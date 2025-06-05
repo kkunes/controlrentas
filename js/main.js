@@ -1,5 +1,5 @@
 // js/main.js
-import { db } from './firebaseConfig.js';
+import { db, auth } from './firebaseConfig.js';
 import { mostrarDashboard } from './dashboard.js';
 // Asegúrate de que eliminarDocumento se importa con un alias de cada módulo
 import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, eliminarDocumento as eliminarInmuebleDoc } from './inmuebles.js';
@@ -9,6 +9,9 @@ import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMante
 import { mostrarReportes } from './reportes.js';
 import './abonos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+const provider = new GoogleAuthProvider();
 
 // ---- Hacemos que las funciones de los módulos estén disponibles en el objeto 'window' ----
 // Esto permite que estas funciones sean llamadas directamente desde el HTML (ej. onclick="mostrarDashboard()")
@@ -74,6 +77,36 @@ window.eliminarDocumento = async (coleccion, id, callbackRefresh) => {
     }
 };
 
+// ---- Funciones de Autenticación ----
+document.getElementById('btnLogin').onclick = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    alert('Error al iniciar sesión: ' + e.message);
+  }
+};
+
+document.getElementById('btnLogout').onclick = async () => {
+  try {
+    await signOut(auth);
+  } catch (e) {
+    alert('Error al cerrar sesión: ' + e.message);
+  }
+};
+
+// Mostrar info de usuario y alternar botones
+onAuthStateChanged(auth, user => {
+  const userInfo = document.getElementById('userInfo');
+  if (user) {
+    document.getElementById('btnLogin').classList.add('hidden');
+    document.getElementById('btnLogout').classList.remove('hidden');
+    userInfo.textContent = `Hola, ${user.displayName || user.email}`;
+  } else {
+    document.getElementById('btnLogin').classList.remove('hidden');
+    document.getElementById('btnLogout').classList.add('hidden');
+    userInfo.textContent = '';
+  }
+});
 
 // ---- Control de Rutas (Navegación) basado en el hash de la URL ----
 const loadContent = () => {
