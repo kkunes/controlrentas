@@ -1,6 +1,7 @@
 // js/firebaseConfig.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 // Si no usas Firebase Storage en ninguna parte de tu aplicación, puedes comentar o eliminar la siguiente línea:
 //import { getStorage } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
 // Tu configuración de Firebase
@@ -16,7 +17,5 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-// Si no usas Firebase Storage, comenta o elimina la siguiente línea:
-//export const storage = getStorage(app);
-
-export { db, app };
+const auth = getAuth(app);
+export { db, app, auth };
