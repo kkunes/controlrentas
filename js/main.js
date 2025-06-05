@@ -1,5 +1,6 @@
 // js/main.js
 import { db, auth } from './firebaseConfig.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { mostrarDashboard } from './dashboard.js';
 // Asegúrate de que eliminarDocumento se importa con un alias de cada módulo
 import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, eliminarDocumento as eliminarInmuebleDoc } from './inmuebles.js';
@@ -9,7 +10,7 @@ import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMante
 import { mostrarReportes } from './reportes.js';
 import './abonos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
 const provider = new GoogleAuthProvider();
 
@@ -101,10 +102,19 @@ onAuthStateChanged(auth, user => {
     document.getElementById('btnLogin').classList.add('hidden');
     document.getElementById('btnLogout').classList.remove('hidden');
     userInfo.textContent = `Hola, ${user.displayName || user.email}`;
+    mostrarDashboard(); // Cargar el dashboard u otra información aquí si es necesario
   } else {
     document.getElementById('btnLogin').classList.remove('hidden');
     document.getElementById('btnLogout').classList.add('hidden');
     userInfo.textContent = '';
+
+    // Mostrar mensaje de inicio de sesión en el contenido principal
+    document.getElementById('contenido').innerHTML = `
+      <div class="text-center py-10">
+        <p class="text-lg text-gray-700 mb-4">Por favor, inicia sesión para ver la información.</p>
+        <button id="btnLogin" class="bg-blue-600 text-white px-4 py-2 rounded">Iniciar sesión con Google</button>
+      </div>
+    `;
   }
 });
 
