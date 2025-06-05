@@ -1,0 +1,123 @@
+// js/main.js
+import { db } from './firebaseConfig.js';
+import { mostrarDashboard } from './dashboard.js';
+// Asegúrate de que eliminarDocumento se importa con un alias de cada módulo
+import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, eliminarDocumento as eliminarInmuebleDoc } from './inmuebles.js';
+import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, confirmarDesocupacionInquilino, confirmarReactivacionInquilino, eliminarDocumento as eliminarInquilinoDoc, mostrarHistorialAbonosInquilino, mostrarSaldoFavorInquilino } from './inquilinos.js';
+import { mostrarPagos, mostrarFormularioNuevoPago, editarPago, mostrarFormularioRegistrarAbono, revisarPagosVencidos, mostrarHistorialPagosInmueble, eliminarDocumento as eliminarPagoDoc, mostrarHistorialPagosInquilino } from './pagos.js'; // Added mostrarHistorialPagosInquilino import
+import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc } from './mantenimientos.js';
+import { mostrarReportes } from './reportes.js';
+import './abonos.js';
+import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+
+// ---- Hacemos que las funciones de los módulos estén disponibles en el objeto 'window' ----
+// Esto permite que estas funciones sean llamadas directamente desde el HTML (ej. onclick="mostrarDashboard()")
+
+// Funciones principales de navegación
+window.mostrarDashboard = mostrarDashboard;
+window.mostrarInmuebles = mostrarInmuebles;
+window.mostrarInquilinos = mostrarInquilinos;
+window.mostrarPagos = mostrarPagos;
+window.mostrarMantenimientos = mostrarMantenimientos;
+window.mostrarReportes = mostrarReportes;
+
+// Funciones específicas de Inmuebles
+window.mostrarFormularioNuevoInmueble = mostrarFormularioNuevoInmueble;
+window.editarInmueble = editarInmueble;
+
+// Funciones específicas de Inquilinos
+window.mostrarFormularioNuevoInquilino = mostrarFormularioNuevoInquilino;
+window.editarInquilino = editarInquilino;
+window.confirmarDesocupacionInquilino = confirmarDesocupacionInquilino;
+window.confirmarReactivacionInquilino = confirmarReactivacionInquilino;
+window.mostrarHistorialPagosInquilino = mostrarHistorialPagosInquilino; // Added this line
+window.mostrarHistorialAbonosInquilino = mostrarHistorialAbonosInquilino;
+window.mostrarSaldoFavorInquilino = mostrarSaldoFavorInquilino;
+
+// Funciones específicas de Pagos
+window.mostrarFormularioNuevoPago = mostrarFormularioNuevoPago;
+window.editarPago = editarPago;
+// window.mostrarHistorialPagosInquilino = mostrarHistorialPagosInquilino; // This was already here, but ensures it's correct
+window.mostrarFormularioRegistrarAbono = mostrarFormularioRegistrarAbono;
+window.revisarPagosVencidos = revisarPagosVencidos;
+window.mostrarHistorialPagosInmueble = mostrarHistorialPagosInmueble;
+
+// Funciones específicas de Mantenimientos
+window.mostrarFormularioNuevoMantenimiento = mostrarFormularioNuevoMantenimiento;
+window.editarMantenimiento = editarMantenimiento;
+window.mostrarHistorialMantenimientoInmueble = mostrarHistorialMantenimientoInmueble;
+
+// Funciones de UI generales
+window.mostrarModal = mostrarModal;
+window.ocultarModal = ocultarModal;
+window.mostrarNotificacion = mostrarNotificacion;
+
+// ***** Centralización de la función eliminarDocumento *****
+// Esta función global manejará la confirmación y delegará la eliminación a la función específica de cada módulo.
+window.eliminarDocumento = async (coleccion, id, callbackRefresh) => {
+    switch (coleccion) {
+        case 'inmuebles':
+            eliminarInmuebleDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'inquilinos':
+            eliminarInquilinoDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'pagos':
+            eliminarPagoDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'mantenimientos':
+            eliminarMantenimientoDoc(coleccion, id, callbackRefresh);
+            break;
+        default:
+            mostrarNotificacion('Colección no reconocida para eliminar.', 'error');
+            break;
+    }
+};
+
+
+// ---- Control de Rutas (Navegación) basado en el hash de la URL ----
+const loadContent = () => {
+    const fullHash = window.location.hash.substring(1);
+    const parts = fullHash.split('?');
+    const hash = parts[0];
+    const queryString = parts[1];
+
+    let params = {};
+    if (queryString) {
+        params = Object.fromEntries(new URLSearchParams(queryString));
+    }
+
+    switch (hash) {
+        case 'inmuebles':
+            mostrarInmuebles(params.estado);
+            break;
+        case 'inquilinos':
+            mostrarInquilinos();
+            break;
+        case 'pagos':
+            mostrarPagos();
+            break;
+        case 'mantenimientos':
+            mostrarMantenimientos();
+            break;
+        case 'reportes':
+            mostrarReportes();
+            break;
+        case 'dashboard':
+        default:
+            mostrarDashboard();
+            break;
+    }
+};
+
+// ---- Event Listeners Principales ----
+
+// Escuchar cambios en el hash de la URL para cargar el contenido correspondiente
+window.addEventListener('hashchange', loadContent);
+
+// Cargar el contenido inicial al cargar completamente la página (DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', () => {
+    loadContent();
+    // Opcional: Revisar pagos vencidos al cargar la aplicación
+    revisarPagosVencidos();
+});
