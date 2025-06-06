@@ -9,7 +9,7 @@ import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm"; // S
 /**
  * Muestra la lista de inmuebles en forma de tarjetas.
  */
-export async function mostrarInmuebles(estadoFiltro = null) {
+export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
@@ -25,8 +25,12 @@ export async function mostrarInmuebles(estadoFiltro = null) {
         });
 
         // Filtrar por estado si se solicita
-        if (estadoFiltro) {
-            inmueblesList = inmueblesList.filter(inmueble => inmueble.estado.toLowerCase() === estadoFiltro.toLowerCase());
+        if (estadoFiltro && estadoFiltro !== "Todos") {
+            inmueblesList = inmueblesList.filter(inmueble => inmueble.estado && inmueble.estado.toLowerCase() === estadoFiltro.toLowerCase());
+        }
+        // Filtrar por tipo si se solicita
+        if (tipoFiltro && tipoFiltro !== "Todos") {
+            inmueblesList = inmueblesList.filter(inmueble => inmueble.tipo && inmueble.tipo.toLowerCase() === tipoFiltro.toLowerCase());
         }
 
         // Ordenar los inmuebles para que los disponibles salgan primero
@@ -36,41 +40,57 @@ export async function mostrarInmuebles(estadoFiltro = null) {
         if (inmueblesList.length === 0) {
             tarjetasInmueblesHtml = `<p class="text-gray-500 text-center py-8">No hay inmuebles registrados.</p>`;
         } else {
-            tarjetasInmueblesHtml = inmueblesList.map(inmueble => `
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 ${inmueble.estado === 'Ocupado' ? 'border-orange-500' : 'border-green-500'}" data-id="${inmueble.id}">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">${inmueble.nombre}</h3>
-                    <p class="text-gray-600 mb-1"><strong>Dirección:</strong> ${inmueble.direccion}</p>
-                    <p class="text-gray-600 mb-1"><strong>Tipo:</strong> ${inmueble.tipo}</p>
-                    <p class="text-gray-600 mb-1"><strong>Renta Mensual:</strong> $${(inmueble.rentaMensual ?? 0).toFixed(2)}</p>
-                    <p class="text-gray-600 mb-4"><strong>Estado:</strong>
-                        <span class="${inmueble.estado === 'Ocupado' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'} px-2 py-0.5 rounded-full text-sm font-medium">
-                            ${inmueble.estado}
-                        </span>
-                    </p>
-                    <div class="flex flex-wrap gap-2 justify-end items-center">
-                        ${inmueble.urlContrato ? `
-                            <a href="${inmueble.urlContrato}" target="_blank" rel="noopener noreferrer"
-                                class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-md text-sm font-semibold shadow transition-colors duration-200 flex items-center gap-1"
-                                title="Ver contrato en Drive">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                                Ver Contrato
-                            </a>
-                        ` : ''}
-                        <button onclick="mostrarHistorialPagosInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Pagos</button>
-                        <button onclick="mostrarHistorialMantenimientoInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Mantenimientos</button>
-                        <button onclick="editarInmueble('${inmueble.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Editar</button>
-                        <button onclick="eliminarDocumento('inmuebles', '${inmueble.id}', mostrarInmuebles)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
-                        <button onclick="mostrarHistorialInquilinosInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Historial Inquilinos</button>
+            tarjetasInmueblesHtml = inmueblesList.map(inmueble => {
+                // Define color de borde según estado
+                let borderColor = 'border-green-500'; // Disponible
+                let estadoBg = 'bg-green-100 text-green-800';
+                if (inmueble.estado === 'Ocupado') {
+                    borderColor = 'border-orange-500';
+                    estadoBg = 'bg-orange-100 text-orange-800';
+                } else if (inmueble.estado === 'Mantenimiento') {
+                    borderColor = 'border-gray-500';
+                    estadoBg = 'bg-gray-100 text-gray-800';
+                }
+
+                return `
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 ${borderColor}" data-id="${inmueble.id}">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">${inmueble.nombre}</h3>
+                        <p class="text-gray-600 mb-1"><strong>Dirección:</strong> ${inmueble.direccion}</p>
+                        <p class="text-gray-600 mb-1"><strong>Tipo:</strong> ${inmueble.tipo}</p>
+                        <p class="text-gray-600 mb-1"><strong>Renta Mensual:</strong> $${(inmueble.rentaMensual ?? 0).toFixed(2)}</p>
+                        <p class="text-gray-600 mb-4"><strong>Estado:</strong>
+                            <span class="${estadoBg} px-2 py-0.5 rounded-full text-sm font-medium">
+                                ${inmueble.estado}
+                            </span>
+                        </p>
+                        <div class="flex flex-wrap gap-2 justify-end items-center">
+                            ${inmueble.urlContrato ? `
+                                <a href="${inmueble.urlContrato}" target="_blank" rel="noopener noreferrer"
+                                    class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-md text-sm font-semibold shadow transition-colors duration-200 flex items-center gap-1"
+                                    title="Ver contrato en Drive">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                    Ver Contrato
+                                </a>
+                            ` : ''}
+                            <button onclick="mostrarHistorialPagosInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Pagos</button>
+                            <button onclick="mostrarHistorialMantenimientoInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Mantenimientos</button>
+                            <button onclick="editarInmueble('${inmueble.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Editar</button>
+                            <button onclick="eliminarDocumento('inmuebles', '${inmueble.id}', mostrarInmuebles)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
+                            <button onclick="mostrarHistorialInquilinosInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Historial Inquilinos</button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+        }).join('');
         }
 
+        // Filtros
+        const tipos = ["Todos", "Casa", "Apartamento", "Local Comercial", "Oficina"];
+        const estados = ["Todos", "Disponible", "Ocupado", "Mantenimiento"];
+
         contenedor.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold text-gray-700">Inmuebles</h2>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                 <div class="flex gap-2">
                     <button onclick="mostrarFormularioNuevoPropietario()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,19 +100,34 @@ export async function mostrarInmuebles(estadoFiltro = null) {
                     </button>
                     <button onclick="mostrarFormularioNuevoInmueble()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Inmueble</button>
                 </div>
+                <div class="flex gap-2">
+                    <select id="filtroTipo" class="border-gray-300 rounded px-2 py-1">
+                        ${tipos.map(tipo => `<option value="${tipo}" ${tipo === (tipoFiltro || "Todos") ? "selected" : ""}>${tipo}</option>`).join('')}
+                    </select>
+                    <select id="filtroEstado" class="border-gray-300 rounded px-2 py-1">
+                        ${estados.map(estado => `<option value="${estado}" ${estado === (estadoFiltro || "Todos") ? "selected" : ""}>${estado}</option>`).join('')}
+                    </select>
+                </div>
             </div>
             <div id="listaInmuebles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 ${tarjetasInmueblesHtml}
             </div>
         `;
 
+        // Listeners para los filtros
+        document.getElementById('filtroTipo').addEventListener('change', function () {
+            mostrarInmuebles(document.getElementById('filtroEstado').value, this.value);
+        });
+        document.getElementById('filtroEstado').addEventListener('change', function () {
+            mostrarInmuebles(this.value, document.getElementById('filtroTipo').value);
+        });
+
+        // Sortable
         const lista = document.getElementById('listaInmuebles');
         Sortable.create(lista, {
             animation: 150,
             onEnd: async function (evt) {
-                // Obtén el nuevo orden de los IDs
                 const ids = Array.from(lista.children).map(card => card.dataset.id);
-                // Actualiza el campo 'orden' en Firestore para cada inmueble
                 for (let i = 0; i < ids.length; i++) {
                     await updateDoc(doc(db, "inmuebles", ids[i]), { orden: i });
                 }
@@ -167,12 +202,6 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                 <input type="url" id="urlContrato" name="urlContrato" placeholder="https://drive.google.com/..." class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inmueble?.urlContrato ?? ''}">
                 <span class="text-xs text-gray-400">Pega aquí el enlace de Google Drive del contrato (opcional).</span>
             </div>
-            <div>
-                <label>
-                    <input type="checkbox" id="tieneInternet" name="tieneInternet">
-                    ¿Cuenta con servicio de Internet?
-                </label>
-            </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
                 <button type="submit" class="btn-primary">${id ? "Actualizar" : "Registrar"} Inmueble</button>
@@ -190,8 +219,6 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
         // Asegurarse de que rentaMensual es un número
         data.rentaMensual = parseFloat(data.rentaMensual);
-        const tieneInternet = document.getElementById('tieneInternet').checked;
-        data.tieneInternet = tieneInternet;
 
         try {
             if (id) {

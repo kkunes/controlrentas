@@ -103,6 +103,8 @@ async function generarReporteMensual(mes, anio) {
 
         let pagosDetalle = [];
         let totalIngresosMes = 0;
+        let totalPagosRentaMes = 0;
+        let totalDepositosMes = 0;
 
         pagosSnap.forEach(doc => {
             const data = doc.data();
@@ -122,6 +124,8 @@ async function generarReporteMensual(mes, anio) {
                 !isNaN(montoPagado)
             ) {
                 totalIngresosMes += montoPagado;
+                // Suma solo pagos de renta
+                totalPagosRentaMes += montoPagado;
                 const inquilinoNombre = inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido';
                 const inmuebleNombre = inmueblesMap.get(data.inmuebleId) || 'Inmueble Desconocido';
                 pagosDetalle.push({
@@ -146,6 +150,29 @@ async function generarReporteMensual(mes, anio) {
             }
         });
 
+        // Sumar depósitos de inquilinos para el mes seleccionado
+        inquilinosSnap.forEach(doc => {
+            const data = doc.data();
+            if (
+                data.depositoRecibido &&
+                data.montoDeposito &&
+                data.fechaDeposito &&
+                data.fechaDeposito >= startOfMonth &&
+                data.fechaDeposito <= endOfMonth
+            ) {
+                totalIngresosMes += parseFloat(data.montoDeposito);
+                totalDepositosMes += parseFloat(data.montoDeposito);
+                const nombreInquilino = data.nombre || 'Inquilino Desconocido';
+                const inmuebleNombre = inmueblesMap.get(data.inmuebleAsociadoId) || 'Inmueble Desconocido';
+                pagosDetalle.push({
+                    fecha: data.fechaDeposito,
+                    tipo: 'Ingreso (Depósito)',
+                    descripcion: `Depósito de ${nombreInquilino} por ${inmuebleNombre}`,
+                    monto: parseFloat(data.montoDeposito)
+                });
+            }
+        });
+
         // 2. Gastos (mantenimientos)
         const mantenimientosRef = collection(db, "mantenimientos");
         const qMantenimientos = query(
@@ -161,59 +188,70 @@ async function generarReporteMensual(mes, anio) {
             const data = doc.data();
             totalGastos += (parseFloat(data.costo) || 0);
             const inmuebleNombre = inmueblesMap.get(data.inmuebleId) || 'Inmueble Desconocido';
+            const tipoMantenimiento = data.tipoMantenimiento ? data.tipoMantenimiento : '';
+            const descripcionMantenimiento = data.descripcion ? data.descripcion : '';
+            const categoriaMantenimiento = data.categoria ? data.categoria : '';
             mantenimientosDetalle.push({
                 fecha: data.fechaMantenimiento ? data.fechaMantenimiento.substring(0, 10) : '',
                 tipo: 'Gasto (Mantenimiento)',
-                descripcion: `Mantenimiento: ${data.tipoMantenimiento || 'N/A'} - ${data.descripcion || 'Sin descripción'} (${inmuebleNombre}) [${data.categoria || 'N/A'}]`,
+                descripcion: `Mantenimiento${tipoMantenimiento ? ': ' + tipoMantenimiento : ''}${descripcionMantenimiento ? ' - ' + descripcionMantenimiento : ''} (${inmuebleNombre})${categoriaMantenimiento ? ' [' + categoriaMantenimiento + ']' : ''}`,
                 monto: parseFloat(data.costo) || 0
             });
         });
 
-        // 3. Mostrar el reporte en HTML
-        const balance = totalIngresosMes - totalGastos;
-        const balanceClass = balance >= 0 ? 'text-green-600' : 'text-red-600';
+        // Unir todos los movimientos (ingresos y gastos) y ordenarlos por fecha descendente
+        const todosLosMovimientos = [...pagosDetalle, ...mantenimientosDetalle].sort((a, b) => b.fecha.localeCompare(a.fecha));
 
-        const todosLosMovimientos = [...pagosDetalle, ...mantenimientosDetalle].sort((a, b) => {
-            return new Date(a.fecha) - new Date(b.fecha);
-        });
-
+        // Generar el HTML del detalle
         if (todosLosMovimientos.length === 0) {
-            listaDetalladaMovimientosHtml = `<p class="text-gray-500 text-center py-4">No hay movimientos registrados para este mes.</p>`;
+            listaDetalladaMovimientosHtml = `<p class="text-gray-500 text-center py-6">No hay movimientos registrados para este mes.</p>`;
         } else {
             listaDetalladaMovimientosHtml = `
-                <div class="overflow-x-auto shadow-sm rounded-lg border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 bg-white rounded-lg shadow">
+                        <thead>
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Monto</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            todosLosMovimientos.forEach(mov => {
-                const montoClass = (mov.tipo.includes('Ingreso')) ? 'text-green-600' : 'text-red-600';
-                listaDetalladaMovimientosHtml += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${mov.fecha}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${mov.tipo}</td>
-                        <td class="px-6 py-4 whitespace-normal text-sm text-gray-900">${mov.descripcion}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold ${montoClass}">$${mov.monto ? mov.monto.toFixed(2) : '0.00'}</td>
-                    </tr>
-                `;
-            });
-            listaDetalladaMovimientosHtml += `
+                        <tbody>
+                            ${todosLosMovimientos.map(mov => `
+                                <tr>
+                                    <td class="px-4 py-2 whitespace-nowrap">${mov.fecha}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap">${mov.tipo}</td>
+                                    <td class="px-4 py-2">${mov.descripcion}</td>
+                                    <td class="px-4 py-2 text-right font-semibold ${mov.tipo.startsWith('Ingreso') ? 'text-green-700' : 'text-red-700'}">
+                                        $${parseFloat(mov.monto).toFixed(2)}
+                                    </td>
+                                </tr>
+                            `).join('')}
                         </tbody>
                     </table>
                 </div>
             `;
         }
 
+        // 3. Mostrar el reporte en HTML
+        const balance = totalIngresosMes - totalGastos;
+        const balanceClass = balance >= 0 ? 'text-green-600' : 'text-red-600';
+        const balanceIcon = balance >= 0
+            ? `<svg class="w-10 h-10 mx-auto mb-2 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`
+            : `<svg class="w-10 h-10 mx-auto mb-2 text-orange-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
+
         resultadoDiv.innerHTML = `
             <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Resumen Financiero Mensual</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-blue-50 p-5 rounded-lg shadow-md text-center border-l-4 border-blue-500">
+                    <p class="text-base font-medium text-blue-700">Pagos de Renta</p>
+                    <p class="text-3xl font-bold text-blue-900 mt-2">$${totalPagosRentaMes.toFixed(2)}</p>
+                </div>
+                <div class="bg-green-50 p-5 rounded-lg shadow-md text-center border-l-4 border-green-500">
+                    <p class="text-base font-medium text-green-700">Depósitos</p>
+                    <p class="text-3xl font-bold text-green-900 mt-2">$${totalDepositosMes.toFixed(2)}</p>
+                </div>
                 <div class="bg-blue-50 p-5 rounded-lg shadow-md text-center border-l-4 border-blue-500">
                     <p class="text-base font-medium text-blue-700">Ingresos Totales</p>
                     <p class="text-3xl font-bold text-blue-900 mt-2">$${totalIngresosMes.toFixed(2)}</p>
@@ -222,12 +260,17 @@ async function generarReporteMensual(mes, anio) {
                     <p class="text-base font-medium text-red-700">Gastos Totales</p>
                     <p class="text-3xl font-bold text-red-900 mt-2">$${totalGastos.toFixed(2)}</p>
                 </div>
-                <div class="p-5 rounded-lg shadow-md text-center border-l-4 ${balance >= 0 ? 'bg-green-50 border-green-500' : 'bg-orange-50 border-orange-500'}">
-                    <p class="text-base font-medium ${balance >= 0 ? 'text-green-700' : 'text-orange-700'}">Balance</p>
-                    <p class="text-3xl font-bold ${balanceClass} mt-2">$${balance.toFixed(2)}</p>
+            </div>
+            <div class="relative flex justify-center mb-10">
+                <div class="w-full md:w-2/3 lg:w-1/2 xl:w-1/3">
+                    <div class="bg-gradient-to-r from-green-400/90 to-blue-500/90 dark:from-green-600/90 dark:to-blue-700/90 rounded-2xl shadow-2xl border-4 border-white p-8 text-center transform hover:scale-105 transition-transform duration-300">
+                        ${balanceIcon}
+                        <p class="text-lg font-semibold text-white tracking-wide mb-1">Balance del Mes</p>
+                        <p class="text-4xl font-extrabold ${balance >= 0 ? 'text-white' : 'text-orange-200'} drop-shadow-lg mb-2">$${balance.toFixed(2)}</p>
+                        <p class="text-sm text-white/80">${balance >= 0 ? '¡Felicidades! El balance es positivo.' : 'Atención: El balance es negativo.'}</p>
+                    </div>
                 </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-indigo-50 p-5 rounded-lg shadow-md text-center border-l-4 border-indigo-500">
                     <p class="text-base font-medium text-indigo-700">Total Internet</p>
@@ -242,7 +285,6 @@ async function generarReporteMensual(mes, anio) {
                     <p class="text-2xl font-bold text-yellow-900 mt-2">$${totalLuz.toFixed(2)}</p>
                 </div>
             </div>
-
             <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Detalle de Todos los Movimientos</h4>
             ${listaDetalladaMovimientosHtml}
         `;

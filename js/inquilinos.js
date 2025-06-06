@@ -7,7 +7,7 @@ import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebase
 /**
  * Muestra la lista de inquilinos en forma de tarjetas.
  */
-export async function mostrarInquilinos() {
+export async function mostrarInquilinos(filtroActivo = "Todos") {
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
@@ -34,52 +34,93 @@ export async function mostrarInquilinos() {
         // Ordenar los inquilinos para que los activos salgan primero
         inquilinosList.sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre));
 
+        // Filtrar por estado si se solicita
+        if (filtroActivo === "Activos") {
+            inquilinosList = inquilinosList.filter(i => i.activo);
+        } else if (filtroActivo === "Inactivos") {
+            inquilinosList = inquilinosList.filter(i => !i.activo);
+        }
+
+        // Obtén todos los pagos una sola vez
+        const pagosSnap = await getDocs(collection(db, "pagos"));
+        let pagosDepositoMap = new Map();
+        pagosSnap.forEach(doc => {
+            const pago = doc.data();
+            if (pago.tipo === "deposito" && pago.inquilinoId) {
+                pagosDepositoMap.set(pago.inquilinoId, { monto: pago.montoTotal, fecha: pago.fechaRegistro });
+            }
+        });
+
         let tarjetasInquilinosHtml = "";
         if (inquilinosList.length === 0) {
             tarjetasInquilinosHtml = `<p class="text-gray-500 text-center py-8">No hay inquilinos registrados.</p>`;
         } else {
-            tarjetasInquilinosHtml = inquilinosList.map(inquilino => `
-                <div class="bg-white rounded-lg shadow-md p-6 ${inquilino.activo ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}" data-id="${inquilino.id}">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-xl font-semibold text-gray-800">${inquilino.nombre}</h3>
-                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${inquilino.activo ? 'Activo' : 'Inactivo'}
-                        </span>
+            tarjetasInquilinosHtml = inquilinosList.map(inquilino => {
+                // Busca el depósito de este inquilino
+                const deposito = pagosDepositoMap.get(inquilino.id);
+
+                return `
+                    <div class="bg-white rounded-lg shadow-md p-6 ${inquilino.activo ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}" data-id="${inquilino.id}">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-semibold text-gray-800">${inquilino.nombre}</h3>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${inquilino.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </div>
+                        <p class="text-gray-600 mb-2"><strong>Teléfono:</strong> ${inquilino.telefono}</p>
+                        <p class="text-gray-600 mb-2"><strong>Inmueble:</strong> ${inquilino.nombreInmueble}</p>
+                        ${inquilino.depositoRecibido && inquilino.montoDeposito && inquilino.fechaDeposito ? `
+                            <p class="text-gray-600 mb-2"><strong>Depósito:</strong> $${parseFloat(inquilino.montoDeposito).toFixed(2)}</p>
+                            <p class="text-gray-600 mb-2"><strong>Fecha Depósito:</strong> ${inquilino.fechaDeposito}</p>
+                        ` : ''}
+                        ${inquilino.fechaOcupacion ? `<p class="text-gray-600 mb-2"><strong>Ocupación (Inicio Pagos):</strong> ${inquilino.fechaOcupacion}</p>` : ''}
+                        ${inquilino.fechaLlegada ? `<p class="text-gray-600 mb-2"><strong>Llegada (Firma):</strong> ${inquilino.fechaLlegada}</p>` : ''}
+                        ${inquilino.fechaInicioContrato ? `<p class="text-gray-600 mb-2"><strong>Inicio Contrato:</strong> ${inquilino.fechaInicioContrato}</p>` : ''}
+                        ${inquilino.fechaFinContrato ? `<p class="text-gray-600 mb-2"><strong>Fin Contrato:</strong> ${inquilino.fechaFinContrato}</p>` : ''}
+                        ${inquilino.fechaDesocupacion ? `<p class="text-gray-600 mb-2"><strong>Desocupación:</strong> ${inquilino.fechaDesocupacion}</p>` : ''}
+                        ${inquilino.fechaRegistro ? `<p class="text-gray-600 mb-2"><strong>Registro:</strong> ${inquilino.fechaRegistro}</p>` : ''}
+                        ${inquilino.urlIdentificacion ? `<p class="text-gray-600 mb-4"><strong>Identificación:</strong> <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:underline">Ver Documento</a></p>` : ''}
+                        
+                        <div class="flex flex-wrap gap-2 justify-end">
+                            <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Historial de Pagos</button>
+                            ${inquilino.activo ? 
+                                `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Desocupar</button>` :
+                                `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Reactivar</button>`
+                            }
+                            <button onclick="editarInquilino('${inquilino.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Editar</button>
+                            <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
+                            <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Abonos</button>
+                            <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Saldo a Favor</button>
+                        </div>
                     </div>
-                    <p class="text-gray-600 mb-2"><strong>Teléfono:</strong> ${inquilino.telefono}</p>
-                    <p class="text-gray-600 mb-2"><strong>Inmueble:</strong> ${inquilino.nombreInmueble}</p>
-                    ${inquilino.fechaOcupacion ? `<p class="text-gray-600 mb-2"><strong>Ocupación (Inicio Pagos):</strong> ${inquilino.fechaOcupacion}</p>` : ''}
-                    ${inquilino.fechaLlegada ? `<p class="text-gray-600 mb-2"><strong>Llegada (Firma):</strong> ${inquilino.fechaLlegada}</p>` : ''}
-                    ${inquilino.fechaInicioContrato ? `<p class="text-gray-600 mb-2"><strong>Inicio Contrato:</strong> ${inquilino.fechaInicioContrato}</p>` : ''}
-                    ${inquilino.fechaFinContrato ? `<p class="text-gray-600 mb-2"><strong>Fin Contrato:</strong> ${inquilino.fechaFinContrato}</p>` : ''}
-                    ${inquilino.fechaDesocupacion ? `<p class="text-gray-600 mb-2"><strong>Desocupación:</strong> ${inquilino.fechaDesocupacion}</p>` : ''}
-                    ${inquilino.fechaRegistro ? `<p class="text-gray-600 mb-2"><strong>Registro:</strong> ${inquilino.fechaRegistro}</p>` : ''}
-                    ${inquilino.urlIdentificacion ? `<p class="text-gray-600 mb-4"><strong>Identificación:</strong> <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:underline">Ver Documento</a></p>` : ''}
-                    
-                    <div class="flex flex-wrap gap-2 justify-end">
-                        <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Historial de Pagos</button>
-                        ${inquilino.activo ? 
-                            `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Desocupar</button>` :
-                            `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Reactivar</button>`
-                        }
-                        <button onclick="editarInquilino('${inquilino.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Editar</button>
-                        <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
-                        <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Abonos</button>
-                        <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Saldo a Favor</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+        }).join('');
+        
         }
 
         contenedor.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold text-gray-700">Inquilinos</h2>
-                <button onclick="mostrarFormularioNuevoInquilino()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Inquilino</button>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-700">Inquilinos</h2>
+                </div>
+                <div class="flex gap-2">
+                    <select id="filtroActivo" class="border-gray-300 rounded px-2 py-1">
+                        <option value="Todos" ${filtroActivo === "Todos" ? "selected" : ""}>Todos</option>
+                        <option value="Activos" ${filtroActivo === "Activos" ? "selected" : ""}>Activos</option>
+                        <option value="Inactivos" ${filtroActivo === "Inactivos" ? "selected" : ""}>Inactivos</option>
+                    </select>
+                    <button onclick="mostrarFormularioNuevoInquilino()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Inquilino</button>
+                </div>
             </div>
             <div id="listaInquilinos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 ${tarjetasInquilinosHtml}
             </div>
         `;
+
+        // Agrega el event listener después de asignar el innerHTML
+        document.getElementById('filtroActivo').addEventListener('change', function () {
+            mostrarInquilinos(this.value);
+        });
 
         const lista = document.getElementById('listaInquilinos');
         if (lista) {
@@ -189,6 +230,17 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <input type="checkbox" id="activo" name="activo" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" ${inquilino === null || inquilino.activo ? 'checked' : ''}>
                 <label for="activo" class="ml-2 block text-sm text-gray-900">Inquilino Activo</label>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">¿Recibió depósito?</label>
+                <input type="checkbox" id="recibioDeposito" name="recibioDeposito" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                <label for="recibioDeposito" class="ml-2 text-sm text-gray-900">Sí</label>
+            </div>
+            <div id="campoDeposito" style="display:none;">
+                <label for="montoDeposito" class="block text-sm font-medium text-gray-700">Monto del depósito</label>
+                <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                <label for="fechaDeposito" class="block text-sm font-medium text-gray-700 mt-2">Fecha del depósito</label>
+                <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+            </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
                 <button type="submit" class="btn-primary">${id ? "Actualizar" : "Registrar"} Inquilino</button>
@@ -206,6 +258,11 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
 
         // Convertir el checkbox a booleano
         data.activo = data.activo === 'on';
+        data.depositoRecibido = data.recibioDeposito === 'on';
+        if (!data.depositoRecibido) {
+            data.montoDeposito = null;
+            data.fechaDeposito = null;
+        }
 
         // Si no se seleccionó inmueble, el valor será una cadena vacía, lo convertimos a null
         if (data.inmuebleAsociadoId === "") {
@@ -222,7 +279,6 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             } else {
                 // Agregar nuevo inquilino
                 const docRef = await addDoc(collection(db, "inquilinos"), data);
-                inquilinoId = docRef.id; // Obtener el ID del nuevo inquilino
                 mostrarNotificacion("Inquilino registrado con éxito.", 'success');
             }
 
@@ -277,6 +333,18 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         } catch (err) {
             console.error("Error al guardar el inquilino:", err);
             mostrarNotificacion("Error al guardar el inquilino.", 'error');
+        }
+
+        // Si es un nuevo inquilino y recibió depósito, registrar el depósito
+        if (data.recibioDeposito === 'on' && data.montoDeposito && data.fechaDeposito) {
+            await addDoc(collection(db, "pagos"), {
+                tipo: "deposito",
+                montoTotal: parseFloat(data.montoDeposito),
+                fechaRegistro: data.fechaDeposito, // Guarda la fecha completa seleccionada
+                inquilinoId: inquilinoId,
+                inmuebleId: data.inmuebleAsociadoId || null,
+                observaciones: "Depósito inicial"
+            });
         }
     });
 }
@@ -687,3 +755,10 @@ window.addEventListener('load', async () => {
 });
 
 import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm";
+
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'recibioDeposito') {
+        document.getElementById('campoDeposito').style.display = e.target.checked ? 'block' : 'none';
+    }
+});
+

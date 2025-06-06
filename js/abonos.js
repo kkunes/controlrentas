@@ -42,16 +42,50 @@ export async function mostrarAbonos() {
             });
         });
 
+        // Agrupar abonos por inquilinoId y guardar el id del abono activo más reciente
+        const abonosPorInquilino = new Map();
+        abonosList.forEach(abono => {
+            if (!abonosPorInquilino.has(abono.inquilinoId)) {
+                abonosPorInquilino.set(abono.inquilinoId, {
+                    id: null, // Aquí guardaremos el id real del abono activo
+                    inquilinoId: abono.inquilinoId,
+                    nombreInquilino: abono.nombreInquilino,
+                    montoOriginal: 0,
+                    saldoRestante: 0,
+                    descripcion: '',
+                    fechaAbono: '',
+                    aplicaciones: []
+                });
+            }
+            const agrupado = abonosPorInquilino.get(abono.inquilinoId);
+            agrupado.montoOriginal += parseFloat(abono.montoOriginal) || 0;
+            agrupado.saldoRestante += parseFloat(abono.saldoRestante) || 0;
+            agrupado.descripcion += abono.descripcion ? (agrupado.descripcion ? ' | ' : '') + abono.descripcion : '';
+            agrupado.fechaAbono = abono.fechaAbono; // toma la última fecha registrada
+            if (Array.isArray(abono.aplicaciones)) {
+                agrupado.aplicaciones = agrupado.aplicaciones.concat(abono.aplicaciones);
+            }
+            // Si este abono tiene saldoRestante > 0 y es el más reciente, guarda su id
+            if (abono.saldoRestante > 0 && (!agrupado.id || new Date(abono.fechaAbono) > new Date(agrupado.fechaAbono))) {
+                agrupado.id = abono.id;
+                agrupado.fechaAbono = abono.fechaAbono;
+            }
+        });
+
+        // Ahora genera las tarjetas solo por inquilino
         let tarjetasAbonosHtml = "";
-        if (abonosList.length === 0) {
+        const abonosUnicos = Array.from(abonosPorInquilino.values());
+        if (abonosUnicos.length === 0) {
             tarjetasAbonosHtml = `<p class="text-gray-500 text-center py-8">No hay saldos a favor registrados.</p>`;
         } else {
-            tarjetasAbonosHtml = abonosList.map(abono => {
+            tarjetasAbonosHtml = abonosUnicos.map(abono => {
                 const estadoClass = abono.saldoRestante > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
                 const estadoText = abono.saldoRestante > 0 ? 'Activo' : 'Consumido';
                 // Historial de aplicaciones
                 let historialAplicacionesHtml = '';
                 if (abono.aplicaciones && abono.aplicaciones.length > 0) {
+                    // Ordenar por fecha descendente
+                    abono.aplicaciones.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
                     historialAplicacionesHtml = `
                         <div class="mt-3">
                             <h4 class="font-semibold text-sm mb-1 text-gray-700">Historial de aplicaciones:</h4>
@@ -76,15 +110,14 @@ export async function mostrarAbonos() {
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">Abono de ${abono.nombreInquilino}</h3>
                         <p class="text-gray-600 mb-2">Monto Original: <span class="font-semibold">$${parseFloat(abono.montoOriginal).toFixed(2)}</span></p>
                         <p class="text-gray-600 mb-2">Saldo Restante: <span class="font-semibold text-xl ${abono.saldoRestante > 0 ? 'text-green-700' : 'text-gray-500'}">$${parseFloat(abono.saldoRestante).toFixed(2)}</span></p>
-                        <p class="text-gray-600 mb-2">Fecha del Abono: ${abono.fechaAbono}</p>
+                        <p class="text-gray-600 mb-2">Fecha del Último Abono: ${abono.fechaAbono}</p>
                         <p class="text-gray-600 mb-2">Descripción: ${abono.descripcion || 'Sin descripción'}</p>
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${estadoClass} mb-4">
                             ${estadoText}
                         </span>
                         ${historialAplicacionesHtml}
                         <div class="flex flex-wrap gap-2 mt-4">
-                            <button onclick="editarAbono('${abono.id}')" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 text-sm">Editar</button>
-                            <button onclick="eliminarAbono('${abono.id}')" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 text-sm">Eliminar</button>
+                            <button onclick="mostrarFormularioNuevoAbono('${abono.id}')" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 text-sm">Actualizar</button>
                             ${abono.saldoRestante > 0 ? `<button onclick="aplicarSaldoFavorManual('${abono.id}', '${abono.inquilinoId}')" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 text-sm">Aplicar Manualmente</button>` : ''}
                         </div>
                     </div>

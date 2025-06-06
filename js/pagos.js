@@ -717,7 +717,7 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="montoAbono" class="block text-sm font-semibold text-gray-700 mb-1">Cantidad a Abonar</label>
-                <input type="number" id="montoAbono" name="montoAbono" step="0.01" min="0.01" max="${saldoPendiente.toFixed(2)}" required
+                <input type="number" id="montoAbono" name="montoAbono" step="0.01" min="0.01" required
                     class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500">
             </div>
             <div>
@@ -742,33 +742,37 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
         const montoAbonar = parseFloat(document.getElementById('montoAbono').value);
         const fechaAbono = document.getElementById('fechaAbono').value;
 
-        if (montoAbonar <= 0 || montoAbonar > saldoPendiente) {
-            mostrarNotificacion('El monto a abonar debe ser mayor a 0 y no exceder el monto pendiente.', 'error');
+        if (montoAbonar <= 0) {
+            mostrarNotificacion('El monto a abonar debe ser mayor a 0.', 'error');
             return;
         }
 
         try {
-            // Asegúrate de que el array 'abonos' exista
             const abonosActuales = pago.abonos || [];
-
-            // Añadir el nuevo abono al array
             abonosActuales.push({
                 montoAbonado: montoAbonar,
                 fechaAbono: fechaAbono
             });
 
             // Recalcular montoPagado sumando todos los abonos
-            const nuevoMontoPagado = abonosActuales.reduce((sum, abono) => sum + abono.montoAbonado, 0);
-            const nuevoSaldoPendiente = montoTotal - nuevoMontoPagado;
+            let nuevoMontoPagado = abonosActuales.reduce((sum, abono) => sum + abono.montoAbonado, 0);
+            let nuevoSaldoPendiente = pago.montoTotal - nuevoMontoPagado;
             let nuevoEstado = 'pendiente';
 
-            if (nuevoMontoPagado >= montoTotal) {
+            // Si el abono es mayor al saldo pendiente, calcula el excedente
+            let excedente = 0;
+            if (nuevoMontoPagado > pago.montoTotal) {
+                excedente = nuevoMontoPagado - pago.montoTotal;
+                nuevoMontoPagado = pago.montoTotal;
+                nuevoSaldoPendiente = 0;
                 nuevoEstado = 'pagado';
+            } else if (nuevoMontoPagado === pago.montoTotal) {
+                nuevoEstado = 'pagado';
+                nuevoSaldoPendiente = 0;
             } else if (nuevoMontoPagado > 0) {
                 nuevoEstado = 'parcial';
             }
-            // Si el pago estaba vencido y no se ha cubierto el total, sigue vencido o parcial/vencido.
-            if (pago.estado === 'vencido' && nuevoMontoPagado < montoTotal) {
+            if (pago.estado === 'vencido' && nuevoMontoPagado < pago.montoTotal) {
                 if (nuevoMontoPagado > 0) {
                     nuevoEstado = 'parcial';
                 } else {
@@ -776,18 +780,46 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
                 }
             }
 
-
+            // Actualiza el pago
             await updateDoc(doc(db, "pagos", pagoId), {
                 montoPagado: nuevoMontoPagado,
                 saldoPendiente: nuevoSaldoPendiente,
                 estado: nuevoEstado,
-                abonos: abonosActuales // Guardar el array de abonos actualizado
+                abonos: abonosActuales
             });
+
+            // Si hay excedente, mándalo a saldo a favor
+            if (excedente > 0) {
+                // Busca si ya hay un saldo a favor activo
+                const abonosSnap = await getDocs(query(
+                    collection(db, "abonosSaldoFavor"),
+                    where("inquilinoId", "==", pago.inquilinoId),
+                    where("saldoRestante", ">", 0)
+                ));
+                if (!abonosSnap.empty) {
+                    const abonoDoc = abonosSnap.docs[0];
+                    const abonoData = abonoDoc.data();
+                    await updateDoc(doc(db, "abonosSaldoFavor", abonoDoc.id), {
+                        saldoRestante: abonoData.saldoRestante + excedente,
+                        montoOriginal: abonoData.montoOriginal + excedente
+                    });
+                } else {
+                    await addDoc(collection(db, "abonosSaldoFavor"), {
+                        inquilinoId: pago.inquilinoId,
+                        montoOriginal: excedente,
+                        saldoRestante: excedente,
+                        descripcion: "Saldo a favor generado por abono excedente",
+                        fechaAbono: fechaAbono,
+                        fechaRegistro: fechaAbono
+                    });
+                }
+                mostrarNotificacion(`El excedente de $${excedente.toFixed(2)} se ha agregado al saldo a favor del inquilino.`, 'info');
+            }
 
             mostrarNotificacion('Abono registrado con éxito.', 'success');
             ocultarModal();
             mostrarPagos();
-    
+
         } catch (error) {
             console.error('Error al registrar el abono:', error);
             mostrarNotificacion('Error al registrar el abono.', 'error');
