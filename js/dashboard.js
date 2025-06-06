@@ -153,6 +153,68 @@ window.inquilinosMap = inquilinosMap; // Hazlo global para usarlo en el modal
             }
         });
 
+        // --- Cálculo de inquilinos con pago próximo en 3 días SOLO usando fechaOcupacion ---
+        const hoy = new Date();
+hoy.setUTCHours(0, 0, 0, 0);
+
+let inquilinosProximoPago = [];
+inquilinosSnap.forEach(doc => {
+    const inquilino = doc.data();
+    if (!inquilino.activo) return;
+
+    let fechaOcupacion = inquilino.fechaOcupacion;
+    if (!fechaOcupacion) return;
+
+    // Convierte a objeto Date si es string
+    let fechaOcupacionDate = typeof fechaOcupacion === 'string'
+        ? new Date(fechaOcupacion)
+        : (fechaOcupacion.toDate ? fechaOcupacion.toDate() : null);
+
+    if (!fechaOcupacionDate) return;
+
+    // Calcula el próximo aniversario mensual de la fecha de ocupación
+    let dia = fechaOcupacionDate.getDate();
+    let proximoPago;
+if (hoy.getDate() < dia) {
+    proximoPago = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
+} else {
+    proximoPago = new Date(hoy.getFullYear(), hoy.getMonth() + 1, dia);
+}
+proximoPago.setHours(0, 0, 0, 0);
+
+    const diffDias = Math.floor((proximoPago - hoy) / (1000 * 60 * 60 * 24));
+    if (diffDias >= 0 && diffDias <= 3) {
+        inquilinosProximoPago.push({
+            id: doc.id,
+            nombre: inquilino.nombre,
+            inmueble: inquilino.nombreInmueble || '',
+            proximoPago: proximoPago.toISOString().split('T')[0],
+            diffDias
+        });
+        console.log('proximoPago calculado:', proximoPago.toISOString().split('T')[0], 'para inquilino', inquilino.nombre);
+    }
+});
+
+        inquilinosProximoPago.forEach(iq => {
+            // Evita duplicados si ya hay un pago próximo a vencer para este inquilino este mes
+            const yaExiste = listaPagosProximos.some(p => p.inquilinoId === iq.id);
+            if (!yaExiste) {
+                listaPagosProximos.push({
+                    inquilinoId: iq.id,
+                    nombreInquilino: iq.nombre,
+                    mesCorrespondiente: '', // Puedes dejarlo vacío o poner el mes de ocupación si quieres
+                    anioCorrespondiente: '',
+                    montoTotal: 0,
+                    montoPagado: 0,
+                    saldoPendiente: 0,
+                    estado: 'Próximo (Ocupación)',
+                    proximoPago: iq.proximoPago,
+                    inmueble: iq.inmueble
+                });
+                pagosProximosAVencer++;
+            }
+        });
+
         // Actualiza las listas globales de pagos
         window.listaPagosPendientes = listaPagosPendientes;
         window.listaPagosParciales = listaPagosParciales;
@@ -315,7 +377,19 @@ window.mostrarListaPagosDashboard = function(tipo) {
     html += `
         <tr>
             <td class="px-4 py-2 text-sm text-gray-800">${nombreInquilino}</td>
-            <td class="px-4 py-2 text-sm text-gray-700">${pago.mesCorrespondiente || ''} / ${pago.anioCorrespondiente || ''}</td>
+            <td class="px-4 py-2 text-sm text-gray-700">
+                ${
+        pago.estado === 'Próximo (Ocupación)'
+            ? (() => {
+                const d = new Date(pago.proximoPago);
+                const dia = String(d.getDate()+2).padStart(2, '0');
+                const mes = String(d.getMonth() + 1).padStart(2, '0');
+                const anio = d.getFullYear();
+                return `${dia}/${mes}/${anio}`;
+            })()
+            : (pago.mesCorrespondiente || '') + ' / ' + (pago.anioCorrespondiente || '')
+    }
+            </td>
             <td class="px-4 py-2 text-sm text-gray-800">$${(pago.montoTotal || 0).toFixed(2)}</td>
             <td class="px-4 py-2 text-sm text-gray-800">$${(pago.montoPagado || 0).toFixed(2)}</td>
             <td class="px-4 py-2 text-sm text-gray-800">$${(pago.saldoPendiente || 0).toFixed(2)}</td>

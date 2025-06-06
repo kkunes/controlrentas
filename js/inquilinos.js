@@ -3,7 +3,7 @@ import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } from "
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // Alias para evitar conflicto
-
+import { obtenerMesesAdeudadosHistorico } from './pagos.js';
 /**
  * Muestra la lista de inquilinos en forma de tarjetas.
  */
@@ -92,6 +92,9 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Abonos</button>
                             <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Saldo a Favor</button>
                         </div>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span id="badge-adeudos-${inquilino.id}" class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
+                        </div>
                     </div>
                 `;
         }).join('');
@@ -134,6 +137,51 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     mostrarNotificacion("Orden de inquilinos actualizado.", "success");
                 }
             });
+        }
+
+        // Actualizar badges de adeudos
+        for (const inquilino of inquilinosList) {
+            if (!inquilino.fechaOcupacion || !inquilino.inmuebleAsociadoId) continue;
+            const mesesAdeudados = await obtenerMesesAdeudadosHistorico(
+                inquilino.id,
+                inquilino.inmuebleAsociadoId,
+                new Date(inquilino.fechaOcupacion)
+            );
+            const badge = document.getElementById(`badge-adeudos-${inquilino.id}`);
+            if (badge) {
+                // Limpia listeners previos
+                const newBadge = badge.cloneNode(true);
+                badge.parentNode.replaceChild(newBadge, badge);
+
+                if (mesesAdeudados.length > 0) {
+                    newBadge.textContent = `${mesesAdeudados.length} adeudo${mesesAdeudados.length > 1 ? 's' : ''}`;
+                    newBadge.className = "inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer";
+                    newBadge.title = "Haz clic para ver los meses adeudados";
+                    newBadge.addEventListener('click', async () => {
+                        const mesesActualizados = await obtenerMesesAdeudadosHistorico(
+                            inquilino.id,
+                            inquilino.inmuebleAsociadoId,
+                            new Date(inquilino.fechaOcupacion)
+                        );
+                        mostrarModal(`
+                            <div class="p-4">
+                                <h3 class="text-lg font-bold mb-2">Meses adeudados de ${inquilino.nombre}</h3>
+                                <ul class="list-disc list-inside mb-4">
+                                    ${mesesActualizados.length > 0
+                                        ? mesesActualizados.map(m => `<li>${m.mes} ${m.anio}</li>`).join('')
+                                        : '<li class="text-green-700">¡Sin adeudos!</li>'
+                                    }
+                                </ul>
+                                <button onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-md">Cerrar</button>
+                            </div>
+                        `);
+                    });
+                } else {
+                    newBadge.textContent = "Sin adeudos";
+                    newBadge.className = "inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800";
+                    newBadge.title = "El inquilino está al corriente";
+                }
+            }
         }
     } catch (error) {
         console.error("Error al obtener inquilinos:", error);
@@ -190,6 +238,11 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         `;
     }).join('');
 
+    const recibioDepositoChecked = inquilino && inquilino.depositoRecibido ? 'checked' : '';
+    const campoDepositoDisplay = inquilino && inquilino.depositoRecibido ? 'block' : 'none';
+    const montoDepositoValue = inquilino && inquilino.montoDeposito ? inquilino.montoDeposito : '';
+    const fechaDepositoValue = inquilino && inquilino.fechaDeposito ? inquilino.fechaDeposito : '';
+
     const modalContent = `
         <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
             <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
@@ -232,14 +285,14 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">¿Recibió depósito?</label>
-                <input type="checkbox" id="recibioDeposito" name="recibioDeposito" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                <input type="checkbox" id="recibioDeposito" name="recibioDeposito" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" ${recibioDepositoChecked}>
                 <label for="recibioDeposito" class="ml-2 text-sm text-gray-900">Sí</label>
             </div>
-            <div id="campoDeposito" style="display:none;">
+            <div id="campoDeposito" style="display:${campoDepositoDisplay};">
                 <label for="montoDeposito" class="block text-sm font-medium text-gray-700">Monto del depósito</label>
-                <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${montoDepositoValue}">
                 <label for="fechaDeposito" class="block text-sm font-medium text-gray-700 mt-2">Fecha del depósito</label>
-                <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${fechaDepositoValue}">
             </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
@@ -454,6 +507,26 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
 
         // Ordenar por fecha (más reciente primero)
         pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
+
+        // Ejemplo de integración en mostrarHistorialPagosInquilino
+        const mesesAdeudados = await obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fechaOcupacion);
+        let adeudosHtml = '';
+        if (mesesAdeudados.length > 0) {
+            adeudosHtml = `
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
+                    <strong>Meses adeudados:</strong>
+                    <ul class="list-disc list-inside">
+                        ${mesesAdeudados.map(m => `<li>${m.mes} ${m.anio}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        } else {
+            adeudosHtml = `
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+                    <strong>¡Sin adeudos!</strong>
+                </div>
+            `;
+        }
 
         let historialHtml = `
             <div class="px-4 py-3 bg-purple-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
@@ -761,4 +834,36 @@ document.addEventListener('change', function(e) {
         document.getElementById('campoDeposito').style.display = e.target.checked ? 'block' : 'none';
     }
 });
+
+// Nueva funcionalidad: Filtrar inquilinos con adeudos
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'filtroAdeudos') {
+        const mostrarConAdeudos = e.target.checked;
+        const listaInquilinos = document.getElementById('listaInquilinos');
+        
+        if (listaInquilinos) {
+            listaInquilinos.querySelectorAll('.bg-white').forEach(card => {
+                const inquilinoId = card.dataset.id;
+                const badge = document.getElementById(`badge-adeudos-${inquilinoId}`);
+                
+                if (badge) {
+                    const tieneAdeudos = badge.textContent !== "Sin adeudos";
+                    card.style.display = mostrarConAdeudos && !tieneAdeudos ? 'none' : 'block';
+                }
+            });
+        }
+    }
+});
+
+// Agregar checkbox de filtro en la interfaz
+const contenedorFiltros = document.getElementById("filtrosInquilinos");
+if (contenedorFiltros) {
+    contenedorFiltros.innerHTML += `
+        <label class="inline-flex items-center">
+            <input type="checkbox" id="filtroAdeudos" class="form-checkbox h-4 w-4 text-red-600">
+            <span class="ml-2 text-sm text-red-700">Mostrar solo inquilinos con adeudos</span>
+        </label>
+    `;
+}
+
 

@@ -739,10 +739,10 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
 
     document.getElementById('formAbono').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const montoAbonar = parseFloat(document.getElementById('montoAbono').value);
+        const montoAbono = parseFloat(document.getElementById('montoAbono').value);
         const fechaAbono = document.getElementById('fechaAbono').value;
 
-        if (montoAbonar <= 0) {
+        if (montoAbono <= 0) {
             mostrarNotificacion('El monto a abonar debe ser mayor a 0.', 'error');
             return;
         }
@@ -750,7 +750,7 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
         try {
             const abonosActuales = pago.abonos || [];
             abonosActuales.push({
-                montoAbonado: montoAbonar,
+                montoAbonado: montoAbono,
                 fechaAbono: fechaAbono
             });
 
@@ -849,6 +849,17 @@ export async function mostrarDetallePago(pagoId) {
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", pago.inquilinoId));
         const nombreInquilino = inquilinoDoc.exists() ? inquilinoDoc.data().nombre : 'Desconocido';
 
+        // Obtener nombre del propietario
+        let nombrePropietario = 'Desconocido';
+        if (pago.propietarioId) {
+            try {
+                const propietarioDoc = await getDoc(doc(db, "propietarios", pago.propietarioId));
+                if (propietarioDoc.exists()) {
+                    nombrePropietario = propietarioDoc.data().nombre;
+                }
+            } catch (e) {}
+        }
+
         let abonosHtml = '';
         if (pago.abonos && pago.abonos.length > 0) {
             abonosHtml = `
@@ -900,6 +911,8 @@ export async function mostrarDetallePago(pagoId) {
                     <div><strong>Saldo Pendiente:</strong> <span class="text-red-700 font-bold">$${(pago.saldoPendiente || 0).toFixed(2)}</span></div>
                     <div><strong>Estado:</strong> <span class="inline-block px-3 py-1 rounded-full font-semibold ${pago.estado === 'pagado' ? 'bg-green-100 text-green-800' : pago.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' : pago.estado === 'vencido' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${pago.estado}</span></div>
                     <div><strong>Fecha de Registro:</strong> <span>${pago.fechaRegistro}</span></div>
+                    <div><strong>Forma de Pago:</strong> <span>${pago.formaPago || 'N/A'}</span></div>
+                    <div><strong>Propietario:</strong> <span>${nombrePropietario}</span></div>
                 </div>
                 ${abonosHtml}
             </div>
@@ -1367,4 +1380,69 @@ export async function mostrarFormularioPagoServicio() {
         ocultarModal();
         mostrarPagos();
     });
+}
+
+/**
+ * Devuelve los meses (mes/año) que un inquilino debe desde su ocupación hasta el mes actual.
+ * @param {string} inquilinoId
+ * @param {string} inmuebleId
+ * @param {Date} fechaOcupacion
+ * @returns {Promise<Array<{mes: string, anio: number}>>}
+ */
+export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fechaOcupacion) {
+    const mesesNombres = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    let fechaIter = new Date(fechaOcupacion.getFullYear(), fechaOcupacion.getMonth(), 1);
+    if (fechaOcupacion.getDate() > 1) {
+        fechaIter.setMonth(fechaIter.getMonth() + 1);
+    }
+
+    let fin = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    let mesesPendientes = [];
+
+    // Trae todos los pagos del inquilino/inmueble una sola vez
+    const pagosQuery = query(
+        collection(db, "pagos"),
+        where("inquilinoId", "==", inquilinoId),
+        where("inmuebleId", "==", inmuebleId)
+    );
+    const pagosSnap = await getDocs(pagosQuery);
+    const pagosList = [];
+    pagosSnap.forEach(doc => pagosList.push(doc.data()));
+
+    while (fechaIter <= fin) {
+        let mes = mesesNombres[fechaIter.getMonth()];
+        let anio = fechaIter.getFullYear();
+
+        // Busca pagos de ese mes/año (ignorando mayúsculas y espacios)
+       const pagosMes = pagosList.filter(p =>
+    p.mesCorrespondiente &&
+    p.anioCorrespondiente &&
+    p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === mes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
+    Number(p.anioCorrespondiente) === anio
+);
+
+        // Si NO hay ningún pago con estado "pagado", se considera pendiente
+        let pagado = false;
+        pagosMes.forEach(pago => {
+            if (
+                typeof pago.estado === "string" &&
+                pago.estado.trim().toLowerCase() === "pagado"
+            ) {
+                pagado = true;
+            }
+        });
+
+        if (!pagado) {
+            mesesPendientes.push({ mes, anio });
+        }
+
+        fechaIter.setMonth(fechaIter.getMonth() + 1);
+    }
+    return mesesPendientes;
 }
