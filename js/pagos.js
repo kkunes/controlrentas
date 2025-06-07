@@ -2,7 +2,7 @@
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
-
+import { generarReciboPDF } from './recibos.js';
 /**
  * Muestra la lista de pagos.
  */
@@ -100,6 +100,7 @@ export async function mostrarPagos() {
                                 <button data-pago-id="${pago.id}" class="btn-abonar-pago bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Abonar</button>
                                 <button data-pago-id="${pago.id}" class="btn-editar-pago bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Editar</button>
                                 <button data-pago-id="${pago.id}" class="btn-eliminar-pago bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Eliminar</button>
+                                <button data-pago-id="${pago.id}" class="btn-recibo-pdf bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Recibo PDF</button>
                             </div>
                         </td>
                     </tr>
@@ -223,6 +224,13 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => mostr
             });
         });
 
+        document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const pagoId = e.currentTarget.dataset.pagoId;
+                generarReciboPDF(pagoId);
+            });
+        });
+
         // --- Filtros interactivos ---
         function aplicarFiltros() {
             const filtroInmueble = document.getElementById('filtroInmueble').value;
@@ -298,6 +306,7 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => mostr
                                     <button data-pago-id="${pago.id}" class="btn-abonar-pago bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Abonar</button>
                                     <button data-pago-id="${pago.id}" class="btn-editar-pago bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Editar</button>
                                     <button data-pago-id="${pago.id}" class="btn-eliminar-pago bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Eliminar</button>
+                                    <button data-pago-id="${pago.id}" class="btn-recibo-pdf bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200">Recibo PDF</button>
                                 </div>
                             </td>
                         </tr>
