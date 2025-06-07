@@ -55,6 +55,8 @@ window.mostrarHistorialMantenimientoInmueble = mostrarHistorialMantenimientoInmu
 window.mostrarModal = mostrarModal;
 window.ocultarModal = ocultarModal;
 window.mostrarNotificacion = mostrarNotificacion;
+window.mostrarLoader = () => document.getElementById('loader').classList.remove('hidden');
+window.ocultarLoader = () => document.getElementById('loader').classList.add('hidden');
 
 // ***** Centralización de la función eliminarDocumento *****
 // Esta función global manejará la confirmación y delegará la eliminación a la función específica de cada módulo.

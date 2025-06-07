@@ -93,6 +93,11 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Saldo a Favor</button>
                         </div>
                         <div class="flex items-center gap-2 mt-2">
+                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700" title="Arrastrar para reordenar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                                </svg>
+                            </span>
                             <span id="badge-adeudos-${inquilino.id}" class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
                         </div>
                     </div>
@@ -129,6 +134,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         if (lista) {
             Sortable.create(lista, {
                 animation: 150,
+                handle: '.handle-move', // <-- Solo se puede arrastrar desde el handle
                 onEnd: async function (evt) {
                     const ids = Array.from(lista.children).map(card => card.dataset.id);
                     for (let i = 0; i < ids.length; i++) {

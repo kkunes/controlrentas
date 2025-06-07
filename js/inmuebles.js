@@ -80,6 +80,13 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                             <button onclick="eliminarDocumento('inmuebles', '${inmueble.id}', mostrarInmuebles)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
                             <button onclick="mostrarHistorialInquilinosInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Historial Inquilinos</button>
                         </div>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700" title="Arrastrar para reordenar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                                </svg>
+                            </span>
+                        </div>
                     </div>
                 `;
         }).join('');
@@ -123,17 +130,20 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
         });
 
         // Sortable
-        const lista = document.getElementById('listaInmuebles');
-        Sortable.create(lista, {
-            animation: 150,
-            onEnd: async function (evt) {
-                const ids = Array.from(lista.children).map(card => card.dataset.id);
-                for (let i = 0; i < ids.length; i++) {
-                    await updateDoc(doc(db, "inmuebles", ids[i]), { orden: i });
+        const listaInmuebles = document.getElementById('listaInmuebles');
+        if (listaInmuebles) {
+            Sortable.create(listaInmuebles, {
+                animation: 150,
+                handle: '.handle-move', // Solo se puede arrastrar desde el handle
+                onEnd: async function (evt) {
+                    const ids = Array.from(listaInmuebles.children).map(card => card.dataset.id);
+                    for (let i = 0; i < ids.length; i++) {
+                        await updateDoc(doc(db, "inmuebles", ids[i]), { orden: i });
+                    }
+                    mostrarNotificacion("Orden actualizado.", "success");
                 }
-                mostrarNotificacion("Orden actualizado.", "success");
-            }
-        });
+            });
+        }
 
     } catch (error) {
         console.error("Error al obtener inmuebles:", error);
