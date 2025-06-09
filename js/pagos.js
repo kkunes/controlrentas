@@ -414,6 +414,24 @@ export async function mostrarFormularioNuevoPago(id = null) {
         `<option value="${prop.id}">${prop.nombre} (${prop.telefono})</option>`
     ).join('');
 
+    // Genera botones para eliminar servicios pagados si existen
+    let serviciosEliminablesHtml = '';
+    if (pago.serviciosPagados) {
+        for (const key in pago.serviciosPagados) {
+            if (key.endsWith('Monto')) continue;
+            if (pago.serviciosPagados[key] === true) {
+                serviciosEliminablesHtml += `
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="text-sm font-medium">${key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                        <button type="button" class="btn-eliminar-servicio bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs" data-servicio="${key}">
+                            Eliminar
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }
+
     const formHtml = `
     <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
         <h3 class="text-2xl font-bold text-center">${titulo}</h3>
@@ -492,11 +510,8 @@ export async function mostrarFormularioNuevoPago(id = null) {
         <!-- Servicios adicionales -->
         <div id="serviciosAdicionales" style="display:none;">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Servicios Pagados</label>
-            <div>
-                <label><input type="checkbox" id="servicioInternet" /> Internet</label>
-                <input type="number" id="montoInternet" placeholder="Monto Internet" class="ml-2 border rounded px-2 py-1 w-24" style="display:none;" min="0" step="0.01" />
-            </div>
-            <!-- Puedes agregar más servicios aquí -->
+            <!-- Aquí se insertan los botones de eliminar -->
+            ${serviciosEliminablesHtml}
         </div>
 
         <div class="flex justify-end space-x-3 mt-8">
@@ -660,6 +675,30 @@ export async function mostrarFormularioNuevoPago(id = null) {
         document.getElementById('servicioInternet').addEventListener('change', function() {
             document.getElementById('montoInternet').style.display = this.checked ? 'inline-block' : 'none';
         });
+    }
+
+    document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const servicio = this.dataset.servicio;
+            if (confirm(`¿Eliminar el servicio "${servicio}" de este pago?`)) {
+                // Elimina el servicio y su monto del objeto
+                delete pago.serviciosPagados[servicio];
+                delete pago.serviciosPagados[`${servicio}Monto`];
+                // Actualiza en Firestore
+                await updateDoc(doc(db, "pagos", pago.id), { serviciosPagados: pago.serviciosPagados });
+                mostrarNotificacion('Servicio eliminado correctamente.', 'success');
+                ocultarModal();
+                mostrarPagos();
+            }
+        });
+    });
+
+    // Después de mostrar el modal
+    if (
+        (pago.serviciosPagados && Object.keys(pago.serviciosPagados).length > 0) ||
+        (inmuebles.find(inm => inm.id === selectedInmueble)?.tieneInternet)
+    ) {
+        document.getElementById('serviciosAdicionales').style.display = 'block';
     }
 }
 
@@ -1306,7 +1345,7 @@ export async function mostrarFormularioPagoServicio() {
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label for="mesServicio" class="block text-sm font-semibold text-gray-700 mb-1">Mes Correspondiente</label>
-                    <select id="mesServicio" name="mesServicio" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white">
+                                       <select id="mesServicio" name="mesServicio" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white">
                         ${mesesOptions}
                     </select>
                 </div>
@@ -1454,4 +1493,26 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         fechaIter.setMonth(fechaIter.getMonth() + 1);
     }
     return mesesPendientes;
+}
+
+/**
+ * Elimina un servicio específico de un pago.
+ * @param {string} pagoId - El ID del pago.
+ * @param {string} nombreServicio - El nombre del servicio a eliminar.
+ */
+export async function eliminarServicioDePago(pagoId, nombreServicio) {
+    const pagoDoc = await getDoc(doc(db, "pagos", pagoId));
+    if (!pagoDoc.exists()) {
+        alert("Pago no encontrado");
+        return;
+    }
+    const pago = pagoDoc.data();
+    if (!pago.serviciosPagados) return;
+
+    // Elimina el servicio y su monto
+    delete pago.serviciosPagados[nombreServicio];
+    delete pago.serviciosPagados[`${nombreServicio}Monto`];
+
+    await updateDoc(doc(db, "pagos", pagoId), { serviciosPagados: pago.serviciosPagados });
+    alert("Servicio eliminado correctamente");
 }

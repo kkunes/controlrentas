@@ -352,6 +352,29 @@ window.mostrarHistorialInquilinosInmueble = mostrarHistorialInquilinosInmueble;
  * @param {function} callbackDashboard - Función para actualizar el dashboard (opcional).
  */
 export async function eliminarDocumento(coleccion, id, callback, callbackDashboard) {
+    if (coleccion === "inmuebles") {
+        // Obtén el inmueble antes de eliminar
+        const docSnap = await getDoc(doc(db, "inmuebles", id));
+        if (!docSnap.exists()) {
+            mostrarNotificacion("Inmueble no encontrado.", 'error');
+            return;
+        }
+        const inmueble = docSnap.data();
+        if (inmueble.estado === "Ocupado") {
+            mostrarNotificacion("No puedes eliminar un inmueble ocupado. Desocúpalo primero.", 'error');
+            return;
+        }
+        // Confirmación antes de eliminar
+        if (!confirm("¿Estás seguro de que deseas eliminar este inmueble? Esta acción no se puede deshacer.")) {
+            return;
+        }
+    } else {
+        // Confirmación genérica para otras colecciones
+        if (!confirm("¿Estás seguro de que deseas eliminar este elemento?")) {
+            return;
+        }
+    }
+
     try {
         await deleteDoc(doc(db, coleccion, id));
         if (typeof callback === 'function') callback();

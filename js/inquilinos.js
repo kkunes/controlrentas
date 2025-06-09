@@ -91,6 +91,9 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
                             <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Abonos</button>
                             <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Saldo a Favor</button>
+                            <button onclick="mostrarMobiliarioAsignadoInquilino('${inquilino.id}', '${inquilino.nombre}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">
+                                Mobiliario Asignado
+                            </button>
                         </div>
                         <div class="flex items-center gap-2 mt-2">
                             <span class="handle-move cursor-move text-gray-400 hover:text-gray-700" title="Arrastrar para reordenar">
@@ -871,5 +874,70 @@ if (contenedorFiltros) {
         </label>
     `;
 }
+
+// Nueva funcionalidad: Mostrar mobiliario asignado a inquilinos
+window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilinoNombre) {
+    // Trae todos los muebles
+    const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+    let mobiliarioAsignado = [];
+    mobiliarioSnap.forEach(doc => {
+        const mob = doc.data();
+        if (Array.isArray(mob.asignaciones)) {
+            const asignacion = mob.asignaciones.find(a => a.inquilinoId === inquilinoId);
+            if (asignacion && asignacion.cantidad > 0) {
+                mobiliarioAsignado.push({
+                    nombre: mob.nombre,
+                    descripcion: mob.descripcion || "",
+                    costoRenta: mob.costoRenta || 0,
+                    cantidad: asignacion.cantidad
+                });
+            }
+        }
+    });
+
+    let total = 0;
+    let tabla = '';
+    if (mobiliarioAsignado.length > 0) {
+        tabla = `
+            <table class="min-w-full divide-y divide-gray-200 mb-4">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2">Mobiliario</th>
+                        <th class="px-4 py-2">Cantidad</th>
+                        <th class="px-4 py-2">Costo Unitario</th>
+                        <th class="px-4 py-2">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${mobiliarioAsignado.map(mob => {
+                        const subtotal = mob.cantidad * mob.costoRenta;
+                        total += subtotal;
+                        return `
+                            <tr>
+                                <td class="px-4 py-2">${mob.nombre}</td>
+                                <td class="px-4 py-2">${mob.cantidad}</td>
+                                <td class="px-4 py-2">$${mob.costoRenta.toFixed(2)}</td>
+                                <td class="px-4 py-2">$${subtotal.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+            <div class="text-right font-bold text-lg text-teal-700 mb-2">Total mobiliario: $${total.toFixed(2)}</div>
+        `;
+    } else {
+        tabla = `<div class="text-gray-500 text-center py-6">No tiene mobiliario asignado.</div>`;
+    }
+
+    mostrarModal(`
+        <div class="px-4 py-3 bg-teal-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <h3 class="text-2xl font-bold text-center">Mobiliario asignado a ${inquilinoNombre}</h3>
+        </div>
+        ${tabla}
+        <div class="flex justify-end mt-6">
+            <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+        </div>
+    `);
+};
 
 

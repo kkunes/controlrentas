@@ -144,7 +144,7 @@ input:focus, select:focus, textarea:focus {
 button.rounded-md,
 button.text-sm {
   font-size: 1rem !important;
-  padding: 0.75rem 1.25rem !important;
+  padding: 0.25rem 0.5rem !important;
   border-radius: 0.5rem !important; /* Más cuadrado, menos pill */
   min-width: 44px;
   min-height: 44px;
@@ -157,6 +157,21 @@ button.text-sm {
   }
   .rounded-lg, .shadow-md {
     border-radius: 1rem;
+  }
+  .btn-detalle-pago,
+  .btn-abonar-pago,
+  .btn-editar-pago,
+  .btn-eliminar-pago,
+  .btn-recibo-pdf {
+    font-size: 0.72rem !important;
+    padding: 0.25rem 0.5rem !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+  }
+  .flex.sm\:flex-row {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 0.2rem;
   }
 }
 
@@ -239,6 +254,17 @@ button.text-sm {
             </button>
           </li>
           <li class="mb-2">
+            <button onclick="mostrarInventarioMobiliario()" class="sidebar-btn flex items-center w-full px-4 py-2 rounded-lg transition-colors duration-200 font-semibold text-base
+              text-white bg-gradient-to-r from-teal-600 to-lime-700 shadow-md hover:from-teal-700 hover:to-lime-800 hover:shadow-lg
+              focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <!-- Mobiliario: Icono de muebles minimalista -->
+              <svg class="w-5 h-5 mr-3 opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M3 12l2-2m0 0l2 2m-2-2v8m6-8l2-2m0 0l2 2m-2-2v8m6-8l2-2m0 0l2 2m-2-2v8"/>
+              </svg>
+              Mobiliario
+            </button>
+          </li>
+          <li class="mb-2">
             <button onclick="mostrarMantenimientos()" class="sidebar-btn flex items-center w-full px-4 py-2 rounded-lg transition-colors duration-200 font-semibold text-base
               text-white bg-gradient-to-r from-yellow-600 to-orange-700 shadow-md hover:from-yellow-700 hover:to-orange-800 hover:shadow-lg
               focus:outline-none focus:ring-2 focus:ring-yellow-400">
@@ -308,6 +334,7 @@ button.text-sm {
 
     <script type="module" src="./js/main.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="./js/mobiliario.js"></script>
     <script>
   const btnMenu = document.getElementById('btnMenu');
   const sidebar = document.getElementById('sidebar');
