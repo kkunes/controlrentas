@@ -722,53 +722,42 @@ export async function mostrarSaldoFavorInquilino(inquilinoId) {
             }
         });
 
-        let html = `
-            <div class="px-4 py-3 bg-cyan-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-                <h3 class="text-2xl font-bold text-center">Saldo a Favor Actual</h3>
+        let tabla = '';
+        if (abonos.length > 0) {
+            tabla = `
+            <div class="w-full max-w-md mx-auto">
+                <div class="divide-y divide-cyan-100 rounded-lg shadow bg-white">
+                    ${abonos.map(a => `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-2">
+                            <div class="flex-1">
+                                <div class="font-semibold text-cyan-800">$${parseFloat(a.monto).toFixed(2)}</div>
+                                ${a.descripcion ? `<div class="text-xs text-gray-400">${a.descripcion}</div>` : ''}
+                            </div>
+                            <div class="flex flex-row sm:flex-col gap-2 mt-2 sm:mt-0 text-sm text-right">
+                                <span class="inline-block text-gray-600">${a.fecha}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="flex justify-between items-center px-3 py-3 bg-cyan-50 rounded-b-lg">
+                        <span class="font-bold text-cyan-800">Total disponible</span>
+                        <span class="font-bold text-lg text-cyan-700">$${saldoTotal.toFixed(2)}</span>
+                    </div>
+                </div>
             </div>
-            <div class="mb-4">
-                <p class="text-lg font-semibold text-green-700">Total disponible: $${saldoTotal.toFixed(2)}</p>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 rounded-lg shadow">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-        `;
-
-        if (abonos.length === 0) {
-            html += `
-                <tr>
-                    <td colspan="3" class="text-center py-8 text-gray-500">No hay saldo a favor disponible.</td>
-                </tr>
             `;
         } else {
-            abonos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            abonos.forEach(a => {
-                html += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 text-sm text-gray-800">$${parseFloat(a.monto).toFixed(2)}</td>
-                        <td class="px-4 py-2 text-sm text-gray-700">${a.fecha}</td>
-                        <td class="px-4 py-2 text-sm text-gray-700">${a.descripcion}</td>
-                    </tr>
-                `;
-            });
+            tabla = `<div class="text-gray-500 text-center py-6">No hay saldo a favor disponible.</div>`;
         }
 
-        html += `
-                    </tbody>
-                </table>
+        mostrarModal(`
+            <div class="px-4 py-3 bg-cyan-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
+                <h3 class="text-lg font-bold text-center">Saldo a Favor Actual</h3>
             </div>
-            <div class="flex justify-end mt-6">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+            <div class="py-2">${tabla}</div>
+            <div class="flex justify-end mt-2">
+                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded shadow-sm transition-colors duration-200 w-full sm:w-auto">Cerrar</button>
             </div>
-        `;
-        mostrarModal(html);
+        `);
     } catch (error) {
         mostrarNotificacion("Error al cargar saldo a favor.", "error");
     }
@@ -877,7 +866,6 @@ if (contenedorFiltros) {
 
 // Nueva funcionalidad: Mostrar mobiliario asignado a inquilinos
 window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilinoNombre) {
-    // Trae todos los muebles
     const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
     let mobiliarioAsignado = [];
     mobiliarioSnap.forEach(doc => {
@@ -899,43 +887,43 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
     let tabla = '';
     if (mobiliarioAsignado.length > 0) {
         tabla = `
-            <table class="min-w-full divide-y divide-gray-200 mb-4">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2">Mobiliario</th>
-                        <th class="px-4 py-2">Cantidad</th>
-                        <th class="px-4 py-2">Costo Unitario</th>
-                        <th class="px-4 py-2">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${mobiliarioAsignado.map(mob => {
-                        const subtotal = mob.cantidad * mob.costoRenta;
-                        total += subtotal;
-                        return `
-                            <tr>
-                                <td class="px-4 py-2">${mob.nombre}</td>
-                                <td class="px-4 py-2">${mob.cantidad}</td>
-                                <td class="px-4 py-2">$${mob.costoRenta.toFixed(2)}</td>
-                                <td class="px-4 py-2">$${subtotal.toFixed(2)}</td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-            <div class="text-right font-bold text-lg text-teal-700 mb-2">Total mobiliario: $${total.toFixed(2)}</div>
+        <div class="w-full max-w-md mx-auto">
+            <div class="divide-y divide-teal-100 rounded-lg shadow bg-white">
+                ${mobiliarioAsignado.map(mob => {
+                    const subtotal = mob.cantidad * mob.costoRenta;
+                    total += subtotal;
+                    return `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-2">
+                            <div class="flex-1">
+                                <div class="font-semibold text-teal-800">${mob.nombre}</div>
+                                ${mob.descripcion ? `<div class="text-xs text-gray-400">${mob.descripcion}</div>` : ''}
+                            </div>
+                            <div class="flex flex-row sm:flex-col gap-2 mt-2 sm:mt-0 text-sm text-right">
+                                <span class="inline-block bg-teal-50 text-teal-700 px-2 py-0.5 rounded">x${mob.cantidad}</span>
+                                <span class="inline-block text-gray-600">$${mob.costoRenta.toFixed(2)} c/u</span>
+                                <span class="inline-block font-bold text-teal-700">$${subtotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                <div class="flex justify-between items-center px-3 py-3 bg-teal-50 rounded-b-lg">
+                    <span class="font-bold text-teal-800">Total mobiliario</span>
+                    <span class="font-bold text-lg text-teal-700">$${total.toFixed(2)}</span>
+                </div>
+            </div>
+        </div>
         `;
     } else {
         tabla = `<div class="text-gray-500 text-center py-6">No tiene mobiliario asignado.</div>`;
     }
 
     mostrarModal(`
-        <div class="px-4 py-3 bg-teal-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-2xl font-bold text-center">Mobiliario asignado a ${inquilinoNombre}</h3>
+        <div class="px-4 py-3 bg-teal-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
+            <h3 class="text-lg font-bold text-center">Mobiliario asignado a ${inquilinoNombre}</h3>
         </div>
-        ${tabla}
-        <div class="flex justify-end mt-6">
-            <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+        <div class="py-2">${tabla}</div>
+        <div class="flex justify-end mt-2">
+            <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded shadow-sm transition-colors duration-200 w-full sm:w-auto">Cerrar</button>
         </div>
     `);
 };

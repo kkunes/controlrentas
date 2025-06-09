@@ -3,7 +3,7 @@ import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, 
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { mostrarHistorialPagosInmueble } from './pagos.js'; // Importar para mostrar historial de pagos
-import { mostrarHistorialMantenimientoInmueble } from './mantenimientos.js'; // Importar para mostrar historial de mantenimientos
+//import { mostrarHistorialMantenimientoInmueble } from './mantenimientos.js'; // Importar para mostrar historial de mantenimientos
 import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm"; // Si usas módulos
 
 /**
@@ -425,4 +425,89 @@ window.mostrarFormularioNuevoPropietario = function() {
         }
     });
 };
+
+export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmuebleNombre) {
+    try {
+        // Trae los mantenimientos de este inmueble
+        const mantenimientosSnap = await getDocs(query(
+            collection(db, "mantenimientos"),
+            where("inmuebleId", "==", inmuebleId)
+        ));
+
+        let historial = [];
+        mantenimientosSnap.forEach(doc => {
+            const data = doc.data();
+            historial.push({
+                descripcion: data.descripcion || '',
+                fecha: data.fecha || '',
+                costo: data.costo ? parseFloat(data.costo) : 0,
+                responsable: data.responsable || '',
+                estado: data.estado || ''
+            });
+        });
+
+        // Ordenar por fecha descendente (más reciente primero)
+        historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+        let tablaHtml = '';
+        if (historial.length === 0) {
+            tablaHtml = `<p class="text-gray-500 text-center py-4">Este inmueble no tiene historial de mantenimientos.</p>`;
+        } else {
+            // Cards para móvil, tabla para escritorio
+            tablaHtml = `
+                <div class="space-y-3 sm:hidden">
+                    ${historial.map(m => `
+                        <div class="rounded-lg shadow border border-yellow-100 bg-white p-3 flex flex-col gap-1">
+                            <div class="font-semibold text-yellow-800">${m.descripcion}</div>
+                            <div class="text-xs text-gray-500">Fecha: <span class="font-medium">${m.fecha}</span></div>
+                            <div class="text-xs text-gray-500">Costo: <span class="font-semibold text-yellow-700">$${m.costo.toFixed(2)}</span></div>
+                            <div class="text-xs text-gray-500">Responsable: <span class="font-medium">${m.responsable}</span></div>
+                            <div class="text-xs text-gray-500">Estado: <span class="font-medium">${m.estado}</span></div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mt-4 hidden sm:block">
+                    <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                        <thead class="bg-yellow-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-semibold text-yellow-800">Descripción</th>
+                                <th class="px-3 py-2 text-left font-semibold text-yellow-800">Fecha</th>
+                                <th class="px-3 py-2 text-right font-semibold text-yellow-800">Costo</th>
+                                <th class="px-3 py-2 text-left font-semibold text-yellow-800">Responsable</th>
+                                <th class="px-3 py-2 text-center font-semibold text-yellow-800">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${historial.map(m => `
+                                <tr class="hover:bg-yellow-50">
+                                    <td class="px-3 py-2">${m.descripcion}</td>
+                                    <td class="px-3 py-2">${m.fecha}</td>
+                                    <td class="px-3 py-2 text-right">$${m.costo.toFixed(2)}</td>
+                                    <td class="px-3 py-2">${m.responsable}</td>
+                                    <td class="px-3 py-2 text-center">${m.estado}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        mostrarModal(`
+            <div class="px-4 py-3 bg-yellow-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
+                <h3 class="text-lg font-bold text-center">Mantenimientos<br><span class="text-base font-normal">${inmuebleNombre}</span></h3>
+            </div>
+            ${tablaHtml}
+            <div class="flex justify-end mt-4">
+                <button onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200 w-full sm:w-auto">Cerrar</button>
+            </div>
+        `);
+
+    } catch (error) {
+        console.error("Error al obtener historial de mantenimientos:", error);
+        mostrarNotificacion("Error al cargar el historial de mantenimientos.", 'error');
+    }
+}
+
+window.mostrarHistorialMantenimientoInmueble = mostrarHistorialMantenimientoInmueble;
 

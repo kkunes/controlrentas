@@ -26,6 +26,9 @@ export async function mostrarDashboard() {
     let pagosParciales = 0;
     let pagosVencidos = 0;
     let ingresosEsteMes = 0;
+    let ingresosRenta = 0;
+    let ingresosDepositos = 0;
+    let ingresosAbonosFavor = 0;
     let gastosEsteMes = 0;
 
     const today = new Date();
@@ -82,7 +85,7 @@ window.inquilinosMap = inquilinosMap; // Hazlo global para usarlo en el modal
                 pago.mesCorrespondiente === nombreMesActual &&
                 String(pago.anioCorrespondiente) === String(currentYear)
             ) {
-                ingresosEsteMes += (pago.montoPagado || pago.montoTotal || 0);
+                ingresosRenta += (pago.montoPagado || pago.montoTotal || 0);
             }
         });
 
@@ -214,6 +217,54 @@ proximoPago.setHours(0, 0, 0, 0);
                 pagosProximosAVencer++;
             }
         });
+
+        // Sumar depósitos recibidos durante el mes en curso
+inquilinosSnap.forEach(doc => {
+    const inquilino = doc.data();
+    if (
+        inquilino.depositoRecibido &&
+        inquilino.montoDeposito &&
+        inquilino.fechaDeposito
+    ) {
+        // Normaliza fecha a string YYYY-MM-DD si es Timestamp
+        let fechaDeposito = inquilino.fechaDeposito;
+        if (fechaDeposito && typeof fechaDeposito === 'object' && fechaDeposito.toDate) {
+            const d = fechaDeposito.toDate();
+            fechaDeposito = d.toISOString().split('T')[0];
+        }
+        // Verifica si el depósito es del mes en curso
+        if (
+            fechaDeposito &&
+            fechaDeposito >= startDateOfMonth &&
+            fechaDeposito <= endDateOfMonth
+        ) {
+            ingresosDepositos += parseFloat(inquilino.montoDeposito) || 0;
+        }
+    }
+});
+
+        // Sumar abonos a saldo a favor realizados durante el mes en curso
+        const abonosSnap = await getDocs(collection(db, "abonosSaldoFavor"));
+        abonosSnap.forEach(doc => {
+            const abono = doc.data();
+            if (abono.fechaAbono) {
+                let fechaAbono = abono.fechaAbono;
+                if (fechaAbono && typeof fechaAbono === 'object' && fechaAbono.toDate) {
+                    const d = fechaAbono.toDate();
+                    fechaAbono = d.toISOString().split('T')[0];
+                }
+                if (
+                    fechaAbono &&
+                    fechaAbono >= startDateOfMonth &&
+                    fechaAbono <= endDateOfMonth
+                ) {
+                    ingresosAbonosFavor += parseFloat(abono.monto) || 0;
+                }
+            }
+        });
+
+        // Suma total igual que en reportes
+        ingresosEsteMes = ingresosRenta + ingresosDepositos + ingresosAbonosFavor;
 
         // Actualiza las listas globales de pagos
         window.listaPagosPendientes = listaPagosPendientes;
