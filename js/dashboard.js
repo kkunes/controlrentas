@@ -61,11 +61,26 @@ export async function mostrarDashboard() {
         // Conteo de Inquilinos
         totalInquilinos = inquilinosSnap.size; // Esto sigue siendo el total de inquilinos, no de inmuebles ocupados.
 
+        // Crear un mapa de inmuebles para búsqueda rápida
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            const data = doc.data();
+            console.log('Inmueble:', doc.id, data);
+            inmueblesMap.set(doc.id, data.nombre);
+        });
+
+        // Crear el mapa de inquilinos con toda la información necesaria
         const inquilinosMap = new Map();
-inquilinosSnap.forEach(doc => {
-    inquilinosMap.set(doc.id, doc.data().nombre);
-});
-window.inquilinosMap = inquilinosMap; // Hazlo global para usarlo en el modal
+        inquilinosSnap.forEach(doc => {
+            const data = doc.data();
+            console.log('Inquilino:', doc.id, data);
+            inquilinosMap.set(doc.id, {
+                nombre: data.nombre,
+                inmuebleId: data.inmuebleAsociadoId,
+                nombreInmueble: data.inmuebleAsociadoId ? inmueblesMap.get(data.inmuebleAsociadoId) || 'No especificado' : 'No especificado'
+            });
+        });
+        window.inquilinosMap = inquilinosMap; // Hazlo global para usarlo en el modal
 
         // Conteo y Suma de Pagos
         const pagosSnap = await getDocs(collection(db, "pagos"));
@@ -152,26 +167,35 @@ window.inquilinosMap = inquilinosMap; // Hazlo global para usarlo en el modal
             const fechaVencimiento = new Date(`${pago.anioCorrespondiente}-${String(mesIndex + 1).padStart(2, '0')}-${String(pago.diaPago || 1).padStart(2, '0')}`);
             const diffDias = Math.ceil((fechaVencimiento - today) / (1000 * 60 * 60 * 24));
 
+            // Obtener información del inquilino y su inmueble
+            const inquilinoData = inquilinosMap.get(pago.inquilinoId);
+            const pagoConInfo = {
+                ...pago,
+                id: doc.id,
+                nombreInquilino: inquilinoData ? inquilinoData.nombre : 'Inquilino Desconocido',
+                nombreInmueble: inquilinoData ? inquilinoData.nombreInmueble : 'No especificado'
+            };
+
             if (pago.estado === 'pendiente') {
-                listaPagosPendientes.push({ id: doc.id, ...pago });
+                listaPagosPendientes.push(pagoConInfo);
                 if (diffDias >= 0 && diffDias <= diasAviso) {
                     pagosProximosAVencer++;
-                    listaPagosProximos.push({ id: doc.id, ...pago });
+                    listaPagosProximos.push(pagoConInfo);
                 }
                 if (diffDias < 0) {
-                    listaPagosVencidos.push({ id: doc.id, ...pago });
+                    listaPagosVencidos.push(pagoConInfo);
                 }
             } else if (pago.estado === 'parcial') {
-                listaPagosParciales.push({ id: doc.id, ...pago });
+                listaPagosParciales.push(pagoConInfo);
                 if (diffDias >= 0 && diffDias <= diasAviso) {
                     pagosProximosAVencer++;
-                    listaPagosProximos.push({ id: doc.id, ...pago });
+                    listaPagosProximos.push(pagoConInfo);
                 }
                 if (diffDias < 0) {
-                    listaPagosVencidos.push({ id: doc.id, ...pago });
+                    listaPagosVencidos.push(pagoConInfo);
                 }
             } else if (pago.estado === 'vencido') {
-                listaPagosVencidos.push({ id: doc.id, ...pago });
+                listaPagosVencidos.push(pagoConInfo);
             }
         });
 
@@ -303,101 +327,137 @@ proximoPago.setHours(0, 0, 0, 0);
         window.listaPagosProximos = listaPagosProximos;
         window.listaPagosVencidos = listaPagosVencidos;
 
+        // Actualizar contadores
+        pagosPendientes = listaPagosPendientes.length;
+        pagosParciales = listaPagosParciales.length;
+        pagosVencidos = listaPagosVencidos.length;
+
         contenedor.innerHTML = `
-            <h2 class="text-2xl font-semibold text-gray-700 mb-6">Dashboard General</h2>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="py-6">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8">Dashboard General</h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <a href="#inmuebles" class="block bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-indigo-500 text-white p-3 rounded-full">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 16h6m-1-4h.01M9 8h.01"></path></svg>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm p-6">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-md">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-lg font-semibold text-indigo-700">Total Inmuebles</p>
+                                <p class="text-4xl font-bold text-indigo-800 mt-2">${totalInmuebles}</p>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Total Inmuebles</p>
-                            <p class="text-2xl font-bold text-gray-900">${totalInmuebles}</p>
-                        </div>
-                    </div>
-                </a>
 
-                <a href="#inmuebles?estado=ocupado" class="block bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-orange-500 text-white p-3 rounded-full">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-6">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-md">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-lg font-semibold text-orange-700">Inmuebles Ocupados</p>
+                                <p class="text-4xl font-bold text-orange-800 mt-2">${inmueblesOcupados}</p>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Inmuebles Ocupados</p>
-                            <p class="text-2xl font-bold text-gray-900">${inmueblesOcupados}</p>
-                        </div>
-                    </div>
-                </a>
 
-                <a href="#inmuebles?estado=disponible" class="block bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-teal-500 text-white p-3 rounded-full">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v-4m-2 4h4m6-12v4m-2-4h4m6 12v4m-2-4h4M3 12l.01-.01M12 3l.01-.01M12 21l.01-.01M21 12l.01-.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg>
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-sm p-6">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mb-4 shadow-md">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-lg font-semibold text-teal-700">Inmuebles Disponibles</p>
+                                <p class="text-4xl font-bold text-teal-800 mt-2">${inmueblesDisponibles}</p>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Inmuebles Disponibles</p>
-                            <p class="text-2xl font-bold text-gray-900">${inmueblesDisponibles}</p>
-                        </div>
-                    </div>
-                </a>
 
-                <a href="#inquilinos" class="block bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-green-500 text-white p-3 rounded-full">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2h2m0 0l4-4m-4 4V8m4 4h.01M9 20h.01"></path></svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Total Inquilinos</p>
-                            <p class="text-2xl font-bold text-gray-900">${totalInquilinos}</p>
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-6">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4 shadow-md">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-lg font-semibold text-green-700">Total Inquilinos</p>
+                                <p class="text-4xl font-bold text-green-800 mt-2">${totalInquilinos}</p>
+                            </div>
                         </div>
                     </div>
-                </a>
 
-                <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-yellow-500 text-white p-3 rounded-full">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V9m0 3v2m0 3.938A5.998 5.998 0 0021 12c0-3.313-2.917-6-6.5-6S3 8.687 3 12c0 1.76.711 3.364 1.865 4.606m6.135-1.606l4-4"></path></svg>
+                    <!-- Tarjetas de ingresos y gastos -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-lg font-semibold text-emerald-700">Ingresos del Mes</p>
+                                    <p class="text-4xl font-bold text-emerald-800 mt-2">$${ingresosEsteMes.toFixed(2)}</p>
+                                </div>
+                                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Ingresos ${nombreMesActual} ${currentYear}</p>
-                            <p class="text-2xl font-bold text-green-600">$${ingresosEsteMes.toFixed(2)}</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-red-500 text-white p-3 rounded-full">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14S6 9 9 5c3 4 0 9 3 9s3-4 0-9c3 4 0 9 3 9"></path></svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Gastos ${nombreMesActual} ${currentYear}</p>
-                            <p class="text-2xl font-bold text-red-600">$${gastosEsteMes.toFixed(2)}</p>
+                        <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-lg font-semibold text-rose-700">Gastos del Mes</p>
+                                    <p class="text-4xl font-bold text-rose-800 mt-2">$${gastosEsteMes.toFixed(2)}</p>
+                                </div>
+                                <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center shadow-md">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Estado de Pagos</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="p-4 bg-blue-50 rounded-md text-center cursor-pointer hover:shadow" onclick="mostrarListaPagosDashboard('pendientes')">
-                        <p class="text-sm font-medium text-blue-700">Pagos Pendientes</p>
-                        <p class="text-3xl font-bold text-blue-800">${pagosPendientes}</p>
-                    </div>
-                    <div class="p-4 bg-yellow-50 rounded-md text-center cursor-pointer hover:shadow" onclick="mostrarListaPagosDashboard('parciales')">
-                        <p class="text-sm font-medium text-yellow-700">Pagos Parciales</p>
-                        <p class="text-3xl font-bold text-yellow-800">${pagosParciales}</p>
-                    </div>
-                    <div class="p-4 bg-orange-50 rounded-md text-center cursor-pointer hover:shadow" onclick="mostrarListaPagosDashboard('proximos')">
-                        <p class="text-sm font-medium text-orange-700">Próximos a Vencer</p>
-                        <p class="text-3xl font-bold text-orange-800">${pagosProximosAVencer}</p>
-                    </div>
-                    <div class="p-4 bg-red-50 rounded-md text-center cursor-pointer hover:shadow" onclick="mostrarListaPagosDashboard('vencidos')">
-                        <p class="text-sm font-medium text-red-700">Pagos Vencidos</p>
-                        <p class="text-3xl font-bold text-red-800">${listaPagosVencidos.length}</p>
+                    <!-- Estado de Pagos -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Estado de Pagos</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('parciales')">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-md">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-lg font-semibold text-emerald-700">Pagos Parciales</p>
+                                    <p class="text-4xl font-bold text-emerald-800 mt-2">${pagosParciales}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('proximos')">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-md">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-lg font-semibold text-orange-700">Próximos a Vencer</p>
+                                    <p class="text-4xl font-bold text-orange-800 mt-2">${pagosProximosAVencer}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('vencidos')">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center mb-4 shadow-md">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-lg font-semibold text-rose-700">Pagos Vencidos</p>
+                                    <p class="text-4xl font-bold text-rose-800 mt-2">${listaPagosVencidos.length}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -419,74 +479,184 @@ window.mostrarInmueblesFiltrados = mostrarInmueblesFiltrados;
 window.mostrarListaPagosDashboard = function(tipo) {
     let lista = [];
     let titulo = '';
+    let colorFondo = '';
+    let colorTexto = '';
+    let colorBorde = '';
+    let colorIcono = '';
+    let colorGradiente = '';
+    
     if (tipo === 'pendientes') {
         lista = window.listaPagosPendientes;
         titulo = 'Pagos Pendientes';
+        colorFondo = 'bg-blue-600';
+        colorTexto = 'text-blue-700';
+        colorBorde = 'border-blue-200';
+        colorIcono = 'text-blue-500';
+        colorGradiente = 'from-blue-50 to-blue-100';
     } else if (tipo === 'parciales') {
         lista = window.listaPagosParciales;
         titulo = 'Pagos Parciales';
+        colorFondo = 'bg-emerald-600';
+        colorTexto = 'text-emerald-700';
+        colorBorde = 'border-emerald-200';
+        colorIcono = 'text-emerald-500';
+        colorGradiente = 'from-emerald-50 to-emerald-100';
     } else if (tipo === 'proximos') {
         lista = window.listaPagosProximos;
         titulo = 'Pagos Próximos a Vencer';
+        colorFondo = 'bg-orange-600';
+        colorTexto = 'text-orange-700';
+        colorBorde = 'border-orange-200';
+        colorIcono = 'text-orange-500';
+        colorGradiente = 'from-orange-50 to-orange-100';
     } else if (tipo === 'vencidos') {
         lista = window.listaPagosVencidos;
         titulo = 'Pagos Vencidos';
+        colorFondo = 'bg-red-600';
+        colorTexto = 'text-red-700';
+        colorBorde = 'border-red-200';
+        colorIcono = 'text-red-500';
+        colorGradiente = 'from-red-50 to-red-100';
     }
 
     let html = `
-        <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-2xl font-bold text-center">${titulo}</h3>
+        <div class="px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-2xl font-bold">${titulo}</h3>
+                <button onclick="ocultarModal()" class="text-white hover:text-gray-200 transition-colors duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 rounded-lg shadow">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Inquilino</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mes/Año</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto Total</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pagado</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pendiente</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-    `;
-    if (lista.length === 0) {
-        html += `<tr><td colspan="6" class="text-center py-8 text-gray-500">No hay pagos en esta categoría.</td></tr>`;
-    } else {
-        lista.forEach(pago => {
-    const nombreInquilino = (pago.nombreInquilino || (window.inquilinosMap && window.inquilinosMap.get(pago.inquilinoId))) || pago.inquilinoId;
-    html += `
-        <tr>
-            <td class="px-4 py-2 text-sm text-gray-800">${nombreInquilino}</td>
-            <td class="px-4 py-2 text-sm text-gray-700">
-                ${
-        pago.estado === 'Próximo (Ocupación)'
-            ? (() => {
-                const d = new Date(pago.proximoPago);
-                const dia = String(d.getDate()+2).padStart(2, '0');
-                const mes = String(d.getMonth() + 1).padStart(2, '0');
-                const anio = d.getFullYear();
-                return `${dia}/${mes}/${anio}`;
-            })()
-            : (pago.mesCorrespondiente || '') + ' / ' + (pago.anioCorrespondiente || '')
-    }
-            </td>
-            <td class="px-4 py-2 text-sm text-gray-800">$${(pago.montoTotal || 0).toFixed(2)}</td>
-            <td class="px-4 py-2 text-sm text-gray-800">$${(pago.montoPagado || 0).toFixed(2)}</td>
-            <td class="px-4 py-2 text-sm text-gray-800">$${(pago.saldoPendiente || 0).toFixed(2)}</td>
-            <td class="px-4 py-2 text-sm">${pago.estado}</td>
-        </tr>
-    `;
-});
-    }
-    html += `
-                </tbody>
-            </table>
+
+        <div class="overflow-x-auto -mx-6 px-6">
+            ${lista.length === 0 ? `
+                <div class="flex flex-col items-center justify-center py-12 bg-gradient-to-br ${colorGradiente} rounded-lg">
+                    <svg class="w-16 h-16 ${colorIcono} mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p class="text-xl text-gray-600 font-medium">No hay pagos en esta categoría</p>
+                </div>
+            ` : `
+                <div class="grid grid-cols-1 gap-6">
+                    ${lista.map(pago => {
+                        const inquilinoData = window.inquilinosMap && window.inquilinosMap.get(pago.inquilinoId);
+                        const nombreInquilino = (pago.nombreInquilino || (inquilinoData && inquilinoData.nombre)) || pago.inquilinoId;
+                        const nombreInmueble = pago.nombreInmueble || (inquilinoData && inquilinoData.nombreInmueble) || 'No especificado';
+                        const fechaPago = pago.estado === 'Próximo (Ocupación)'
+                            ? (() => {
+                                const d = new Date(pago.proximoPago);
+                                const dia = String(d.getDate()+2).padStart(2, '0');
+                                const mes = String(d.getMonth() + 1).padStart(2, '0');
+                                const anio = d.getFullYear();
+                                return `${dia}/${mes}/${anio}`;
+                            })()
+                            : (pago.mesCorrespondiente || '') + ' / ' + (pago.anioCorrespondiente || '');
+
+                        return `
+                            <div class="bg-white rounded-lg shadow-sm border ${colorBorde} hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+                                <div class="p-6">
+                                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                                        <!-- Información del Inquilino -->
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-3 mb-4">
+                                                <div class="w-12 h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
+                                                    <svg class="w-6 h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-lg font-semibold text-gray-900">${nombreInquilino}</h4>
+                                                    <p class="text-sm text-gray-500">Inquilino</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Información del Inmueble -->
+                                            <div class="flex items-center gap-3 mb-4">
+                                                <div class="w-12 h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
+                                                    <svg class="w-6 h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-lg font-semibold text-gray-900">${nombreInmueble}</h4>
+                                                    <p class="text-sm text-gray-500">Inmueble</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Detalles del Pago -->
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
+                                                    <p class="text-sm font-medium ${colorTexto}">Fecha</p>
+                                                    <p class="text-sm font-semibold text-gray-900 mt-1">${fechaPago}</p>
+                                                </div>
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
+                                                    <p class="text-sm font-medium ${colorTexto}">Monto Total</p>
+                                                    <p class="text-sm font-semibold text-gray-900 mt-1">$${(pago.montoTotal || 0).toFixed(2)}</p>
+                                                </div>
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
+                                                    <p class="text-sm font-medium ${colorTexto}">Pagado</p>
+                                                    <p class="text-sm font-semibold text-gray-900 mt-1">$${(pago.montoPagado || 0).toFixed(2)}</p>
+                                                </div>
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
+                                                    <p class="text-sm font-medium ${colorTexto}">Pendiente</p>
+                                                    <p class="text-sm font-semibold text-gray-900 mt-1">$${(pago.saldoPendiente || 0).toFixed(2)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Estado -->
+                                        <div class="flex items-center justify-end">
+                                            <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full ${colorTexto} bg-opacity-10 bg-gradient-to-r ${colorGradiente}">
+                                                ${pago.estado}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `}
         </div>
-        <div class="flex justify-end mt-6">
-            <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+
+        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+            <button type="button" onclick="ocultarModal()" class="bg-gradient-to-r ${colorGradiente} hover:opacity-90 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-all duration-200 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Cerrar
+            </button>
         </div>
     `;
     mostrarModal(html);
+};
+
+// Asegurarse de que la función mostrarModal esté definida
+window.mostrarModal = function(contenido) {
+    // Crear el contenedor del modal si no existe
+    let modalContainer = document.getElementById('modal-container');
+    if (!modalContainer) {
+        modalContainer = document.createElement('div');
+        modalContainer.id = 'modal-container';
+        modalContainer.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+        document.body.appendChild(modalContainer);
+    }
+
+    // Crear el contenido del modal
+    modalContainer.innerHTML = `
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-lg bg-white">
+            ${contenido}
+        </div>
+    `;
+};
+
+// Asegurarse de que la función ocultarModal esté definida
+window.ocultarModal = function() {
+    const modalContainer = document.getElementById('modal-container');
+    if (modalContainer) {
+        modalContainer.remove();
+    }
 };
