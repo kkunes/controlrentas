@@ -3,7 +3,7 @@ import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, 
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { mostrarHistorialPagosInmueble } from './pagos.js'; // Importar para mostrar historial de pagos
-//import { mostrarHistorialMantenimientoInmueble } from './mantenimientos.js'; // Importar para mostrar historial de mantenimientos
+
 import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm"; // Si usas módulos
 
 /**
