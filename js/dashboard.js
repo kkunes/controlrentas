@@ -69,8 +69,12 @@ window.inquilinosMap = inquilinosMap; // Hazlo global para usarlo en el modal
 
         // Conteo y Suma de Pagos
         const pagosSnap = await getDocs(collection(db, "pagos"));
+        console.log('Fecha inicio mes:', startDateOfMonth);
+        console.log('Fecha fin mes:', endDateOfMonth);
+        
         pagosSnap.forEach(doc => {
             const pago = doc.data();
+            console.log('Procesando pago:', pago);
 
             // Normaliza fechaRealizado a string YYYY-MM-DD si es Timestamp
             let fechaRealizadoStr = pago.fechaRealizado;
@@ -78,14 +82,29 @@ window.inquilinosMap = inquilinosMap; // Hazlo global para usarlo en el modal
                 const d = fechaRealizadoStr.toDate();
                 fechaRealizadoStr = d.toISOString().split('T')[0];
             }
+            console.log('Fecha realizada:', fechaRealizadoStr);
 
-            // Suma solo pagos pagados o parciales realizados este mes
+            // Si no hay fechaRealizado, usar fechaRegistro
+            if (!fechaRealizadoStr && pago.fechaRegistro) {
+                if (typeof pago.fechaRegistro === 'object' && pago.fechaRegistro.toDate) {
+                    const d = pago.fechaRegistro.toDate();
+                    fechaRealizadoStr = d.toISOString().split('T')[0];
+                } else {
+                    fechaRealizadoStr = pago.fechaRegistro;
+                }
+                console.log('Usando fechaRegistro:', fechaRealizadoStr);
+            }
+
+            // Suma todos los pagos realizados este mes
             if (
                 (pago.estado === 'pagado' || pago.estado === 'parcial') &&
-                pago.mesCorrespondiente === nombreMesActual &&
-                String(pago.anioCorrespondiente) === String(currentYear)
+                fechaRealizadoStr &&
+                fechaRealizadoStr >= startDateOfMonth &&
+                fechaRealizadoStr <= endDateOfMonth
             ) {
-                ingresosRenta += (pago.montoPagado || pago.montoTotal || 0);
+                const monto = pago.montoPagado || pago.montoTotal || 0;
+                ingresosRenta += parseFloat(monto);
+                console.log('Sumando a ingresosRenta:', monto, 'Total actual:', ingresosRenta);
             }
         });
 
@@ -219,29 +238,31 @@ proximoPago.setHours(0, 0, 0, 0);
         });
 
         // Sumar depósitos recibidos durante el mes en curso
-inquilinosSnap.forEach(doc => {
-    const inquilino = doc.data();
-    if (
-        inquilino.depositoRecibido &&
-        inquilino.montoDeposito &&
-        inquilino.fechaDeposito
-    ) {
-        // Normaliza fecha a string YYYY-MM-DD si es Timestamp
-        let fechaDeposito = inquilino.fechaDeposito;
-        if (fechaDeposito && typeof fechaDeposito === 'object' && fechaDeposito.toDate) {
-            const d = fechaDeposito.toDate();
-            fechaDeposito = d.toISOString().split('T')[0];
-        }
-        // Verifica si el depósito es del mes en curso
-        if (
-            fechaDeposito &&
-            fechaDeposito >= startDateOfMonth &&
-            fechaDeposito <= endDateOfMonth
-        ) {
-            ingresosDepositos += parseFloat(inquilino.montoDeposito) || 0;
-        }
-    }
-});
+        const depositosSnap = await getDocs(collection(db, "pagos"));
+        depositosSnap.forEach(doc => {
+            const deposito = doc.data();
+            if (deposito.tipo === "deposito" && deposito.fechaRegistro) {
+                // Normaliza fecha a string YYYY-MM-DD si es Timestamp
+                let fechaDeposito = deposito.fechaRegistro;
+                if (fechaDeposito && typeof fechaDeposito === 'object' && fechaDeposito.toDate) {
+                    const d = fechaDeposito.toDate();
+                    fechaDeposito = d.toISOString().split('T')[0];
+                }
+                console.log('Procesando depósito:', deposito);
+                console.log('Fecha depósito:', fechaDeposito);
+
+                // Verifica si el depósito es del mes en curso
+                if (
+                    fechaDeposito &&
+                    fechaDeposito >= startDateOfMonth &&
+                    fechaDeposito <= endDateOfMonth
+                ) {
+                    const monto = parseFloat(deposito.montoTotal) || 0;
+                    ingresosDepositos += monto;
+                    console.log('Sumando a ingresosDepositos:', monto, 'Total actual:', ingresosDepositos);
+                }
+            }
+        });
 
         // Sumar abonos a saldo a favor realizados durante el mes en curso
         const abonosSnap = await getDocs(collection(db, "abonosSaldoFavor"));
@@ -253,18 +274,28 @@ inquilinosSnap.forEach(doc => {
                     const d = fechaAbono.toDate();
                     fechaAbono = d.toISOString().split('T')[0];
                 }
+                console.log('Procesando abono:', abono);
+                console.log('Fecha abono:', fechaAbono);
+
                 if (
                     fechaAbono &&
                     fechaAbono >= startDateOfMonth &&
                     fechaAbono <= endDateOfMonth
                 ) {
-                    ingresosAbonosFavor += parseFloat(abono.monto) || 0;
+                    const monto = parseFloat(abono.monto) || 0;
+                    ingresosAbonosFavor += monto;
+                    console.log('Sumando a ingresosAbonosFavor:', monto, 'Total actual:', ingresosAbonosFavor);
                 }
             }
         });
 
-        // Suma total igual que en reportes
+        // Suma total de todos los ingresos del mes
         ingresosEsteMes = ingresosRenta + ingresosDepositos + ingresosAbonosFavor;
+        console.log('Totales finales:');
+        console.log('Ingresos Renta:', ingresosRenta);
+        console.log('Ingresos Depósitos:', ingresosDepositos);
+        console.log('Ingresos Abonos:', ingresosAbonosFavor);
+        console.log('Total Ingresos:', ingresosEsteMes);
 
         // Actualiza las listas globales de pagos
         window.listaPagosPendientes = listaPagosPendientes;

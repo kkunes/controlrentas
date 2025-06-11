@@ -76,49 +76,107 @@ export async function mostrarAbonos() {
         let tarjetasAbonosHtml = "";
         const abonosUnicos = Array.from(abonosPorInquilino.values());
         if (abonosUnicos.length === 0) {
-            tarjetasAbonosHtml = `<p class="text-gray-500 text-center py-8">No hay saldos a favor registrados.</p>`;
+            tarjetasAbonosHtml = `
+                <div class="col-span-full">
+                    <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-500 text-lg">No hay saldos a favor registrados.</p>
+                        <button onclick="mostrarFormularioNuevoAbono()" class="mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200">
+                            Registrar Nuevo Abono
+                        </button>
+                    </div>
+                </div>`;
         } else {
             tarjetasAbonosHtml = abonosUnicos.map(abono => {
                 const estadoClass = abono.saldoRestante > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
                 const estadoText = abono.saldoRestante > 0 ? 'Activo' : 'Consumido';
+                
                 // Historial de aplicaciones
                 let historialAplicacionesHtml = '';
                 if (abono.aplicaciones && abono.aplicaciones.length > 0) {
-                    // Ordenar por fecha descendente
                     abono.aplicaciones.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
                     historialAplicacionesHtml = `
-                        <div class="mt-3">
-                            <h4 class="font-semibold text-sm mb-1 text-gray-700">Historial de aplicaciones:</h4>
-                            <ul class="text-xs text-gray-600 space-y-1">
+                        <div class="mt-4 border-t border-gray-200 pt-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-semibold text-sm text-gray-700">Historial de aplicaciones</h4>
+                                <span class="text-xs text-gray-500">${abono.aplicaciones.length} aplicación(es)</span>
+                            </div>
+                            <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
                                 ${abono.aplicaciones.map(app => {
                                     const pagoInfo = pagosMap.get(app.pagoId);
                                     const pagoLabel = pagoInfo ? `${pagoInfo.mes || ''} ${pagoInfo.anio || ''}` : 'Pago desconocido';
                                     return `
-                                        <li>
-                                            Pago: <span class="font-semibold">${pagoLabel}</span> |
-                                            Monto: <span class="font-semibold text-green-700">$${parseFloat(app.montoAplicado).toFixed(2)}</span> |
-                                            Fecha: <span>${app.fecha}</span>
-                                        </li>
+                                        <div class="bg-gray-50 rounded-lg p-2 text-xs">
+                                            <div class="flex justify-between items-center">
+                                                <span class="font-medium text-gray-700">${pagoLabel}</span>
+                                                <span class="text-green-600 font-semibold">$${parseFloat(app.montoAplicado).toFixed(2)}</span>
+                                            </div>
+                                            <div class="text-gray-500 text-xs mt-1">${app.fecha}</div>
+                                        </div>
                                     `;
                                 }).join('')}
-                            </ul>
+                            </div>
                         </div>
                     `;
                 }
+
                 return `
-                    <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-200">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Abono de ${abono.nombreInquilino}</h3>
-                        <p class="text-gray-600 mb-2">Monto Original: <span class="font-semibold">$${parseFloat(abono.montoOriginal).toFixed(2)}</span></p>
-                        <p class="text-gray-600 mb-2">Saldo Restante: <span class="font-semibold text-xl ${abono.saldoRestante > 0 ? 'text-green-700' : 'text-gray-500'}">$${parseFloat(abono.saldoRestante).toFixed(2)}</span></p>
-                        <p class="text-gray-600 mb-2">Fecha del Último Abono: ${abono.fechaAbono}</p>
-                        <p class="text-gray-600 mb-2">Descripción: ${abono.descripcion || 'Sin descripción'}</p>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${estadoClass} mb-4">
-                            ${estadoText}
-                        </span>
-                        ${historialAplicacionesHtml}
-                        <div class="flex flex-wrap gap-2 mt-4">
-                            <button onclick="mostrarFormularioNuevoAbono('${abono.id}')" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 text-sm">Actualizar</button>
-                            ${abono.saldoRestante > 0 ? `<button onclick="aplicarSaldoFavorManual('${abono.id}', '${abono.inquilinoId}')" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 text-sm">Aplicar Manualmente</button>` : ''}
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+                        <div class="p-4 sm:p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-1">${abono.nombreInquilino}</h3>
+                                    <div class="flex items-center space-x-2 mb-3">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
+                                            ${estadoText}
+                                        </span>
+                                        <span class="text-sm text-gray-500">${abono.fechaAbono}</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-600">Monto Original</div>
+                                    <div class="text-lg font-semibold text-gray-800">$${parseFloat(abono.montoOriginal).toFixed(2)}</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 bg-gray-50 rounded-lg p-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Saldo Restante</span>
+                                    <span class="text-xl font-bold ${abono.saldoRestante > 0 ? 'text-green-600' : 'text-gray-500'}">
+                                        $${parseFloat(abono.saldoRestante).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            ${abono.descripcion ? `
+                                <div class="mt-4 text-sm text-gray-600">
+                                    <span class="font-medium">Descripción:</span>
+                                    <p class="mt-1">${abono.descripcion}</p>
+                                </div>
+                            ` : ''}
+
+                            ${historialAplicacionesHtml}
+
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <button onclick="mostrarFormularioNuevoAbono('${abono.id}')" 
+                                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 flex items-center justify-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Actualizar
+                                </button>
+                                ${abono.saldoRestante > 0 ? `
+                                    <button onclick="aplicarSaldoFavorManual('${abono.id}', '${abono.inquilinoId}')" 
+                                            class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 flex items-center justify-center">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Aplicar Saldo
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -126,15 +184,20 @@ export async function mostrarAbonos() {
         }
 
         contenedor.innerHTML = `
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Gestión de Saldos a Favor</h2>
-            <div class="mb-6 flex justify-between items-center">
-                <button onclick="mostrarFormularioNuevoAbono()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-colors duration-200 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Registrar Nuevo Abono
-                </button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                ${tarjetasAbonosHtml}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 sm:mb-0">Gestión de Saldos a Favor</h2>
+                    <button onclick="mostrarFormularioNuevoAbono()" 
+                            class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Registrar Nuevo Abono
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${tarjetasAbonosHtml}
+                </div>
             </div>
         `;
     } catch (error) {
@@ -263,31 +326,55 @@ export async function mostrarFormularioNuevoAbono(id = null) {
 
     const formHtml = `
         <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-2xl font-bold text-center">${titulo}</h3>
+            <h3 class="text-xl sm:text-2xl font-bold text-center">${titulo}</h3>
         </div>
-        <form id="formAbonoSaldoFavor" class="space-y-4">
+        <form id="formAbonoSaldoFavor" class="space-y-4 max-w-lg mx-auto">
             <div>
                 <label for="inquilinoId" class="block text-gray-700 text-sm font-bold mb-2">Inquilino:</label>
-                <select id="inquilinoId" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <select id="inquilinoId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
                     <option value="">-- Seleccionar Inquilino --</option>
                     ${inquilinosOptions}
                 </select>
             </div>
             <div>
                 <label for="montoOriginal" class="block text-gray-700 text-sm font-bold mb-2">Monto del Abono:</label>
-                <input type="number" id="montoOriginal" value="${abono.montoOriginal}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" step="0.01" required min="0.01">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                    <input type="number" 
+                           id="montoOriginal" 
+                           value="${abono.montoOriginal}" 
+                           class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                           step="0.01" 
+                           required 
+                           min="0.01"
+                           placeholder="0.00">
+                </div>
             </div>
             <div>
                 <label for="descripcionAbono" class="block text-gray-700 text-sm font-bold mb-2">Descripción (Opcional):</label>
-                <textarea id="descripcionAbono" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" rows="2">${abono.descripcion || ''}</textarea>
+                <textarea id="descripcionAbono" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                          rows="2"
+                          placeholder="Ingrese una descripción del abono...">${abono.descripcion || ''}</textarea>
             </div>
             <div>
                 <label for="fechaAbono" class="block text-gray-700 text-sm font-bold mb-2">Fecha del Abono:</label>
-                <input type="date" id="fechaAbono" value="${abono.fechaAbono}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <input type="date" 
+                       id="fechaAbono" 
+                       value="${abono.fechaAbono}" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                       required>
             </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-md shadow-md transition-colors duration-200">Guardar</button>
+            <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                <button type="button" 
+                        onclick="ocultarModal()" 
+                        class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Guardar
+                </button>
             </div>
         </form>
     `;

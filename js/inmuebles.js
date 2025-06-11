@@ -44,52 +44,117 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                 // Define color de borde según estado
                 let borderColor = 'border-green-500'; // Disponible
                 let estadoBg = 'bg-green-100 text-green-800';
+                let estadoIcon = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'; // Checkmark icon
+                
                 if (inmueble.estado === 'Ocupado') {
                     borderColor = 'border-orange-500';
                     estadoBg = 'bg-orange-100 text-orange-800';
+                    estadoIcon = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'; // Clock icon
                 } else if (inmueble.estado === 'Mantenimiento') {
                     borderColor = 'border-gray-500';
                     estadoBg = 'bg-gray-100 text-gray-800';
+                    estadoIcon = 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z'; // Settings icon
                 }
 
                 return `
-                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 ${borderColor}" data-id="${inmueble.id}">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">${inmueble.nombre}</h3>
-                        <p class="text-gray-600 mb-1"><strong>Dirección:</strong> ${inmueble.direccion}</p>
-                        <p class="text-gray-600 mb-1"><strong>Tipo:</strong> ${inmueble.tipo}</p>
-                        <p class="text-gray-600 mb-1"><strong>Renta Mensual:</strong> $${(inmueble.rentaMensual ?? 0).toFixed(2)}</p>
-                        <p class="text-gray-600 mb-4"><strong>Estado:</strong>
-                            <span class="${estadoBg} px-2 py-0.5 rounded-full text-sm font-medium">
-                                ${inmueble.estado}
-                            </span>
-                        </p>
-                        <div class="flex flex-wrap gap-2 justify-end items-center">
-                            ${inmueble.urlContrato ? `
-                                <a href="${inmueble.urlContrato}" target="_blank" rel="noopener noreferrer"
-                                    class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-md text-sm font-semibold shadow transition-colors duration-200 flex items-center gap-1"
-                                    title="Ver contrato en Drive">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${borderColor} overflow-hidden transform hover:-translate-y-1" data-id="${inmueble.id}">
+                        <div class="p-4 sm:p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inmueble.nombre}</h3>
+                                </div>
+                                <span class="${estadoBg} px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${estadoIcon}" />
                                     </svg>
-                                    Ver Contrato
-                                </a>
-                            ` : ''}
-                            <button onclick="mostrarHistorialPagosInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Pagos</button>
-                            <button onclick="mostrarHistorialMantenimientoInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Mantenimientos</button>
-                            <button onclick="editarInmueble('${inmueble.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Editar</button>
-                            <button onclick="eliminarDocumento('inmuebles', '${inmueble.id}', mostrarInmuebles)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
-                            <button onclick="mostrarHistorialInquilinosInmueble('${inmueble.id}', '${inmueble.nombre}')" class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Historial Inquilinos</button>
+                                    ${inmueble.estado}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span class="text-sm font-medium">${inmueble.direccion}</span>
+                                </div>
+                                
+                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    <span class="text-sm font-medium">${inmueble.tipo}</span>
+                                </div>
+                                
+                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span class="text-sm font-medium">$${(inmueble.rentaMensual ?? 0).toFixed(2)}</span>
+                                    <span class="text-xs text-gray-500 ml-1">/mes</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                ${inmueble.urlContrato ? `
+                                    <a href="${inmueble.urlContrato}" target="_blank" rel="noopener noreferrer"
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md"
+                                        title="Ver contrato en Drive">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Contrato
+                                    </a>
+                                ` : ''}
+                                <button onclick="mostrarHistorialPagosInmueble('${inmueble.id}', '${inmueble.nombre}')" 
+                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Pagos
+                                </button>
+                                <button onclick="mostrarHistorialMantenimientoInmueble('${inmueble.id}', '${inmueble.nombre}')" 
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    </svg>
+                                    Mantenimiento
+                                </button>
+                                <button onclick="editarInmueble('${inmueble.id}')" 
+                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Editar
+                                </button>
+                                <button onclick="eliminarDocumento('inmuebles', '${inmueble.id}', mostrarInmuebles)" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Eliminar
+                                </button>
+                                <button onclick="mostrarHistorialInquilinosInmueble('${inmueble.id}', '${inmueble.nombre}')" 
+                                    class="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    Inquilinos
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700" title="Arrastrar para reordenar">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-end">
+                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700 flex items-center gap-1.5 transition-colors duration-200" title="Arrastrar para reordenar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                                 </svg>
+                                <span class="text-xs">Reordenar</span>
                             </span>
                         </div>
                     </div>
                 `;
-        }).join('');
+            }).join('');
         }
 
         // Filtros
@@ -171,50 +236,62 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
     }
 
     const tituloModal = id ? "Editar Inmueble" : "Registrar Nuevo Inmueble";
-
     const modalContent = `
         <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
+            <h3 class="text-xl sm:text-2xl font-bold text-center">${tituloModal}</h3>
         </div>
-        <form id="formInmueble" class="space-y-4">
-            <div>
-                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre/Identificador</label>
-                <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inmueble?.nombre ?? ''}" required>
+        <form id="formInmueble" class="space-y-4 max-h-[80vh] overflow-y-auto px-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre/Identificador</label>
+                    <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.nombre ?? ''}" placeholder="Ej: Casa 123" required>
+                </div>
+                <div>
+                    <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo de Inmueble</label>
+                    <select id="tipo" name="tipo" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <option value="">Selecciona un tipo</option>
+                        <option value="Casa" ${inmueble?.tipo === 'Casa' ? 'selected' : ''}>Casa</option>
+                        <option value="Apartamento" ${inmueble?.tipo === 'Apartamento' ? 'selected' : ''}>Apartamento</option>
+                        <option value="Local Comercial" ${inmueble?.tipo === 'Local Comercial' ? 'selected' : ''}>Local Comercial</option>
+                        <option value="Oficina" ${inmueble?.tipo === 'Oficina' ? 'selected' : ''}>Oficina</option>
+                    </select>
+                </div>
             </div>
+
             <div>
                 <label for="direccion" class="block text-sm font-medium text-gray-700">Dirección</label>
-                <input type="text" id="direccion" name="direccion" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inmueble?.direccion ?? ''}" required>
+                <input type="text" id="direccion" name="direccion" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.direccion ?? ''}" placeholder="Ej: Calle Principal #123, Colonia" required>
             </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="rentaMensual" class="block text-sm font-medium text-gray-700">Renta Mensual</label>
+                    <div class="mt-1 relative rounded-lg shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" id="rentaMensual" name="rentaMensual" step="0.01" class="pl-7 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.rentaMensual ?? ''}" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
+                    <select id="estado" name="estado" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <option value="Disponible" ${inmueble?.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                        <option value="Ocupado" ${inmueble?.estado === 'Ocupado' ? 'selected' : ''}>Ocupado</option>
+                        <option value="Mantenimiento" ${inmueble?.estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
+                    </select>
+                </div>
+            </div>
+
             <div>
-                <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo de Inmueble</label>
-                <select id="tipo" name="tipo" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    <option value="">Selecciona un tipo</option>
-                    <option value="Casa" ${inmueble?.tipo === 'Casa' ? 'selected' : ''}>Casa</option>
-                    <option value="Apartamento" ${inmueble?.tipo === 'Apartamento' ? 'selected' : ''}>Apartamento</option>
-                    <option value="Local Comercial" ${inmueble?.tipo === 'Local Comercial' ? 'selected' : ''}>Local Comercial</option>
-                    <option value="Oficina" ${inmueble?.tipo === 'Oficina' ? 'selected' : ''}>Oficina</option>
-                </select>
+                <label for="urlContrato" class="block text-sm font-medium text-gray-700">URL del Contrato</label>
+                <input type="url" id="urlContrato" name="urlContrato" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.urlContrato ?? ''}" placeholder="Ej: https://drive.google.com/file/...">
+                <p class="mt-1 text-xs text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
             </div>
-            <div>
-                <label for="rentaMensual" class="block text-sm font-medium text-gray-700">Renta Mensual</label>
-                <input type="number" id="rentaMensual" name="rentaMensual" step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inmueble?.rentaMensual ?? ''}" required>
-            </div>
-            <div>
-                <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
-                <select id="estado" name="estado" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    <option value="Disponible" ${inmueble?.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
-                    <option value="Ocupado" ${inmueble?.estado === 'Ocupado' ? 'selected' : ''}>Ocupado</option>
-                    <option value="Mantenimiento" ${inmueble?.estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
-                </select>
-            </div>
-            <div>
-                <label for="urlContrato" class="block text-sm font-medium text-gray-700">URL de Contrato (Drive)</label>
-                <input type="url" id="urlContrato" name="urlContrato" placeholder="https://drive.google.com/..." class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inmueble?.urlContrato ?? ''}">
-                <span class="text-xs text-gray-400">Pega aquí el enlace de Google Drive del contrato (opcional).</span>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-                <button type="submit" class="btn-primary">${id ? "Actualizar" : "Registrar"} Inmueble</button>
+
+            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-sm transition-colors duration-200">${id ? "Actualizar" : "Registrar"} Inmueble</button>
             </div>
         </form>
     `;

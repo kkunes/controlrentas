@@ -60,48 +60,142 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 const deposito = pagosDepositoMap.get(inquilino.id);
 
                 return `
-                    <div class="bg-white rounded-lg shadow-md p-6 ${inquilino.activo ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}" data-id="${inquilino.id}">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-xl font-semibold text-gray-800">${inquilino.nombre}</h3>
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                ${inquilino.activo ? 'Activo' : 'Inactivo'}
-                            </span>
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${inquilino.activo ? 'border-green-500' : 'border-red-500'} overflow-hidden transform hover:-translate-y-1" data-id="${inquilino.id}">
+                        <div class="p-4 sm:p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${inquilino.activo ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}" />
+                                    </svg>
+                                    ${inquilino.activo ? 'Activo' : 'Inactivo'}
+                                </span>
+                            </div>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                    <span class="text-sm font-medium">${inquilino.telefono}</span>
+                                </div>
+
+                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    <span class="text-sm font-medium">${inquilino.nombreInmueble}</span>
+                                </div>
+
+                                ${inquilino.depositoRecibido && inquilino.montoDeposito && inquilino.fechaDeposito ? `
+                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="text-sm font-medium">Depósito: $${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
+                                    </div>
+                                ` : ''}
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                    ${inquilino.fechaOcupacion ? `
+                                        <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span class="text-sm font-medium">Inicio Pagos: ${inquilino.fechaOcupacion}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${inquilino.fechaLlegada ? `
+                                        <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span class="text-sm font-medium">Firma: ${inquilino.fechaLlegada}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+
+                                ${inquilino.urlIdentificacion ? `
+                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Identificación</a>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" 
+                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Pagos
+                                </button>
+                                ${inquilino.activo ? 
+                                    `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" 
+                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                        </svg>
+                                        Desocupar
+                                    </button>` :
+                                    `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Reactivar
+                                    </button>`
+                                }
+                                <button onclick="editarInquilino('${inquilino.id}')" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Editar
+                                </button>
+                                <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Eliminar
+                                </button>
+                                <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" 
+                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    Abonos
+                                </button>
+                                <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" 
+                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Saldo
+                                </button>
+                                <button onclick="mostrarMobiliarioAsignadoInquilino('${inquilino.id}', '${inquilino.nombre}')" 
+                                    class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    Mobiliario
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-gray-600 mb-2"><strong>Teléfono:</strong> ${inquilino.telefono}</p>
-                        <p class="text-gray-600 mb-2"><strong>Inmueble:</strong> ${inquilino.nombreInmueble}</p>
-                        ${inquilino.depositoRecibido && inquilino.montoDeposito && inquilino.fechaDeposito ? `
-                            <p class="text-gray-600 mb-2"><strong>Depósito:</strong> $${parseFloat(inquilino.montoDeposito).toFixed(2)}</p>
-                            <p class="text-gray-600 mb-2"><strong>Fecha Depósito:</strong> ${inquilino.fechaDeposito}</p>
-                        ` : ''}
-                        ${inquilino.fechaOcupacion ? `<p class="text-gray-600 mb-2"><strong>Ocupación (Inicio Pagos):</strong> ${inquilino.fechaOcupacion}</p>` : ''}
-                        ${inquilino.fechaLlegada ? `<p class="text-gray-600 mb-2"><strong>Llegada (Firma):</strong> ${inquilino.fechaLlegada}</p>` : ''}
-                        ${inquilino.fechaInicioContrato ? `<p class="text-gray-600 mb-2"><strong>Inicio Contrato:</strong> ${inquilino.fechaInicioContrato}</p>` : ''}
-                        ${inquilino.fechaFinContrato ? `<p class="text-gray-600 mb-2"><strong>Fin Contrato:</strong> ${inquilino.fechaFinContrato}</p>` : ''}
-                        ${inquilino.fechaDesocupacion ? `<p class="text-gray-600 mb-2"><strong>Desocupación:</strong> ${inquilino.fechaDesocupacion}</p>` : ''}
-                        ${inquilino.fechaRegistro ? `<p class="text-gray-600 mb-2"><strong>Registro:</strong> ${inquilino.fechaRegistro}</p>` : ''}
-                        ${inquilino.urlIdentificacion ? `<p class="text-gray-600 mb-4"><strong>Identificación:</strong> <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:underline">Ver Documento</a></p>` : ''}
-                        
-                        <div class="flex flex-wrap gap-2 justify-end">
-                            <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Historial de Pagos</button>
-                            ${inquilino.activo ? 
-                                `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Desocupar</button>` :
-                                `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Reactivar</button>`
-                            }
-                            <button onclick="editarInquilino('${inquilino.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Editar</button>
-                            <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Eliminar</button>
-                            <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Abonos</button>
-                            <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">Ver Saldo a Favor</button>
-                            <button onclick="mostrarMobiliarioAsignadoInquilino('${inquilino.id}', '${inquilino.nombre}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200">
-                                Mobiliario Asignado
-                            </button>
-                        </div>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700" title="Arrastrar para reordenar">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+                            <span id="badge-adeudos-${inquilino.id}" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
+                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700 flex items-center gap-1.5 transition-colors duration-200" title="Arrastrar para reordenar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                                 </svg>
+                                <span class="text-xs">Reordenar</span>
                             </span>
-                            <span id="badge-adeudos-${inquilino.id}" class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
                         </div>
                     </div>
                 `;
@@ -112,15 +206,22 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         contenedor.innerHTML = `
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-semibold text-gray-700">Inquilinos</h2>
+                    <h2 class="text-2xl font-bold text-gray-800">Inquilinos</h2>
+                    <p class="text-sm text-gray-600 mt-1">Administra los inquilinos y sus contratos</p>
                 </div>
-                <div class="flex gap-2">
-                    <select id="filtroActivo" class="border-gray-300 rounded px-2 py-1">
-                        <option value="Todos" ${filtroActivo === "Todos" ? "selected" : ""}>Todos</option>
-                        <option value="Activos" ${filtroActivo === "Activos" ? "selected" : ""}>Activos</option>
-                        <option value="Inactivos" ${filtroActivo === "Inactivos" ? "selected" : ""}>Inactivos</option>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <select id="filtroActivo" class="border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                        <option value="Todos" ${filtroActivo === "Todos" ? "selected" : ""}>Todos los inquilinos</option>
+                        <option value="Activos" ${filtroActivo === "Activos" ? "selected" : ""}>Inquilinos activos</option>
+                        <option value="Inactivos" ${filtroActivo === "Inactivos" ? "selected" : ""}>Inquilinos inactivos</option>
                     </select>
-                    <button onclick="mostrarFormularioNuevoInquilino()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Inquilino</button>
+                    <button onclick="mostrarFormularioNuevoInquilino()" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2 hover:shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Registrar Nuevo Inquilino
+                    </button>
                 </div>
             </div>
             <div id="listaInquilinos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -254,58 +355,73 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
 
     const modalContent = `
         <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
+            <h3 class="text-xl sm:text-2xl font-bold text-center">${tituloModal}</h3>
         </div>
-        <form id="formInquilino" class="space-y-4">
-            <div>
-                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inquilino ? inquilino.nombre : ''}" placeholder="Ej: Juan Pérez" required>
+        <form id="formInquilino" class="space-y-4 max-h-[80vh] overflow-y-auto px-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                    <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inquilino ? inquilino.nombre : ''}" placeholder="Ej: Juan Pérez" required>
+                </div>
+                <div>
+                    <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inquilino ? inquilino.telefono : ''}" placeholder="Ej: +52 123 456 7890" required>
+                </div>
             </div>
-            <div>
-                <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
-                <input type="tel" id="telefono" name="telefono" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inquilino ? inquilino.telefono : ''}" placeholder="Ej: +52 123 456 7890" required>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="fechaLlegada" class="block text-sm font-medium text-gray-700">Fecha de Llegada</label>
+                    <input type="date" id="fechaLlegada" name="fechaLlegada" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        value="${inquilino && inquilino.fechaLlegada ? inquilino.fechaLlegada : ''}" required>
+                </div>
+                <div>
+                    <label for="fechaOcupacion" class="block text-sm font-medium text-gray-700">Fecha de Ocupación</label>
+                    <input type="date" id="fechaOcupacion" name="fechaOcupacion" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        value="${inquilino && inquilino.fechaOcupacion ? inquilino.fechaOcupacion : ''}" required>
+                </div>
             </div>
+
             <div>
-                <label for="fechaLlegada" class="block text-sm font-medium text-gray-700">Fecha de Llegada (Firma de Contrato)</label>
-                <input type="date" id="fechaLlegada" name="fechaLlegada" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                    value="${inquilino && inquilino.fechaLlegada ? inquilino.fechaLlegada : ''}" required>
+                <label for="urlIdentificacion" class="block text-sm font-medium text-gray-700">URL de Identificación</label>
+                <input type="url" id="urlIdentificacion" name="urlIdentificacion" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inquilino && inquilino.urlIdentificacion ? inquilino.urlIdentificacion : ''}" placeholder="Ej: https://docs.google.com/d/abc123xyz">
+                <p class="mt-1 text-xs text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
             </div>
-            <div>
-                <label for="fechaOcupacion" class="block text-sm font-medium text-gray-700">Fecha de Ocupación (Inicio de Pagos)</label>
-                <input type="date" id="fechaOcupacion" name="fechaOcupacion" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                    value="${inquilino && inquilino.fechaOcupacion ? inquilino.fechaOcupacion : ''}" required>
-            </div>
-            <div>
-                <label for="urlIdentificacion" class="block text-sm font-medium text-gray-700">URL de Identificación (INE, Pasaporte, etc.)</label>
-                <input type="url" id="urlIdentificacion" name="urlIdentificacion" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${inquilino && inquilino.urlIdentificacion ? inquilino.urlIdentificacion : ''}" placeholder="Ej: https://docs.google.com/d/abc123xyz">
-                <p class="mt-2 text-xs text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
-            </div>
+
             <div>
                 <label for="inmuebleAsociadoId" class="block text-sm font-medium text-gray-700">Inmueble Asociado</label>
-                <select id="inmuebleAsociadoId" name="inmuebleAsociadoId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                <select id="inmuebleAsociadoId" name="inmuebleAsociadoId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                     <option value="">Ninguno</option>
                     ${inmueblesOptions}
                 </select>
-                <p class="mt-2 text-xs text-gray-500">Solo se muestran inmuebles disponibles o el actualmente asignado a este inquilino.</p>
+                <p class="mt-1 text-xs text-gray-500">Solo se muestran inmuebles disponibles o el actualmente asignado.</p>
             </div>
-            <div class="flex items-center">
-                <input type="checkbox" id="activo" name="activo" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" ${inquilino === null || inquilino.activo ? 'checked' : ''}>
-                <label for="activo" class="ml-2 block text-sm text-gray-900">Inquilino Activo</label>
+
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                    <input type="checkbox" id="activo" name="activo" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" ${inquilino === null || inquilino.activo ? 'checked' : ''}>
+                    <label for="activo" class="ml-2 block text-sm text-gray-900">Inquilino Activo</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="recibioDeposito" name="recibioDeposito" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" ${recibioDepositoChecked}>
+                    <label for="recibioDeposito" class="ml-2 text-sm text-gray-900">Recibió depósito</label>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">¿Recibió depósito?</label>
-                <input type="checkbox" id="recibioDeposito" name="recibioDeposito" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" ${recibioDepositoChecked}>
-                <label for="recibioDeposito" class="ml-2 text-sm text-gray-900">Sí</label>
+
+            <div id="campoDeposito" style="display:${campoDepositoDisplay};" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="montoDeposito" class="block text-sm font-medium text-gray-700">Monto del depósito</label>
+                    <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${montoDepositoValue}">
+                </div>
+                <div>
+                    <label for="fechaDeposito" class="block text-sm font-medium text-gray-700">Fecha del depósito</label>
+                    <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${fechaDepositoValue}">
+                </div>
             </div>
-            <div id="campoDeposito" style="display:${campoDepositoDisplay};">
-                <label for="montoDeposito" class="block text-sm font-medium text-gray-700">Monto del depósito</label>
-                <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${montoDepositoValue}">
-                <label for="fechaDeposito" class="block text-sm font-medium text-gray-700 mt-2">Fecha del depósito</label>
-                <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="${fechaDepositoValue}">
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-                <button type="submit" class="btn-primary">${id ? "Actualizar" : "Registrar"} Inquilino</button>
+
+            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-sm transition-colors duration-200">${id ? "Actualizar" : "Registrar"} Inquilino</button>
             </div>
         </form>
     `;
@@ -871,8 +987,9 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
     mobiliarioSnap.forEach(doc => {
         const mob = doc.data();
         if (Array.isArray(mob.asignaciones)) {
-            const asignacion = mob.asignaciones.find(a => a.inquilinoId === inquilinoId);
-            if (asignacion && asignacion.cantidad > 0) {
+            // Solo considerar asignaciones activas (activa !== false y cantidad > 0)
+            const asignacion = mob.asignaciones.find(a => a.inquilinoId === inquilinoId && a.cantidad > 0 && a.activa !== false);
+            if (asignacion) {
                 mobiliarioAsignado.push({
                     nombre: mob.nombre,
                     descripcion: mob.descripcion || "",
@@ -883,10 +1000,21 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
         }
     });
 
+    if (mobiliarioAsignado.length === 0) {
+        mostrarModal(`
+            <div class="px-4 py-3 bg-teal-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
+                <h3 class="text-lg font-bold text-center">Mobiliario asignado a ${inquilinoNombre}</h3>
+            </div>
+            <div class="py-6 text-center text-gray-500 text-lg">No hay mobiliario asignado actualmente a este inquilino.</div>
+            <div class="flex justify-end mt-2">
+                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded shadow-sm transition-colors duration-200 w-full sm:w-auto">Cerrar</button>
+            </div>
+        `);
+        return;
+    }
+
     let total = 0;
-    let tabla = '';
-    if (mobiliarioAsignado.length > 0) {
-        tabla = `
+    let tabla = `
         <div class="w-full max-w-md mx-auto">
             <div class="divide-y divide-teal-100 rounded-lg shadow bg-white">
                 ${mobiliarioAsignado.map(mob => {
@@ -912,10 +1040,7 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
                 </div>
             </div>
         </div>
-        `;
-    } else {
-        tabla = `<div class="text-gray-500 text-center py-6">No tiene mobiliario asignado.</div>`;
-    }
+    `;
 
     mostrarModal(`
         <div class="px-4 py-3 bg-teal-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">

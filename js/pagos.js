@@ -531,27 +531,57 @@ export async function mostrarFormularioNuevoPago(id = null) {
     const montoTotalInput = document.getElementById('montoTotal');
     const montoPagoInput = document.getElementById('montoPago');
 
-    // Al seleccionar un inmueble, autollenar inquilino y monto
-    inmuebleSelect.addEventListener('change', function() {
-        const inmuebleId = this.value;
-        const inmueble = inmuebles.find(inm => inm.id === inmuebleId);
-
-        // Cargar costo mensual
-        montoTotalInput.value = inmueble ? (inmueble.rentaMensual || 0) : '';
-
-        // Buscar inquilino activo asociado a este inmueble
-        const inquilino = inquilinos.find(inq => inq.inmuebleId === inmuebleId && (inq.activo === true || inq.activo === "true"));
-        inquilinoSelect.value = inquilino ? inquilino.id : '';
-
-        // Mostrar servicios adicionales solo si el inmueble tiene internet
-        if (inmueble && inmueble.tieneInternet) {
-            document.getElementById('serviciosAdicionales').style.display = 'block';
-        } else {
-            document.getElementById('serviciosAdicionales').style.display = 'none';
-            document.getElementById('servicioInternet').checked = false;
-            document.getElementById('montoInternet').style.display = 'none';
+    // Dentro de la función mostrarFormularioNuevoPago, después de cargar los inmuebles e inquilinos, agregar la consulta de mobiliario
+    const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+    let mobiliarioMap = new Map();
+    mobiliarioSnap.forEach(doc => {
+        const mob = doc.data();
+        if (Array.isArray(mob.asignaciones)) {
+            mobiliarioMap.set(doc.id, mob);
         }
     });
+
+    // Función para calcular el total (costo del inmueble + costo del mobiliario asignado)
+    async function calcularTotal(inmuebleId) {
+        const inmueble = inmuebles.find(inm => inm.id === inmuebleId);
+        if (!inmueble) return 0;
+        const inquilinoId = inmueble.inquilinoActualId;
+        if (!inquilinoId) return inmueble.rentaMensual || 0;
+        let costoMobiliario = 0;
+        mobiliarioMap.forEach((mob, mobId) => {
+            const asignacion = mob.asignaciones.find(a => a.inquilinoId === inquilinoId && a.cantidad > 0 && a.activa !== false);
+            if (asignacion) {
+                costoMobiliario += asignacion.cantidad * (mob.costoRenta || 0);
+            }
+        });
+        return (inmueble.rentaMensual || 0) + costoMobiliario;
+    }
+
+    // Al cargar el formulario, calcular y mostrar el total si hay un inmueble seleccionado
+    if (selectedInmueble) {
+        const total = await calcularTotal(selectedInmueble);
+        montoTotalInput.value = total;
+    }
+
+    // En el event listener de cambio del inmueble, usar la función calcularTotal
+    inmuebleSelect.addEventListener('change', async function() {
+        const inmuebleId = this.value;
+        const total = await calcularTotal(inmuebleId);
+        montoTotalInput.value = total;
+        // montoPagoInput.value = total; // Actualizar el monto a pagar con el total calculado
+
+        // Autocompletar el campo del inquilino con el inquilino asociado al inmueble
+        const inmueble = inmuebles.find(inm => inm.id === inmuebleId);
+        if (inmueble && inmueble.inquilinoActualId) {
+            inquilinoSelect.value = inmueble.inquilinoActualId;
+            inquilinoSelect.disabled = true; // Bloquear el campo del inquilino
+        } else {
+            inquilinoSelect.value = '';
+            inquilinoSelect.disabled = false; // Desbloquear el campo si no hay inquilino asociado
+        }
+    });
+
+
 
     // Si es edición, selecciona los valores actuales
     inmuebleSelect.value = selectedInmueble;
@@ -631,9 +661,13 @@ export async function mostrarFormularioNuevoPago(id = null) {
         const formaPago = document.getElementById('formaPago').value;
         const propietarioId = document.getElementById('propietarioId').value;
         const serviciosPagados = {};
-        if (document.getElementById('servicioInternet').checked) {
+        
+        // Verificar si existen los elementos de servicios antes de acceder a ellos
+        const servicioInternet = document.getElementById('servicioInternet');
+        if (servicioInternet && servicioInternet.checked) {
             serviciosPagados.internet = true;
-            serviciosPagados.internetMonto = parseFloat(document.getElementById('montoInternet').value) || 0;
+            const montoInternet = document.getElementById('montoInternet');
+            serviciosPagados.internetMonto = montoInternet ? parseFloat(montoInternet.value) || 0 : 0;
         }
 
         const datos = {

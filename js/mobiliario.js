@@ -523,18 +523,28 @@ window.liberarMobiliario = async function(id) {
             const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
             return `
                 <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="checkbox" name="liberarAsignacion" value="${a.inquilinoId}" class="mr-3 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <div class="flex items-start">
+                        <input type="checkbox" name="liberarAsignacion" value="${a.inquilinoId}" class="mr-3 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded mt-1">
                         <div class="flex-1">
                             <div class="font-medium text-gray-900">${nombreInquilino}</div>
                             <div class="text-sm text-gray-500">
-                                Cantidad: ${a.cantidad} | 
+                                Cantidad asignada: ${a.cantidad} | 
                                 Asignado: ${new Date(a.fechaAsignacion).toLocaleDateString()} |
                                 Condición: ${a.condicionAsignacion || 'No especificada'}
                             </div>
                             ${a.notas ? `<div class="text-xs text-gray-400 mt-1">${a.notas}</div>` : ''}
+                            <div class="mt-2">
+                                <label class="text-sm text-gray-600">Cantidad a liberar:</label>
+                                <input type="number" 
+                                       name="cantidadLiberar_${a.inquilinoId}" 
+                                       min="1" 
+                                       max="${a.cantidad}" 
+                                       value="${a.cantidad}"
+                                       class="mt-1 block w-24 border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:ring-orange-500 focus:border-orange-500"
+                                       disabled>
+                            </div>
                         </div>
-                    </label>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -608,30 +618,60 @@ window.liberarMobiliario = async function(id) {
                 // Procesar cada asignación seleccionada
                 checkboxes.forEach(checkbox => {
                     const inquilinoId = checkbox.value;
+                    const cantidadALiberar = parseInt(document.querySelector(`input[name="cantidadLiberar_${inquilinoId}"]`).value, 10);
                     const asignacionIndex = asignaciones.findIndex(a => a.inquilinoId === inquilinoId && a.activa !== false);
                     
                     if (asignacionIndex >= 0) {
                         const asignacion = asignaciones[asignacionIndex];
-                        cantidadLiberada += asignacion.cantidad;
                         
-                        // Marcar como inactiva en lugar de eliminar (para historial)
-                        asignaciones[asignacionIndex] = {
-                            ...asignacion,
-                            activa: false,
-                            fechaLiberacion: new Date().toISOString(),
-                            condicionLiberacion,
-                            motivoLiberacion,
-                            notasLiberacion
-                        };
+                        if (cantidadALiberar > asignacion.cantidad) {
+                            throw new Error(`La cantidad a liberar no puede ser mayor a la cantidad asignada`);
+                        }
+
+                        cantidadLiberada += cantidadALiberar;
+                        
+                        if (cantidadALiberar === asignacion.cantidad) {
+                            // Si se libera todo, marcar como inactiva
+                            asignaciones[asignacionIndex] = {
+                                ...asignacion,
+                                activa: false,
+                                fechaLiberacion: new Date().toISOString(),
+                                condicionLiberacion,
+                                motivoLiberacion,
+                                notasLiberacion
+                            };
+                        } else {
+                            // Si se libera parcialmente, crear una nueva asignación con la cantidad restante
+                            const cantidadRestante = asignacion.cantidad - cantidadALiberar;
+                            
+                            // Marcar la asignación actual como inactiva
+                            asignaciones[asignacionIndex] = {
+                                ...asignacion,
+                                activa: false,
+                                fechaLiberacion: new Date().toISOString(),
+                                condicionLiberacion,
+                                motivoLiberacion,
+                                notasLiberacion,
+                                cantidad: cantidadALiberar
+                            };
+
+                            // Agregar nueva asignación con la cantidad restante
+                            asignaciones.push({
+                                ...asignacion,
+                                cantidad: cantidadRestante,
+                                fechaAsignacion: new Date().toISOString(),
+                                activa: true
+                            });
+                        }
 
                         // Agregar al historial
                         const nombreInquilino = inquilinosMap.get(inquilinoId) || 'Inquilino Desconocido';
                         historial.push({
                             fecha: new Date().toISOString(),
                             accion: "liberado",
-                            descripcion: `${asignacion.cantidad} unidad(es) liberada(s) de ${nombreInquilino}`,
+                            descripcion: `${cantidadALiberar} unidad(es) liberada(s) de ${nombreInquilino}`,
                             inquilinoId,
-                            cantidad: asignacion.cantidad,
+                            cantidad: cantidadALiberar,
                             motivo: motivoLiberacion,
                             condicion: condicionLiberacion,
                             notas: notasLiberacion
@@ -648,7 +688,7 @@ window.liberarMobiliario = async function(id) {
                 await updateDoc(doc(db, "mobiliario", id), {
                     cantidadAsignada: nuevaCantidadAsignada,
                     estado: nuevoEstado,
-                    condicion: condicionLiberacion, // Actualizar condición general
+                    condicion: condicionLiberacion,
                     asignaciones,
                     historial,
                     fechaUltimaLiberacion: new Date().toISOString()
@@ -659,8 +699,18 @@ window.liberarMobiliario = async function(id) {
                 mostrarInventarioMobiliario();
             } catch (error) {
                 console.error("Error al liberar mobiliario:", error);
-                mostrarNotificacion("Error al liberar mobiliario.", "error");
+                mostrarNotificacion(error.message || "Error al liberar mobiliario.", "error");
             }
+        });
+
+        // Agregar el event listener para habilitar/deshabilitar el input de cantidad
+        document.querySelectorAll('input[name="liberarAsignacion"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const cantidadInput = document.querySelector(`input[name="cantidadLiberar_${this.value}"]`);
+                if (cantidadInput) {
+                    cantidadInput.disabled = !this.checked;
+                }
+            });
         });
     } catch (error) {
         console.error("Error al preparar liberación:", error);
