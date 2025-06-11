@@ -237,61 +237,129 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
     const tituloModal = id ? "Editar Inmueble" : "Registrar Nuevo Inmueble";
     const modalContent = `
-        <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-xl sm:text-2xl font-bold text-center">${tituloModal}</h3>
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
+            <div class="px-6 py-4">
+                <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
+                <p class="text-center text-indigo-100 mt-1">Complete los datos del inmueble</p>
+            </div>
         </div>
-        <form id="formInmueble" class="space-y-4 max-h-[80vh] overflow-y-auto px-2">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre/Identificador</label>
-                    <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.nombre ?? ''}" placeholder="Ej: Casa 123" required>
-                </div>
-                <div>
-                    <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo de Inmueble</label>
-                    <select id="tipo" name="tipo" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                        <option value="">Selecciona un tipo</option>
-                        <option value="Casa" ${inmueble?.tipo === 'Casa' ? 'selected' : ''}>Casa</option>
-                        <option value="Apartamento" ${inmueble?.tipo === 'Apartamento' ? 'selected' : ''}>Apartamento</option>
-                        <option value="Local Comercial" ${inmueble?.tipo === 'Local Comercial' ? 'selected' : ''}>Local Comercial</option>
-                        <option value="Oficina" ${inmueble?.tipo === 'Oficina' ? 'selected' : ''}>Oficina</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label for="direccion" class="block text-sm font-medium text-gray-700">Dirección</label>
-                <input type="text" id="direccion" name="direccion" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.direccion ?? ''}" placeholder="Ej: Calle Principal #123, Colonia" required>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="rentaMensual" class="block text-sm font-medium text-gray-700">Renta Mensual</label>
-                    <div class="mt-1 relative rounded-lg shadow-sm">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 sm:text-sm">$</span>
-                        </div>
-                        <input type="number" id="rentaMensual" name="rentaMensual" step="0.01" class="pl-7 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.rentaMensual ?? ''}" placeholder="0.00" required>
+        
+        <form id="formInmueble" class="space-y-6 max-h-[80vh] overflow-y-auto px-2">
+            <!-- Información Básica -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Información Básica
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre/Identificador</label>
+                        <input type="text" id="nombre" name="nombre" 
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                            value="${inmueble?.nombre ?? ''}" 
+                            placeholder="Ej: Casa 123" required>
+                    </div>
+                    <div>
+                        <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Inmueble</label>
+                        <select id="tipo" name="tipo" 
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" required>
+                            <option value="">Selecciona un tipo</option>
+                            <option value="Casa" ${inmueble?.tipo === 'Casa' ? 'selected' : ''}>Casa</option>
+                            <option value="Apartamento" ${inmueble?.tipo === 'Apartamento' ? 'selected' : ''}>Apartamento</option>
+                            <option value="Local Comercial" ${inmueble?.tipo === 'Local Comercial' ? 'selected' : ''}>Local Comercial</option>
+                            <option value="Oficina" ${inmueble?.tipo === 'Oficina' ? 'selected' : ''}>Oficina</option>
+                        </select>
                     </div>
                 </div>
+            </div>
+
+            <!-- Ubicación -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Ubicación
+                </h4>
                 <div>
-                    <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
-                    <select id="estado" name="estado" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                        <option value="Disponible" ${inmueble?.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
-                        <option value="Ocupado" ${inmueble?.estado === 'Ocupado' ? 'selected' : ''}>Ocupado</option>
-                        <option value="Mantenimiento" ${inmueble?.estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
-                    </select>
+                    <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">Dirección Completa</label>
+                    <input type="text" id="direccion" name="direccion" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                        value="${inmueble?.direccion ?? ''}" 
+                        placeholder="Ej: Calle Principal #123, Colonia" required>
                 </div>
             </div>
 
-            <div>
-                <label for="urlContrato" class="block text-sm font-medium text-gray-700">URL del Contrato</label>
-                <input type="url" id="urlContrato" name="urlContrato" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="${inmueble?.urlContrato ?? ''}" placeholder="Ej: https://drive.google.com/file/...">
-                <p class="mt-1 text-xs text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
+            <!-- Detalles Financieros -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Detalles Financieros
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="rentaMensual" class="block text-sm font-medium text-gray-700 mb-1">Renta Mensual</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500">$</span>
+                            </div>
+                            <input type="number" id="rentaMensual" name="rentaMensual" step="0.01" 
+                                class="w-full pl-7 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                                value="${inmueble?.rentaMensual ?? ''}" 
+                                placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Estado del Inmueble</label>
+                        <select id="estado" name="estado" 
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" required>
+                            <option value="Disponible" ${inmueble?.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                            <option value="Ocupado" ${inmueble?.estado === 'Ocupado' ? 'selected' : ''}>Ocupado</option>
+                            <option value="Mantenimiento" ${inmueble?.estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
+            <!-- Documentación -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Documentación
+                </h4>
+                <div>
+                    <label for="urlContrato" class="block text-sm font-medium text-gray-700 mb-1">URL del Contrato</label>
+                    <input type="url" id="urlContrato" name="urlContrato" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                        value="${inmueble?.urlContrato ?? ''}" 
+                        placeholder="Ej: https://drive.google.com/file/...">
+                    <p class="mt-1 text-xs text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
             <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-sm transition-colors duration-200">${id ? "Actualizar" : "Registrar"} Inmueble</button>
+                <button type="button" onclick="ocultarModal()" 
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-colors duration-200 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cancelar
+                </button>
+                <button type="submit" 
+                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-colors duration-200 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    ${id ? "Actualizar" : "Registrar"} Inmueble
+                </button>
             </div>
         </form>
     `;

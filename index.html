@@ -304,56 +304,68 @@ button.text-sm {
           </li>
         </ul>
       </nav>
-      </aside>
-
-    <main class="flex-grow p-2 md:p-6 overflow-y-auto w-full">
-        <header class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Panel de Administración</h1>
-            <p class="text-gray-600">Bienvenido de nuevo a tu gestor de propiedades.</p>
-        </header>
-
-        <div id="contenido" class="bg-white rounded-lg shadow-md p-6">
-            Cargando contenido...
+      
+      <!-- Botones de inicio y cierre de sesión -->
+      <div class="mt-auto pt-4 border-t border-gray-700">
+        <div class="flex flex-col space-y-2">
+          <button id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            Iniciar sesión con Google
+          </button>
+          <button id="btnLogout" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center hidden">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Cerrar sesión
+          </button>
+          <span id="userInfo" class="text-center text-sm text-gray-300"></span>
         </div>
-    </main>
+      </div>
+  </aside>
 
-    <div id="miModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-        <div id="modalContenido" class="bg-white rounded-lg shadow-xl p-4 w-full max-w-lg md:max-w-lg relative">
-            </div>
-    </div>
+  <main class="flex-grow p-2 md:p-6 overflow-y-auto w-full">
+      <header class="mb-6">
+          <h1 class="text-3xl font-bold text-gray-800">Panel de Administración</h1>
+          <p class="text-gray-600">Bienvenido de nuevo a tu gestor de propiedades.</p>
+      </header>
 
-    <div id="notificacionContainer" class="fixed top-4 right-4 z-50 space-y-2">
-        </div>
+      <div id="contenido" class="bg-white rounded-lg shadow-md p-6">
+          Cargando contenido...
+      </div>
+  </main>
 
-        <!-- Botones de inicio y cierre de sesión -->
-        <div class="fixed top-4 right-4 z-50 flex items-center">
-          <button id="btnLogin" class="bg-blue-600 text-white px-4 py-2 rounded">Iniciar sesión con Google</button>
-          <button id="btnLogout" class="bg-gray-400 text-white px-4 py-2 rounded hidden">Cerrar sesión</button>
-          <span id="userInfo" class="ml-2 text-sm text-gray-700"></span>
-        </div>
+  <div id="miModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+      <div id="modalContenido" class="bg-white rounded-lg shadow-xl p-4 w-full max-w-lg md:max-w-lg relative">
+          </div>
+  </div>
 
-    <script type="module" src="./js/main.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script type="module" src="./js/mobiliario.js"></script>
-    <script>
-  const btnMenu = document.getElementById('btnMenu');
-  const sidebar = document.getElementById('sidebar');
-  btnMenu.addEventListener('click', () => {
-    sidebar.classList.toggle('abierto');
-  });
-  // Cierra el sidebar al hacer clic fuera en móvil
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth < 768 && sidebar.classList.contains('abierto')) {
-      if (!sidebar.contains(e.target) && e.target !== btnMenu) {
-        sidebar.classList.remove('abierto');
-      }
+  <div id="notificacionContainer" class="fixed top-4 right-4 z-50 space-y-2">
+      </div>
+
+  <script type="module" src="./js/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" src="./js/mobiliario.js"></script>
+  <script>
+const btnMenu = document.getElementById('btnMenu');
+const sidebar = document.getElementById('sidebar');
+btnMenu.addEventListener('click', () => {
+  sidebar.classList.toggle('abierto');
+});
+// Cierra el sidebar al hacer clic fuera en móvil
+document.addEventListener('click', (e) => {
+  if (window.innerWidth < 768 && sidebar.classList.contains('abierto')) {
+    if (!sidebar.contains(e.target) && e.target !== btnMenu) {
+      sidebar.classList.remove('abierto');
     }
+  }
+});
+sidebar.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (window.innerWidth < 768) sidebar.classList.remove('abierto');
   });
-  sidebar.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (window.innerWidth < 768) sidebar.classList.remove('abierto');
-    });
-  });
+});
 </script>
 </body>
 </html>
