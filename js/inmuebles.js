@@ -144,7 +144,7 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                                 </button>
                             </div>
                         </div>
-                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-end">
+                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-between">
                             <span class="handle-move cursor-move text-gray-400 hover:text-gray-700 flex items-center gap-1.5 transition-colors duration-200" title="Arrastrar para reordenar">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />

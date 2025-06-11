@@ -189,13 +189,13 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-                            <span id="badge-adeudos-${inquilino.id}" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
                             <span class="handle-move cursor-move text-gray-400 hover:text-gray-700 flex items-center gap-1.5 transition-colors duration-200" title="Arrastrar para reordenar">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                                 </svg>
                                 <span class="text-xs">Reordenar</span>
                             </span>
+                            <span id="badge-adeudos-${inquilino.id}" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
                         </div>
                     </div>
                 `;
@@ -265,7 +265,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                 if (mesesAdeudados.length > 0) {
                     newBadge.textContent = `${mesesAdeudados.length} adeudo${mesesAdeudados.length > 1 ? 's' : ''}`;
-                    newBadge.className = "inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer";
+                    newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
                     newBadge.title = "Haz clic para ver los meses adeudados";
                     newBadge.addEventListener('click', async () => {
                         const mesesActualizados = await obtenerMesesAdeudadosHistorico(
@@ -274,21 +274,62 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             new Date(inquilino.fechaOcupacion)
                         );
                         mostrarModal(`
-                            <div class="p-4">
-                                <h3 class="text-lg font-bold mb-2">Meses adeudados de ${inquilino.nombre}</h3>
-                                <ul class="list-disc list-inside mb-4">
-                                    ${mesesActualizados.length > 0
-                                        ? mesesActualizados.map(m => `<li>${m.mes} ${m.anio}</li>`).join('')
-                                        : '<li class="text-green-700">¡Sin adeudos!</li>'
-                                    }
-                                </ul>
-                                <button onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-md">Cerrar</button>
+                            <div class="px-4 py-3 bg-red-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+                                <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h4 class="text-lg font-semibold text-gray-800 flex items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Resumen de Adeudos
+                                        </h4>
+                                        <span class="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                            ${mesesActualizados.length} mes${mesesActualizados.length > 1 ? 'es' : ''} adeudado${mesesActualizados.length > 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                    <div class="space-y-3">
+                                        ${mesesActualizados.map(m => `
+                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                                                <div class="flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span class="font-medium text-gray-800">${m.mes} ${m.anio}</span>
+                                                </div>
+                                                <span class="text-sm text-gray-500">Pendiente de pago</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-yellow-700">
+                                                Se recomienda contactar al inquilino para regularizar los pagos pendientes.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                                <button onclick="ocultarModal()" 
+                                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-lg shadow-sm transition-colors duration-200">
+                                    Cerrar
+                                </button>
                             </div>
                         `);
                     });
                 } else {
                     newBadge.textContent = "Sin adeudos";
-                    newBadge.className = "inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800";
+                    newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
                     newBadge.title = "El inquilino está al corriente";
                 }
             }
@@ -339,11 +380,12 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     const inmueblesOptions = inmueblesDisponibles.map(inmueble => {
         // Si el inmueble está ocupado por otro inquilino (no el actual en edición), deshabilitarlo
         const isDisabled = inmueble.estado === 'Ocupado' && (!inquilino || inmueble.id !== inquilino.inmuebleAsociadoId);
+        const rentaFormateada = inmueble.rentaMensual ? `$${parseFloat(inmueble.rentaMensual).toFixed(2)}` : '';
         return `
             <option value="${inmueble.id}" 
                     ${inquilino && inquilino.inmuebleAsociadoId === inmueble.id ? 'selected' : ''}
                     ${isDisabled ? 'disabled' : ''}>
-                ${inmueble.nombre} ${isDisabled ? '(Ocupado)' : ''}
+                ${inmueble.nombre} ${rentaFormateada ? `(${rentaFormateada}/mes)` : ''} ${isDisabled ? '(Ocupado)' : ''}
             </option>
         `;
     }).join('');
@@ -496,14 +538,17 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
 
         try {
             let inquilinoId = id; // El ID del inquilino que estamos creando/editando
+            let docRef;
 
             if (id) {
                 // Actualizar inquilino existente
-                await updateDoc(doc(db, "inquilinos", id), data);
+                docRef = doc(db, "inquilinos", id);
+                await updateDoc(docRef, data);
                 mostrarNotificacion("Inquilino actualizado con éxito.", 'success');
             } else {
                 // Agregar nuevo inquilino
-                const docRef = await addDoc(collection(db, "inquilinos"), data);
+                docRef = await addDoc(collection(db, "inquilinos"), data);
+                inquilinoId = docRef.id; // Obtener el ID del nuevo documento
                 mostrarNotificacion("Inquilino registrado con éxito.", 'success');
             }
 
@@ -535,9 +580,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 mostrarNotificacion(`Inmueble ${inmueblesDisponibles.find(i => i.id === nuevoInmuebleId)?.nombre || 'seleccionado'} marcado como Ocupado.`, 'info');
             } else if (!nuevoInmuebleId && id) {
                 // Si se eliminó la asociación de inmueble de un inquilino existente
-                // La lógica del `inmuebleAnteriorId` ya debería haberlo manejado, pero nos aseguramos
-                // Esta parte es más para cuando se edita un inquilino y se le quita la asociación sin usar desocupar
-                 if (inmuebleAnteriorId) {
+                if (inmuebleAnteriorId) {
                     await updateDocInmueble(doc(db, "inmuebles", inmuebleAnteriorId), {
                         estado: 'Disponible',
                         inquilinoActualId: null,
@@ -546,30 +589,29 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                     mostrarNotificacion(`Inmueble ${inmueblesDisponibles.find(i => i.id === inmuebleAnteriorId)?.nombre || 'anterior'} marcado como Disponible.`, 'info');
                 }
                 // Actualizar el inquilino sin nombre de inmueble
-                 await updateDoc(doc(db, "inquilinos", inquilinoId), {
+                await updateDoc(doc(db, "inquilinos", inquilinoId), {
                     inmuebleAsociadoNombre: 'No Asignado'
                 });
             }
 
-
             ocultarModal();
             mostrarInquilinos(); // Recargar la lista de inquilinos
+
+            // Si es un nuevo inquilino y recibió depósito, registrar el depósito
+            if (data.recibioDeposito === 'on' && data.montoDeposito && data.fechaDeposito) {
+                await addDoc(collection(db, "pagos"), {
+                    tipo: "deposito",
+                    montoTotal: parseFloat(data.montoDeposito),
+                    fechaRegistro: data.fechaDeposito,
+                    inquilinoId: inquilinoId,
+                    inmuebleId: data.inmuebleAsociadoId || null,
+                    observaciones: "Depósito inicial"
+                });
+            }
            
         } catch (err) {
             console.error("Error al guardar el inquilino:", err);
             mostrarNotificacion("Error al guardar el inquilino.", 'error');
-        }
-
-        // Si es un nuevo inquilino y recibió depósito, registrar el depósito
-        if (data.recibioDeposito === 'on' && data.montoDeposito && data.fechaDeposito) {
-            await addDoc(collection(db, "pagos"), {
-                tipo: "deposito",
-                montoTotal: parseFloat(data.montoDeposito),
-                fechaRegistro: data.fechaDeposito, // Guarda la fecha completa seleccionada
-                inquilinoId: inquilinoId,
-                inmuebleId: data.inmuebleAsociadoId || null,
-                observaciones: "Depósito inicial"
-            });
         }
     });
 }
