@@ -78,12 +78,17 @@ export async function mostrarAbonos() {
         if (abonosUnicos.length === 0) {
             tarjetasAbonosHtml = `
                 <div class="col-span-full">
-                    <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                    <div class="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
                         <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <p class="text-gray-500 text-lg">No hay saldos a favor registrados.</p>
-                        <button onclick="mostrarFormularioNuevoAbono()" class="mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200">
+                        <p class="text-gray-500 text-lg mb-6">No hay saldos a favor registrados.</p>
+                        <button onclick="mostrarFormularioNuevoAbono()" 
+                            class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                            text-white font-medium px-6 py-2.5 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center mx-auto">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
                             Registrar Nuevo Abono
                         </button>
                     </div>
@@ -100,7 +105,12 @@ export async function mostrarAbonos() {
                     historialAplicacionesHtml = `
                         <div class="mt-4 border-t border-gray-200 pt-4">
                             <div class="flex items-center justify-between mb-2">
-                                <h4 class="font-semibold text-sm text-gray-700">Historial de aplicaciones</h4>
+                                <h4 class="font-semibold text-sm text-gray-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    Historial de aplicaciones
+                                </h4>
                                 <span class="text-xs text-gray-500">${abono.aplicaciones.length} aplicación(es)</span>
                             </div>
                             <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
@@ -108,7 +118,7 @@ export async function mostrarAbonos() {
                                     const pagoInfo = pagosMap.get(app.pagoId);
                                     const pagoLabel = pagoInfo ? `${pagoInfo.mes || ''} ${pagoInfo.anio || ''}` : 'Pago desconocido';
                                     return `
-                                        <div class="bg-gray-50 rounded-lg p-2 text-xs">
+                                        <div class="bg-gray-50 rounded-lg p-2.5 text-xs border border-gray-100">
                                             <div class="flex justify-between items-center">
                                                 <span class="font-medium text-gray-700">${pagoLabel}</span>
                                                 <span class="text-green-600 font-semibold">$${parseFloat(app.montoAplicado).toFixed(2)}</span>
@@ -123,8 +133,8 @@ export async function mostrarAbonos() {
                 }
 
                 return `
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
-                        <div class="p-4 sm:p-6">
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-100">
+                        <div class="p-5 sm:p-6">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-1">${abono.nombreInquilino}</h3>
@@ -141,7 +151,7 @@ export async function mostrarAbonos() {
                                 </div>
                             </div>
 
-                            <div class="mt-4 bg-gray-50 rounded-lg p-3">
+                            <div class="mt-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-gray-600">Saldo Restante</span>
                                     <span class="text-xl font-bold ${abono.saldoRestante > 0 ? 'text-green-600' : 'text-gray-500'}">
@@ -161,17 +171,21 @@ export async function mostrarAbonos() {
 
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <button onclick="mostrarFormularioNuevoAbono('${abono.id}')" 
-                                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+                                        text-white text-sm font-medium px-3 py-2 rounded-lg shadow-sm transition-all duration-200 
+                                        flex items-center justify-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                     Actualizar
                                 </button>
                                 ${abono.saldoRestante > 0 ? `
                                     <button onclick="aplicarSaldoFavorManual('${abono.id}', '${abono.inquilinoId}')" 
-                                            class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 flex items-center justify-center">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            class="flex-1 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 
+                                            text-white text-sm font-medium px-3 py-2 rounded-lg shadow-sm transition-all duration-200 
+                                            flex items-center justify-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
                                         Aplicar Saldo
                                     </button>
@@ -185,12 +199,18 @@ export async function mostrarAbonos() {
 
         contenedor.innerHTML = `
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 sm:mb-0">Gestión de Saldos a Favor</h2>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center">
+                        <svg class="w-8 h-8 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Gestión de Saldos a Favor
+                    </h2>
                     <button onclick="mostrarFormularioNuevoAbono()" 
-                            class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition-colors duration-200 flex items-center justify-center">
+                            class="mt-4 sm:mt-0 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                            text-white font-medium px-4 py-2.5 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
                         Registrar Nuevo Abono
                     </button>
@@ -325,25 +345,27 @@ export async function mostrarFormularioNuevoAbono(id = null) {
     const inquilinosOptions = inquilinosList.map(inc => `<option value="${inc.id}" ${inc.id === abono.inquilinoId ? 'selected' : ''}>${inc.nombre}</option>`).join('');
 
     const formHtml = `
-        <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+        <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
             <h3 class="text-xl sm:text-2xl font-bold text-center">${titulo}</h3>
         </div>
-        <form id="formAbonoSaldoFavor" class="space-y-4 max-w-lg mx-auto">
+        <form id="formAbonoSaldoFavor" class="space-y-4 max-w-lg mx-auto px-2">
             <div>
-                <label for="inquilinoId" class="block text-gray-700 text-sm font-bold mb-2">Inquilino:</label>
-                <select id="inquilinoId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                <label for="inquilinoId" class="block text-gray-700 text-sm font-medium mb-2">Inquilino:</label>
+                <select id="inquilinoId" 
+                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                        required>
                     <option value="">-- Seleccionar Inquilino --</option>
                     ${inquilinosOptions}
                 </select>
             </div>
             <div>
-                <label for="montoOriginal" class="block text-gray-700 text-sm font-bold mb-2">Monto del Abono:</label>
+                <label for="montoOriginal" class="block text-gray-700 text-sm font-medium mb-2">Monto del Abono:</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500">$</span>
                     <input type="number" 
                            id="montoOriginal" 
                            value="${abono.montoOriginal}" 
-                           class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                           class="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                            step="0.01" 
                            required 
                            min="0.01"
@@ -351,28 +373,29 @@ export async function mostrarFormularioNuevoAbono(id = null) {
                 </div>
             </div>
             <div>
-                <label for="descripcionAbono" class="block text-gray-700 text-sm font-bold mb-2">Descripción (Opcional):</label>
+                <label for="descripcionAbono" class="block text-gray-700 text-sm font-medium mb-2">Descripción (Opcional):</label>
                 <textarea id="descripcionAbono" 
-                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                          class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                           rows="2"
                           placeholder="Ingrese una descripción del abono...">${abono.descripcion || ''}</textarea>
             </div>
             <div>
-                <label for="fechaAbono" class="block text-gray-700 text-sm font-bold mb-2">Fecha del Abono:</label>
+                <label for="fechaAbono" class="block text-gray-700 text-sm font-medium mb-2">Fecha del Abono:</label>
                 <input type="date" 
                        id="fechaAbono" 
                        value="${abono.fechaAbono}" 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                       class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                        required>
             </div>
             <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                 <button type="button" 
                         onclick="ocultarModal()" 
-                        class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
                     Cancelar
                 </button>
                 <button type="submit" 
-                        class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
                     Guardar
                 </button>
             </div>

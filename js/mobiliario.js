@@ -32,29 +32,36 @@ export async function mostrarInventarioMobiliario() {
         });
 
         let html = `
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold text-gray-700">Inventario de Mobiliario</h2>
-                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 flex items-center gap-2" onclick="mostrarFormularioNuevoMueble()">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    Inventario de Mobiliario
+                </h2>
+                <button onclick="mostrarFormularioNuevoMueble()" 
+                    class="w-full sm:w-auto bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                    text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center font-medium text-sm sm:text-base">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
                     Agregar Mobiliario
                 </button>
             </div>
             
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Renta</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibles</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asignaciones</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Descripción</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cant.</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disp.</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Asign.</th>
+                                <th class="px-3 sm:px-6 py-3 sm:py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -99,37 +106,63 @@ export async function mostrarInventarioMobiliario() {
                 }
 
                 html += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${mob.nombre}</td>
-                        <td class="px-4 py-3 text-sm text-gray-700">${mob.descripcion || '-'}</td>
-                        <td class="px-4 py-3 text-sm text-gray-900">$${(mob.costoRenta || 0).toFixed(2)}</td>
-                        <td class="px-4 py-3 text-sm">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${estadoClass}">
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium text-gray-900">${mob.nombre}</td>
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-700 hidden sm:table-cell">${mob.descripcion || '-'}</td>
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-900">$${(mob.costoRenta || 0).toFixed(2)}</td>
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm">
+                            <span class="inline-flex px-2 sm:px-3 py-1 text-xs font-semibold rounded-full ${estadoClass}">
                                 ${estadoTexto}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-900">${cantidadTotal}</td>
-                        <td class="px-4 py-3 text-sm font-semibold ${cantidadDisponible > 0 ? 'text-green-600' : 'text-red-600'}">${cantidadDisponible}</td>
-                        <td class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title="${asignacionesTexto}">${asignacionesTexto}</td>
-                        <td class="px-4 py-3 text-sm text-right">
-                            <div class="flex flex-col sm:flex-row sm:justify-end gap-1">
-                                <button onclick="verHistorialMobiliario('${mob.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs transition-colors duration-200" title="Ver historial">
-                                    📋
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-900">${cantidadTotal}</td>
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold ${cantidadDisponible > 0 ? 'text-green-600' : 'text-red-600'}">${cantidadDisponible}</td>
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-700 max-w-xs truncate hidden sm:table-cell" title="${asignacionesTexto}">${asignacionesTexto}</td>
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-right">
+                            <div class="flex flex-wrap justify-end gap-1.5">
+                                <button onclick="verHistorialMobiliario('${mob.id}')" 
+                                    class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
+                                    text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    Historial
                                 </button>
-                                <button onclick="editarMueble('${mob.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs transition-colors duration-200">
+                                <button onclick="editarMueble('${mob.id}')" 
+                                    class="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
+                                    text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
                                     Editar
                                 </button>
                                 ${cantidadDisponible > 0 ? `
-                                    <button onclick="asignarMueble('${mob.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs transition-colors duration-200">
+                                    <button onclick="asignarMueble('${mob.id}')" 
+                                        class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+                                        text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
                                         Asignar
                                     </button>
                                 ` : ''}
                                 ${cantidadAsignada > 0 ? `
-                                    <button onclick="liberarMobiliario('${mob.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs transition-colors duration-200">
+                                    <button onclick="liberarMobiliario('${mob.id}')" 
+                                        class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 
+                                        text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                                        </svg>
                                         Liberar
                                     </button>
                                 ` : ''}
-                                <button onclick="eliminarMueble('${mob.id}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs transition-colors duration-200" ${cantidadAsignada > 0 ? 'disabled title="No se puede eliminar mobiliario asignado"' : ''}>
+                                <button onclick="eliminarMueble('${mob.id}')" 
+                                    class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
+                                    text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5"
+                                    ${cantidadAsignada > 0 ? 'disabled title="No se puede eliminar mobiliario asignado"' : ''}>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
                                     Eliminar
                                 </button>
                             </div>
@@ -158,38 +191,55 @@ export async function mostrarInventarioMobiliario() {
  */
 export function mostrarFormularioNuevoMueble() {
     const formHtml = `
-        <div class="px-4 py-3 bg-green-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
-            <h3 class="text-2xl font-bold text-center">Agregar Mobiliario</h3>
+        <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-6">
+            <h3 class="text-xl sm:text-2xl font-bold text-center">Agregar Mobiliario</h3>
         </div>
-        <form id="formNuevoMueble" class="space-y-5 px-2">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre *</label>
-                <input type="text" id="nombreMueble" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-green-500 focus:border-green-500">
+        <form id="formNuevoMueble" class="space-y-4 sm:space-y-6 px-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Nombre *</label>
+                    <input type="text" id="nombreMueble" required 
+                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Costo de Renta *</label>
+                    <input type="number" id="costoRentaMueble" min="0" step="0.01" required 
+                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
+                </div>
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
-                <textarea id="descripcionMueble" rows="3" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-green-500 focus:border-green-500" placeholder="Descripción detallada del mobiliario..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Descripción</label>
+                <textarea id="descripcionMueble" rows="3" 
+                    class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm" 
+                    placeholder="Descripción detallada del mobiliario..."></textarea>
             </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Costo de Renta *</label>
-                <input type="number" id="costoRentaMueble" min="0" step="0.01" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-green-500 focus:border-green-500">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Cantidad *</label>
+                    <input type="number" id="cantidadMueble" min="1" required 
+                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Condición</label>
+                    <select id="condicionMueble" 
+                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
+                        <option value="excelente">Excelente</option>
+                        <option value="buena" selected>Buena</option>
+                        <option value="regular">Regular</option>
+                        <option value="necesita_reparacion">Necesita Reparación</option>
+                    </select>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Cantidad *</label>
-                <input type="number" id="cantidadMueble" min="1" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-green-500 focus:border-green-500">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Condición</label>
-                <select id="condicionMueble" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-green-500 focus:border-green-500">
-                    <option value="excelente">Excelente</option>
-                    <option value="buena" selected>Buena</option>
-                    <option value="regular">Regular</option>
-                    <option value="necesita_reparacion">Necesita Reparación</option>
-                </select>
-            </div>
-            <div class="flex justify-end space-x-3 mt-8">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">Guardar</button>
+            <div class="flex justify-end space-x-3 mt-6 sm:mt-8">
+                <button type="button" onclick="ocultarModal()" 
+                    class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 text-sm">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                    class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                    text-white font-medium rounded-xl shadow-md transition-all duration-200 text-sm">
+                    Guardar
+                </button>
             </div>
         </form>
     `;
@@ -248,39 +298,55 @@ window.editarMueble = async function(id) {
         const mueble = muebleDoc.data();
         
         const formHtml = `
-            <div class="px-4 py-3 bg-yellow-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="px-6 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <h3 class="text-2xl font-bold text-center">Editar Mobiliario</h3>
             </div>
-            <form id="formEditarMueble" class="space-y-5 px-2">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre *</label>
-                    <input type="text" id="nombreMuebleEdit" value="${mueble.nombre}" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-yellow-500 focus:border-yellow-500">
+            <form id="formEditarMueble" class="space-y-6 px-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
+                        <input type="text" id="nombreMuebleEdit" value="${mueble.nombre}" required 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Costo de Renta *</label>
+                        <input type="number" id="costoRentaMuebleEdit" value="${mueble.costoRenta}" min="0" step="0.01" required 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
-                    <textarea id="descripcionMuebleEdit" rows="3" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-yellow-500 focus:border-yellow-500">${mueble.descripcion || ''}</textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                    <textarea id="descripcionMuebleEdit" rows="3" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">${mueble.descripcion || ''}</textarea>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Costo de Renta *</label>
-                    <input type="number" id="costoRentaMuebleEdit" value="${mueble.costoRenta}" min="0" step="0.01" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-yellow-500 focus:border-yellow-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Cantidad Total *</label>
-                    <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-yellow-500 focus:border-yellow-500">
-                    <p class="text-xs text-gray-500 mt-1">Mínimo: ${mueble.cantidadAsignada || 0} (cantidad actualmente asignada)</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Condición</label>
-                    <select id="condicionMuebleEdit" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-yellow-500 focus:border-yellow-500">
-                        <option value="excelente" ${mueble.condicion === 'excelente' ? 'selected' : ''}>Excelente</option>
-                        <option value="buena" ${mueble.condicion === 'buena' ? 'selected' : ''}>Buena</option>
-                        <option value="regular" ${mueble.condicion === 'regular' ? 'selected' : ''}>Regular</option>
-                        <option value="necesita_reparacion" ${mueble.condicion === 'necesita_reparacion' ? 'selected' : ''}>Necesita Reparación</option>
-                    </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad Total *</label>
+                        <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                        <p class="text-xs text-gray-500 mt-1">Mínimo: ${mueble.cantidadAsignada || 0} (cantidad actualmente asignada)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Condición</label>
+                        <select id="condicionMuebleEdit" 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                            <option value="excelente" ${mueble.condicion === 'excelente' ? 'selected' : ''}>Excelente</option>
+                            <option value="buena" ${mueble.condicion === 'buena' ? 'selected' : ''}>Buena</option>
+                            <option value="regular" ${mueble.condicion === 'regular' ? 'selected' : ''}>Regular</option>
+                            <option value="necesita_reparacion" ${mueble.condicion === 'necesita_reparacion' ? 'selected' : ''}>Necesita Reparación</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
-                    <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">Actualizar</button>
+                    <button type="button" onclick="ocultarModal()" 
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                        class="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
+                        Actualizar
+                    </button>
                 </div>
             </form>
         `;
@@ -392,34 +458,45 @@ window.asignarMueble = async function(id) {
         }
 
         const selectHtml = `
-            <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <h3 class="text-xl font-bold text-center">Asignar Mobiliario</h3>
                 <p class="text-center text-blue-100 mt-1">${mueble.nombre}</p>
             </div>
-            <form id="formAsignarMueble" class="space-y-5 px-2">
-                <div class="bg-blue-50 p-4 rounded-lg">
+            <form id="formAsignarMueble" class="space-y-6 px-2">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md mb-6 border border-blue-200">
                     <p class="text-sm text-blue-800"><strong>Disponibles:</strong> ${disponibles} de ${mueble.cantidad || 0}</p>
                     <p class="text-sm text-blue-800"><strong>Condición:</strong> ${mueble.condicion || 'No especificada'}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Selecciona un inquilino *</label>
-                    <select id="inquilinoAsignar" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecciona un inquilino *</label>
+                    <select id="inquilinoAsignar" required 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700">
                         <option value="">Selecciona...</option>
                         ${inquilinos.map(inq => `<option value="${inq.id}">${inq.nombre} ${inq.inmuebleNombre ? `(${inq.inmuebleNombre})` : ''}</option>`).join('')}
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Cantidad a asignar *</label>
-                    <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad a asignar *</label>
+                    <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700">
                     <p class="text-xs text-gray-500 mt-1">Máximo disponible: ${disponibles}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Notas de asignación</label>
-                    <textarea id="notasAsignacion" rows="2" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500" placeholder="Observaciones sobre la asignación..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas de asignación</label>
+                    <textarea id="notasAsignacion" rows="2" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700" 
+                        placeholder="Observaciones sobre la asignación..."></textarea>
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
-                    <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">Asignar</button>
+                    <button type="button" onclick="ocultarModal()" 
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                        class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
+                        Asignar
+                    </button>
                 </div>
             </form>
         `;
@@ -550,48 +627,61 @@ window.liberarMobiliario = async function(id) {
         }).join('');
 
         const formHtml = `
-            <div class="px-4 py-3 bg-orange-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <h3 class="text-xl font-bold text-center">Liberar Mobiliario</h3>
                 <p class="text-center text-orange-100 mt-1">${mueble.nombre}</p>
             </div>
-            <form id="formLiberarMueble" class="space-y-5 px-2">
-                <div class="bg-orange-50 p-4 rounded-lg">
+            <form id="formLiberarMueble" class="space-y-6 px-2">
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md mb-6 border border-orange-200">
                     <p class="text-sm text-orange-800"><strong>Total asignado:</strong> ${mueble.cantidadAsignada || 0} de ${mueble.cantidad || 0}</p>
                     <p class="text-sm text-orange-800"><strong>Asignaciones activas:</strong> ${asignacionesActivas.length}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-3">Selecciona las asignaciones a liberar:</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Selecciona las asignaciones a liberar:</label>
                     <div class="space-y-2 max-h-60 overflow-y-auto">
                         ${opcionesLiberacion}
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Condición al liberar</label>
-                    <select id="condicionLiberacion" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500">
-                        <option value="excelente">Excelente</option>
-                        <option value="buena" selected>Buena</option>
-                        <option value="regular">Regular</option>
-                        <option value="necesita_reparacion">Necesita Reparación</option>
-                        <option value="dañado">Dañado</option>
-                    </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Condición al liberar</label>
+                        <select id="condicionLiberacion" 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-700">
+                            <option value="excelente">Excelente</option>
+                            <option value="buena" selected>Buena</option>
+                            <option value="regular">Regular</option>
+                            <option value="necesita_reparacion">Necesita Reparación</option>
+                            <option value="dañado">Dañado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Motivo de liberación</label>
+                        <select id="motivoLiberacion" 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-700">
+                            <option value="fin_contrato">Fin de contrato</option>
+                            <option value="cambio_inmueble">Cambio de inmueble</option>
+                            <option value="solicitud_inquilino">Solicitud del inquilino</option>
+                            <option value="mantenimiento">Mantenimiento</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Motivo de liberación</label>
-                    <select id="motivoLiberacion" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500">
-                        <option value="fin_contrato">Fin de contrato</option>
-                        <option value="cambio_inmueble">Cambio de inmueble</option>
-                        <option value="solicitud_inquilino">Solicitud del inquilino</option>
-                        <option value="mantenimiento">Mantenimiento</option>
-                        <option value="otro">Otro</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Notas de liberación</label>
-                    <textarea id="notasLiberacion" rows="3" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500" placeholder="Observaciones sobre el estado del mobiliario al liberarlo..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas de liberación</label>
+                    <textarea id="notasLiberacion" rows="3" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-700" 
+                        placeholder="Observaciones sobre el estado del mobiliario al liberarlo..."></textarea>
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
-                    <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-                    <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">Liberar Seleccionados</button>
+                    <button type="button" onclick="ocultarModal()" 
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                        class="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
+                        Liberar Seleccionados
+                    </button>
                 </div>
             </form>
         `;
@@ -842,23 +932,23 @@ window.verHistorialMobiliario = async function(id) {
         }
 
         const modalHtml = `
-            <div class="px-4 py-3 bg-purple-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <h3 class="text-xl font-bold text-center">Historial de Mobiliario</h3>
                 <p class="text-center text-purple-100 mt-1">${mueble.nombre}</p>
             </div>
-            <div class="space-y-4">
+            <div class="space-y-6">
                 <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="bg-gray-50 p-3 rounded">
-                        <strong>Estado actual:</strong> ${mueble.estado || 'No especificado'}
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
+                        <strong class="text-purple-800">Estado actual:</strong> ${mueble.estado || 'No especificado'}
                     </div>
-                    <div class="bg-gray-50 p-3 rounded">
-                        <strong>Condición:</strong> ${mueble.condicion || 'No especificada'}
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
+                        <strong class="text-purple-800">Condición:</strong> ${mueble.condicion || 'No especificada'}
                     </div>
-                    <div class="bg-gray-50 p-3 rounded">
-                        <strong>Total:</strong> ${mueble.cantidad || 0} unidades
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
+                        <strong class="text-purple-800">Total:</strong> ${mueble.cantidad || 0} unidades
                     </div>
-                    <div class="bg-gray-50 p-3 rounded">
-                        <strong>Asignadas:</strong> ${mueble.cantidadAsignada || 0} unidades
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
+                        <strong class="text-purple-800">Asignadas:</strong> ${mueble.cantidadAsignada || 0} unidades
                     </div>
                 </div>
                 <div>
@@ -868,7 +958,10 @@ window.verHistorialMobiliario = async function(id) {
                 ${resumenAsignaciones}
             </div>
             <div class="flex justify-end mt-6">
-                <button onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+                <button onclick="ocultarModal()" 
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                    Cerrar
+                </button>
             </div>
         `;
         mostrarModal(modalHtml);
