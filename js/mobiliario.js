@@ -48,6 +48,38 @@ export async function mostrarInventarioMobiliario() {
                     Agregar Mobiliario
                 </button>
             </div>
+
+            <!-- Filtros -->
+            <div class="bg-white rounded-xl shadow-md p-4 mb-6 border border-gray-100">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                        <input type="text" id="filtroBusqueda" placeholder="Buscar por nombre..." 
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                        <select id="filtroEstado" 
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Todos</option>
+                            <option value="disponible">Disponible</option>
+                            <option value="parcialmente_asignado">Parcialmente Asignado</option>
+                            <option value="totalmente_asignado">Totalmente Asignado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Condición</label>
+                        <select id="filtroCondicion" 
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Todas</option>
+                            <option value="excelente">Excelente</option>
+                            <option value="buena">Buena</option>
+                            <option value="regular">Regular</option>
+                            <option value="necesita_reparacion">Necesita Reparación</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
@@ -64,7 +96,7 @@ export async function mostrarInventarioMobiliario() {
                                 <th class="px-3 sm:px-6 py-3 sm:py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200" id="tablaMobiliario">
         `;
 
         if (mobiliarioList.length === 0) {
@@ -106,7 +138,10 @@ export async function mostrarInventarioMobiliario() {
                 }
 
                 html += `
-                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                    <tr class="hover:bg-gray-50 transition-colors duration-200" 
+                        data-nombre="${mob.nombre.toLowerCase()}"
+                        data-estado="${estadoTexto.toLowerCase()}"
+                        data-condicion="${(mob.condicion || '').toLowerCase()}">
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium text-gray-900">${mob.nombre}</td>
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-700 hidden sm:table-cell">${mob.descripcion || '-'}</td>
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-900">$${(mob.costoRenta || 0).toFixed(2)}</td>
@@ -180,6 +215,35 @@ export async function mostrarInventarioMobiliario() {
         `;
 
         document.getElementById("contenido").innerHTML = html;
+
+        // Agregar event listeners para los filtros
+        const filtroBusqueda = document.getElementById('filtroBusqueda');
+        const filtroEstado = document.getElementById('filtroEstado');
+        const filtroCondicion = document.getElementById('filtroCondicion');
+
+        const aplicarFiltros = () => {
+            const busqueda = filtroBusqueda.value.toLowerCase();
+            const estado = filtroEstado.value.toLowerCase();
+            const condicion = filtroCondicion.value.toLowerCase();
+
+            const filas = document.querySelectorAll('#tablaMobiliario tr');
+            filas.forEach(fila => {
+                const nombre = fila.dataset.nombre || '';
+                const estadoFila = fila.dataset.estado || '';
+                const condicionFila = fila.dataset.condicion || '';
+
+                const coincideBusqueda = nombre.includes(busqueda);
+                const coincideEstado = !estado || estadoFila.includes(estado);
+                const coincideCondicion = !condicion || condicionFila.includes(condicion);
+
+                fila.style.display = coincideBusqueda && coincideEstado && coincideCondicion ? '' : 'none';
+            });
+        };
+
+        filtroBusqueda.addEventListener('input', aplicarFiltros);
+        filtroEstado.addEventListener('change', aplicarFiltros);
+        filtroCondicion.addEventListener('change', aplicarFiltros);
+
     } catch (error) {
         console.error("Error al cargar el inventario de mobiliario:", error);
         mostrarNotificacion("Error al cargar el inventario de mobiliario.", "error");
@@ -191,38 +255,70 @@ export async function mostrarInventarioMobiliario() {
  */
 export function mostrarFormularioNuevoMueble() {
     const formHtml = `
-        <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-6">
-            <h3 class="text-xl sm:text-2xl font-bold text-center">Agregar Mobiliario</h3>
-        </div>
-        <form id="formNuevoMueble" class="space-y-4 sm:space-y-6 px-2">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Nombre *</label>
-                    <input type="text" id="nombreMueble" required 
-                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Costo de Renta *</label>
-                    <input type="number" id="costoRentaMueble" min="0" step="0.01" required 
-                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    <h3 class="text-xl font-bold">Agregar Mobiliario</h3>
                 </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Descripción</label>
+        </div>
+        <form id="formNuevoMueble" class="space-y-6 px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        Nombre *
+                    </label>
+                    <input type="text" id="nombreMueble" required 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Costo de Renta *
+                    </label>
+                    <input type="number" id="costoRentaMueble" min="0" step="0.01" required 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                    </svg>
+                    Descripción
+                </label>
                 <textarea id="descripcionMueble" rows="3" 
-                    class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm" 
+                    class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700" 
                     placeholder="Descripción detallada del mobiliario..."></textarea>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Cantidad *</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Cantidad *
+                    </label>
                     <input type="number" id="cantidadMueble" min="1" required 
-                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Condición</label>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Condición
+                    </label>
                     <select id="condicionMueble" 
-                        class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 text-sm">
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                         <option value="excelente">Excelente</option>
                         <option value="buena" selected>Buena</option>
                         <option value="regular">Regular</option>
@@ -230,14 +326,20 @@ export function mostrarFormularioNuevoMueble() {
                     </select>
                 </div>
             </div>
-            <div class="flex justify-end space-x-3 mt-6 sm:mt-8">
+            <div class="flex justify-end space-x-3 mt-8">
                 <button type="button" onclick="ocultarModal()" 
-                    class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 text-sm">
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                     Cancelar
                 </button>
                 <button type="submit" 
-                    class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
-                    text-white font-medium rounded-xl shadow-md transition-all duration-200 text-sm">
+                    class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                    text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
                     Guardar
                 </button>
             </div>
@@ -298,38 +400,70 @@ window.editarMueble = async function(id) {
         const mueble = muebleDoc.data();
         
         const formHtml = `
-            <div class="px-6 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
-                <h3 class="text-2xl font-bold text-center">Editar Mobiliario</h3>
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                <div class="px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        <h3 class="text-xl font-bold">Editar Mobiliario</h3>
+                    </div>
+                </div>
             </div>
-            <form id="formEditarMueble" class="space-y-6 px-2">
+            <form id="formEditarMueble" class="space-y-6 px-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            Nombre *
+                        </label>
                         <input type="text" id="nombreMuebleEdit" value="${mueble.nombre}" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Costo de Renta *</label>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Costo de Renta *
+                        </label>
                         <input type="number" id="costoRentaMuebleEdit" value="${mueble.costoRenta}" min="0" step="0.01" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                        </svg>
+                        Descripción
+                    </label>
                     <textarea id="descripcionMuebleEdit" rows="3" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">${mueble.descripcion || ''}</textarea>
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">${mueble.descripcion || ''}</textarea>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad Total *</label>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            Cantidad Total *
+                        </label>
                         <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                         <p class="text-xs text-gray-500 mt-1">Mínimo: ${mueble.cantidadAsignada || 0} (cantidad actualmente asignada)</p>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Condición</label>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Condición
+                        </label>
                         <select id="condicionMuebleEdit" 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700">
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                             <option value="excelente" ${mueble.condicion === 'excelente' ? 'selected' : ''}>Excelente</option>
                             <option value="buena" ${mueble.condicion === 'buena' ? 'selected' : ''}>Buena</option>
                             <option value="regular" ${mueble.condicion === 'regular' ? 'selected' : ''}>Regular</option>
@@ -339,12 +473,18 @@ window.editarMueble = async function(id) {
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
                     <button type="button" onclick="ocultarModal()" 
-                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
                         Cancelar
                     </button>
                     <button type="submit" 
-                        class="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
+                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
                         Actualizar
                     </button>
                 </div>
@@ -458,43 +598,88 @@ window.asignarMueble = async function(id) {
         }
 
         const selectHtml = `
-            <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
-                <h3 class="text-xl font-bold text-center">Asignar Mobiliario</h3>
-                <p class="text-center text-blue-100 mt-1">${mueble.nombre}</p>
-            </div>
-            <form id="formAsignarMueble" class="space-y-6 px-2">
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md mb-6 border border-blue-200">
-                    <p class="text-sm text-blue-800"><strong>Disponibles:</strong> ${disponibles} de ${mueble.cantidad || 0}</p>
-                    <p class="text-sm text-blue-800"><strong>Condición:</strong> ${mueble.condicion || 'No especificada'}</p>
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                <div class="px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <h3 class="text-xl font-bold">Asignar Mobiliario</h3>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecciona un inquilino *</label>
+            </div>
+            <form id="formAsignarMueble" class="space-y-6 px-4">
+                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-md mb-6 border border-indigo-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-indigo-800">Disponibles</p>
+                                <p class="text-lg font-bold text-indigo-900">${disponibles} de ${mueble.cantidad || 0}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-indigo-800">Condición</p>
+                                <p class="text-lg font-bold text-indigo-900">${mueble.condicion || 'No especificada'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Selecciona un inquilino *
+                    </label>
                     <select id="inquilinoAsignar" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700">
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                         <option value="">Selecciona...</option>
                         ${inquilinos.map(inq => `<option value="${inq.id}">${inq.nombre} ${inq.inmuebleNombre ? `(${inq.inmuebleNombre})` : ''}</option>`).join('')}
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad a asignar *</label>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Cantidad a asignar *
+                    </label>
                     <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700">
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                     <p class="text-xs text-gray-500 mt-1">Máximo disponible: ${disponibles}</p>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas de asignación</label>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                        </svg>
+                        Notas de asignación
+                    </label>
                     <textarea id="notasAsignacion" rows="2" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700" 
                         placeholder="Observaciones sobre la asignación..."></textarea>
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
                     <button type="button" onclick="ocultarModal()" 
-                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
                         Cancelar
                     </button>
                     <button type="submit" 
-                        class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
+                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
                         Asignar
                     </button>
                 </div>
@@ -599,25 +784,57 @@ window.liberarMobiliario = async function(id) {
         const opcionesLiberacion = asignacionesActivas.map(a => {
             const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
             return `
-                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
                     <div class="flex items-start">
-                        <input type="checkbox" name="liberarAsignacion" value="${a.inquilinoId}" class="mr-3 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded mt-1">
+                        <input type="checkbox" name="liberarAsignacion" value="${a.inquilinoId}" class="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1">
                         <div class="flex-1">
-                            <div class="font-medium text-gray-900">${nombreInquilino}</div>
-                            <div class="text-sm text-gray-500">
-                                Cantidad asignada: ${a.cantidad} | 
-                                Asignado: ${new Date(a.fechaAsignacion).toLocaleDateString()} |
-                                Condición: ${a.condicionAsignacion || 'No especificada'}
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                <div class="font-medium text-gray-900">${nombreInquilino}</div>
                             </div>
-                            ${a.notas ? `<div class="text-xs text-gray-400 mt-1">${a.notas}</div>` : ''}
-                            <div class="mt-2">
-                                <label class="text-sm text-gray-600">Cantidad a liberar:</label>
+                            <div class="text-sm text-gray-500 mt-1">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                    </svg>
+                                    <span>Cantidad asignada: ${a.cantidad}</span>
+                                </div>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Asignado: ${new Date(a.fechaAsignacion).toLocaleDateString()}</span>
+                                </div>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Condición: ${a.condicionAsignacion || 'No especificada'}</span>
+                                </div>
+                            </div>
+                            ${a.notas ? `
+                                <div class="mt-2 text-xs text-gray-400 flex items-start space-x-2">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                                    </svg>
+                                    <span>${a.notas}</span>
+                                </div>
+                            ` : ''}
+                            <div class="mt-3">
+                                <label class="text-sm text-gray-600 flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                    </svg>
+                                    <span>Cantidad a liberar:</span>
+                                </label>
                                 <input type="number" 
                                        name="cantidadLiberar_${a.inquilinoId}" 
                                        min="1" 
                                        max="${a.cantidad}" 
                                        value="${a.cantidad}"
-                                       class="mt-1 block w-24 border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:ring-orange-500 focus:border-orange-500"
+                                       class="mt-1 block w-24 border border-gray-300 rounded-lg shadow-sm py-1.5 px-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                        disabled>
                             </div>
                         </div>
@@ -627,26 +844,60 @@ window.liberarMobiliario = async function(id) {
         }).join('');
 
         const formHtml = `
-            <div class="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
-                <h3 class="text-xl font-bold text-center">Liberar Mobiliario</h3>
-                <p class="text-center text-orange-100 mt-1">${mueble.nombre}</p>
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                <div class="px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                        <h3 class="text-xl font-bold">Liberar Mobiliario</h3>
+                    </div>
+                </div>
             </div>
-            <form id="formLiberarMueble" class="space-y-6 px-2">
-                <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md mb-6 border border-orange-200">
-                    <p class="text-sm text-orange-800"><strong>Total asignado:</strong> ${mueble.cantidadAsignada || 0} de ${mueble.cantidad || 0}</p>
-                    <p class="text-sm text-orange-800"><strong>Asignaciones activas:</strong> ${asignacionesActivas.length}</p>
+            <form id="formLiberarMueble" class="space-y-6 px-4">
+                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-md mb-6 border border-indigo-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-indigo-800">Total asignado</p>
+                                <p class="text-lg font-bold text-indigo-900">${mueble.cantidadAsignada || 0} de ${mueble.cantidad || 0}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-indigo-800">Asignaciones activas</p>
+                                <p class="text-lg font-bold text-indigo-900">${asignacionesActivas.length}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Selecciona las asignaciones a liberar:</label>
-                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                    <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Selecciona las asignaciones a liberar:
+                    </label>
+                    <div class="space-y-3 max-h-60 overflow-y-auto">
                         ${opcionesLiberacion}
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Condición al liberar</label>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Condición al liberar
+                        </label>
                         <select id="condicionLiberacion" 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-700">
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                             <option value="excelente">Excelente</option>
                             <option value="buena" selected>Buena</option>
                             <option value="regular">Regular</option>
@@ -654,10 +905,15 @@ window.liberarMobiliario = async function(id) {
                             <option value="dañado">Dañado</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Motivo de liberación</label>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Motivo de liberación
+                        </label>
                         <select id="motivoLiberacion" 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-700">
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                             <option value="fin_contrato">Fin de contrato</option>
                             <option value="cambio_inmueble">Cambio de inmueble</option>
                             <option value="solicitud_inquilino">Solicitud del inquilino</option>
@@ -666,20 +922,31 @@ window.liberarMobiliario = async function(id) {
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas de liberación</label>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                        </svg>
+                        Notas de liberación
+                    </label>
                     <textarea id="notasLiberacion" rows="3" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-700" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700" 
                         placeholder="Observaciones sobre el estado del mobiliario al liberarlo..."></textarea>
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
                     <button type="button" onclick="ocultarModal()" 
-                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
                         Cancelar
                     </button>
                     <button type="submit" 
-                        class="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
+                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
                         Liberar Seleccionados
                     </button>
                 </div>

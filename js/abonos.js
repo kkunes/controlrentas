@@ -346,56 +346,97 @@ export async function mostrarFormularioNuevoAbono(id = null) {
 
     const formHtml = `
         <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
-            <h3 class="text-xl sm:text-2xl font-bold text-center">${titulo}</h3>
+            <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                ${titulo}
+            </h3>
         </div>
-        <form id="formAbonoSaldoFavor" class="space-y-4 max-w-lg mx-auto px-2">
-            <div>
-                <label for="inquilinoId" class="block text-gray-700 text-sm font-medium mb-2">Inquilino:</label>
-                <select id="inquilinoId" 
-                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                        required>
-                    <option value="">-- Seleccionar Inquilino --</option>
-                    ${inquilinosOptions}
-                </select>
-            </div>
-            <div>
-                <label for="montoOriginal" class="block text-gray-700 text-sm font-medium mb-2">Monto del Abono:</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500">$</span>
-                    <input type="number" 
-                           id="montoOriginal" 
-                           value="${abono.montoOriginal}" 
-                           class="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                           step="0.01" 
-                           required 
-                           min="0.01"
-                           placeholder="0.00">
+        <form id="formAbonoSaldoFavor" class="space-y-5 max-w-lg mx-auto px-4">
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="space-y-4">
+                    <div>
+                        <label for="inquilinoId" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Inquilino:
+                        </label>
+                        <select id="inquilinoId" 
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                                required>
+                            <option value="">-- Seleccionar Inquilino --</option>
+                            ${inquilinosOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="montoOriginal" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Monto del Abono:
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500">$</span>
+                            <input type="number" 
+                                   id="montoOriginal" 
+                                   value="${abono.montoOriginal}" 
+                                   class="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                                   step="0.01" 
+                                   required 
+                                   min="0.01"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <label for="descripcionAbono" class="block text-gray-700 text-sm font-medium mb-2">Descripción (Opcional):</label>
-                <textarea id="descripcionAbono" 
-                          class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                          rows="2"
-                          placeholder="Ingrese una descripción del abono...">${abono.descripcion || ''}</textarea>
+
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="space-y-4">
+                    <div>
+                        <label for="descripcionAbono" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                            </svg>
+                            Descripción (Opcional):
+                        </label>
+                        <textarea id="descripcionAbono" 
+                                  class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                                  rows="2"
+                                  placeholder="Ingrese una descripción del abono...">${abono.descripcion || ''}</textarea>
+                    </div>
+                    <div>
+                        <label for="fechaAbono" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Fecha del Abono:
+                        </label>
+                        <input type="date" 
+                               id="fechaAbono" 
+                               value="${abono.fechaAbono}" 
+                               class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" 
+                               required>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="fechaAbono" class="block text-gray-700 text-sm font-medium mb-2">Fecha del Abono:</label>
-                <input type="date" 
-                       id="fechaAbono" 
-                       value="${abono.fechaAbono}" 
-                       class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                       required>
-            </div>
+
             <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                 <button type="button" 
                         onclick="ocultarModal()" 
-                        class="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
+                        class="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                     Cancelar
                 </button>
                 <button type="submit" 
                         class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200">
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
                     Guardar
                 </button>
             </div>
