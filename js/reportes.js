@@ -24,7 +24,7 @@ export async function mostrarReportes() {
     let mesesOptions = meses.map((mes, index) => `<option value="${index + 1}">${mes}</option>`).join('');
 
     contenedor.innerHTML = `
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center">
                 <svg class="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -33,7 +33,7 @@ export async function mostrarReportes() {
             </h2>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-8 border border-gray-100">
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8 border border-gray-100">
             <h3 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6 flex items-center">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
@@ -248,11 +248,11 @@ async function generarReporteMensual(mes, anio) {
                         </thead>
                         <tbody>
                             ${todosLosMovimientos.map(mov => `
-                                <tr>
-                                    <td class="px-4 py-2 whitespace-nowrap">${mov.fecha}</td>
-                                    <td class="px-4 py-2 whitespace-nowrap">${mov.tipo}</td>
-                                    <td class="px-4 py-2">${mov.descripcion}</td>
-                                    <td class="px-4 py-2 text-right font-semibold ${mov.tipo.startsWith('Ingreso') ? 'text-green-700' : 'text-red-700'}">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm">${mov.fecha}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm">${mov.tipo}</td>
+                                    <td class="px-4 py-2 text-sm">${mov.descripcion}</td>
+                                    <td class="px-4 py-2 text-right font-semibold text-sm ${mov.tipo.startsWith('Ingreso') ? 'text-green-700' : 'text-red-700'}">
                                         $${parseFloat(mov.monto).toFixed(2)}
                                     </td>
                                 </tr>
@@ -317,10 +317,10 @@ async function generarReporteMensual(mes, anio) {
             </div>
             <div class="relative flex justify-center mb-6 sm:mb-10">
                 <div class="w-full md:w-2/3 lg:w-1/2 xl:w-1/3">
-                    <div class="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl shadow-xl border border-white/20 p-6 sm:p-8 text-center transform hover:scale-105 transition-all duration-300">
+                    <div class="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl shadow-xl border border-white/20 p-4 sm:p-8 text-center transform hover:scale-105 transition-all duration-300">
                         ${balanceIcon}
                         <p class="text-base sm:text-lg font-semibold text-white tracking-wide mb-1">Balance del Mes</p>
-                        <p class="text-3xl sm:text-4xl font-extrabold ${balance >= 0 ? 'text-white' : 'text-orange-200'} drop-shadow-lg mb-2">$${balance.toFixed(2)}</p>
+                        <p class="text-2xl sm:text-4xl font-extrabold ${balance >= 0 ? 'text-white' : 'text-orange-200'} drop-shadow-lg mb-2">$${balance.toFixed(2)}</p>
                         <p class="text-xs sm:text-sm text-white/80">${balance >= 0 ? '¡Felicidades! El balance es positivo.' : 'Atención: El balance es negativo.'}</p>
                     </div>
                 </div>
