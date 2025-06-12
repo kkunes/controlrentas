@@ -338,7 +338,7 @@ proximoPago.setHours(0, 0, 0, 0);
                     <h2 class="text-3xl font-bold text-gray-900 mb-8">Dashboard General</h2>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm p-6">
+                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles()">
                             <div class="flex flex-col items-center">
                                 <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-md">
                                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,7 +350,7 @@ proximoPago.setHours(0, 0, 0, 0);
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-6">
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Ocupado')">
                             <div class="flex flex-col items-center">
                                 <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-md">
                                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,19 +362,19 @@ proximoPago.setHours(0, 0, 0, 0);
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-sm p-6">
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Disponible')">
                             <div class="flex flex-col items-center">
                                 <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mb-4 shadow-md">
                                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                     </svg>
                                 </div>
-                                <p class="text-lg font-semibold text-teal-700">Inmuebles Disponibles</p>
+                                <p class="text-lg font-semibold text-teal-700 text-center">Inmuebles Disponibles</p>
                                 <p class="text-4xl font-bold text-teal-800 mt-2">${inmueblesDisponibles}</p>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-6">
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInquilinos()">
                             <div class="flex flex-col items-center">
                                 <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4 shadow-md">
                                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

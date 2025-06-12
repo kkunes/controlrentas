@@ -8,23 +8,40 @@ import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 export async function mostrarInventarioMobiliario() {
     try {
         const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
-        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+        const mobiliario = [];
         
-        // Crear mapa de inquilinos para mostrar nombres
+        // Obtener nombres de inquilinos
+        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const inquilinosMap = new Map();
         inquilinosSnap.forEach(doc => {
-            const data = doc.data();
-            inquilinosMap.set(doc.id, data.nombre);
+            inquilinosMap.set(doc.id, doc.data().nombre);
         });
 
-        let mobiliarioList = [];
+        // Obtener nombres de inmuebles
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data().nombre);
+        });
+
         mobiliarioSnap.forEach(doc => {
             const data = doc.data();
-            mobiliarioList.push({ id: doc.id, ...data });
+            const asignacionesActivas = (data.asignaciones || []).filter(a => a.activa !== false);
+            const resumenAsignaciones = asignacionesActivas.map(a => {
+                const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
+                const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+                return `${nombreInquilino} - Inmueble: ${nombreInmueble} (${a.cantidad})`;
+            }).join(', ');
+
+            mobiliario.push({
+                id: doc.id,
+                ...data,
+                resumenAsignaciones
+            });
         });
 
         // Ordenar por estado (disponible primero) y luego por nombre
-        mobiliarioList.sort((a, b) => {
+        mobiliario.sort((a, b) => {
             if (a.estado !== b.estado) {
                 return a.estado === 'disponible' ? -1 : 1;
             }
@@ -99,7 +116,7 @@ export async function mostrarInventarioMobiliario() {
                         <tbody class="bg-white divide-y divide-gray-200" id="tablaMobiliario">
         `;
 
-        if (mobiliarioList.length === 0) {
+        if (mobiliario.length === 0) {
             html += `
                 <tr>
                     <td colspan="8" class="px-4 py-8 text-center text-gray-500">
@@ -108,7 +125,7 @@ export async function mostrarInventarioMobiliario() {
                 </tr>
             `;
         } else {
-            mobiliarioList.forEach(mob => {
+            mobiliario.forEach(mob => {
                 const cantidadTotal = mob.cantidad || 0;
                 const cantidadAsignada = mob.cantidadAsignada || 0;
                 const cantidadDisponible = cantidadTotal - cantidadAsignada;
@@ -132,7 +149,8 @@ export async function mostrarInventarioMobiliario() {
                     if (asignacionesActivas.length > 0) {
                         asignacionesTexto = asignacionesActivas.map(a => {
                             const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
-                            return `${nombreInquilino} (${a.cantidad})`;
+                            const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+                            return `${nombreInquilino} - Inmueble: ${nombreInmueble} (${a.cantidad})`;
                         }).join(', ');
                     }
                 }
@@ -255,13 +273,13 @@ export async function mostrarInventarioMobiliario() {
  */
 export function mostrarFormularioNuevoMueble() {
     const formHtml = `
-        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+        <div class="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
             <div class="px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
-                    <h3 class="text-xl font-bold">Agregar Mobiliario</h3>
+                    <h3 class="text-xl font-bold">Nuevo Mobiliario</h3>
                 </div>
             </div>
         </div>
@@ -400,7 +418,7 @@ window.editarMueble = async function(id) {
         const mueble = muebleDoc.data();
         
         const formHtml = `
-            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+            <div class="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <div class="px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -574,7 +592,11 @@ window.asignarMueble = async function(id) {
         const inquilinos = [];
         inquilinosSnap.forEach(doc => {
             const data = doc.data();
-            inquilinos.push({ id: doc.id, ...data });
+            inquilinos.push({ 
+                id: doc.id, 
+                ...data,
+                inmuebleNombre: data.inmuebleAsociadoNombre || 'No especificado'
+            });
         });
 
         if (inquilinos.length === 0) {
@@ -598,7 +620,7 @@ window.asignarMueble = async function(id) {
         }
 
         const selectHtml = `
-            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <div class="px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -622,26 +644,31 @@ window.asignarMueble = async function(id) {
                         </div>
                         <div class="flex items-center space-x-2">
                             <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                             <div>
-                                <p class="text-sm font-medium text-indigo-800">Condición</p>
-                                <p class="text-lg font-bold text-indigo-900">${mueble.condicion || 'No especificada'}</p>
+                                <p class="text-sm font-medium text-indigo-800">Costo de Renta</p>
+                                <p class="text-lg font-bold text-indigo-900">$${(mueble.costoRenta || 0).toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
                         <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-                        Selecciona un inquilino *
+                        Inquilino *
                     </label>
-                    <select id="inquilinoAsignar" required 
+                    <select id="inquilinoAsignar" required
                         class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                        <option value="">Selecciona...</option>
-                        ${inquilinos.map(inq => `<option value="${inq.id}">${inq.nombre} ${inq.inmuebleNombre ? `(${inq.inmuebleNombre})` : ''}</option>`).join('')}
+                        <option value="">Selecciona un inquilino</option>
+                        ${inquilinos.map(inquilino => `
+                            <option value="${inquilino.id}">
+                                ${inquilino.nombre} - Inmueble: ${inquilino.inmuebleNombre}
+                            </option>
+                        `).join('')}
                     </select>
                 </div>
                 <div class="space-y-2">
@@ -708,8 +735,13 @@ window.asignarMueble = async function(id) {
                     asignaciones[existingIndex].fechaUltimaModificacion = new Date().toISOString();
                     if (notas) asignaciones[existingIndex].notas = notas;
                 } else {
+                    // Obtener el inmueble asociado al inquilino
+                    const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
+                    const inmuebleAsociadoId = inquilinoDoc.data()?.inmuebleAsociadoId;
+                    
                     asignaciones.push({
                         inquilinoId,
+                        inmuebleAsociadoId,
                         cantidad,
                         fechaAsignacion: new Date().toISOString(),
                         activa: true,
@@ -781,8 +813,15 @@ window.liberarMobiliario = async function(id) {
             inquilinosMap.set(doc.id, doc.data().nombre);
         });
 
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data().nombre);
+        });
+
         const opcionesLiberacion = asignacionesActivas.map(a => {
             const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
+            const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
             return `
                 <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
                     <div class="flex items-start">
@@ -792,7 +831,7 @@ window.liberarMobiliario = async function(id) {
                                 <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                 </svg>
-                                <div class="font-medium text-gray-900">${nombreInquilino}</div>
+                                <div class="font-medium text-gray-900">${nombreInquilino} - Inmueble: ${nombreInmueble}</div>
                             </div>
                             <div class="text-sm text-gray-500 mt-1">
                                 <div class="flex items-center space-x-2">
@@ -844,7 +883,7 @@ window.liberarMobiliario = async function(id) {
         }).join('');
 
         const formHtml = `
-            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+            <div class="bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <div class="px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1088,7 +1127,6 @@ window.verHistorialMobiliario = async function(id) {
 
         const mueble = muebleDoc.data();
         const historial = mueble.historial || [];
-        const asignaciones = mueble.asignaciones || [];
 
         // Obtener nombres de inquilinos
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
@@ -1097,138 +1135,146 @@ window.verHistorialMobiliario = async function(id) {
             inquilinosMap.set(doc.id, doc.data().nombre);
         });
 
-        // Generar historial ordenado por fecha descendente
-        const historialOrdenado = [...historial].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        // Obtener nombres de inmuebles
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data().nombre);
+        });
 
-        let historialHtml = '';
-        if (historialOrdenado.length === 0) {
-            historialHtml = '<p class="text-gray-500 text-center py-4">No hay historial disponible.</p>';
-        } else {
-            historialHtml = `
-                <div class="space-y-3 max-h-60 overflow-y-auto">
-                    ${historialOrdenado.map(h => {
-                        const fecha = new Date(h.fecha).toLocaleString();
-                        let iconoAccion = '📝';
-                        let colorAccion = 'text-gray-600';
-                        
-                        switch (h.accion) {
-                            case 'creado':
-                                iconoAccion = '✨';
-                                colorAccion = 'text-green-600';
-                                break;
-                            case 'asignado':
-                                iconoAccion = '📤';
-                                colorAccion = 'text-blue-600';
-                                break;
-                            case 'liberado':
-                                iconoAccion = '📥';
-                                colorAccion = 'text-orange-600';
-                                break;
-                            case 'editado':
-                                iconoAccion = '✏️';
-                                colorAccion = 'text-yellow-600';
-                                break;
-                        }
+        // Ordenar historial por fecha (más reciente primero)
+        historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-                        return `
-                            <div class="border-l-4 border-gray-200 pl-4 py-2">
-                                <div class="flex items-start">
-                                    <span class="text-lg mr-2">${iconoAccion}</span>
-                                    <div class="flex-1">
-                                        <div class="flex justify-between items-start">
-                                            <span class="font-medium ${colorAccion} capitalize">${h.accion}</span>
-                                            <span class="text-xs text-gray-500">${fecha}</span>
-                                        </div>
-                                        <p class="text-sm text-gray-700 mt-1">${h.descripcion}</p>
-                                        ${h.notas ? `<p class="text-xs text-gray-500 mt-1 italic">${h.notas}</p>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
+        const historialHtml = historial.map(h => {
+            const fecha = new Date(h.fecha).toLocaleString();
+            let descripcion = h.descripcion;
+            
+            // Si hay un inquilino asociado, mostrar su nombre y el inmueble
+            if (h.inquilinoId) {
+                const nombreInquilino = inquilinosMap.get(h.inquilinoId) || 'Inquilino Desconocido';
+                const nombreInmueble = h.inmuebleAsociadoId ? inmueblesMap.get(h.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+                descripcion = descripcion.replace('Inquilino Desconocido', `${nombreInquilino} - Inmueble: ${nombreInmueble}`);
+            }
 
-        // Generar resumen de asignaciones
-        const asignacionesActivas = asignaciones.filter(a => a.activa !== false);
-        const asignacionesInactivas = asignaciones.filter(a => a.activa === false);
-
-        let resumenAsignaciones = '';
-        if (asignacionesActivas.length > 0 || asignacionesInactivas.length > 0) {
-            resumenAsignaciones = `
-                <div class="mt-6">
-                    <h5 class="font-semibold text-gray-800 mb-3">Resumen de Asignaciones</h5>
-                    ${asignacionesActivas.length > 0 ? `
-                        <div class="mb-4">
-                            <h6 class="text-sm font-medium text-green-700 mb-2">Asignaciones Activas (${asignacionesActivas.length})</h6>
-                            <div class="space-y-2">
-                                ${asignacionesActivas.map(a => {
-                                    const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
-                                    return `
-                                        <div class="bg-green-50 p-2 rounded text-sm">
-                                            <strong>${nombreInquilino}</strong> - ${a.cantidad} unidad(es)
-                                            <br><span class="text-xs text-gray-600">Desde: ${new Date(a.fechaAsignacion).toLocaleDateString()}</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    ${asignacionesInactivas.length > 0 ? `
+            return `
+                <div class="border-l-4 ${getColorBorde(h.accion)} pl-4 py-2">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <h6 class="text-sm font-medium text-gray-700 mb-2">Asignaciones Anteriores (${asignacionesInactivas.length})</h6>
-                            <div class="space-y-2">
-                                ${asignacionesInactivas.map(a => {
-                                    const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
-                                    return `
-                                        <div class="bg-gray-50 p-2 rounded text-sm">
-                                            <strong>${nombreInquilino}</strong> - ${a.cantidad} unidad(es)
-                                            <br><span class="text-xs text-gray-600">
-                                                ${new Date(a.fechaAsignacion).toLocaleDateString()} - ${new Date(a.fechaLiberacion).toLocaleDateString()}
-                                                ${a.motivoLiberacion ? `(${a.motivoLiberacion})` : ''}
-                                            </span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
+                            <p class="font-medium text-gray-900">${descripcion}</p>
+                            ${h.notas ? `<p class="text-sm text-gray-500 mt-1">${h.notas}</p>` : ''}
                         </div>
-                    ` : ''}
+                        <span class="text-sm text-gray-500">${fecha}</span>
+                    </div>
                 </div>
             `;
-        }
+        }).join('');
+
+        // Obtener asignaciones activas
+        const asignacionesActivas = (mueble.asignaciones || []).filter(a => a.activa !== false);
+        const resumenAsignaciones = asignacionesActivas.map(a => {
+            const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
+            const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+            return `
+                <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-900">${nombreInquilino} - Inmueble: ${nombreInmueble}</p>
+                            <p class="text-sm text-gray-500">Cantidad: ${a.cantidad}</p>
+                            <p class="text-sm text-gray-500">Asignado: ${new Date(a.fechaAsignacion).toLocaleDateString()}</p>
+                            ${a.notas ? `<p class="text-sm text-gray-500 mt-1">${a.notas}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
         const modalHtml = `
-            <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
-                <h3 class="text-xl font-bold text-center">Historial de Mobiliario</h3>
-                <p class="text-center text-purple-100 mt-1">${mueble.nombre}</p>
-            </div>
-            <div class="space-y-6">
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
-                        <strong class="text-purple-800">Estado actual:</strong> ${mueble.estado || 'No especificado'}
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
-                        <strong class="text-purple-800">Condición:</strong> ${mueble.condicion || 'No especificada'}
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
-                        <strong class="text-purple-800">Total:</strong> ${mueble.cantidad || 0} unidades
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm border border-purple-200">
-                        <strong class="text-purple-800">Asignadas:</strong> ${mueble.cantidadAsignada || 0} unidades
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                <div class="px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <h3 class="text-xl font-bold">Historial de ${mueble.nombre}</h3>
                     </div>
                 </div>
+            </div>
+            <div class="space-y-6 px-4">
+                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-md mb-6 border border-indigo-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-indigo-800">Total en inventario</p>
+                                <p class="text-lg font-bold text-indigo-900">${mueble.cantidad || 0} unidades</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-indigo-800">Asignaciones activas</p>
+                                <p class="text-lg font-bold text-indigo-900">${asignacionesActivas.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
-                    <h5 class="font-semibold text-gray-800 mb-3">Historial de Movimientos</h5>
-                    ${historialHtml}
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Historial de Movimientos
+                    </h4>
+                    <div class="flex flex-wrap gap-2 mb-3 text-xs text-gray-500">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 border-l-4 border-green-500 mr-1"></div>
+                            <span>Creado</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 border-l-4 border-blue-500 mr-1"></div>
+                            <span>Asignado</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 border-l-4 border-orange-500 mr-1"></div>
+                            <span>Liberado</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 border-l-4 border-yellow-500 mr-1"></div>
+                            <span>Editado</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        ${resumenAsignaciones || '<p class="text-gray-500">No hay asignaciones activas</p>'}
+                    </div>
                 </div>
-                ${resumenAsignaciones}
-            </div>
-            <div class="flex justify-end mt-6">
-                <button onclick="ocultarModal()" 
-                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200">
-                    Cerrar
-                </button>
+
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Historial de Movimientos
+                    </h4>
+                    <div class="space-y-3">
+                        ${historialHtml || '<p class="text-gray-500">No hay historial disponible</p>'}
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-8">
+                    <button onclick="ocultarModal()" 
+                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cerrar
+                    </button>
+                </div>
             </div>
         `;
         mostrarModal(modalHtml);
@@ -1242,3 +1288,65 @@ window.verHistorialMobiliario = async function(id) {
 window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;
 window.mostrarFormularioNuevoMueble = mostrarFormularioNuevoMueble;
 window.eliminarMueble = eliminarMueble;
+
+window.actualizarAsignacionesInmuebles = async function() {
+    try {
+        // Obtener todos los documentos de mobiliario
+        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+        
+        for (const mobDoc of mobiliarioSnap.docs) {
+            const mobiliario = mobDoc.data();
+            const asignaciones = mobiliario.asignaciones || [];
+            let asignacionesActualizadas = false;
+
+            // Actualizar cada asignación
+            for (let asignacion of asignaciones) {
+                if (asignacion.activa !== false && !asignacion.inmuebleAsociadoId) {
+                    // Obtener el inquilino
+                    const inquilinoDoc = await getDoc(doc(db, "inquilinos", asignacion.inquilinoId));
+                    if (inquilinoDoc.exists()) {
+                        const inmuebleAsociadoId = inquilinoDoc.data()?.inmuebleAsociadoId;
+                        if (inmuebleAsociadoId) {
+                            asignacion.inmuebleAsociadoId = inmuebleAsociadoId;
+                            asignacionesActualizadas = true;
+                        }
+                    }
+                }
+            }
+
+            // Si se actualizaron asignaciones, guardar los cambios
+            if (asignacionesActualizadas) {
+                await updateDoc(doc(db, "mobiliario", mobDoc.id), {
+                    asignaciones: asignaciones
+                });
+            }
+        }
+
+        mostrarNotificacion("Asignaciones actualizadas correctamente.", "success");
+        mostrarInventarioMobiliario();
+    } catch (error) {
+        console.error("Error al actualizar asignaciones:", error);
+        mostrarNotificacion("Error al actualizar las asignaciones.", "error");
+    }
+};
+
+// Llamar a la función para actualizar las asignaciones
+window.actualizarAsignacionesInmuebles();
+
+/**
+ * Obtiene el color del borde según la acción del historial
+ */
+function getColorBorde(accion) {
+    switch (accion) {
+        case 'creado':
+            return 'border-green-500';
+        case 'asignado':
+            return 'border-blue-500';
+        case 'liberado':
+            return 'border-orange-500';
+        case 'editado':
+            return 'border-yellow-500';
+        default:
+            return 'border-gray-500';
+    }
+}

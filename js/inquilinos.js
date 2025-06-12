@@ -216,7 +216,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                         <option value="Inactivos" ${filtroActivo === "Inactivos" ? "selected" : ""}>Inquilinos inactivos</option>
                     </select>
                     <button onclick="mostrarFormularioNuevoInquilino()" 
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2 hover:shadow-lg">
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2 hover:shadow-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -396,7 +396,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     const fechaDepositoValue = inquilino && inquilino.fechaDeposito ? inquilino.fechaDeposito : '';
 
     const modalContent = `
-        <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+        <div class="px-4 py-3 bg-green-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
             <h3 class="text-xl sm:text-2xl font-bold text-center">${tituloModal}</h3>
         </div>
         <form id="formInquilino" class="space-y-6 max-h-[80vh] overflow-y-auto px-2">
@@ -510,7 +510,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
 
             <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
                 <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200 text-base">Cancelar</button>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200 text-base">${id ? "Actualizar" : "Registrar"} Inquilino</button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200 text-base">${id ? "Actualizar" : "Registrar"} Inquilino</button>
             </div>
         </form>
     `;
@@ -743,7 +743,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         }
 
         let historialHtml = `
-            <div class="px-4 py-3 bg-purple-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <div class="px-4 py-3 bg-purple-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
                 <h3 class="text-2xl font-bold text-center">Historial de Pagos de ${inquilino.nombre}</h3>
             </div>
             <div class="overflow-x-auto">
@@ -857,7 +857,7 @@ export async function mostrarHistorialAbonosInquilino(inquilinoId) {
         });
 
         let html = `
-            <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <div class="px-4 py-3 bg-indigo-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
                 <h3 class="text-2xl font-bold text-center">Historial de Abonos</h3>
             </div>
             <div class="overflow-x-auto">
@@ -955,7 +955,7 @@ export async function mostrarSaldoFavorInquilino(inquilinoId) {
         }
 
         mostrarModal(`
-            <div class="px-4 py-3 bg-cyan-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
+            <div class="px-4 py-3 bg-green-500 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
                 <h3 class="text-lg font-bold text-center">Saldo a Favor Actual</h3>
             </div>
             <div class="py-2">${tabla}</div>
