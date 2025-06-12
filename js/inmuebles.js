@@ -237,34 +237,51 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
     const tituloModal = id ? "Editar Inmueble" : "Registrar Nuevo Inmueble";
     const modalContent = `
-        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
+        <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
             <div class="px-6 py-4">
-                <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
-                <p class="text-center text-indigo-100 mt-1">Complete los datos del inmueble</p>
+                <div class="flex items-center justify-center gap-3">
+                    <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <div>
+                        <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
+                        <p class="text-center text-indigo-100 mt-1">Complete los datos del inmueble</p>
+                    </div>
+                </div>
             </div>
         </div>
         
         <form id="formInmueble" class="space-y-6 max-h-[80vh] overflow-y-auto px-2">
             <!-- Información Básica -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                     Información Básica
                 </h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre/Identificador</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label for="nombre" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Nombre/Identificador
+                        </label>
                         <input type="text" id="nombre" name="nombre" 
-                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
                             value="${inmueble?.nombre ?? ''}" 
                             placeholder="Ej: Casa 123" required>
                     </div>
-                    <div>
-                        <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Inmueble</label>
+                    <div class="space-y-2">
+                        <label for="tipo" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Tipo de Inmueble
+                        </label>
                         <select id="tipo" name="tipo" 
-                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" required>
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" required>
                             <option value="">Selecciona un tipo</option>
                             <option value="Casa" ${inmueble?.tipo === 'Casa' ? 'selected' : ''}>Casa</option>
                             <option value="Apartamento" ${inmueble?.tipo === 'Apartamento' ? 'selected' : ''}>Apartamento</option>
@@ -276,7 +293,7 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
             </div>
 
             <!-- Ubicación -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -284,40 +301,56 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                     </svg>
                     Ubicación
                 </h4>
-                <div>
-                    <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">Dirección Completa</label>
+                <div class="space-y-2">
+                    <label for="direccion" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Dirección Completa
+                    </label>
                     <input type="text" id="direccion" name="direccion" 
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
                         value="${inmueble?.direccion ?? ''}" 
                         placeholder="Ej: Calle Principal #123, Colonia" required>
                 </div>
             </div>
 
             <!-- Detalles Financieros -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Detalles Financieros
                 </h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="rentaMensual" class="block text-sm font-medium text-gray-700 mb-1">Renta Mensual</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label for="rentaMensual" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Renta Mensual
+                        </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-gray-500">$</span>
                             </div>
                             <input type="number" id="rentaMensual" name="rentaMensual" step="0.01" 
-                                class="w-full pl-7 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                                class="w-full pl-7 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
                                 value="${inmueble?.rentaMensual ?? ''}" 
                                 placeholder="0.00" required>
                         </div>
                     </div>
-                    <div>
-                        <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Estado del Inmueble</label>
+                    <div class="space-y-2">
+                        <label for="estado" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Estado del Inmueble
+                        </label>
                         <select id="estado" name="estado" 
-                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" required>
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" required>
                             <option value="Disponible" ${inmueble?.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
                             <option value="Ocupado" ${inmueble?.estado === 'Ocupado' ? 'selected' : ''}>Ocupado</option>
                             <option value="Mantenimiento" ${inmueble?.estado === 'Mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
@@ -327,35 +360,45 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
             </div>
 
             <!-- Documentación -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Documentación
                 </h4>
-                <div>
-                    <label for="urlContrato" class="block text-sm font-medium text-gray-700 mb-1">URL del Contrato</label>
+                <div class="space-y-2">
+                    <label for="urlContrato" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        URL del Contrato
+                    </label>
                     <input type="url" id="urlContrato" name="urlContrato" 
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200" 
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
                         value="${inmueble?.urlContrato ?? ''}" 
                         placeholder="Ej: https://drive.google.com/file/...">
-                    <p class="mt-1 text-xs text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
+                    <p class="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.
+                    </p>
                 </div>
             </div>
 
             <!-- Botones de Acción -->
             <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                 <button type="button" onclick="ocultarModal()" 
-                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-colors duration-200 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     Cancelar
                 </button>
                 <button type="submit" 
-                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-colors duration-200 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                     ${id ? "Actualizar" : "Registrar"} Inmueble
@@ -439,30 +482,41 @@ export async function mostrarHistorialInquilinosInmueble(inmuebleId, inmuebleNom
 
         let tablaHtml = '';
         if (historial.length === 0) {
-            tablaHtml = `<p class="text-gray-500 text-center py-4">Este inmueble no tiene historial de inquilinos.</p>`;
+            tablaHtml = `
+                <div class="text-center py-8">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <p class="text-gray-500 text-lg">Este inmueble no tiene historial de inquilinos.</p>
+                </div>`;
         } else {
             tablaHtml = `
                 <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mt-4">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-indigo-50">
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Inquilino</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha Inicio</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha Fin</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Correo</th>
-                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Actual</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Inquilino</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Fecha Inicio</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Fecha Fin</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Teléfono</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Correo</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-indigo-700 uppercase tracking-wider">Actual</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${historial.map(h => `
-                                <tr>
-                                    <td class="px-4 py-2 text-sm text-gray-900">${h.nombre}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-900">${h.fechaInicio || '-'}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-900">${h.fechaFin || '-'}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-900">${h.telefono || '-'}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-900">${h.correo || '-'}</td>
-                                    <td class="px-4 py-2 text-center">${h.actual ? '<span title="Actual" class="inline-block w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center">&#10003;</span>' : ''}</td>
+                                <tr class="hover:bg-indigo-50 transition-colors duration-200">
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.nombre}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.fechaInicio || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.fechaFin || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.telefono || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.correo || '-'}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        ${h.actual ? 
+                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actual</span>' : 
+                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Anterior</span>'
+                                        }
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -472,12 +526,28 @@ export async function mostrarHistorialInquilinosInmueble(inmuebleId, inmuebleNom
         }
 
         mostrarModal(`
-            <div class="px-4 py-3 bg-cyan-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-                <h3 class="text-xl font-bold text-center">Historial de Inquilinos<br><span class="text-base font-normal">${inmuebleNombre}</span></h3>
+            <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-center gap-3">
+                        <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold text-center">Historial de Inquilinos</h3>
+                            <p class="text-center text-indigo-100 mt-1">${inmuebleNombre}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             ${tablaHtml}
             <div class="flex justify-end mt-6">
-                <button onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+                <button onclick="ocultarModal()" 
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cerrar
+                </button>
             </div>
         `);
 
@@ -596,40 +666,52 @@ export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmueble
 
         let tablaHtml = '';
         if (historial.length === 0) {
-            tablaHtml = `<p class="text-gray-500 text-center py-4">Este inmueble no tiene historial de mantenimientos.</p>`;
+            tablaHtml = `
+                <div class="text-center py-8">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p class="text-gray-500 text-lg">Este inmueble no tiene historial de mantenimientos.</p>
+                </div>`;
         } else {
-            // Cards para móvil, tabla para escritorio
             tablaHtml = `
                 <div class="space-y-3 sm:hidden">
                     ${historial.map(m => `
-                        <div class="rounded-lg shadow border border-yellow-100 bg-white p-3 flex flex-col gap-1">
-                            <div class="font-semibold text-yellow-800">${m.descripcion}</div>
-                            <div class="text-xs text-gray-500">Fecha: <span class="font-medium">${m.fecha}</span></div>
-                            <div class="text-xs text-gray-500">Costo: <span class="font-semibold text-yellow-700">$${m.costo.toFixed(2)}</span></div>
-                            <div class="text-xs text-gray-500">Responsable: <span class="font-medium">${m.responsable}</span></div>
-                            <div class="text-xs text-gray-500">Estado: <span class="font-medium">${m.estado}</span></div>
+                        <div class="rounded-lg shadow border border-yellow-100 bg-white p-4 hover:shadow-md transition-shadow duration-200">
+                            <div class="font-semibold text-yellow-800 mb-2">${m.descripcion}</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div class="text-gray-600">Fecha: <span class="font-medium text-gray-900">${m.fecha}</span></div>
+                                <div class="text-gray-600">Costo: <span class="font-semibold text-yellow-700">$${m.costo.toFixed(2)}</span></div>
+                                <div class="text-gray-600">Responsable: <span class="font-medium text-gray-900">${m.responsable}</span></div>
+                                <div class="text-gray-600">Estado: <span class="font-medium text-gray-900">${m.estado}</span></div>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
                 <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mt-4 hidden sm:block">
-                    <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                    <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-yellow-50">
                             <tr>
-                                <th class="px-3 py-2 text-left font-semibold text-yellow-800">Descripción</th>
-                                <th class="px-3 py-2 text-left font-semibold text-yellow-800">Fecha</th>
-                                <th class="px-3 py-2 text-right font-semibold text-yellow-800">Costo</th>
-                                <th class="px-3 py-2 text-left font-semibold text-yellow-800">Responsable</th>
-                                <th class="px-3 py-2 text-center font-semibold text-yellow-800">Estado</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-yellow-800 uppercase tracking-wider">Descripción</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-yellow-800 uppercase tracking-wider">Fecha</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-yellow-800 uppercase tracking-wider">Costo</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-yellow-800 uppercase tracking-wider">Responsable</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-yellow-800 uppercase tracking-wider">Estado</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="bg-white divide-y divide-gray-200">
                             ${historial.map(m => `
-                                <tr class="hover:bg-yellow-50">
-                                    <td class="px-3 py-2">${m.descripcion}</td>
-                                    <td class="px-3 py-2">${m.fecha}</td>
-                                    <td class="px-3 py-2 text-right">$${m.costo.toFixed(2)}</td>
-                                    <td class="px-3 py-2">${m.responsable}</td>
-                                    <td class="px-3 py-2 text-center">${m.estado}</td>
+                                <tr class="hover:bg-yellow-50 transition-colors duration-200">
+                                    <td class="px-4 py-3 text-sm text-gray-900">${m.descripcion}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${m.fecha}</td>
+                                    <td class="px-4 py-3 text-sm text-right font-medium text-yellow-700">$${m.costo.toFixed(2)}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${m.responsable}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            ${m.estado}
+                                        </span>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -639,12 +721,29 @@ export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmueble
         }
 
         mostrarModal(`
-            <div class="px-4 py-3 bg-yellow-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
-                <h3 class="text-lg font-bold text-center">Mantenimientos<br><span class="text-base font-normal">${inmuebleNombre}</span></h3>
+            <div class="bg-gradient-to-br from-yellow-500 via-yellow-600 to-yellow-700 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-center gap-3">
+                        <svg class="w-8 h-8 text-yellow-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold text-center">Mantenimientos</h3>
+                            <p class="text-center text-yellow-100 mt-1">${inmuebleNombre}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             ${tablaHtml}
-            <div class="flex justify-end mt-4">
-                <button onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200 w-full sm:w-auto">Cerrar</button>
+            <div class="flex justify-end mt-6">
+                <button onclick="ocultarModal()" 
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cerrar
+                </button>
             </div>
         `);
 

@@ -24,31 +24,31 @@ export async function mostrarReportes() {
     let mesesOptions = meses.map((mes, index) => `<option value="${index + 1}">${mes}</option>`).join('');
 
     contenedor.innerHTML = `
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 flex items-center">
-                <svg class="w-8 h-8 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center">
+                <svg class="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 Generador de Reportes
             </h2>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-8 mb-8 border border-gray-100">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-                <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-8 border border-gray-100">
+            <h3 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6 flex items-center">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                 </svg>
                 Reporte Mensual de Ingresos y Gastos
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
                 <div class="relative">
                     <label for="selectMes" class="block text-sm font-medium text-gray-700 mb-2">Mes</label>
                     <div class="relative">
-                        <select id="selectMes" class="block w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        <select id="selectMes" class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                             ${mesesOptions}
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </div>
@@ -57,26 +57,26 @@ export async function mostrarReportes() {
                 <div class="relative">
                     <label for="selectAnio" class="block text-sm font-medium text-gray-700 mb-2">Año</label>
                     <div class="relative">
-                        <select id="selectAnio" class="block w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        <select id="selectAnio" class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                             ${aniosOptions}
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </div>
                     </div>
                 </div>
                 <div class="flex items-end">
-                    <button id="generarReporteBtn" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center font-medium">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button id="generarReporteBtn" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center font-medium">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                         Generar Reporte
                     </button>
                 </div>
             </div>
-            <div id="reporteResultado" class="mt-8 p-6 border border-gray-200 rounded-xl bg-gray-50">
+            <div id="reporteResultado" class="mt-6 sm:mt-8 p-4 sm:p-6 border border-gray-200 rounded-xl bg-gray-50">
                 <p class="text-gray-500 text-center">Selecciona un mes y año y haz clic en "Generar Reporte".</p>
             </div>
         </div>
@@ -271,91 +271,91 @@ async function generarReporteMensual(mes, anio) {
             : `<svg class="w-10 h-10 mx-auto mb-2 text-orange-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
 
         resultadoDiv.innerHTML = `
-            <h3 class="text-2xl font-semibold text-gray-800 mb-6 border-b pb-4 flex items-center">
-                <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h3 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6 border-b pb-4 flex items-center">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                 </svg>
                 Resumen Financiero Mensual
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md text-center border border-blue-200">
-                    <div class="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl shadow-md text-center border border-blue-200">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <p class="text-base font-medium text-blue-700">Pagos de Renta</p>
-                    <p class="text-3xl font-bold text-blue-900 mt-2">$${totalPagosRentaMes.toFixed(2)}</p>
+                    <p class="text-sm sm:text-base font-medium text-blue-700">Pagos de Renta</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-blue-900 mt-2">$${totalPagosRentaMes.toFixed(2)}</p>
                 </div>
-                <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md text-center border border-green-200">
-                    <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl shadow-md text-center border border-green-200">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <p class="text-base font-medium text-green-700">Depósitos</p>
-                    <p class="text-3xl font-bold text-green-900 mt-2">$${totalDepositosMes.toFixed(2)}</p>
+                    <p class="text-sm sm:text-base font-medium text-green-700">Depósitos</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-green-900 mt-2">$${totalDepositosMes.toFixed(2)}</p>
                 </div>
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md text-center border border-blue-200">
-                    <div class="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl shadow-md text-center border border-blue-200">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
                     </div>
-                    <p class="text-base font-medium text-blue-700">Ingresos Totales</p>
-                    <p class="text-3xl font-bold text-blue-900 mt-2">$${totalIngresosMes.toFixed(2)}</p>
+                    <p class="text-sm sm:text-base font-medium text-blue-700">Ingresos Totales</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-blue-900 mt-2">$${totalIngresosMes.toFixed(2)}</p>
                 </div>
-                <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-md text-center border border-red-200">
-                    <div class="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gradient-to-br from-red-50 to-red-100 p-4 sm:p-6 rounded-xl shadow-md text-center border border-red-200">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <p class="text-base font-medium text-red-700">Gastos Totales</p>
-                    <p class="text-3xl font-bold text-red-900 mt-2">$${totalGastos.toFixed(2)}</p>
+                    <p class="text-sm sm:text-base font-medium text-red-700">Gastos Totales</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-red-900 mt-2">$${totalGastos.toFixed(2)}</p>
                 </div>
             </div>
-            <div class="relative flex justify-center mb-10">
+            <div class="relative flex justify-center mb-6 sm:mb-10">
                 <div class="w-full md:w-2/3 lg:w-1/2 xl:w-1/3">
-                    <div class="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl shadow-xl border border-white/20 p-8 text-center transform hover:scale-105 transition-all duration-300">
+                    <div class="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl shadow-xl border border-white/20 p-6 sm:p-8 text-center transform hover:scale-105 transition-all duration-300">
                         ${balanceIcon}
-                        <p class="text-lg font-semibold text-white tracking-wide mb-1">Balance del Mes</p>
-                        <p class="text-4xl font-extrabold ${balance >= 0 ? 'text-white' : 'text-orange-200'} drop-shadow-lg mb-2">$${balance.toFixed(2)}</p>
-                        <p class="text-sm text-white/80">${balance >= 0 ? '¡Felicidades! El balance es positivo.' : 'Atención: El balance es negativo.'}</p>
+                        <p class="text-base sm:text-lg font-semibold text-white tracking-wide mb-1">Balance del Mes</p>
+                        <p class="text-3xl sm:text-4xl font-extrabold ${balance >= 0 ? 'text-white' : 'text-orange-200'} drop-shadow-lg mb-2">$${balance.toFixed(2)}</p>
+                        <p class="text-xs sm:text-sm text-white/80">${balance >= 0 ? '¡Felicidades! El balance es positivo.' : 'Atención: El balance es negativo.'}</p>
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-md text-center border border-indigo-200">
-                    <div class="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 sm:p-6 rounded-xl shadow-md text-center border border-indigo-200">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
                         </svg>
                     </div>
-                    <p class="text-base font-medium text-indigo-700">Total Internet</p>
-                    <p class="text-2xl font-bold text-indigo-900 mt-2">$${totalInternet.toFixed(2)}</p>
+                    <p class="text-sm sm:text-base font-medium text-indigo-700">Total Internet</p>
+                    <p class="text-xl sm:text-2xl font-bold text-indigo-900 mt-2">$${totalInternet.toFixed(2)}</p>
                 </div>
-                <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 p-6 rounded-xl shadow-md text-center border border-cyan-200">
-                    <div class="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 p-4 sm:p-6 rounded-xl shadow-md text-center border border-cyan-200">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                         </svg>
                     </div>
-                    <p class="text-base font-medium text-cyan-700">Total Agua</p>
-                    <p class="text-2xl font-bold text-cyan-900 mt-2">$${totalAgua.toFixed(2)}</p>
+                    <p class="text-sm sm:text-base font-medium text-cyan-700">Total Agua</p>
+                    <p class="text-xl sm:text-2xl font-bold text-cyan-900 mt-2">$${totalAgua.toFixed(2)}</p>
                 </div>
-                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-md text-center border border-yellow-200">
-                    <div class="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 sm:p-6 rounded-xl shadow-md text-center border border-yellow-200">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
-                    <p class="text-base font-medium text-yellow-700">Total Luz</p>
-                    <p class="text-2xl font-bold text-yellow-900 mt-2">$${totalLuz.toFixed(2)}</p>
+                    <p class="text-sm sm:text-base font-medium text-yellow-700">Total Luz</p>
+                    <p class="text-xl sm:text-2xl font-bold text-yellow-900 mt-2">$${totalLuz.toFixed(2)}</p>
                 </div>
             </div>
-            <h4 class="text-xl font-semibold text-gray-800 mb-6 border-b pb-4 flex items-center">
-                <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h4 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6 border-b pb-4 flex items-center">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
                 Detalle de Todos los Movimientos
