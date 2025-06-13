@@ -150,7 +150,7 @@ export async function generarReciboPDF(pagoId) {
     pdf.setFont("helvetica", "italic");
     pdf.setFontSize(10);
     pdf.setTextColor(55, 65, 81);
-    pdf.text("Firma y sello", xIzq + 45, yIzq + 5, { align: "center" });
+    pdf.text("Firma", xIzq + 45, yIzq + 5, { align: "center" });
 
     // Mensaje de agradecimiento
     yIzq += 15;
