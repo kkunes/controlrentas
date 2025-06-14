@@ -65,8 +65,11 @@ export async function mostrarPagos() {
                         break;
                 }
 
-                // Calcular el monto total incluyendo servicios pagados
-                let montoTotal = pago.montoTotal || 0;
+                // Calcular el monto base (renta)
+                let montoBase = pago.montoBase || pago.montoTotal || 0;
+                
+                // Calcular el monto total sumando servicios y mobiliario
+                let montoTotal = montoBase;
                 
                 // Sumar montos de servicios pagados
                 if (pago.serviciosPagados) {
@@ -393,8 +396,11 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                             break;
                     }
 
-                    // Calcular el monto total incluyendo servicios pagados
-                    let montoTotal = pago.montoTotal || 0;
+                    // Calcular el monto base (renta)
+                    let montoBase = pago.montoBase || pago.montoTotal || 0;
+                    
+                    // Calcular el monto total sumando servicios y mobiliario
+                    let montoTotal = montoBase;
                     
                     // Sumar montos de servicios pagados
                     if (pago.serviciosPagados) {
@@ -722,20 +728,11 @@ export async function mostrarFormularioNuevoPago(id = null) {
         }
     });
 
-    // Función para calcular el total (costo del inmueble + costo del mobiliario asignado)
+    // Función para obtener solo el costo del inmueble (sin sumar mobiliario)
     async function calcularTotal(inmuebleId) {
         const inmueble = inmuebles.find(inm => inm.id === inmuebleId);
         if (!inmueble) return 0;
-        const inquilinoId = inmueble.inquilinoActualId;
-        if (!inquilinoId) return inmueble.rentaMensual || 0;
-        let costoMobiliario = 0;
-        mobiliarioMap.forEach((mob, mobId) => {
-            const asignacion = mob.asignaciones.find(a => a.inquilinoId === inquilinoId && a.cantidad > 0 && a.activa !== false);
-            if (asignacion) {
-                costoMobiliario += asignacion.cantidad * (mob.costoRenta || 0);
-            }
-        });
-        return (inmueble.rentaMensual || 0) + costoMobiliario;
+        return inmueble.rentaMensual || 0;
     }
 
     // Al cargar el formulario, calcular y mostrar el total si hay un inmueble seleccionado
@@ -943,11 +940,19 @@ export async function mostrarFormularioPagoServicio() {
             mostrarNotificacion("No hay inquilinos activos para registrar pagos.", "error");
             return;
         }
+        
+        // Obtener inmuebles para mostrar junto a los inquilinos
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data().nombre);
+        });
 
-        // Opciones de inquilinos
-        const inquilinosOptions = inquilinos.map(inq => `
-            <option value="${inq.id}">${inq.nombre}</option>
-        `).join('');
+        // Opciones de inquilinos con inmueble asociado
+        const inquilinosOptions = inquilinos.map(inq => {
+            const inmuebleNombre = inmueblesMap.get(inq.inmuebleAsociadoId) || 'Sin inmueble';
+            return `<option value="${inq.id}">${inq.nombre} - ${inmuebleNombre}</option>`;
+        }).join('');
 
         // Meses y años para el formulario
         const meses = [
@@ -1229,6 +1234,13 @@ export async function mostrarFormularioPagoMobiliario() {
             return;
         }
 
+        // Obtener inmuebles para mostrar junto a los inquilinos
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data().nombre);
+        });
+
         // Obtener mobiliario asignado
         const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
         const mobiliarioAsignado = [];
@@ -1252,10 +1264,11 @@ export async function mostrarFormularioPagoMobiliario() {
             return;
         }
 
-        // Opciones de inquilinos
-        const inquilinosOptions = inquilinos.map(inq => `
-            <option value="${inq.id}">${inq.nombre}</option>
-        `).join('');
+        // Opciones de inquilinos con inmueble asociado
+        const inquilinosOptions = inquilinos.map(inq => {
+            const inmuebleNombre = inmueblesMap.get(inq.inmuebleAsociadoId) || 'Sin inmueble';
+            return `<option value="${inq.id}">${inq.nombre} - ${inmuebleNombre}</option>`;
+        }).join('');
 
         // Meses y años para el formulario
         const meses = [
@@ -2209,6 +2222,13 @@ export async function gestionarServiciosPago(pagoId) {
         const pago = pagoDoc.data();
         const serviciosPagados = pago.serviciosPagados || {};
         
+        // Obtener información del inmueble y del inquilino
+        const inmuebleDoc = await getDoc(doc(db, "inmuebles", pago.inmuebleId));
+        const nombreInmueble = inmuebleDoc.exists() ? inmuebleDoc.data().nombre : 'Inmueble Desconocido';
+        
+        const inquilinoDoc = await getDoc(doc(db, "inquilinos", pago.inquilinoId));
+        const nombreInquilino = inquilinoDoc.exists() ? inquilinoDoc.data().nombre : 'Inquilino Desconocido';
+        
         // Preparar datos de servicios existentes
         const servicios = [
             { id: "internet", nombre: "Internet", monto: serviciosPagados.internetMonto || 0, activo: serviciosPagados.internet || false },
@@ -2248,6 +2268,12 @@ export async function gestionarServiciosPago(pagoId) {
                 <h3 class="text-2xl font-bold text-center">Gestionar Servicios</h3>
             </div>
             <form id="formGestionServicios" class="space-y-4">
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-3">
+                    <div class="flex flex-col gap-1">
+                        <p class="text-sm font-medium text-blue-800">Inmueble: <span class="font-bold">${nombreInmueble}</span></p>
+                        <p class="text-sm font-medium text-blue-800">Inquilino: <span class="font-bold">${nombreInquilino}</span></p>
+                    </div>
+                </div>
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h4 class="font-medium text-gray-700 mb-3">Servicios del pago</h4>
                     <div class="space-y-2">
@@ -2286,21 +2312,18 @@ export async function gestionarServiciosPago(pagoId) {
                 
                 if (confirm(`¿Estás seguro de eliminar el servicio de ${servicioId}?`)) {
                     try {
-                        // Guardar el monto del servicio antes de eliminarlo para restar del total
-                        const montoServicio = serviciosPagados[`${servicioId}Monto`] || 0;
-                        
                         // Eliminar el servicio
                         delete serviciosPagados[servicioId];
                         delete serviciosPagados[`${servicioId}Monto`];
                         
-                        // Actualizar montoTotal restando el servicio eliminado
-                        const nuevoMontoTotal = Math.max(0, (pago.montoTotal || 0) - montoServicio);
-                        
-                        // Actualizar en Firestore
+                        // Actualizar en Firestore solo los servicios
                         await updateDoc(doc(db, "pagos", pagoId), { 
-                            serviciosPagados: serviciosPagados,
-                            montoTotal: nuevoMontoTotal
+                            serviciosPagados: serviciosPagados
                         });
+                        
+                        // Disparar un evento personalizado para notificar que se eliminó un servicio
+                        const event = new CustomEvent('servicioEliminado', { detail: { pagoId, servicio: servicioId } });
+                        document.dispatchEvent(event);
                         
                         mostrarNotificacion(`Servicio ${servicioId} eliminado correctamente`, "success");
                         ocultarModal();
@@ -2339,20 +2362,9 @@ export async function gestionarServiciosPago(pagoId) {
             }
             
             try {
-                // Calcular el total de servicios anterior y nuevo
-                const totalServiciosAnterior = calcularTotalServicios(serviciosPagados);
-                const totalServiciosNuevo = calcularTotalServicios(nuevoServicios);
-                
-                // Calcular la diferencia para ajustar el monto total
-                const diferencia = totalServiciosNuevo - totalServiciosAnterior;
-                
-                // Calcular nuevo monto total
-                const nuevoMontoTotal = (pago.montoTotal || 0) + diferencia;
-                
-                // Actualizar en Firestore
+                // Actualizar en Firestore solo los servicios
                 await updateDoc(doc(db, "pagos", pagoId), { 
-                    serviciosPagados: nuevoServicios,
-                    montoTotal: nuevoMontoTotal
+                    serviciosPagados: nuevoServicios
                 });
                 
                 mostrarNotificacion("Servicios actualizados correctamente", "success");
@@ -2386,11 +2398,23 @@ export async function eliminarServicioDePago(pagoId, nombreServicio) {
         const pago = pagoDoc.data();
         if (!pago.serviciosPagados) return;
 
+        // Guardar el monto del servicio antes de eliminarlo
+        const montoServicio = pago.serviciosPagados[`${nombreServicio}Monto`] || 0;
+        
         // Elimina el servicio y su monto
         delete pago.serviciosPagados[nombreServicio];
         delete pago.serviciosPagados[`${nombreServicio}Monto`];
 
-        await updateDoc(doc(db, "pagos", pagoId), { serviciosPagados: pago.serviciosPagados });
+        // Actualizar en Firestore solo los servicios, sin modificar montoTotal
+        // El montoTotal en la base de datos solo incluye la renta base
+        await updateDoc(doc(db, "pagos", pagoId), { 
+            serviciosPagados: pago.serviciosPagados
+        });
+        
+        // Disparar un evento personalizado para notificar que se eliminó un servicio
+        const event = new CustomEvent('servicioEliminado', { detail: { pagoId, servicio: nombreServicio } });
+        document.dispatchEvent(event);
+        
         mostrarNotificacion("Servicio eliminado correctamente", "success");
         mostrarPagos(); // Recargar la lista de pagos
     } catch (error) {
@@ -2413,6 +2437,13 @@ export async function gestionarMobiliarioPago(pagoId) {
         
         const pago = pagoDoc.data();
         const mobiliarioPagado = pago.mobiliarioPagado || [];
+        
+        // Obtener información del inmueble y del inquilino
+        const inmuebleDoc = await getDoc(doc(db, "inmuebles", pago.inmuebleId));
+        const nombreInmueble = inmuebleDoc.exists() ? inmuebleDoc.data().nombre : 'Inmueble Desconocido';
+        
+        const inquilinoDoc = await getDoc(doc(db, "inquilinos", pago.inquilinoId));
+        const nombreInquilino = inquilinoDoc.exists() ? inquilinoDoc.data().nombre : 'Inquilino Desconocido';
         
         // Obtener detalles del mobiliario
         const mobiliarioDetalles = [];
@@ -2472,6 +2503,12 @@ export async function gestionarMobiliarioPago(pagoId) {
                 <h3 class="text-2xl font-bold text-center">Gestionar Mobiliario</h3>
             </div>
             <div class="space-y-4">
+                <div class="bg-green-50 p-3 rounded-lg border border-green-200 mb-3">
+                    <div class="flex flex-col gap-1">
+                        <p class="text-sm font-medium text-green-800">Inmueble: <span class="font-bold">${nombreInmueble}</span></p>
+                        <p class="text-sm font-medium text-green-800">Inquilino: <span class="font-bold">${nombreInquilino}</span></p>
+                    </div>
+                </div>
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h4 class="font-medium text-gray-700 mb-3">Mobiliario incluido en este pago</h4>
                     <div class="space-y-2">
