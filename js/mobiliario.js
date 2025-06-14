@@ -648,7 +648,7 @@ window.asignarMueble = async function(id) {
                             </svg>
                             <div>
                                 <p class="text-sm font-medium text-indigo-800">Costo de Renta</p>
-                                <p class="text-lg font-bold text-indigo-900">$${(mueble.costoRenta || 0).toFixed(2)}</p>
+                                <p class="text-lg font-bold text-indigo-900">${(mueble.costoRenta || 0).toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
@@ -671,16 +671,29 @@ window.asignarMueble = async function(id) {
                         `).join('')}
                     </select>
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                        </svg>
-                        Cantidad a asignar *
-                    </label>
-                    <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                    <p class="text-xs text-gray-500 mt-1">Máximo disponible: ${disponibles}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            Cantidad a asignar *
+                        </label>
+                        <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        <p class="text-xs text-gray-500 mt-1">Máximo disponible: ${disponibles}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Fecha de Asignación *
+                        </label>
+                        <input type="date" id="fechaAsignacion" value="${new Date().toISOString().split('T')[0]}" required 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        <p class="text-xs text-gray-500 mt-1">Si la asignación es antes del día 15, se cobrará en el mes actual. Si es a partir del día 15, se cobrará en el siguiente mes.</p>
+                    </div>
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -718,6 +731,7 @@ window.asignarMueble = async function(id) {
             e.preventDefault();
             const inquilinoId = document.getElementById('inquilinoAsignar').value;
             const cantidad = parseInt(document.getElementById('cantidadAsignar').value, 10);
+            const fechaAsignacion = document.getElementById('fechaAsignacion').value;
             const notas = document.getElementById('notasAsignacion').value.trim();
 
             if (!inquilinoId || cantidad < 1 || cantidad > disponibles) {
@@ -726,6 +740,13 @@ window.asignarMueble = async function(id) {
             }
 
             try {
+                const fechaAsignacion = document.getElementById('fechaAsignacion').value;
+                const fechaAsignacionObj = new Date(fechaAsignacion);
+                const diaAsignacion = fechaAsignacionObj.getDate();
+                
+                // Determinar si se cobra en el mes actual o siguiente
+                const cobroEnMesActual = diaAsignacion < 15;
+                
                 // Actualizar asignaciones
                 let asignaciones = Array.isArray(mueble.asignaciones) ? [...mueble.asignaciones] : [];
                 const existingIndex = asignaciones.findIndex(a => a.inquilinoId === inquilinoId && a.activa !== false);
@@ -733,6 +754,8 @@ window.asignarMueble = async function(id) {
                 if (existingIndex >= 0) {
                     asignaciones[existingIndex].cantidad += cantidad;
                     asignaciones[existingIndex].fechaUltimaModificacion = new Date().toISOString();
+                    asignaciones[existingIndex].fechaAsignacion = fechaAsignacion;
+                    asignaciones[existingIndex].cobroEnMesActual = cobroEnMesActual;
                     if (notas) asignaciones[existingIndex].notas = notas;
                 } else {
                     // Obtener el inmueble asociado al inquilino
@@ -743,7 +766,8 @@ window.asignarMueble = async function(id) {
                         inquilinoId,
                         inmuebleAsociadoId,
                         cantidad,
-                        fechaAsignacion: new Date().toISOString(),
+                        fechaAsignacion: fechaAsignacion,
+                        cobroEnMesActual: cobroEnMesActual,
                         activa: true,
                         notas,
                         condicionAsignacion: mueble.condicion || 'buena'
@@ -1117,6 +1141,10 @@ window.liberarMobiliario = async function(id) {
 /**
  * Ver historial completo del mobiliario.
  */
+/**
+ * Ver historial completo del mobiliario.
+ * @param {string} id - ID del mobiliario a consultar.
+ */
 window.verHistorialMobiliario = async function(id) {
     try {
         const muebleDoc = await getDoc(doc(db, "mobiliario", id));
@@ -1288,6 +1316,7 @@ window.verHistorialMobiliario = async function(id) {
 window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;
 window.mostrarFormularioNuevoMueble = mostrarFormularioNuevoMueble;
 window.eliminarMueble = eliminarMueble;
+window.verHistorialMobiliario = verHistorialMobiliario;
 
 window.actualizarAsignacionesInmuebles = async function() {
     try {

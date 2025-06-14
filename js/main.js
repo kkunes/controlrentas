@@ -7,8 +7,9 @@ import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, elimi
 import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, confirmarDesocupacionInquilino, confirmarReactivacionInquilino, eliminarDocumento as eliminarInquilinoDoc, mostrarHistorialAbonosInquilino, mostrarSaldoFavorInquilino } from './inquilinos.js';
 import { mostrarPagos, mostrarFormularioNuevoPago, editarPago, mostrarFormularioRegistrarAbono, revisarPagosVencidos, mostrarHistorialPagosInmueble, eliminarDocumento as eliminarPagoDoc, mostrarHistorialPagosInquilino } from './pagos.js'; // Added mostrarHistorialPagosInquilino import
 import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc } from './mantenimientos.js';
+import { mostrarInventarioMobiliario, mostrarFormularioNuevoMueble, eliminarMueble } from './mobiliario.js';
 import { mostrarReportes } from './reportes.js';
-import './abonos.js';
+import { mostrarAbonos, mostrarFormularioNuevoAbono, editarAbono, eliminarAbono, aplicarSaldoFavorManual } from './abonos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
@@ -23,7 +24,9 @@ window.mostrarInmuebles = mostrarInmuebles;
 window.mostrarInquilinos = mostrarInquilinos;
 window.mostrarPagos = mostrarPagos;
 window.mostrarMantenimientos = mostrarMantenimientos;
+window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;
 window.mostrarReportes = mostrarReportes;
+window.mostrarAbonos = mostrarAbonos;
 
 // Funciones específicas de Inmuebles
 window.mostrarFormularioNuevoInmueble = mostrarFormularioNuevoInmueble;
@@ -50,6 +53,17 @@ window.mostrarHistorialPagosInmueble = mostrarHistorialPagosInmueble;
 window.mostrarFormularioNuevoMantenimiento = mostrarFormularioNuevoMantenimiento;
 window.editarMantenimiento = editarMantenimiento;
 window.mostrarHistorialMantenimientoInmueble = mostrarHistorialMantenimientoInmueble;
+
+// Funciones específicas de Mobiliario
+window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;
+window.mostrarFormularioNuevoMueble = mostrarFormularioNuevoMueble;
+window.eliminarMueble = eliminarMueble;
+
+// Funciones específicas de Abonos/Saldos a Favor
+window.mostrarFormularioNuevoAbono = mostrarFormularioNuevoAbono;
+window.editarAbono = editarAbono;
+window.eliminarAbono = eliminarAbono;
+window.aplicarSaldoFavorManual = aplicarSaldoFavorManual;
 
 // Funciones de UI generales
 window.mostrarModal = mostrarModal;
@@ -145,8 +159,14 @@ const loadContent = () => {
         case 'mantenimientos':
             mostrarMantenimientos();
             break;
+        case 'mobiliario':
+            mostrarInventarioMobiliario();
+            break;
         case 'reportes':
             mostrarReportes();
+            break;
+        case 'abonos':
+            mostrarAbonos();
             break;
         case 'dashboard':
         default:

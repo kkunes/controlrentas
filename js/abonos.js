@@ -84,8 +84,9 @@ export async function mostrarAbonos() {
                         </svg>
                         <p class="text-gray-500 text-lg mb-6">No hay saldos a favor registrados.</p>
                         <button onclick="mostrarFormularioNuevoAbono()"
-                            class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
-                            text-white font-medium px-6 py-2.5 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center mx-auto">
+                            class="bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700
+                            text-white font-medium px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 
+                            flex items-center justify-center mx-auto border border-emerald-400/30">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
@@ -171,9 +172,9 @@ export async function mostrarAbonos() {
 
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <button onclick="mostrarFormularioNuevoAbono('${abono.id}')"
-                                        class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
-                                        text-white text-sm font-medium px-3 py-2 rounded-lg shadow-sm transition-all duration-200
-                                        flex items-center justify-center gap-1.5">
+                                        class="flex-1 bg-gradient-to-br from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700
+                                        text-white text-sm font-medium px-3 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
+                                        flex items-center justify-center gap-1.5 border border-indigo-400/30">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
@@ -181,9 +182,9 @@ export async function mostrarAbonos() {
                                 </button>
                                 ${abono.saldoRestante > 0 ? `
                                     <button onclick="aplicarSaldoFavorManual('${abono.id}', '${abono.inquilinoId}')"
-                                            class="flex-1 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700
-                                            text-white text-sm font-medium px-3 py-2 rounded-lg shadow-sm transition-all duration-200
-                                            flex items-center justify-center gap-1.5">
+                                            class="flex-1 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700
+                                            text-white text-sm font-medium px-3 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
+                                            flex items-center justify-center gap-1.5 border border-emerald-400/30">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
@@ -191,9 +192,9 @@ export async function mostrarAbonos() {
                                     </button>
                                 ` : ''}
                                 <button onclick="eliminarAbono('${abono.id}')"
-                                        class="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700
-                                        text-white text-sm font-medium px-3 py-2 rounded-lg shadow-sm transition-all duration-200
-                                        flex items-center justify-center gap-1.5">
+                                        class="flex-1 bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700
+                                        text-white text-sm font-medium px-3 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
+                                        flex items-center justify-center gap-1.5 border border-rose-400/30">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -216,8 +217,9 @@ export async function mostrarAbonos() {
                         Gestión de Saldos a Favor
                     </h2>
                     <button onclick="mostrarFormularioNuevoAbono()"
-                            class="mt-4 sm:mt-0 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
-                            text-white font-medium px-4 py-2.5 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">
+                            class="mt-4 sm:mt-0 bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700
+                            text-white font-medium px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 
+                            flex items-center justify-center border border-emerald-400/30">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
@@ -354,7 +356,7 @@ export async function mostrarFormularioNuevoAbono(id = null) {
     const inquilinosOptions = inquilinosList.map(inc => `<option value="${inc.id}" ${inc.id === abono.inquilinoId ? 'selected' : ''}>${inc.nombre}</option>`).join('');
 
     const formHtml = `
-        <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+        <div class="px-6 py-5 bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6 shadow-md">
             <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -434,15 +436,15 @@ export async function mostrarFormularioNuevoAbono(id = null) {
             <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                 <button type="button"
                         onclick="ocultarModal()"
-                        class="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center">
+                        class="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center border border-gray-200">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                     Cancelar
                 </button>
                 <button type="submit"
-                        class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">
+                        class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-br from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700
+                        text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center border border-indigo-400/30">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -566,3 +568,12 @@ window.mostrarFormularioNuevoAbono = mostrarFormularioNuevoAbono;
 window.editarAbono = editarAbono;
 window.eliminarAbono = eliminarAbono;
 window.aplicarSaldoFavorManual = aplicarSaldoFavorManual;
+
+// Asegurarse de que las funciones estén disponibles cuando se cargue la página
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Módulo de abonos cargado correctamente');
+    // Verificar que las funciones estén disponibles globalmente
+    if (typeof window.mostrarAbonos === 'function') {
+        console.log('Función mostrarAbonos disponible');
+    }
+});
