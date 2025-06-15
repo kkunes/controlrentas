@@ -221,6 +221,13 @@ button.text-sm {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .animate-spin { animation: spin 1s linear infinite; }
+
+/* Animación de pulso para los indicadores */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+.animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
 </style>
 </head>
 <body class="flex h-screen bg-gray-100">
@@ -251,83 +258,83 @@ button.text-sm {
       <nav class="flex-grow">
         <ul class="space-y-3">
           <li>
-            <button onclick="mostrarDashboard()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-dashboard" onclick="mostrarDashboard()" data-section="dashboard" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-blue-500/30 to-blue-600/30 hover:from-blue-500/50 hover:to-blue-600/50
               focus:outline-none focus:ring-2 focus:ring-blue-400/70 border border-blue-500/30 hover:border-blue-500/50 shadow-md hover:shadow-blue-500/20">
               <svg class="w-5 h-5 mr-3 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
               </svg>
-              <span class="relative">Dashboard<span class="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full"></span></span>
+              <span class="flex items-center">Dashboard<span class="indicator ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full"></span></span>
             </button>
           </li>
           <li>
-            <button onclick="mostrarInmuebles()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-inmuebles" onclick="mostrarInmuebles()" data-section="inmuebles" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-indigo-500/30 to-indigo-600/30 hover:from-indigo-500/50 hover:to-indigo-600/50
               focus:outline-none focus:ring-2 focus:ring-indigo-400/70 border border-indigo-500/30 hover:border-indigo-500/50 shadow-md hover:shadow-indigo-500/20">
               <svg class="w-5 h-5 mr-3 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
               </svg>
-              Inmuebles
+              <span class="flex items-center">Inmuebles<span class="indicator ml-1.5 inline-block w-3 h-3 bg-indigo-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button onclick="mostrarInquilinos()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-inquilinos" onclick="mostrarInquilinos()" data-section="inquilinos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-purple-500/30 to-purple-600/30 hover:from-purple-500/50 hover:to-purple-600/50
               focus:outline-none focus:ring-2 focus:ring-purple-400/70 border border-purple-500/30 hover:border-purple-500/50 shadow-md hover:shadow-purple-500/20">
               <svg class="w-5 h-5 mr-3 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
               </svg>
-              Inquilinos
+              <span class="flex items-center">Inquilinos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-purple-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button onclick="mostrarPagos()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-pagos" onclick="mostrarPagos()" data-section="pagos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-green-500/30 to-green-600/30 hover:from-green-500/50 hover:to-green-600/50
               focus:outline-none focus:ring-2 focus:ring-green-400/70 border border-green-500/30 hover:border-green-500/50 shadow-md hover:shadow-green-500/20">
               <svg class="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
-              Pagos
+              <span class="flex items-center">Pagos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-green-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button onclick="mostrarInventarioMobiliario()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-mobiliario" onclick="mostrarInventarioMobiliario()" data-section="mobiliario" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-teal-500/30 to-teal-600/30 hover:from-teal-500/50 hover:to-teal-600/50
               focus:outline-none focus:ring-2 focus:ring-teal-400/70 border border-teal-500/30 hover:border-teal-500/50 shadow-md hover:shadow-teal-500/20">
               <svg class="w-5 h-5 mr-3 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
               </svg>
-              Mobiliario
+              <span class="flex items-center">Mobiliario<span class="indicator ml-1.5 inline-block w-3 h-3 bg-teal-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button onclick="mostrarMantenimientos()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-mantenimientos" onclick="mostrarMantenimientos()" data-section="mantenimientos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-yellow-500/30 to-amber-600/30 hover:from-yellow-500/50 hover:to-amber-600/50
               focus:outline-none focus:ring-2 focus:ring-yellow-400/70 border border-yellow-500/30 hover:border-yellow-500/50 shadow-md hover:shadow-yellow-500/20">
               <svg class="w-5 h-5 mr-3 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
               </svg>
-              Mantenimientos
+              <span class="flex items-center">Mantenimientos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-yellow-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button onclick="mostrarReportes()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-reportes" onclick="mostrarReportes()" data-section="reportes" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-pink-500/30 to-rose-600/30 hover:from-pink-500/50 hover:to-rose-600/50
               focus:outline-none focus:ring-2 focus:ring-pink-400/70 border border-pink-500/30 hover:border-pink-500/50 shadow-md hover:shadow-pink-500/20">
               <svg class="w-5 h-5 mr-3 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
-              Reportes
+              <span class="flex items-center">Reportes<span class="indicator ml-1.5 inline-block w-3 h-3 bg-pink-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button onclick="mostrarAbonos()" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
+            <button id="btn-abonos" onclick="mostrarAbonos()" data-section="abonos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
               text-white bg-gradient-to-r from-cyan-500/30 to-sky-600/30 hover:from-cyan-500/50 hover:to-sky-600/50
               focus:outline-none focus:ring-2 focus:ring-cyan-400/70 border border-cyan-500/30 hover:border-cyan-500/50 shadow-md hover:shadow-cyan-500/20">
               <svg class="w-5 h-5 mr-3 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              Saldos a Favor
+              <span class="flex items-center">Saldos a Favor<span class="indicator ml-1.5 inline-block w-3 h-3 bg-cyan-400 rounded-full hidden"></span></span>
             </button>
           </li>
         </ul>
@@ -340,7 +347,7 @@ button.text-sm {
             <svg class="w-5 h-5 mr-2 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
             </svg>
-            <span class="relative">Iniciar sesión con Google<span class="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span></span>
+            <span class="flex items-center">Iniciar sesión con Google<span class="ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full animate-pulse"></span></span>
           </button>
           <button id="btnLogout" class="w-full bg-gradient-to-r from-gray-500/40 to-slate-600/40 hover:from-gray-500/60 hover:to-slate-600/60 text-white px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center border border-gray-500/30 hover:border-gray-500/50 shadow-md hover:shadow-gray-500/30 hidden">
             <svg class="w-5 h-5 mr-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -415,7 +422,113 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.innerWidth < 1024) {
     sidebar.classList.remove('abierto');
   }
+  
+  // Configurar el sistema de indicadores para el sidebar
+  setupSidebarIndicators();
 });
+
+// Función para configurar los indicadores del sidebar
+function setupSidebarIndicators() {
+  // Por defecto, dashboard está activo al inicio
+  setActiveSection('dashboard');
+  
+  // Agregar event listeners a todos los botones del sidebar
+  document.querySelectorAll('.sidebar-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const section = this.getAttribute('data-section');
+      setActiveSection(section);
+    });
+  });
+}
+
+// Función para establecer la sección activa
+function setActiveSection(sectionId) {
+  // Ocultar todos los indicadores
+  document.querySelectorAll('.indicator').forEach(indicator => {
+    indicator.classList.add('hidden');
+  });
+  
+  // Mostrar el indicador de la sección activa
+  const activeIndicator = document.querySelector(`#btn-${sectionId} .indicator`);
+  if (activeIndicator) {
+    activeIndicator.classList.remove('hidden');
+    
+    // Añadir una animación de pulso
+    activeIndicator.classList.add('animate-pulse');
+    
+    // Guardar la sección activa en localStorage para persistencia
+    localStorage.setItem('activeSection', sectionId);
+  }
+}
+
+// Función para mostrar cada sección que también actualiza el indicador
+window.mostrarDashboard = function() {
+  // Código existente para mostrar dashboard
+  if (typeof originalMostrarDashboard === 'function') {
+    originalMostrarDashboard();
+  }
+  setActiveSection('dashboard');
+};
+
+// Guardar referencias a las funciones originales
+const originalMostrarDashboard = window.mostrarDashboard;
+const originalMostrarInmuebles = window.mostrarInmuebles;
+const originalMostrarInquilinos = window.mostrarInquilinos;
+const originalMostrarPagos = window.mostrarPagos;
+const originalMostrarInventarioMobiliario = window.mostrarInventarioMobiliario;
+const originalMostrarMantenimientos = window.mostrarMantenimientos;
+const originalMostrarReportes = window.mostrarReportes;
+const originalMostrarAbonos = window.mostrarAbonos;
+
+// Sobrescribir las funciones para actualizar los indicadores
+window.mostrarInmuebles = function() {
+  if (typeof originalMostrarInmuebles === 'function') {
+    originalMostrarInmuebles.apply(this, arguments);
+  }
+  setActiveSection('inmuebles');
+};
+
+window.mostrarInquilinos = function() {
+  if (typeof originalMostrarInquilinos === 'function') {
+    originalMostrarInquilinos.apply(this, arguments);
+  }
+  setActiveSection('inquilinos');
+};
+
+window.mostrarPagos = function() {
+  if (typeof originalMostrarPagos === 'function') {
+    originalMostrarPagos.apply(this, arguments);
+  }
+  setActiveSection('pagos');
+};
+
+window.mostrarInventarioMobiliario = function() {
+  if (typeof originalMostrarInventarioMobiliario === 'function') {
+    originalMostrarInventarioMobiliario.apply(this, arguments);
+  }
+  setActiveSection('mobiliario');
+};
+
+window.mostrarMantenimientos = function() {
+  if (typeof originalMostrarMantenimientos === 'function') {
+    originalMostrarMantenimientos.apply(this, arguments);
+  }
+  setActiveSection('mantenimientos');
+};
+
+window.mostrarReportes = function() {
+  if (typeof originalMostrarReportes === 'function') {
+    originalMostrarReportes.apply(this, arguments);
+  }
+  setActiveSection('reportes');
+};
+
+window.mostrarAbonos = function() {
+  if (typeof originalMostrarAbonos === 'function') {
+    originalMostrarAbonos.apply(this, arguments);
+  }
+  setActiveSection('abonos');
+};
 </script>
 </body>
 </html>
