@@ -173,7 +173,8 @@ export async function mostrarDashboard() {
                 ...pago,
                 id: doc.id,
                 nombreInquilino: inquilinoData ? inquilinoData.nombre : 'Inquilino Desconocido',
-                nombreInmueble: inquilinoData ? inquilinoData.nombreInmueble : 'No especificado'
+                nombreInmueble: inquilinoData ? inquilinoData.nombreInmueble : 'No especificado',
+                fechaVencimiento: fechaVencimiento
             };
 
             if (pago.estado === 'pendiente') {
@@ -183,6 +184,7 @@ export async function mostrarDashboard() {
                     listaPagosProximos.push(pagoConInfo);
                 }
                 if (diffDias < 0) {
+                    // Si la fecha actual es posterior a la fecha de vencimiento, está vencido
                     listaPagosVencidos.push(pagoConInfo);
                 }
             } else if (pago.estado === 'parcial') {
@@ -192,6 +194,7 @@ export async function mostrarDashboard() {
                     listaPagosProximos.push(pagoConInfo);
                 }
                 if (diffDias < 0) {
+                    // Si la fecha actual es posterior a la fecha de vencimiento, está vencido
                     listaPagosVencidos.push(pagoConInfo);
                 }
             } else if (pago.estado === 'vencido') {
