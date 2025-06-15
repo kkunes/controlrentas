@@ -3,6 +3,71 @@
 import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
 /**
+ * Muestra un diálogo de confirmación personalizado.
+ * @param {string} mensaje - El mensaje HTML a mostrar
+ * @param {string} botonConfirmar - Texto del botón de confirmación
+ * @param {string} botonCancelar - Texto del botón de cancelación
+ * @param {'info'|'warning'|'danger'} tipo - Tipo de confirmación
+ * @returns {Promise<boolean>} - Promesa que resuelve a true si se confirma, false si se cancela
+ */
+export function confirmarAccion(mensaje, botonConfirmar = 'Confirmar', botonCancelar = 'Cancelar', tipo = 'warning') {
+    return new Promise((resolve) => {
+        // Colores según el tipo
+        let colorPrincipal, colorHover, colorBorde;
+        
+        switch (tipo) {
+            case 'danger':
+                colorPrincipal = 'from-rose-500 to-red-600';
+                colorHover = 'hover:from-rose-600 hover:to-red-700';
+                colorBorde = 'border-rose-400/30';
+                break;
+            case 'warning':
+                colorPrincipal = 'from-amber-500 to-yellow-600';
+                colorHover = 'hover:from-amber-600 hover:to-yellow-700';
+                colorBorde = 'border-amber-400/30';
+                break;
+            case 'info':
+            default:
+                colorPrincipal = 'from-indigo-500 to-blue-600';
+                colorHover = 'hover:from-indigo-600 hover:to-blue-700';
+                colorBorde = 'border-indigo-400/30';
+                break;
+        }
+        
+        const modalHtml = `
+            <div class="p-6 max-w-md mx-auto">
+                ${mensaje}
+                
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                    <button id="btn-cancelar"
+                            class="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center border border-gray-200">
+                        ${botonCancelar}
+                    </button>
+                    <button id="btn-confirmar"
+                            class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-br ${colorPrincipal} ${colorHover}
+                            text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center border ${colorBorde}">
+                        ${botonConfirmar}
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        mostrarModal(modalHtml);
+        
+        // Agregar event listeners
+        document.getElementById('btn-confirmar').addEventListener('click', () => {
+            ocultarModal();
+            resolve(true);
+        });
+        
+        document.getElementById('btn-cancelar').addEventListener('click', () => {
+            ocultarModal();
+            resolve(false);
+        });
+    });
+}
+
+/**
  * Muestra un modal con contenido HTML.
  * @param {string} htmlContent - El contenido HTML a mostrar dentro del modal.
  */

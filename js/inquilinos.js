@@ -61,7 +61,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                 return `
                     <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${inquilino.activo ? 'border-green-500' : 'border-red-500'} overflow-hidden transform hover:-translate-y-1" data-id="${inquilino.id}">
-                        <div class="p-4 sm:p-6">
+                        <div class="p-4 sm:p-5 md:p-6">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
@@ -130,7 +130,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                                 <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" 
                                     title="Ver historial de pagos del inquilino"
-                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -156,7 +156,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 }
                                 <button onclick="editarInquilino('${inquilino.id}')" 
                                     title="Editar información del inquilino"
-                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
@@ -164,7 +164,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" 
                                     title="Eliminar este inquilino"
-                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
@@ -172,7 +172,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" 
                                     title="Ver historial de abonos del inquilino"
-                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
@@ -180,7 +180,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" 
                                     title="Ver saldo a favor del inquilino"
-                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -188,7 +188,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="mostrarMobiliarioAsignadoInquilino('${inquilino.id}', '${inquilino.nombre}')" 
                                     title="Ver mobiliario asignado al inquilino"
-                                    class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
@@ -233,7 +233,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     </button>
                 </div>
             </div>
-            <div id="listaInquilinos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="listaInquilinos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 ${tarjetasInquilinosHtml}
             </div>
         `;
@@ -420,11 +420,11 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="nombre" class="block text-base font-medium text-gray-700 mb-2">Nombre Completo</label>
-                        <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 px-4" value="${inquilino ? inquilino.nombre : ''}" placeholder="Ej: Juan Pérez" required>
+                        <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${inquilino ? inquilino.nombre : ''}" placeholder="Ej: Juan Pérez" required>
                     </div>
                     <div>
                         <label for="telefono" class="block text-base font-medium text-gray-700 mb-2">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 px-4" value="${inquilino ? inquilino.telefono : ''}" placeholder="Ej: +52 123 456 7890" required>
+                        <input type="tel" id="telefono" name="telefono" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${inquilino ? inquilino.telefono : ''}" placeholder="Ej: +52 123 456 7890" required>
                     </div>
                 </div>
             </div>
@@ -440,12 +440,12 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="fechaLlegada" class="block text-base font-medium text-gray-700 mb-2">Fecha de Llegada</label>
-                        <input type="date" id="fechaLlegada" name="fechaLlegada" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 px-4"
+                        <input type="date" id="fechaLlegada" name="fechaLlegada" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4"
                             value="${inquilino && inquilino.fechaLlegada ? inquilino.fechaLlegada : ''}" required>
                     </div>
                     <div>
                         <label for="fechaOcupacion" class="block text-base font-medium text-gray-700 mb-2">Fecha de Ocupación</label>
-                        <input type="date" id="fechaOcupacion" name="fechaOcupacion" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 px-4"
+                        <input type="date" id="fechaOcupacion" name="fechaOcupacion" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4"
                             value="${inquilino && inquilino.fechaOcupacion ? inquilino.fechaOcupacion : ''}" required>
                     </div>
                 </div>
@@ -461,7 +461,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 </h4>
                 <div>
                     <label for="urlIdentificacion" class="block text-base font-medium text-gray-700 mb-2">URL de Identificación</label>
-                    <input type="url" id="urlIdentificacion" name="urlIdentificacion" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 px-4" value="${inquilino && inquilino.urlIdentificacion ? inquilino.urlIdentificacion : ''}" placeholder="Ej: https://docs.google.com/d/abc123xyz">
+                    <input type="url" id="urlIdentificacion" name="urlIdentificacion" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${inquilino && inquilino.urlIdentificacion ? inquilino.urlIdentificacion : ''}" placeholder="Ej: https://docs.google.com/d/abc123xyz">
                     <p class="mt-2 text-sm text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
                 </div>
             </div>
@@ -476,7 +476,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 </h4>
                 <div>
                     <label for="inmuebleAsociadoId" class="block text-base font-medium text-gray-700 mb-2">Inmueble Asociado</label>
-                    <select id="inmuebleAsociadoId" name="inmuebleAsociadoId" class="mt-1 block w-full pl-4 pr-10 py-3 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <select id="inmuebleAsociadoId" name="inmuebleAsociadoId" class="mt-1 block w-full pl-4 pr-10 py-3 sm:py-3.5 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">Ninguno</option>
                         ${inmueblesOptions}
                     </select>
@@ -507,19 +507,19 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                     <div id="campoDeposito" style="display:${campoDepositoDisplay};" class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
                         <div>
                             <label for="montoDeposito" class="block text-base font-medium text-gray-700 mb-2">Monto del depósito</label>
-                            <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 px-4" value="${montoDepositoValue}">
+                            <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${montoDepositoValue}">
                         </div>
                         <div>
                             <label for="fechaDeposito" class="block text-base font-medium text-gray-700 mb-2">Fecha del depósito</label>
-                            <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 px-4" value="${fechaDepositoValue}">
+                            <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${fechaDepositoValue}">
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200 text-base">Cancelar</button>
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200 text-base">${id ? "Actualizar" : "Registrar"} Inquilino</button>
+                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3.5 rounded-lg shadow-sm transition-colors duration-200 text-base">Cancelar</button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3.5 rounded-lg shadow-sm transition-colors duration-200 text-base">${id ? "Actualizar" : "Registrar"} Inquilino</button>
             </div>
         </form>
     `;
