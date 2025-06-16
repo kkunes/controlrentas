@@ -2,6 +2,7 @@
 import { db, auth } from './firebaseConfig.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { mostrarDashboard } from './dashboard.js';
+import { verificarContratosProximosARenovar, mostrarDetallesRenovacion } from './recordatorios.js';
 // Asegúrate de que eliminarDocumento se importa con un alias de cada módulo
 import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, eliminarDocumento as eliminarInmuebleDoc } from './inmuebles.js';
 import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, confirmarDesocupacionInquilino, confirmarReactivacionInquilino, eliminarDocumento as eliminarInquilinoDoc, mostrarHistorialAbonosInquilino, mostrarSaldoFavorInquilino } from './inquilinos.js';
@@ -71,6 +72,10 @@ window.ocultarModal = ocultarModal;
 window.mostrarNotificacion = mostrarNotificacion;
 window.mostrarLoader = () => document.getElementById('loader').classList.remove('hidden');
 window.ocultarLoader = () => document.getElementById('loader').classList.add('hidden');
+
+// Funciones de recordatorios de renovación de contratos
+window.verificarContratosProximosARenovar = verificarContratosProximosARenovar;
+window.mostrarDetallesRenovacion = mostrarDetallesRenovacion;
 
 // ***** Centralización de la función eliminarDocumento *****
 // Esta función global manejará la confirmación y delegará la eliminación a la función específica de cada módulo.
@@ -183,6 +188,14 @@ window.addEventListener('hashchange', loadContent);
 // Cargar el contenido inicial al cargar completamente la página (DOMContentLoaded)
 document.addEventListener('DOMContentLoaded', () => {
     loadContent();
-    // Opcional: Revisar pagos vencidos al cargar la aplicación
+    // Revisar pagos vencidos al cargar la aplicación
     revisarPagosVencidos();
+    
+    // Verificar contratos próximos a renovar
+    verificarContratosProximosARenovar().then(contratos => {
+        if (contratos.length > 0) {
+            // Mostrar notificación si hay contratos próximos a renovar
+            mostrarNotificacion(`Hay ${contratos.length} contrato(s) próximo(s) a renovar`, 'warning', 5000);
+        }
+    });
 });
