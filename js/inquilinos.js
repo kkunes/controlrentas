@@ -125,6 +125,29 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Identificación</a>
                                     </div>
                                 ` : ''}
+                                
+                                ${inquilino.pagaServicios && inquilino.servicios && Array.isArray(inquilino.servicios) && inquilino.servicios.length > 0 ? `
+                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium">Servicios:</span>
+                                            ${inquilino.servicios.map(servicio => 
+                                                `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
+                                            ).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${inquilino.pagaServicios && inquilino.tipoServicio && inquilino.montoServicio && (!inquilino.servicios || !Array.isArray(inquilino.servicios)) ? `
+                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        <span class="text-sm font-medium">Servicio: ${inquilino.tipoServicio} - ${parseFloat(inquilino.montoServicio).toFixed(2)}/mes</span>
+                                    </div>
+                                ` : ''}
                             </div>
 
                             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -512,6 +535,85 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 </div>
             </div>
 
+            <!-- Sección de Servicios -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Servicios
+                </h4>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="pagaServicios" name="pagaServicios" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" ${inquilino && inquilino.pagaServicios ? 'checked' : ''}>
+                        <label for="pagaServicios" class="ml-3 block text-base text-gray-900">Inquilino paga servicios adicionales</label>
+                    </div>
+                    
+                    <div id="serviciosContainer" class="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200" style="display: ${inquilino && inquilino.pagaServicios ? 'block' : 'none'}">
+                        <div id="listaServicios">
+                            ${inquilino && inquilino.servicios && Array.isArray(inquilino.servicios) && inquilino.servicios.length > 0 ? 
+                                inquilino.servicios.map((servicio, index) => `
+                                    <div class="servicio-item border border-gray-200 rounded-lg p-3 mb-3 bg-white">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h5 class="font-medium text-gray-700">Servicio #${index + 1}</h5>
+                                            <button type="button" class="btn-eliminar-servicio text-red-500 hover:text-red-700" data-index="${index}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio</label>
+                                                <select name="servicios[${index}][tipo]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                                    <option value="Internet" ${servicio.tipo === 'Internet' ? 'selected' : ''}>Internet</option>
+                                                    <option value="Cable" ${servicio.tipo === 'Cable' ? 'selected' : ''}>Cable</option>
+                                                    <option value="Agua" ${servicio.tipo === 'Agua' ? 'selected' : ''}>Agua</option>
+                                                    <option value="Luz" ${servicio.tipo === 'Luz' ? 'selected' : ''}>Luz</option>
+                                                    <option value="Gas" ${servicio.tipo === 'Gas' ? 'selected' : ''}>Gas</option>
+                                                    <option value="Otro" ${servicio.tipo === 'Otro' ? 'selected' : ''}>Otro</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Monto Mensual</label>
+                                                <div class="mt-1 relative rounded-md shadow-sm">
+                                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                                    </div>
+                                                    <input type="number" name="servicios[${index}][monto]" step="0.01" min="0" 
+                                                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md py-2" 
+                                                        placeholder="0.00" 
+                                                        value="${servicio.monto || ''}">
+                                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                        <span class="text-gray-500 sm:text-sm">MXN</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                                            <textarea name="servicios[${index}][notas]" rows="2" 
+                                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                placeholder="Detalles adicionales sobre el servicio">${servicio.notas || ''}</textarea>
+                                        </div>
+                                    </div>
+                                `).join('') : 
+                                `<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>`
+                            }
+                        </div>
+                        
+                        <div class="flex justify-center mt-4">
+                            <button type="button" id="btnAgregarServicio" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-sm transition-colors duration-200 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Agregar Servicio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sección de Estado y Depósito -->
             <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -553,6 +655,20 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     `;
 
     mostrarModal(modalContent);
+    
+    // Configurar el botón para agregar servicios
+    const btnAgregarServicio = document.getElementById('btnAgregarServicio');
+    if (btnAgregarServicio) {
+        btnAgregarServicio.addEventListener('click', agregarServicioAlFormulario);
+    }
+    
+    // Configurar los botones para eliminar servicios existentes
+    const botonesEliminar = document.querySelectorAll('.btn-eliminar-servicio');
+    botonesEliminar.forEach(btn => {
+        btn.addEventListener('click', function() {
+            eliminarServicio(this);
+        });
+    });
 
     document.getElementById('formInquilino').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -560,12 +676,72 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
 
-        // Convertir el checkbox a booleano
+        // Convertir los checkboxes a booleanos
         data.activo = data.activo === 'on';
         data.depositoRecibido = data.recibioDeposito === 'on';
+        data.pagaServicios = data.pagaServicios === 'on';
+        
         if (!data.depositoRecibido) {
             data.montoDeposito = null;
             data.fechaDeposito = null;
+        }
+        
+        // Manejar datos de servicios
+        if (!data.pagaServicios) {
+            data.tipoServicio = null;
+            data.montoServicio = null;
+            data.notasServicio = null;
+            data.servicios = [];
+        } else {
+            // Procesar servicios múltiples
+            const servicios = [];
+            const formEntries = Array.from(formData.entries());
+            
+            // Extraer los datos de servicios del formulario
+            // Agrupar por índice
+            const serviciosPorIndice = {};
+            
+            formEntries.forEach(entry => {
+                const match = entry[0].match(/servicios\[(\d+)\]\[(\w+)\]/);
+                if (match) {
+                    const index = match[1];
+                    const campo = match[2];
+                    
+                    if (!serviciosPorIndice[index]) {
+                        serviciosPorIndice[index] = {};
+                    }
+                    
+                    serviciosPorIndice[index][campo] = entry[1];
+                }
+            });
+            
+            // Convertir a array de servicios
+            Object.values(serviciosPorIndice).forEach(servicio => {
+                if (servicio.tipo && servicio.monto) {
+                    servicios.push({
+                        tipo: servicio.tipo,
+                        monto: parseFloat(servicio.monto),
+                        notas: servicio.notas || ""
+                    });
+                }
+            });
+            
+            // Eliminar los campos con corchetes del objeto data
+            formEntries.forEach(entry => {
+                if (entry[0].includes('[')) {
+                    delete data[entry[0]];
+                }
+            });
+            
+            // Asignar el array de servicios
+            data.servicios = servicios;
+            
+            // Mantener compatibilidad con el formato anterior
+            if (servicios.length > 0) {
+                data.tipoServicio = servicios[0].tipo;
+                data.montoServicio = servicios[0].monto;
+                data.notasServicio = servicios[0].notas || "";
+            }
         }
 
         // Si no se seleccionó inmueble, el valor será una cadena vacía, lo convertimos a null
@@ -1073,7 +1249,84 @@ document.addEventListener('change', function(e) {
     if (e.target && e.target.id === 'recibioDeposito') {
         document.getElementById('campoDeposito').style.display = e.target.checked ? 'block' : 'none';
     }
+    
+    if (e.target && e.target.id === 'pagaServicios') {
+        document.getElementById('serviciosContainer').style.display = e.target.checked ? 'block' : 'none';
+    }
 });
+
+// Función para agregar un nuevo servicio al formulario
+function agregarServicioAlFormulario() {
+    const listaServicios = document.getElementById('listaServicios');
+    if (!listaServicios) return;
+    
+    // Limpiar mensaje de "No hay servicios"
+    if (listaServicios.innerHTML.includes('No hay servicios agregados')) {
+        listaServicios.innerHTML = '';
+    }
+    
+    // Obtener el índice para el nuevo servicio
+    const servicioItems = listaServicios.querySelectorAll('.servicio-item');
+    const nuevoIndice = servicioItems.length;
+    
+    // Crear el nuevo elemento de servicio
+    const nuevoServicio = document.createElement('div');
+    nuevoServicio.className = 'servicio-item border border-gray-200 rounded-lg p-3 mb-3 bg-white';
+    nuevoServicio.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <h5 class="font-medium text-gray-700">Servicio #${nuevoIndice + 1}</h5>
+            <button type="button" class="btn-eliminar-servicio text-red-500 hover:text-red-700" data-index="${nuevoIndice}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio</label>
+                <select name="servicios[${nuevoIndice}][tipo]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="Internet">Internet</option>
+                    <option value="Cable">Cable</option>
+                    <option value="Agua">Agua</option>
+                    <option value="Luz">Luz</option>
+                    <option value="Gas">Gas</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Monto Mensual</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input type="number" name="servicios[${nuevoIndice}][monto]" step="0.01" min="0" 
+                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md py-2" 
+                        placeholder="0.00">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">MXN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+            <textarea name="servicios[${nuevoIndice}][notas]" rows="2" 
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md"
+                placeholder="Detalles adicionales sobre el servicio"></textarea>
+        </div>
+    `;
+    
+    // Agregar el nuevo servicio a la lista
+    listaServicios.appendChild(nuevoServicio);
+    
+    // Agregar evento para eliminar el servicio
+    const btnEliminar = nuevoServicio.querySelector('.btn-eliminar-servicio');
+    if (btnEliminar) {
+        btnEliminar.addEventListener('click', function() {
+            eliminarServicio(this);
+        });
+    }
+}
 
 // Nueva funcionalidad: Filtrar inquilinos con adeudos
 document.addEventListener('change', function(e) {
@@ -1094,6 +1347,43 @@ document.addEventListener('change', function(e) {
         }
     }
 });
+
+// Función para eliminar un servicio
+function eliminarServicio(btnEliminar) {
+    const servicioItem = btnEliminar.closest('.servicio-item');
+    if (servicioItem) {
+        const listaServicios = document.getElementById('listaServicios');
+        listaServicios.removeChild(servicioItem);
+        
+        // Renumerar los servicios restantes
+        const servicioItems = listaServicios.querySelectorAll('.servicio-item');
+        if (servicioItems.length === 0) {
+            listaServicios.innerHTML = '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>';
+        } else {
+            servicioItems.forEach((item, index) => {
+                // Actualizar el título
+                const titulo = item.querySelector('h5');
+                if (titulo) {
+                    titulo.textContent = `Servicio #${index + 1}`;
+                }
+                
+                // Actualizar los índices en los nombres de los campos
+                const campos = item.querySelectorAll('[name^="servicios["]');
+                campos.forEach(campo => {
+                    const nombreActual = campo.getAttribute('name');
+                    const nuevoNombre = nombreActual.replace(/servicios\[\d+\]/, `servicios[${index}]`);
+                    campo.setAttribute('name', nuevoNombre);
+                });
+                
+                // Actualizar el atributo data-index del botón eliminar
+                const btnEliminar = item.querySelector('.btn-eliminar-servicio');
+                if (btnEliminar) {
+                    btnEliminar.setAttribute('data-index', index);
+                }
+            });
+        }
+    }
+}
 
 // Agregar checkbox de filtro en la interfaz
 const contenedorFiltros = document.getElementById("filtrosInquilinos");

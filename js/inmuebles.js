@@ -112,9 +112,18 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span class="text-sm font-medium">$${(inmueble.rentaMensual ?? 0).toFixed(2)}</span>
+                                    <span class="text-sm font-medium">${(inmueble.rentaMensual ?? 0).toFixed(2)}</span>
                                     <span class="text-xs text-gray-500 ml-1">/mes</span>
                                 </div>
+                                
+                                ${inmueble.numeroCFE ? `
+                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    <span class="text-sm font-medium">CFE: ${inmueble.numeroCFE}</span>
+                                </div>
+                                ` : ''}
                             </div>
 
                             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -128,17 +137,7 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                                         <span>Contrato</span>
                                     </a>
                                 ` : ''}
-                                ${inmueble.latitud && inmueble.longitud ? `
-                                    <button onclick="mostrarMapaInmueble('${inmueble.id}')" 
-                                        title="Ver ubicación en mapa"
-                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span>Ubicación</span>
-                                    </button>
-                                ` : ''}
+                                
                                 <button onclick="mostrarHistorialPagosInmueble('${inmueble.id}', '${inmueble.nombre}')" 
                                     title="Ver historial de pagos del inmueble"
                                     class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
@@ -477,6 +476,36 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                             <input type="hidden" id="estado" name="estado" value="Disponible">
                         </div>
                         `}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Servicios -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Servicios
+                </h4>
+                <div class="space-y-4">
+                    <div>
+                        <label for="numeroCFE" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Número de Servicio CFE
+                        </label>
+                        <input type="text" id="numeroCFE" name="numeroCFE" 
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
+                            value="${inmueble?.numeroCFE ?? ''}" 
+                            placeholder="Ej: 123456789012">
+                        <p class="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Número de servicio para el pago de luz (aparece en el recibo de CFE).
+                        </p>
                     </div>
                 </div>
             </div>
