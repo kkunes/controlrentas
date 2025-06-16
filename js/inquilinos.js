@@ -219,6 +219,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     <p class="text-sm text-gray-600 mt-1">Administra los inquilinos y sus contratos</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex flex-col">
+                        <label for="busquedaInquilino" class="text-xs text-gray-600 mb-1">Buscar inquilino:</label>
+                        <div class="relative">
+                            <input type="text" id="busquedaInquilino" placeholder="Buscar por nombre o teléfono..." 
+                                class="border-gray-300 rounded-lg pl-8 pr-2 py-2 w-72 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
                     <select id="filtroActivo" class="border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
                         <option value="Todos" ${filtroActivo === "Todos" ? "selected" : ""}>Todos los inquilinos</option>
                         <option value="Activos" ${filtroActivo === "Activos" ? "selected" : ""}>Inquilinos activos</option>
@@ -238,9 +248,27 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             </div>
         `;
 
-        // Agrega el event listener después de asignar el innerHTML
+        // Agrega los event listeners después de asignar el innerHTML
         document.getElementById('filtroActivo').addEventListener('change', function () {
             mostrarInquilinos(this.value);
+        });
+        
+        // Listener para el cuadro de búsqueda
+        document.getElementById('busquedaInquilino').addEventListener('input', function() {
+            const busqueda = this.value.toLowerCase();
+            const tarjetas = document.querySelectorAll('#listaInquilinos > div');
+            
+            tarjetas.forEach(tarjeta => {
+                const nombre = tarjeta.querySelector('h3')?.textContent.toLowerCase() || '';
+                const telefono = tarjeta.querySelector('.text-gray-600 .text-sm')?.textContent.toLowerCase() || '';
+                const inmueble = tarjeta.querySelectorAll('.text-gray-600 .text-sm')[1]?.textContent.toLowerCase() || '';
+                
+                if (nombre.includes(busqueda) || telefono.includes(busqueda) || inmueble.includes(busqueda)) {
+                    tarjeta.style.display = '';
+                } else {
+                    tarjeta.style.display = 'none';
+                }
+            });
         });
 
         const lista = document.getElementById('listaInquilinos');

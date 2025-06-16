@@ -4,6 +4,21 @@ import { db } from './firebaseConfig.js';
 import { mostrarNotificacion } from './ui.js';
 import { mostrarInmuebles } from './inmuebles.js';
 
+// Variable para evitar mostrar notificación al recargar
+const notificacionesIgnoradas = ["Asignaciones Actualizadas Correctamente"];
+
+// Sobrescribir la función mostrarNotificacion para filtrar mensajes específicos
+const originalMostrarNotificacion = window.mostrarNotificacion;
+window.mostrarNotificacion = function(mensaje, tipo = 'info', duracion = 3500) {
+    if (notificacionesIgnoradas.includes(mensaje)) {
+        return; // No mostrar esta notificación
+    }
+    originalMostrarNotificacion(mensaje, tipo, duracion);
+};
+
+// Variable para controlar si ya se mostró la notificación de asignaciones
+let notificacionAsignacionesMostrada = false;
+
 // Variables globales para listas de pagos
 window.listaPagosPendientes = [];
 window.listaPagosParciales = [];
@@ -11,6 +26,15 @@ window.listaPagosProximos = [];
 window.listaPagosVencidos = [];
 
 export async function mostrarDashboard() {
+    // Sobrescribir temporalmente la función mostrarNotificacion para evitar la notificación específica
+    const originalMostrarNotificacion = window.mostrarNotificacion;
+    window.mostrarNotificacion = function(mensaje, tipo) {
+        if (mensaje === "Asignaciones Actualizadas Correctamente") {
+            return; // No mostrar esta notificación específica
+        }
+        originalMostrarNotificacion(mensaje, tipo);
+    };
+    
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
@@ -469,6 +493,11 @@ proximoPago.setHours(0, 0, 0, 0);
         console.error("Error al cargar el dashboard:", error);
         mostrarNotificacion("Error al cargar el dashboard.", 'error');
         contenedor.innerHTML = `<p class="text-red-600 text-center">Error al cargar los datos del dashboard.</p>`;
+    } finally {
+        // Restaurar la función original de mostrarNotificacion
+        if (window.mostrarNotificacion !== mostrarNotificacion) {
+            window.mostrarNotificacion = mostrarNotificacion;
+        }
     }
 }
 

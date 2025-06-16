@@ -179,13 +179,29 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                     </button>
                     <button onclick="mostrarFormularioNuevoInmueble()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Inmueble</button>
                 </div>
-                <div class="flex gap-2">
-                    <select id="filtroTipo" class="border-gray-300 rounded px-2 py-1">
-                        ${tipos.map(tipo => `<option value="${tipo}" ${tipo === (tipoFiltro || "Todos") ? "selected" : ""}>${tipo}</option>`).join('')}
-                    </select>
-                    <select id="filtroEstado" class="border-gray-300 rounded px-2 py-1">
-                        ${estados.map(estado => `<option value="${estado}" ${estado === (estadoFiltro || "Todos") ? "selected" : ""}>${estado}</option>`).join('')}
-                    </select>
+                <div class="flex gap-2 flex-wrap">
+                    <div class="flex flex-col">
+                        <label for="busquedaInmueble" class="text-xs text-gray-600 mb-1">Buscar inmueble:</label>
+                        <div class="relative">
+                            <input type="text" id="busquedaInmueble" placeholder="Buscar por nombre o dirección..." 
+                                class="border-gray-300 rounded pl-8 pr-2 py-1 w-72">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="filtroTipo" class="text-xs text-gray-600 mb-1">Filtrar por tipo:</label>
+                        <select id="filtroTipo" class="border-gray-300 rounded px-2 py-1">
+                            ${tipos.map(tipo => `<option value="${tipo}" ${tipo === (tipoFiltro || "Todos") ? "selected" : ""}>${tipo}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="filtroEstado" class="text-xs text-gray-600 mb-1">Filtrar por estado:</label>
+                        <select id="filtroEstado" class="border-gray-300 rounded px-2 py-1">
+                            ${estados.map(estado => `<option value="${estado}" ${estado === (estadoFiltro || "Todos") ? "selected" : ""}>${estado}</option>`).join('')}
+                        </select>
+                    </div>
                 </div>
             </div>
             <div id="listaInmuebles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -199,6 +215,23 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
         });
         document.getElementById('filtroEstado').addEventListener('change', function () {
             mostrarInmuebles(this.value, document.getElementById('filtroTipo').value);
+        });
+        
+        // Listener para el cuadro de búsqueda
+        document.getElementById('busquedaInmueble').addEventListener('input', function() {
+            const busqueda = this.value.toLowerCase();
+            const tarjetas = document.querySelectorAll('#listaInmuebles > div');
+            
+            tarjetas.forEach(tarjeta => {
+                const nombre = tarjeta.querySelector('h3')?.textContent.toLowerCase() || '';
+                const direccion = tarjeta.querySelector('.text-gray-600 .text-sm')?.textContent.toLowerCase() || '';
+                
+                if (nombre.includes(busqueda) || direccion.includes(busqueda)) {
+                    tarjeta.style.display = '';
+                } else {
+                    tarjeta.style.display = 'none';
+                }
+            });
         });
 
         // Sortable

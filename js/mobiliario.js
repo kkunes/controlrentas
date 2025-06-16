@@ -1351,7 +1351,7 @@ window.actualizarAsignacionesInmuebles = async function() {
             }
         }
 
-        mostrarNotificacion("Asignaciones actualizadas correctamente.", "success");
+        // No mostrar notificación
         mostrarInventarioMobiliario();
     } catch (error) {
         console.error("Error al actualizar asignaciones:", error);
