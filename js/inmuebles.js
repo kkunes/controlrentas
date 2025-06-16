@@ -82,16 +82,16 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                                         <span class="text-sm font-medium">${inmueble.direccion}</span>
                                     </div>
                                     ${inmueble.latitud && inmueble.longitud ? `
-                                        <div class="flex gap-1">
+                                        <div class="flex flex-col gap-1">
                                             <button onclick="mostrarMapaInmueble('${inmueble.id}')" 
-                                                class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                                                class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs flex items-center justify-center gap-1">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                                                 </svg>
                                                 Mapa
                                             </button>
                                             <button onclick="compartirUbicacion('${inmueble.latitud}', '${inmueble.longitud}', '${inmueble.nombre}')" 
-                                                class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs flex items-center justify-center gap-1">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                                                 </svg>
@@ -1140,9 +1140,11 @@ function mostrarOpcionesCompartir(url, nombre) {
             <p class="text-gray-700 mb-2">La URL de la ubicación ha sido copiada al portapapeles. También puedes:</p>
             
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
-                <div class="flex items-center justify-between">
-                    <input type="text" value="${url}" readonly class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700">
-                    <button id="btnCopiarURL" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div class="w-full overflow-hidden">
+                        <input type="text" value="${url}" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm overflow-ellipsis">
+                    </div>
+                    <button id="btnCopiarURL" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg whitespace-nowrap">
                         Copiar
                     </button>
                 </div>

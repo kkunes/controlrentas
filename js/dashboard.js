@@ -365,69 +365,69 @@ proximoPago.setHours(0, 0, 0, 0);
         pagosVencidos = listaPagosVencidos.length;
 
         contenedor.innerHTML = `
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="py-6">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8">Dashboard General</h2>
+            <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+                <div class="py-4 sm:py-6">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 text-center sm:text-left">Dashboard General</h2>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles()">
+                    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
+                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles()">
                             <div class="flex flex-col items-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-md">
-                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                     </svg>
                                 </div>
-                                <p class="text-lg font-semibold text-indigo-700">Total Inmuebles</p>
-                                <p class="text-4xl font-bold text-indigo-800 mt-2">${totalInmuebles}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-indigo-700 text-center">Total Inmuebles</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-indigo-800 mt-1 sm:mt-2">${totalInmuebles}</p>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Ocupado')">
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Ocupado')">
                             <div class="flex flex-col items-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-md">
-                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                     </svg>
                                 </div>
-                                <p class="text-lg font-semibold text-orange-700">Inmuebles Ocupados</p>
-                                <p class="text-4xl font-bold text-orange-800 mt-2">${inmueblesOcupados}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-orange-700 text-center">Inmuebles Ocupados</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-orange-800 mt-1 sm:mt-2">${inmueblesOcupados}</p>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Disponible')">
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Disponible')">
                             <div class="flex flex-col items-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mb-4 shadow-md">
-                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                     </svg>
                                 </div>
-                                <p class="text-lg font-semibold text-teal-700 text-center">Inmuebles Disponibles</p>
-                                <p class="text-4xl font-bold text-teal-800 mt-2">${inmueblesDisponibles}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-teal-700 text-center">Inmuebles Disponibles</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-teal-800 mt-1 sm:mt-2">${inmueblesDisponibles}</p>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInquilinos()">
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInquilinos()">
                             <div class="flex flex-col items-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4 shadow-md">
-                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                     </svg>
                                 </div>
-                                <p class="text-lg font-semibold text-green-700">Total Inquilinos</p>
-                                <p class="text-4xl font-bold text-green-800 mt-2">${totalInquilinos}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-green-700 text-center">Total Inquilinos</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-green-800 mt-1 sm:mt-2">${totalInquilinos}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Tarjetas de ingresos y gastos -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-4 sm:p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div class="text-center sm:text-left">
                                     <p class="text-lg font-semibold text-emerald-700">Ingresos del Mes</p>
-                                    <p class="text-4xl font-bold text-emerald-800 mt-2">$${ingresosEsteMes.toFixed(2)}</p>
+                                    <p class="text-3xl sm:text-4xl font-bold text-emerald-800 mt-2 break-words">${ingresosEsteMes.toFixed(2)}</p>
                                 </div>
-                                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
+                                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md mx-auto sm:mx-0">
                                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
@@ -435,13 +435,13 @@ proximoPago.setHours(0, 0, 0, 0);
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
+                        <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-4 sm:p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div class="text-center sm:text-left">
                                     <p class="text-lg font-semibold text-rose-700">Gastos del Mes</p>
-                                    <p class="text-4xl font-bold text-rose-800 mt-2">$${gastosEsteMes.toFixed(2)}</p>
+                                    <p class="text-3xl sm:text-4xl font-bold text-rose-800 mt-2 break-words">${gastosEsteMes.toFixed(2)}</p>
                                 </div>
-                                <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center shadow-md">
+                                <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center shadow-md mx-auto sm:mx-0">
                                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                     </svg>
@@ -451,52 +451,52 @@ proximoPago.setHours(0, 0, 0, 0);
                     </div>
 
                     <!-- Estado de Pagos -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100 mb-8">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Estado de Pagos</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('parciales')">
+                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 mb-8">
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center sm:text-left">Estado de Pagos</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('parciales')">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-md">
-                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-md">
+                                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-lg font-semibold text-emerald-700">Pagos Parciales</p>
-                                    <p class="text-4xl font-bold text-emerald-800 mt-2">${pagosParciales}</p>
+                                    <p class="text-base sm:text-lg font-semibold text-emerald-700 text-center">Pagos Parciales</p>
+                                    <p class="text-3xl sm:text-4xl font-bold text-emerald-800 mt-1 sm:mt-2">${pagosParciales}</p>
                                 </div>
                             </div>
 
-                            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('proximos')">
+                            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('proximos')">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-md">
-                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-md">
+                                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-lg font-semibold text-orange-700">Próximos a Vencer</p>
-                                    <p class="text-4xl font-bold text-orange-800 mt-2">${pagosProximosAVencer}</p>
+                                    <p class="text-base sm:text-lg font-semibold text-orange-700 text-center">Próximos a Vencer</p>
+                                    <p class="text-3xl sm:text-4xl font-bold text-orange-800 mt-1 sm:mt-2">${pagosProximosAVencer}</p>
                                 </div>
                             </div>
 
-                            <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('vencidos')">
+                            <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarListaPagosDashboard('vencidos')">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center mb-4 shadow-md">
-                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-md">
+                                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-lg font-semibold text-rose-700">Pagos Vencidos</p>
-                                    <p class="text-4xl font-bold text-rose-800 mt-2">${listaPagosVencidos.length}</p>
+                                    <p class="text-base sm:text-lg font-semibold text-rose-700 text-center">Pagos Vencidos</p>
+                                    <p class="text-3xl sm:text-4xl font-bold text-rose-800 mt-1 sm:mt-2">${listaPagosVencidos.length}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Recordatorios de Renovación de Contratos -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-yellow-100">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-2xl font-bold text-gray-900">Renovación de Contratos</h3>
-                            <button id="btnVerRenovaciones" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 flex items-center gap-2">
+                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-yellow-100">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                            <h3 class="text-xl sm:text-2xl font-bold text-gray-900 text-center sm:text-left">Renovación de Contratos</h3>
+                            <button id="btnVerRenovaciones" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md shadow-md transition-colors duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -504,10 +504,10 @@ proximoPago.setHours(0, 0, 0, 0);
                                 Ver Renovaciones
                             </button>
                         </div>
-                        <p class="text-gray-600 mb-4">Los contratos se renuevan cada 6 meses. El sistema mostrará recordatorios 15 días antes de la fecha de renovación.</p>
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
+                        <p class="text-gray-600 mb-4 text-sm sm:text-base">Los contratos se renuevan cada 6 meses. El sistema mostrará recordatorios 15 días antes de la fecha de renovación.</p>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 sm:p-4 rounded-r-lg">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-0.5">
                                     <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
@@ -597,27 +597,27 @@ window.mostrarListaPagosDashboard = function(tipo) {
     }
 
     let html = `
-        <div class="px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+        <div class="px-3 sm:px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6">
             <div class="flex items-center justify-between">
-                <h3 class="text-2xl font-bold">${titulo}</h3>
+                <h3 class="text-xl sm:text-2xl font-bold">${titulo}</h3>
                 <button onclick="ocultarModal()" class="text-white hover:text-gray-200 transition-colors duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
         </div>
 
-        <div class="overflow-x-auto -mx-6 px-6">
+        <div class="overflow-x-auto -mx-6 px-3 sm:px-6">
             ${lista.length === 0 ? `
-                <div class="flex flex-col items-center justify-center py-12 bg-gradient-to-br ${colorGradiente} rounded-lg">
-                    <svg class="w-16 h-16 ${colorIcono} mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex flex-col items-center justify-center py-8 sm:py-12 bg-gradient-to-br ${colorGradiente} rounded-lg">
+                    <svg class="w-12 h-12 sm:w-16 sm:h-16 ${colorIcono} mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <p class="text-xl text-gray-600 font-medium">No hay pagos en esta categoría</p>
+                    <p class="text-lg sm:text-xl text-gray-600 font-medium">No hay pagos en esta categoría</p>
                 </div>
             ` : `
-                <div class="grid grid-cols-1 gap-6">
+                <div class="grid grid-cols-1 gap-4 sm:gap-6">
                     ${lista.map(pago => {
                         const inquilinoData = window.inquilinosMap && window.inquilinosMap.get(pago.inquilinoId);
                         const nombreInquilino = (pago.nombreInquilino || (inquilinoData && inquilinoData.nombre)) || pago.inquilinoId;
@@ -634,59 +634,59 @@ window.mostrarListaPagosDashboard = function(tipo) {
 
                         return `
                             <div class="bg-white rounded-lg shadow-sm border ${colorBorde} hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
-                                <div class="p-6">
-                                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                                <div class="p-3 sm:p-6">
+                                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 sm:gap-6">
                                         <!-- Información del Inquilino -->
                                         <div class="flex-1">
-                                            <div class="flex items-center gap-3 mb-4">
-                                                <div class="w-12 h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
-                                                    <svg class="w-6 h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                                                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
+                                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <h4 class="text-lg font-semibold text-gray-900">${nombreInquilino}</h4>
-                                                    <p class="text-sm text-gray-500">Inquilino</p>
+                                                    <h4 class="text-base sm:text-lg font-semibold text-gray-900">${nombreInquilino}</h4>
+                                                    <p class="text-xs sm:text-sm text-gray-500">Inquilino</p>
                                                 </div>
                                             </div>
                                             
                                             <!-- Información del Inmueble -->
-                                            <div class="flex items-center gap-3 mb-4">
-                                                <div class="w-12 h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
-                                                    <svg class="w-6 h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                                                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
+                                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <h4 class="text-lg font-semibold text-gray-900">${nombreInmueble}</h4>
-                                                    <p class="text-sm text-gray-500">Inmueble</p>
+                                                    <h4 class="text-base sm:text-lg font-semibold text-gray-900">${nombreInmueble}</h4>
+                                                    <p class="text-xs sm:text-sm text-gray-500">Inmueble</p>
                                                 </div>
                                             </div>
 
                                             <!-- Detalles del Pago -->
-                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
-                                                    <p class="text-sm font-medium ${colorTexto}">Fecha</p>
-                                                    <p class="text-sm font-semibold text-gray-900 mt-1">${fechaPago}</p>
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-2 sm:p-4 shadow-sm">
+                                                    <p class="text-xs sm:text-sm font-medium ${colorTexto}">Fecha</p>
+                                                    <p class="text-xs sm:text-sm font-semibold text-gray-900 mt-1">${fechaPago}</p>
                                                 </div>
-                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
-                                                    <p class="text-sm font-medium ${colorTexto}">Monto Total</p>
-                                                    <p class="text-sm font-semibold text-gray-900 mt-1">$${(pago.montoTotal || 0).toFixed(2)}</p>
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-2 sm:p-4 shadow-sm">
+                                                    <p class="text-xs sm:text-sm font-medium ${colorTexto}">Monto Total</p>
+                                                    <p class="text-xs sm:text-sm font-semibold text-gray-900 mt-1">${(pago.montoTotal || 0).toFixed(2)}</p>
                                                 </div>
-                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
-                                                    <p class="text-sm font-medium ${colorTexto}">Pagado</p>
-                                                    <p class="text-sm font-semibold text-gray-900 mt-1">$${(pago.montoPagado || 0).toFixed(2)}</p>
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-2 sm:p-4 shadow-sm">
+                                                    <p class="text-xs sm:text-sm font-medium ${colorTexto}">Pagado</p>
+                                                    <p class="text-xs sm:text-sm font-semibold text-gray-900 mt-1">${(pago.montoPagado || 0).toFixed(2)}</p>
                                                 </div>
-                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-4 shadow-sm">
-                                                    <p class="text-sm font-medium ${colorTexto}">Pendiente</p>
-                                                    <p class="text-sm font-semibold text-gray-900 mt-1">$${(pago.saldoPendiente || 0).toFixed(2)}</p>
+                                                <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-2 sm:p-4 shadow-sm">
+                                                    <p class="text-xs sm:text-sm font-medium ${colorTexto}">Pendiente</p>
+                                                    <p class="text-xs sm:text-sm font-semibold text-gray-900 mt-1">${(pago.saldoPendiente || 0).toFixed(2)}</p>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <!-- Estado -->
-                                        <div class="flex items-center justify-end">
-                                            <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full ${colorTexto} bg-opacity-10 bg-gradient-to-r ${colorGradiente}">
+                                        <div class="flex items-center justify-center md:justify-end mt-3 md:mt-0">
+                                            <span class="px-3 sm:px-4 py-1.5 sm:py-2 inline-flex text-xs sm:text-sm leading-5 font-semibold rounded-full ${colorTexto} bg-opacity-10 bg-gradient-to-r ${colorGradiente}">
                                                 ${pago.estado}
                                             </span>
                                         </div>
