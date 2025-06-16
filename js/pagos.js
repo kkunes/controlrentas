@@ -6,11 +6,106 @@ import { generarReciboPDF } from './recibos.js';
 /**
  * Muestra la lista de pagos.
  */
-export async function mostrarPagos() {
+export async function mostrarPagos(mostrarTabla = false) {
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de pagos.", 'error');
+        return;
+    }
+    
+    // Si no se solicita mostrar la tabla directamente, mostrar los botones grandes
+    if (!mostrarTabla) {
+        contenedor.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-10">
+                <h2 class="text-3xl font-bold text-gray-800 mb-10">Gestión de Pagos</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+                    <button id="btnNuevoPago" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                        text-white p-8 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center">
+                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span class="text-xl font-bold">Registrar Nuevo Pago</span>
+                        <span class="text-sm text-green-100 mt-2">Registrar pago de renta</span>
+                    </button>
+                    
+                    <button id="btnPagoServicio" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+                        text-white p-8 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center">
+                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span class="text-xl font-bold">Registrar Pago de Servicio</span>
+                        <span class="text-sm text-blue-100 mt-2">Internet, agua, luz, mobiliario</span>
+                    </button>
+                    
+                    <button id="btnHistorialPagos" class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
+                        text-white p-8 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center">
+                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span class="text-xl font-bold">Historial de Pagos</span>
+                        <span class="text-sm text-purple-100 mt-2">Ver todos los pagos registrados</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Agregar event listeners a los botones
+        document.getElementById('btnNuevoPago').addEventListener('click', () => mostrarFormularioNuevoPago());
+        document.getElementById('btnPagoServicio').addEventListener('click', () => {
+            // Mostrar opciones para elegir entre pago de servicios o mobiliario
+            const opcionesHtml = `
+                <div class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
+                    <button id="btnCerrarModal" class="absolute top-3 right-3 text-white hover:text-indigo-200 transition-colors duration-200 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <h3 class="text-2xl font-bold text-center">Seleccionar Tipo de Pago</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+                    <button id="btnPagarServicios" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+                        text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col items-center justify-center transform hover:-translate-y-1">
+                        <div class="bg-blue-400 bg-opacity-30 p-3 rounded-full mb-3">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-medium">Pago de Servicios</span>
+                        <span class="text-sm text-blue-100 mt-1">Internet, Agua, Luz</span>
+                    </button>
+                    <button id="btnPagarMobiliario" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                        text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col items-center justify-center transform hover:-translate-y-1">
+                        <div class="bg-green-400 bg-opacity-30 p-3 rounded-full mb-3">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-medium">Pago de Mobiliario</span>
+                        <span class="text-sm text-green-100 mt-1">Muebles y Equipamiento</span>
+                    </button>
+                </div>
+            `;
+            
+            mostrarModal(opcionesHtml);
+            
+            // Agregar event listeners a los botones
+            document.getElementById('btnCerrarModal').addEventListener('click', () => {
+                ocultarModal();
+            });
+            
+            document.getElementById('btnPagarServicios').addEventListener('click', () => {
+                ocultarModal();
+                mostrarFormularioPagoServicio();
+            });
+            
+            document.getElementById('btnPagarMobiliario').addEventListener('click', () => {
+                ocultarModal();
+                mostrarFormularioPagoMobiliario();
+            });
+        });
+        document.getElementById('btnHistorialPagos').addEventListener('click', () => mostrarPagos(true));
+        
         return;
     }
 
@@ -257,23 +352,32 @@ export async function mostrarPagos() {
 document.getElementById('btnPagoServicio').addEventListener('click', () => {
     // Mostrar opciones para elegir entre pago de servicios o mobiliario
     const opcionesHtml = `
-        <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+        <div class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
+            <button id="btnCerrarModal" class="absolute top-3 right-3 text-white hover:text-indigo-200 transition-colors duration-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
             <h3 class="text-2xl font-bold text-center">Seleccionar Tipo de Pago</h3>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
             <button id="btnPagarServicios" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
-                text-white p-6 rounded-xl shadow-md transition-all duration-200 flex flex-col items-center justify-center">
-                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
+                text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col items-center justify-center transform hover:-translate-y-1">
+                <div class="bg-blue-400 bg-opacity-30 p-3 rounded-full mb-3">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
                 <span class="text-lg font-medium">Pago de Servicios</span>
                 <span class="text-sm text-blue-100 mt-1">Internet, Agua, Luz</span>
             </button>
             <button id="btnPagarMobiliario" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
-                text-white p-6 rounded-xl shadow-md transition-all duration-200 flex flex-col items-center justify-center">
-                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
+                text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col items-center justify-center transform hover:-translate-y-1">
+                <div class="bg-green-400 bg-opacity-30 p-3 rounded-full mb-3">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </div>
                 <span class="text-lg font-medium">Pago de Mobiliario</span>
                 <span class="text-sm text-green-100 mt-1">Muebles y Equipamiento</span>
             </button>
@@ -283,6 +387,10 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
     mostrarModal(opcionesHtml);
     
     // Agregar event listeners a los botones
+    document.getElementById('btnCerrarModal').addEventListener('click', () => {
+        ocultarModal();
+    });
+    
     document.getElementById('btnPagarServicios').addEventListener('click', () => {
         ocultarModal();
         mostrarFormularioPagoServicio();
