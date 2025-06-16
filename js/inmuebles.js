@@ -73,12 +73,32 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                             </div>
                             
                             <div class="space-y-3 mb-6">
-                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <span class="text-sm font-medium">${inmueble.direccion}</span>
+                                <div class="flex items-center justify-between text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span class="text-sm font-medium">${inmueble.direccion}</span>
+                                    </div>
+                                    ${inmueble.latitud && inmueble.longitud ? `
+                                        <div class="flex gap-1">
+                                            <button onclick="mostrarMapaInmueble('${inmueble.id}')" 
+                                                class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                                </svg>
+                                                Mapa
+                                            </button>
+                                            <button onclick="compartirUbicacion('${inmueble.latitud}', '${inmueble.longitud}', '${inmueble.nombre}')" 
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                                </svg>
+                                                Compartir
+                                            </button>
+                                        </div>
+                                    ` : ''}
                                 </div>
                                 
                                 <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
@@ -107,6 +127,17 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                                         </svg>
                                         <span>Contrato</span>
                                     </a>
+                                ` : ''}
+                                ${inmueble.latitud && inmueble.longitud ? `
+                                    <button onclick="mostrarMapaInmueble('${inmueble.id}')" 
+                                        title="Ver ubicación en mapa"
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span>Ubicación</span>
+                                    </button>
                                 ` : ''}
                                 <button onclick="mostrarHistorialPagosInmueble('${inmueble.id}', '${inmueble.nombre}')" 
                                     title="Ver historial de pagos del inmueble"
@@ -342,18 +373,58 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                     </svg>
                     Ubicación
                 </h4>
-                <div class="space-y-2">
-                    <label for="direccion" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Dirección Completa
-                    </label>
-                    <input type="text" id="direccion" name="direccion" 
-                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
-                        value="${inmueble?.direccion ?? ''}" 
-                        placeholder="Ej: Calle Principal #123, Colonia" required>
+                <div class="space-y-4">
+                    <div>
+                        <label for="direccion" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Dirección Completa
+                        </label>
+                        <input type="text" id="direccion" name="direccion" 
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
+                            value="${inmueble?.direccion ?? ''}" 
+                            placeholder="Ej: Calle Principal #123, Colonia" required>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="latitud" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                </svg>
+                                Latitud
+                            </label>
+                            <input type="text" id="latitud" name="latitud" 
+                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
+                                value="${inmueble?.latitud ?? ''}" 
+                                placeholder="Ej: 19.4326">
+                        </div>
+                        <div>
+                            <label for="longitud" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                </svg>
+                                Longitud
+                            </label>
+                            <input type="text" id="longitud" name="longitud" 
+                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
+                                value="${inmueble?.longitud ?? ''}" 
+                                placeholder="Ej: -99.1332">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button type="button" id="btnObtenerUbicacion" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Obtener Ubicación Actual
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -460,6 +531,26 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
     mostrarModal(modalContent);
 
+    // Añadir evento para obtener la ubicación actual
+    document.getElementById('btnObtenerUbicacion').addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById('latitud').value = position.coords.latitude;
+                    document.getElementById('longitud').value = position.coords.longitude;
+                    mostrarNotificacion("Ubicación obtenida correctamente", "success");
+                },
+                (error) => {
+                    console.error("Error al obtener la ubicación:", error);
+                    mostrarNotificacion("Error al obtener la ubicación: " + error.message, "error");
+                },
+                { enableHighAccuracy: true }
+            );
+        } else {
+            mostrarNotificacion("Tu navegador no soporta geolocalización", "error");
+        }
+    });
+
     document.getElementById('formInmueble').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -468,6 +559,10 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
         // Asegurarse de que rentaMensual es un número
         data.rentaMensual = parseFloat(data.rentaMensual);
+        
+        // Convertir latitud y longitud a números si existen
+        if (data.latitud) data.latitud = parseFloat(data.latitud);
+        if (data.longitud) data.longitud = parseFloat(data.longitud);
 
         try {
             if (id) {
@@ -496,10 +591,146 @@ export async function editarInmueble(id) {
 }
 
 /**
+ * Muestra un mapa con la ubicación del inmueble
+ * @param {string} inmuebleId - ID del inmueble
+ */
+export async function mostrarMapaInmueble(inmuebleId) {
+    try {
+        const inmuebleDoc = await getDoc(doc(db, "inmuebles", inmuebleId));
+        if (!inmuebleDoc.exists()) {
+            mostrarNotificacion("Inmueble no encontrado", "error");
+            return;
+        }
+
+        const inmueble = inmuebleDoc.data();
+        
+        if (!inmueble.latitud || !inmueble.longitud) {
+            mostrarNotificacion("Este inmueble no tiene coordenadas de ubicación registradas", "warning");
+            return;
+        }
+
+        const modalContent = `
+            <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+                <h3 class="text-xl font-bold text-center">Ubicación de ${inmueble.nombre}</h3>
+            </div>
+            
+            <div class="mb-4">
+                <div class="bg-gray-100 rounded-lg overflow-hidden" style="height: 400px;">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        style="border:0" 
+                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAa8HeLH2lQMbPeOiMlM9D1VxZ7pbGQq8o&q=${inmueble.latitud},${inmueble.longitud}&zoom=15" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <div class="flex-1 bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">Dirección</h4>
+                    <p class="text-gray-600">${inmueble.direccion || 'No especificada'}</p>
+                </div>
+                <div class="flex-1 bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">Coordenadas</h4>
+                    <p class="text-gray-600">Latitud: ${inmueble.latitud}</p>
+                    <p class="text-gray-600">Longitud: ${inmueble.longitud}</p>
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <button onclick="compartirUbicacion('${inmueble.latitud}', '${inmueble.longitud}', '${inmueble.nombre}')" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Compartir Ubicación
+                </button>
+                
+                <button onclick="ocultarModal()" 
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
+                    Cerrar
+                </button>
+            </div>
+        `;
+        
+        mostrarModal(modalContent);
+        
+    } catch (error) {
+        console.error("Error al mostrar el mapa:", error);
+        mostrarNotificacion("Error al cargar el mapa", "error");
+    }
+}
+
+// Hacer la función disponible globalmente
+window.mostrarMapaInmueble = mostrarMapaInmueble;
+
+/**
  * Muestra el historial de inquilinos de un inmueble en un modal.
  * @param {string} inmuebleId - ID del inmueble.
  * @param {string} inmuebleNombre - Nombre del inmueble.
  */
+/**
+ * Comparte la ubicación de un inmueble
+ * @param {string|number} latitud - Latitud del inmueble
+ * @param {string|number} longitud - Longitud del inmueble
+ * @param {string} nombre - Nombre del inmueble
+ */
+export function compartirUbicacion(latitud, longitud, nombre) {
+    // Verificar si el navegador soporta la API de compartir
+    if (navigator.share) {
+        // Crear URL de Google Maps
+        const mapsUrl = `https://www.google.com/maps?q=${latitud},${longitud}`;
+        
+        // Compartir usando la API Web Share
+        navigator.share({
+            title: `Ubicación de ${nombre}`,
+            text: `Aquí está la ubicación de ${nombre}`,
+            url: mapsUrl
+        })
+        .then(() => mostrarNotificacion("Ubicación compartida con éxito", "success"))
+        .catch(error => {
+            console.error("Error al compartir:", error);
+            mostrarNotificacion("Error al compartir la ubicación", "error");
+            
+            // Fallback: copiar al portapapeles si falla compartir
+            copiarAlPortapapeles(mapsUrl);
+        });
+    } else {
+        // Fallback para navegadores que no soportan la API de compartir
+        const mapsUrl = `https://www.google.com/maps?q=${latitud},${longitud}`;
+        copiarAlPortapapeles(mapsUrl);
+    }
+}
+
+/**
+ * Copia un texto al portapapeles
+ * @param {string} texto - Texto a copiar
+ */
+function copiarAlPortapapeles(texto) {
+    // Crear un elemento temporal
+    const input = document.createElement('input');
+    input.value = texto;
+    document.body.appendChild(input);
+    input.select();
+    
+    try {
+        // Ejecutar el comando de copia
+        document.execCommand('copy');
+        mostrarNotificacion("URL de ubicación copiada al portapapeles", "success");
+    } catch (err) {
+        console.error("Error al copiar:", err);
+        mostrarNotificacion("No se pudo copiar la URL. " + texto, "info", 5000);
+    }
+    
+    // Eliminar el elemento temporal
+    document.body.removeChild(input);
+}
+
+// Hacer la función disponible globalmente
+window.compartirUbicacion = compartirUbicacion;
+
 export async function mostrarHistorialInquilinosInmueble(inmuebleId, inmuebleNombre) {
     try {
         // Buscar todos los inquilinos que han estado asociados a este inmueble
