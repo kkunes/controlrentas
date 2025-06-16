@@ -422,7 +422,7 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            Obtener Ubicación Actual
+                            Obtener Mi Ubicación Actual
                         </button>
                     </div>
                 </div>
@@ -532,22 +532,29 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
     mostrarModal(modalContent);
 
     // Añadir evento para obtener la ubicación actual
-    document.getElementById('btnObtenerUbicacion').addEventListener('click', () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    document.getElementById('latitud').value = position.coords.latitude;
-                    document.getElementById('longitud').value = position.coords.longitude;
-                    mostrarNotificacion("Ubicación obtenida correctamente", "success");
-                },
-                (error) => {
-                    console.error("Error al obtener la ubicación:", error);
-                    mostrarNotificacion("Error al obtener la ubicación: " + error.message, "error");
-                },
-                { enableHighAccuracy: true }
-            );
-        } else {
-            mostrarNotificacion("Tu navegador no soporta geolocalización", "error");
+    document.getElementById('btnObtenerUbicacion').addEventListener('click', async () => {
+        // Mostrar notificación de espera
+        mostrarNotificacion("Obteniendo ubicación...", "info");
+        
+        try {
+            // Usar un servicio de geolocalización por IP como alternativa
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            
+            if (data && data.latitude && data.longitude) {
+                document.getElementById('latitud').value = data.latitude;
+                document.getElementById('longitud').value = data.longitude;
+                mostrarNotificacion("Ubicación aproximada obtenida por IP", "success");
+            } else {
+                throw new Error("No se pudo obtener la ubicación");
+            }
+        } catch (error) {
+            console.error("Error al obtener ubicación:", error);
+            mostrarNotificacion("No se pudo obtener la ubicación. Usando coordenadas predeterminadas.", "warning");
+            
+            // Usar coordenadas predeterminadas como respaldo
+            document.getElementById('latitud').value = "19.4326";
+            document.getElementById('longitud').value = "-99.1332";
         }
     });
 
@@ -605,7 +612,17 @@ export async function mostrarMapaInmueble(inmuebleId) {
         const inmueble = inmuebleDoc.data();
         
         if (!inmueble.latitud || !inmueble.longitud) {
-            mostrarNotificacion("Este inmueble no tiene coordenadas de ubicación registradas", "warning");
+            // Si no hay coordenadas, mostrar un formulario para añadirlas
+            mostrarFormularioUbicacion(inmuebleId, inmueble);
+            return;
+        }
+        
+        // Validar que las coordenadas sean números válidos
+        const lat = parseFloat(inmueble.latitud);
+        const lng = parseFloat(inmueble.longitud);
+        
+        if (isNaN(lat) || isNaN(lng)) {
+            mostrarNotificacion("Las coordenadas del inmueble no son válidas", "error");
             return;
         }
 
@@ -615,14 +632,16 @@ export async function mostrarMapaInmueble(inmuebleId) {
             </div>
             
             <div class="mb-4">
-                <div class="bg-gray-100 rounded-lg overflow-hidden" style="height: 400px;">
+                <div class="bg-gray-100 rounded-lg overflow-hidden" style="height: 400px;" id="map-container">
                     <iframe 
                         width="100%" 
                         height="100%" 
                         frameborder="0" 
-                        style="border:0" 
-                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAa8HeLH2lQMbPeOiMlM9D1VxZ7pbGQq8o&q=${inmueble.latitud},${inmueble.longitud}&zoom=15" 
-                        allowfullscreen>
+                        scrolling="no" 
+                        marginheight="0" 
+                        marginwidth="0" 
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=${inmueble.longitud-0.01}%2C${inmueble.latitud-0.01}%2C${inmueble.longitud+0.01}%2C${inmueble.latitud+0.01}&amp;layer=mapnik&amp;marker=${inmueble.latitud}%2C${inmueble.longitud}" 
+                        style="border: none;">
                     </iframe>
                 </div>
             </div>
@@ -639,14 +658,24 @@ export async function mostrarMapaInmueble(inmuebleId) {
                 </div>
             </div>
             
-            <div class="flex justify-between">
-                <button onclick="compartirUbicacion('${inmueble.latitud}', '${inmueble.longitud}', '${inmueble.nombre}')" 
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                    Compartir Ubicación
-                </button>
+            <div class="flex flex-wrap justify-between gap-2">
+                <div class="flex gap-2">
+                    <a href="https://www.google.com/maps?q=${inmueble.latitud},${inmueble.longitud}" target="_blank"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Abrir en Google Maps
+                    </a>
+                    
+                    <button onclick="compartirUbicacion('${inmueble.latitud}', '${inmueble.longitud}', '${inmueble.nombre}')" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                        Compartir
+                    </button>
+                </div>
                 
                 <button onclick="ocultarModal()" 
                     class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
@@ -663,8 +692,324 @@ export async function mostrarMapaInmueble(inmuebleId) {
     }
 }
 
-// Hacer la función disponible globalmente
+/**
+ * Muestra un formulario para ingresar ubicación manualmente
+ */
+function mostrarFormularioUbicacionManual() {
+    const modalContent = `
+        <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <h3 class="text-xl font-bold text-center">Ingresar Ubicación Manualmente</h3>
+            <p class="text-center text-blue-100 text-sm">Busca la ubicación en Google Maps y copia las coordenadas</p>
+        </div>
+        
+        <div class="space-y-6">
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <div class="flex items-center gap-2 text-yellow-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="font-medium">No se pudo obtener la ubicación automáticamente</p>
+                </div>
+                <p class="mt-2 text-sm text-yellow-600">Sigue estos pasos para ingresar la ubicación manualmente:</p>
+                <ol class="mt-2 text-sm text-yellow-600 list-decimal pl-5 space-y-1">
+                    <li>Abre <a href="https://maps.google.com" target="_blank" class="text-blue-600 hover:underline">Google Maps</a> en una nueva pestaña</li>
+                    <li>Busca la dirección del inmueble</li>
+                    <li>Haz clic derecho en el punto exacto y selecciona "¿Qué hay aquí?"</li>
+                    <li>En la parte inferior aparecerán las coordenadas (ej: 19.4326, -99.1332)</li>
+                    <li>Copia esos números en los campos de abajo</li>
+                </ol>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="latitudManual" class="block text-sm font-medium text-gray-700">Latitud</label>
+                    <input type="text" id="latitudManual" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Ej: 19.4326">
+                </div>
+                <div>
+                    <label for="longitudManual" class="block text-sm font-medium text-gray-700">Longitud</label>
+                    <input type="text" id="longitudManual" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Ej: -99.1332">
+                </div>
+            </div>
+            
+            <div class="flex justify-between mt-6 pt-4 border-t border-gray-200">
+                <button type="button" onclick="ocultarModal()" 
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
+                    Cancelar
+                </button>
+                
+                <button id="btnGuardarUbicacionManual" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Guardar Ubicación
+                </button>
+            </div>
+        </div>
+    `;
+    
+    mostrarModal(modalContent);
+    
+    // Evento para guardar la ubicación manual
+    document.getElementById('btnGuardarUbicacionManual').addEventListener('click', () => {
+        const latitud = document.getElementById('latitudManual').value.trim();
+        const longitud = document.getElementById('longitudManual').value.trim();
+        
+        if (!latitud || !longitud) {
+            mostrarNotificacion("Por favor, ingresa ambas coordenadas", "error");
+            return;
+        }
+        
+        // Validar que sean números válidos
+        const latNum = parseFloat(latitud);
+        const lonNum = parseFloat(longitud);
+        
+        if (isNaN(latNum) || isNaN(lonNum)) {
+            mostrarNotificacion("Las coordenadas deben ser números válidos", "error");
+            return;
+        }
+        
+        // Validar rango de coordenadas
+        if (latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
+            mostrarNotificacion("Las coordenadas están fuera de rango válido", "error");
+            return;
+        }
+        
+        // Asignar valores a los campos del formulario principal
+        document.getElementById('latitud').value = latNum;
+        document.getElementById('longitud').value = lonNum;
+        
+        mostrarNotificacion("Ubicación guardada correctamente", "success");
+        ocultarModal();
+    });
+}
+
+/**
+ * Muestra un formulario para añadir coordenadas a un inmueble
+ * @param {string} inmuebleId - ID del inmueble
+ * @param {Object} inmueble - Datos del inmueble
+ */
+export async function mostrarFormularioUbicacion(inmuebleId, inmueble) {
+    const modalContent = `
+        <div class="px-4 py-3 bg-yellow-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <h3 class="text-xl font-bold text-center">Añadir Ubicación</h3>
+            <p class="text-center text-yellow-100 text-sm">Este inmueble no tiene coordenadas registradas</p>
+        </div>
+        
+        <form id="formUbicacion" class="space-y-6">
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+                <div class="flex items-center gap-2 text-yellow-700 mb-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="font-medium">Inmueble: ${inmueble.nombre}</p>
+                </div>
+                <p class="text-sm text-yellow-600">Para compartir la ubicación, necesitas añadir las coordenadas geográficas.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="latitudForm" class="block text-sm font-medium text-gray-700">Latitud</label>
+                    <input type="text" id="latitudForm" name="latitud" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Ej: 19.4326" required>
+                </div>
+                <div>
+                    <label for="longitudForm" class="block text-sm font-medium text-gray-700">Longitud</label>
+                    <input type="text" id="longitudForm" name="longitud" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Ej: -99.1332" required>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <button type="button" id="btnObtenerUbicacionForm" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Obtener Mi Ubicación Actual
+                </button>
+            </div>
+            
+            <div class="flex justify-between mt-6 pt-4 border-t border-gray-200">
+                <button type="button" onclick="ocultarModal()" 
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
+                    Cancelar
+                </button>
+                
+                <button type="submit" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Guardar Ubicación
+                </button>
+            </div>
+        </form>
+    `;
+    
+    mostrarModal(modalContent);
+    
+    // Evento para obtener la ubicación actual
+    document.getElementById('btnObtenerUbicacionForm').addEventListener('click', () => {
+        // Mostrar formulario para ingresar ubicación manualmente
+        mostrarFormularioUbicacionManualParaForm(inmuebleId);
+    });
+    
+    // Evento para guardar la ubicación
+    document.getElementById('formUbicacion').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const latitud = parseFloat(document.getElementById('latitudForm').value);
+        const longitud = parseFloat(document.getElementById('longitudForm').value);
+        
+        if (isNaN(latitud) || isNaN(longitud)) {
+            mostrarNotificacion("Por favor, ingresa coordenadas válidas", "error");
+            return;
+        }
+        
+        try {
+            await updateDoc(doc(db, "inmuebles", inmuebleId), {
+                latitud,
+                longitud
+            });
+            
+            mostrarNotificacion("Ubicación guardada correctamente", "success");
+            ocultarModal();
+            
+            // Mostrar el mapa con las nuevas coordenadas
+            setTimeout(() => {
+                mostrarMapaInmueble(inmuebleId);
+            }, 500);
+            
+        } catch (error) {
+            console.error("Error al guardar la ubicación:", error);
+            mostrarNotificacion("Error al guardar la ubicación", "error");
+        }
+    });
+}
+
+/**
+ * Muestra un formulario para ingresar ubicación manualmente para un inmueble específico
+ * @param {string} inmuebleId - ID del inmueble
+ */
+function mostrarFormularioUbicacionManualParaForm(inmuebleId) {
+    const modalContent = `
+        <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <h3 class="text-xl font-bold text-center">Ingresar Ubicación Manualmente</h3>
+            <p class="text-center text-blue-100 text-sm">Busca la ubicación en Google Maps y copia las coordenadas</p>
+        </div>
+        
+        <div class="space-y-6">
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <div class="flex items-center gap-2 text-yellow-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="font-medium">No se pudo obtener la ubicación automáticamente</p>
+                </div>
+                <p class="mt-2 text-sm text-yellow-600">Sigue estos pasos para ingresar la ubicación manualmente:</p>
+                <ol class="mt-2 text-sm text-yellow-600 list-decimal pl-5 space-y-1">
+                    <li>Abre <a href="https://maps.google.com" target="_blank" class="text-blue-600 hover:underline">Google Maps</a> en una nueva pestaña</li>
+                    <li>Busca la dirección del inmueble</li>
+                    <li>Haz clic derecho en el punto exacto y selecciona "¿Qué hay aquí?"</li>
+                    <li>En la parte inferior aparecerán las coordenadas (ej: 19.4326, -99.1332)</li>
+                    <li>Copia esos números en los campos de abajo</li>
+                </ol>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="latitudManualForm" class="block text-sm font-medium text-gray-700">Latitud</label>
+                    <input type="text" id="latitudManualForm" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Ej: 19.4326">
+                </div>
+                <div>
+                    <label for="longitudManualForm" class="block text-sm font-medium text-gray-700">Longitud</label>
+                    <input type="text" id="longitudManualForm" 
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Ej: -99.1332">
+                </div>
+            </div>
+            
+            <div class="flex justify-between mt-6 pt-4 border-t border-gray-200">
+                <button type="button" onclick="ocultarModal()" 
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
+                    Cancelar
+                </button>
+                
+                <button id="btnGuardarUbicacionManualForm" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Guardar Ubicación
+                </button>
+            </div>
+        </div>
+    `;
+    
+    mostrarModal(modalContent);
+    
+    // Evento para guardar la ubicación manual
+    document.getElementById('btnGuardarUbicacionManualForm').addEventListener('click', async () => {
+        const latitud = document.getElementById('latitudManualForm').value.trim();
+        const longitud = document.getElementById('longitudManualForm').value.trim();
+        
+        if (!latitud || !longitud) {
+            mostrarNotificacion("Por favor, ingresa ambas coordenadas", "error");
+            return;
+        }
+        
+        // Validar que sean números válidos
+        const latNum = parseFloat(latitud);
+        const lonNum = parseFloat(longitud);
+        
+        if (isNaN(latNum) || isNaN(lonNum)) {
+            mostrarNotificacion("Las coordenadas deben ser números válidos", "error");
+            return;
+        }
+        
+        // Validar rango de coordenadas
+        if (latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
+            mostrarNotificacion("Las coordenadas están fuera de rango válido", "error");
+            return;
+        }
+        
+        try {
+            // Guardar directamente en la base de datos
+            await updateDoc(doc(db, "inmuebles", inmuebleId), {
+                latitud: latNum,
+                longitud: lonNum
+            });
+            
+            mostrarNotificacion("Ubicación guardada correctamente", "success");
+            ocultarModal();
+            
+            // Mostrar el mapa con las nuevas coordenadas
+            setTimeout(() => {
+                mostrarMapaInmueble(inmuebleId);
+            }, 500);
+            
+        } catch (error) {
+            console.error("Error al guardar la ubicación:", error);
+            mostrarNotificacion("Error al guardar la ubicación", "error");
+        }
+    });
+}
+
+// Hacer las funciones disponibles globalmente
 window.mostrarMapaInmueble = mostrarMapaInmueble;
+window.mostrarFormularioUbicacion = mostrarFormularioUbicacion;
+window.mostrarFormularioUbicacionManual = mostrarFormularioUbicacionManual;
+window.mostrarFormularioUbicacionManualParaForm = mostrarFormularioUbicacionManualParaForm;
 
 /**
  * Muestra el historial de inquilinos de un inmueble en un modal.
@@ -678,29 +1023,24 @@ window.mostrarMapaInmueble = mostrarMapaInmueble;
  * @param {string} nombre - Nombre del inmueble
  */
 export function compartirUbicacion(latitud, longitud, nombre) {
-    // Verificar si el navegador soporta la API de compartir
-    if (navigator.share) {
-        // Crear URL de Google Maps
-        const mapsUrl = `https://www.google.com/maps?q=${latitud},${longitud}`;
+    try {
+        // Validar que las coordenadas sean números válidos
+        const lat = parseFloat(latitud);
+        const lng = parseFloat(longitud);
         
-        // Compartir usando la API Web Share
-        navigator.share({
-            title: `Ubicación de ${nombre}`,
-            text: `Aquí está la ubicación de ${nombre}`,
-            url: mapsUrl
-        })
-        .then(() => mostrarNotificacion("Ubicación compartida con éxito", "success"))
-        .catch(error => {
-            console.error("Error al compartir:", error);
-            mostrarNotificacion("Error al compartir la ubicación", "error");
-            
-            // Fallback: copiar al portapapeles si falla compartir
-            copiarAlPortapapeles(mapsUrl);
-        });
-    } else {
-        // Fallback para navegadores que no soportan la API de compartir
-        const mapsUrl = `https://www.google.com/maps?q=${latitud},${longitud}`;
+        if (isNaN(lat) || isNaN(lng)) {
+            throw new Error("Coordenadas inválidas");
+        }
+        
+        // Crear URL de Google Maps
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        
+        // Usar directamente el método alternativo de compartir
         copiarAlPortapapeles(mapsUrl);
+        mostrarOpcionesCompartir(mapsUrl, nombre);
+    } catch (error) {
+        console.error("Error al compartir ubicación:", error);
+        mostrarNotificacion("Error al compartir: " + error.message, "error");
     }
 }
 
@@ -709,16 +1049,43 @@ export function compartirUbicacion(latitud, longitud, nombre) {
  * @param {string} texto - Texto a copiar
  */
 function copiarAlPortapapeles(texto) {
+    // Usar la API moderna del portapapeles si está disponible
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto)
+            .then(() => {
+                mostrarNotificacion("URL de ubicación copiada al portapapeles", "success");
+            })
+            .catch(err => {
+                console.error("Error al copiar con Clipboard API:", err);
+                copiarAlPortapapelesLegacy(texto);
+            });
+    } else {
+        // Método alternativo para navegadores que no soportan Clipboard API
+        copiarAlPortapapelesLegacy(texto);
+    }
+}
+
+/**
+ * Método alternativo para copiar al portapapeles
+ * @param {string} texto - Texto a copiar
+ */
+function copiarAlPortapapelesLegacy(texto) {
     // Crear un elemento temporal
     const input = document.createElement('input');
     input.value = texto;
+    input.style.position = 'fixed';
+    input.style.opacity = '0';
     document.body.appendChild(input);
     input.select();
     
     try {
         // Ejecutar el comando de copia
-        document.execCommand('copy');
-        mostrarNotificacion("URL de ubicación copiada al portapapeles", "success");
+        const exito = document.execCommand('copy');
+        if (exito) {
+            mostrarNotificacion("URL de ubicación copiada al portapapeles", "success");
+        } else {
+            throw new Error("No se pudo copiar");
+        }
     } catch (err) {
         console.error("Error al copiar:", err);
         mostrarNotificacion("No se pudo copiar la URL. " + texto, "info", 5000);
@@ -726,6 +1093,71 @@ function copiarAlPortapapeles(texto) {
     
     // Eliminar el elemento temporal
     document.body.removeChild(input);
+}
+
+/**
+ * Muestra opciones alternativas para compartir cuando la API Web Share no está disponible
+ * @param {string} url - URL a compartir
+ * @param {string} nombre - Nombre del inmueble
+ */
+function mostrarOpcionesCompartir(url, nombre) {
+    const modalContent = `
+        <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <h3 class="text-xl font-bold text-center">Compartir Ubicación</h3>
+            <p class="text-center text-blue-100 text-sm">Ubicación de ${nombre}</p>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-gray-700 mb-2">La URL de la ubicación ha sido copiada al portapapeles. También puedes:</p>
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+                <div class="flex items-center justify-between">
+                    <input type="text" value="${url}" readonly class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700">
+                    <button id="btnCopiarURL" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg">
+                        Copiar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <a href="https://wa.me/?text=${encodeURIComponent(`Ubicación de ${nombre}: ${url}`)}" target="_blank" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-center flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    WhatsApp
+                </a>
+                <a href="mailto:?subject=${encodeURIComponent(`Ubicación de ${nombre}`)}&body=${encodeURIComponent(`Aquí está la ubicación de ${nombre}: ${url}`)}" 
+                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-center flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Email
+                </a>
+                <a href="sms:?body=${encodeURIComponent(`Ubicación de ${nombre}: ${url}`)}" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-center flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    SMS
+                </a>
+            </div>
+        </div>
+        
+        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+            <button onclick="ocultarModal()" 
+                class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
+                Cerrar
+            </button>
+        </div>
+    `;
+    
+    mostrarModal(modalContent);
+    
+    // Evento para el botón de copiar
+    document.getElementById('btnCopiarURL').addEventListener('click', () => {
+        copiarAlPortapapeles(url);
+    });
 }
 
 // Hacer la función disponible globalmente
