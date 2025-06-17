@@ -1,5 +1,5 @@
 // js/abonos.js
-import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 
@@ -27,18 +27,112 @@ export async function mostrarAbonos() {
             });
         });
 
+        // Obtener inmuebles para mostrar junto a los inquilinos
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data().nombre || 'Inmueble sin nombre');
+        });
+        
+        // Crear un mapa para buscar inmuebles por nombre también
+        const inmueblesNombreMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.nombre) {
+                inmueblesNombreMap.set(data.nombre.toLowerCase(), data.nombre);
+            }
+        });
+        
         const inquilinosMap = new Map();
         inquilinosSnap.forEach(doc => {
-            inquilinosMap.set(doc.id, doc.data().nombre);
+            const inquilino = doc.data();
+            
+            // Verificar todos los posibles campos donde podría estar el ID del inmueble
+            let inmuebleId = inquilino.inmuebleId || inquilino.inmuebleAsociadoId || inquilino.idInmueble;
+            let inmuebleNombre = null;
+            
+            // 1. Intentar obtener por ID
+            if (inmuebleId && inmueblesMap.has(inmuebleId)) {
+                inmuebleNombre = inmueblesMap.get(inmuebleId);
+            } 
+            // 2. Intentar obtener por campo nombreInmueble
+            else if (inquilino.nombreInmueble) {
+                inmuebleNombre = inquilino.nombreInmueble;
+            }
+            // 3. Intentar buscar por coincidencia de nombre
+            else if (inquilino.inmueble && typeof inquilino.inmueble === 'string') {
+                const nombreLower = inquilino.inmueble.toLowerCase();
+                if (inmueblesNombreMap.has(nombreLower)) {
+                    inmuebleNombre = inmueblesNombreMap.get(nombreLower);
+                } else {
+                    inmuebleNombre = inquilino.inmueble; // Usar el nombre directamente
+                }
+            }
+            
+            // Si no se encontró de ninguna forma
+            if (!inmuebleNombre) {
+                inmuebleNombre = 'Sin inmueble asignado';
+            }
+            
+            inquilinosMap.set(doc.id, {
+                nombre: inquilino.nombre,
+                inmuebleNombre: inmuebleNombre
+            });
         });
 
         let abonosList = [];
         abonosSnap.forEach(doc => {
             const data = doc.data();
+            const inquilinoInfo = inquilinosMap.get(data.inquilinoId) || { nombre: 'Inquilino Desconocido', inmuebleNombre: 'Sin inmueble' };
+            
+            // Si el inmueble aparece como "Sin inmueble asignado", intentar obtenerlo directamente
+            let inmuebleNombre = inquilinoInfo.inmuebleNombre;
+            if (inmuebleNombre === 'Sin inmueble asignado' || inmuebleNombre === 'Inmueble no encontrado') {
+                // Buscar el inquilino directamente para verificar su inmueble
+                const inquilinoDoc = inquilinosSnap.docs.find(d => d.id === data.inquilinoId);
+                if (inquilinoDoc) {
+                    const inquilinoData = inquilinoDoc.data();
+                    
+                    // 1. Intentar obtener por ID
+                    const inmuebleId = inquilinoData.inmuebleId || inquilinoData.inmuebleAsociadoId || inquilinoData.idInmueble;
+                    if (inmuebleId && inmueblesMap.has(inmuebleId)) {
+                        inmuebleNombre = inmueblesMap.get(inmuebleId);
+                    } 
+                    // 2. Intentar obtener por campo nombreInmueble
+                    else if (inquilinoData.nombreInmueble) {
+                        inmuebleNombre = inquilinoData.nombreInmueble;
+                    }
+                    // 3. Intentar buscar por coincidencia de nombre
+                    else if (inquilinoData.inmueble && typeof inquilinoData.inmueble === 'string') {
+                        // Buscar por nombre en el mapa de inmuebles
+                        for (const [id, nombre] of inmueblesMap.entries()) {
+                            if (nombre.toLowerCase() === inquilinoData.inmueble.toLowerCase()) {
+                                inmuebleNombre = nombre;
+                                break;
+                            }
+                        }
+                        // Si no se encontró, usar el nombre directamente
+                        if (inmuebleNombre === 'Sin inmueble asignado' || inmuebleNombre === 'Inmueble no encontrado') {
+                            inmuebleNombre = inquilinoData.inmueble;
+                        }
+                    }
+                    
+                    // 4. Verificar si hay un campo de inmueble en formato diferente
+                    if ((inmuebleNombre === 'Sin inmueble asignado' || inmuebleNombre === 'Inmueble no encontrado') && 
+                        inquilinoData.inmuebleAsociado && typeof inquilinoData.inmuebleAsociado === 'object') {
+                        // A veces el inmueble está como objeto con nombre
+                        if (inquilinoData.inmuebleAsociado.nombre) {
+                            inmuebleNombre = inquilinoData.inmuebleAsociado.nombre;
+                        }
+                    }
+                }
+            }
+            
             abonosList.push({
                 id: doc.id,
                 ...data,
-                nombreInquilino: inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido'
+                nombreInquilino: inquilinoInfo.nombre,
+                inmuebleNombre: inmuebleNombre
             });
         });
 
@@ -50,6 +144,7 @@ export async function mostrarAbonos() {
                     id: null, // Aquí guardaremos el id real del abono activo
                     inquilinoId: abono.inquilinoId,
                     nombreInquilino: abono.nombreInquilino,
+                    inmuebleNombre: abono.inmuebleNombre,
                     montoOriginal: 0,
                     saldoRestante: 0,
                     descripcion: '',
@@ -139,6 +234,7 @@ export async function mostrarAbonos() {
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-1">${abono.nombreInquilino}</h3>
+                                    <p class="text-sm text-indigo-600 font-medium mb-2">${abono.inmuebleNombre !== 'Sin inmueble asignado' && abono.inmuebleNombre !== 'Inmueble no encontrado' ? abono.inmuebleNombre : 'Inmueble: No asignado'}</p>
                                     <div class="flex items-center space-x-2 mb-3">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoClass}">
                                             ${estadoText}
@@ -191,7 +287,7 @@ export async function mostrarAbonos() {
                                         Aplicar Saldo
                                     </button>
                                 ` : ''}
-                                <button onclick="eliminarAbono('${abono.id}')"
+                                <button onclick="eliminarAbono('${abono.id}', '${abono.inquilinoId}')"
                                         class="flex-1 bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700
                                         text-white text-sm font-medium px-3 py-2.5 sm:py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
                                         flex items-center justify-center gap-1.5 border border-rose-400/30">
@@ -328,9 +424,58 @@ export async function mostrarFormularioNuevoAbono(id = null) {
     let inquilinosList = [];
 
     try {
+        // Obtener inmuebles para mostrar junto a los inquilinos
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data().nombre || 'Inmueble sin nombre');
+        });
+        
+        // Crear un mapa para buscar inmuebles por nombre también
+        const inmueblesNombreMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.nombre) {
+                inmueblesNombreMap.set(data.nombre.toLowerCase(), data.nombre);
+            }
+        });
+        
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         inquilinosSnap.forEach(doc => {
-            inquilinosList.push({ id: doc.id, ...doc.data() });
+            const inquilino = doc.data();
+            
+            // Verificar todos los posibles campos donde podría estar el ID del inmueble
+            let inmuebleId = inquilino.inmuebleId || inquilino.inmuebleAsociadoId || inquilino.idInmueble;
+            let inmuebleNombre = null;
+            
+            // 1. Intentar obtener por ID
+            if (inmuebleId && inmueblesMap.has(inmuebleId)) {
+                inmuebleNombre = inmueblesMap.get(inmuebleId);
+            } 
+            // 2. Intentar obtener por campo nombreInmueble
+            else if (inquilino.nombreInmueble) {
+                inmuebleNombre = inquilino.nombreInmueble;
+            }
+            // 3. Intentar buscar por coincidencia de nombre
+            else if (inquilino.inmueble && typeof inquilino.inmueble === 'string') {
+                const nombreLower = inquilino.inmueble.toLowerCase();
+                if (inmueblesNombreMap.has(nombreLower)) {
+                    inmuebleNombre = inmueblesNombreMap.get(nombreLower);
+                } else {
+                    inmuebleNombre = inquilino.inmueble; // Usar el nombre directamente
+                }
+            }
+            
+            // Si no se encontró de ninguna forma
+            if (!inmuebleNombre) {
+                inmuebleNombre = 'Sin inmueble asignado';
+            }
+            
+            inquilinosList.push({ 
+                id: doc.id, 
+                ...inquilino,
+                inmuebleNombre: inmuebleNombre
+            });
         });
     } catch (error) {
         mostrarNotificacion("Error al cargar inquilinos disponibles.", 'error');
@@ -353,7 +498,12 @@ export async function mostrarFormularioNuevoAbono(id = null) {
         }
     }
 
-    const inquilinosOptions = inquilinosList.map(inc => `<option value="${inc.id}" ${inc.id === abono.inquilinoId ? 'selected' : ''}>${inc.nombre}</option>`).join('');
+    const inquilinosOptions = inquilinosList.map(inc => {
+        const inmuebleText = (inc.inmuebleNombre !== 'Sin inmueble asignado' && inc.inmuebleNombre !== 'Inmueble no encontrado') 
+            ? inc.inmuebleNombre 
+            : 'Sin inmueble';
+        return `<option value="${inc.id}" ${inc.id === abono.inquilinoId ? 'selected' : ''}>${inc.nombre} - ${inmuebleText}</option>`;
+    }).join('');
 
     const formHtml = `
         <div class="px-6 py-5 bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6 shadow-md">
@@ -540,25 +690,57 @@ export async function editarAbono(id) {
 /**
  * Elimina un abono a favor con doble confirmación.
  * @param {string} id - ID del abono a eliminar.
+ * @param {string} inquilinoId - ID del inquilino asociado (opcional).
  */
-export async function eliminarAbono(id) {
-    // Primera confirmación
-    if (confirm('¿Estás seguro de que quieres eliminar este saldo a favor? Esta acción es irreversible.')) {
-        // Segunda confirmación
-        if (confirm('REALMENTE deseas eliminar este saldo a favor? No se podrá recuperar.')) {
-            try {
-                await deleteDoc(doc(db, "abonosSaldoFavor", id));
-                mostrarNotificacion('Saldo a favor eliminado con éxito.', 'success');
+export async function eliminarAbono(id, inquilinoId = null) {
+    try {
+        // Preguntar si desea eliminar todos los abonos del inquilino
+        const eliminarTodo = inquilinoId && confirm('¿Deseas eliminar TODOS los saldos a favor de este inquilino?');
+        
+        // Primera confirmación
+        const mensaje = eliminarTodo 
+            ? '¿Estás seguro de que quieres eliminar TODOS los saldos a favor de este inquilino? Esta acción es irreversible.'
+            : '¿Estás seguro de que quieres eliminar este saldo a favor? Esta acción es irreversible.';
+            
+        if (confirm(mensaje)) {
+            // Segunda confirmación
+            const mensaje2 = eliminarTodo
+                ? 'REALMENTE deseas eliminar TODOS los saldos a favor de este inquilino? No se podrán recuperar.'
+                : 'REALMENTE deseas eliminar este saldo a favor? No se podrá recuperar.';
+                
+            if (confirm(mensaje2)) {
+                if (eliminarTodo) {
+                    // Eliminar todos los abonos asociados al inquilino
+                    const abonosQuery = query(
+                        collection(db, "abonosSaldoFavor"),
+                        where("inquilinoId", "==", inquilinoId)
+                    );
+                    const abonosSnap = await getDocs(abonosQuery);
+                    
+                    // Eliminar cada documento encontrado
+                    const batch = writeBatch(db);
+                    abonosSnap.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    
+                    mostrarNotificacion('Todos los saldos a favor del inquilino han sido eliminados.', 'success');
+                } else {
+                    // Eliminar solo el abono específico
+                    await deleteDoc(doc(db, "abonosSaldoFavor", id));
+                    mostrarNotificacion('Saldo a favor eliminado con éxito.', 'success');
+                }
+                
                 mostrarAbonos();
-
-            } catch (error) {
-                mostrarNotificacion('Error al eliminar el saldo a favor.', 'error');
+            } else {
+                mostrarNotificacion('Eliminación cancelada.', 'info');
             }
         } else {
             mostrarNotificacion('Eliminación cancelada.', 'info');
         }
-    } else {
-        mostrarNotificacion('Eliminación cancelada.', 'info');
+    } catch (error) {
+        console.error("Error al eliminar:", error);
+        mostrarNotificacion('Error al eliminar el saldo a favor.', 'error');
     }
 }
 
