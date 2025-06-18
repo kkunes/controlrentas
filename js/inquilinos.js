@@ -324,7 +324,10 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 badge.parentNode.replaceChild(newBadge, badge);
 
                 if (mesesAdeudados.length > 0) {
-                    newBadge.textContent = `${mesesAdeudados.length} adeudo${mesesAdeudados.length > 1 ? 's' : ''}`;
+                    // Contar servicios pendientes
+                    const serviciosPendientes = mesesAdeudados.filter(m => m.serviciosPendientes).length;
+                    
+                    newBadge.textContent = `${mesesAdeudados.length} adeudo${mesesAdeudados.length > 1 ? 's' : ''}${serviciosPendientes > 0 ? ` + ${serviciosPendientes} serv.` : ''}`;
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
                     newBadge.title = "Haz clic para ver los meses adeudados";
                     newBadge.addEventListener('click', async () => {
@@ -333,6 +336,10 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             inquilino.inmuebleAsociadoId,
                             new Date(inquilino.fechaOcupacion)
                         );
+                        
+                        // Contar servicios pendientes actualizados
+                        const serviciosPendientesActualizados = mesesActualizados.filter(m => m.serviciosPendientes).length;
+                        
                         mostrarModal(`
                             <div class="px-4 py-3 bg-red-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
                                 <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
@@ -346,9 +353,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                             </svg>
                                             Resumen de Adeudos
                                         </h4>
-                                        <span class="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
-                                            ${mesesActualizados.length} mes${mesesActualizados.length > 1 ? 'es' : ''} adeudado${mesesActualizados.length > 1 ? 's' : ''}
-                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                                ${mesesActualizados.length} mes${mesesActualizados.length > 1 ? 'es' : ''} adeudado${mesesActualizados.length > 1 ? 's' : ''}
+                                            </span>
+                                            ${serviciosPendientesActualizados > 0 ? `
+                                                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                                                    ${serviciosPendientesActualizados} servicio${serviciosPendientesActualizados > 1 ? 's' : ''} pendiente${serviciosPendientesActualizados > 1 ? 's' : ''}
+                                                </span>
+                                            ` : ''}
+                                        </div>
                                     </div>
                                     <div class="space-y-3">
                                         ${mesesActualizados.map(m => `
@@ -359,7 +373,14 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                                     </svg>
                                                     <span class="font-medium text-gray-800">${m.mes} ${m.anio}</span>
                                                 </div>
-                                                <span class="text-sm text-gray-500">Pendiente de pago</span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-sm text-red-600 font-medium">Renta pendiente</span>
+                                                    ${m.serviciosPendientes ? `
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                            Servicios pendientes
+                                                        </span>
+                                                    ` : ''}
+                                                </div>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -374,6 +395,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <div class="ml-3">
                                             <p class="text-sm text-yellow-700">
                                                 Se recomienda contactar al inquilino para regularizar los pagos pendientes.
+                                                ${serviciosPendientesActualizados > 0 ? ' También tiene servicios pendientes de pago.' : ''}
                                             </p>
                                         </div>
                                     </div>

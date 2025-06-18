@@ -170,8 +170,21 @@ export async function generarReciboPDF(pagoId) {
     pdf.text(`Mes:`, xDer, yDer);
     pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
     yDer += 6;
+    // Calcular el monto total sumando servicios pagados
+    let montoTotal = pago.montoTotal || 0;
+    if (pago.serviciosPagados) {
+        if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
+            montoTotal += pago.serviciosPagados.internetMonto;
+        }
+        if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
+            montoTotal += pago.serviciosPagados.aguaMonto;
+        }
+        if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
+            montoTotal += pago.serviciosPagados.luzMonto;
+        }
+    }
     pdf.text(`Monto total:`, xDer, yDer);
-    pdf.text(`$${(pago.montoTotal || 0).toFixed(2)}`, xDer + 35, yDer);
+    pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
     yDer += 6;
     pdf.text(`Monto pagado:`, xDer, yDer);
     pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);

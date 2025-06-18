@@ -160,8 +160,14 @@ export async function mostrarPagos(mostrarTabla = false) {
                         break;
                 }
 
-                // Calcular el monto base (renta)
-                let montoBase = pago.montoBase || pago.montoTotal || 0;
+                // Obtener el costo real del inmueble desde la colección de inmuebles
+                let montoBase = 0;
+                const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
+                if (inmuebleData && inmuebleData.rentaMensual) {
+                    montoBase = inmuebleData.rentaMensual;
+                } else {
+                    montoBase = pago.montoBase || pago.montoTotal || 0;
+                }
                 
                 // Calcular el monto total sumando servicios y mobiliario
                 let montoTotal = montoBase;
@@ -179,11 +185,28 @@ export async function mostrarPagos(mostrarTabla = false) {
                     }
                 }
                 
+                // Sumar el mobiliario pagado al monto total
+                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                    pago.mobiliarioPagado.forEach(item => {
+                        montoTotal += item.costo || 0;
+                    });
+                }
+                
                 // Asegurar que los montos se muestren con 2 decimales, incluso si son null o undefined
                 const montoTotalFormatted = montoTotal.toFixed(2);
                 const montoPagadoFormatted = pago.montoPagado ? pago.montoPagado.toFixed(2) : '0.00';
                 const saldoPendienteFormatted = pago.saldoPendiente ? pago.saldoPendiente.toFixed(2) : '0.00';
 
+                // Verificar si el inquilino tiene servicios asignados
+                const inquilinoData = inquilinosSnap.docs.find(doc => doc.id === pago.inquilinoId)?.data();
+                const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
+                    ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
+                    (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+                
+                // Verificar si el inquilino tiene mobiliario asignado
+                const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado && 
+                    Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
+                
                 // En la generación de filas de la tabla:
                 const servicios = [];
                 if (pago.serviciosPagados?.internet) {
@@ -196,6 +219,16 @@ export async function mostrarPagos(mostrarTabla = false) {
                     servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
                 }
                 
+                // Determinar si hay servicios pendientes
+                let serviciosHtml = '';
+                if (servicios.length > 0) {
+                    serviciosHtml = servicios.join('<br>');
+                } else if (tieneServicios) {
+                    serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                } else {
+                    serviciosHtml = '-';
+                }
+                
                 // Calcular total de mobiliario
                 let mobiliarioTotal = 0;
                 if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
@@ -203,9 +236,15 @@ export async function mostrarPagos(mostrarTabla = false) {
                         mobiliarioTotal += item.costo || 0;
                     });
                 }
-                const mobiliarioHtml = mobiliarioTotal > 0 ? 
-                    `${mobiliarioTotal.toFixed(2)}` : 
-                    '-';
+                
+                // Determinar si hay mobiliario pendiente
+                let mobiliarioHtml = '';
+                if (mobiliarioTotal > 0) {
+                    mobiliarioHtml = `${mobiliarioTotal.toFixed(2)}`;
+                } else {
+                    // Siempre mostrar "Pendiente" cuando no hay mobiliario pagado
+                    mobiliarioHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                }
 
 
                 tablaFilas += `
@@ -213,11 +252,11 @@ export async function mostrarPagos(mostrarTabla = false) {
                         <td class="px-4 py-2 text-sm text-gray-800">${pago.nombreInmueble}</td>
                         <td class="px-4 py-2 text-sm text-gray-700">${pago.nombreInquilino}</td>
                         <td class="px-4 py-2 text-sm text-gray-800">${montoTotalFormatted}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">${montoPagadoFormatted}</td>
+                        <td class="px-4 py-2 text-sm text-gray-800">${montoBase.toFixed(2)}</td>
                         <td class="px-4 py-2 text-sm text-gray-800">${saldoPendienteFormatted}</td>
                         <td class="px-4 py-2 text-sm"><span class="${estadoClass}">${pago.estado || 'N/A'}</span></td>
                         <td class="px-4 py-2 text-sm text-gray-700">${pago.mesCorrespondiente || 'N/A'}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">${servicios.join('<br>') || '-'}</td>
+                        <td class="px-4 py-2 text-sm text-gray-800">${serviciosHtml}</td>
                         <td class="px-4 py-2 text-sm text-gray-800">${mobiliarioHtml}</td>
                         <td class="px-4 py-2 text-sm text-right">
                             <div class="flex flex-wrap justify-end gap-1">
@@ -334,7 +373,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                             <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inmueble</th>
                             <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inquilino</th>
                             <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Total</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Pagado</th>
+                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago de Renta</th>
                             <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Pendiente</th>
                             <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                             <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mes Corresp.</th>
@@ -504,8 +543,14 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                             break;
                     }
 
-                    // Calcular el monto base (renta)
-                    let montoBase = pago.montoBase || pago.montoTotal || 0;
+                    // Obtener el costo real del inmueble desde la colección de inmuebles
+                    let montoBase = 0;
+                    const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
+                    if (inmuebleData && inmuebleData.rentaMensual) {
+                        montoBase = inmuebleData.rentaMensual;
+                    } else {
+                        montoBase = pago.montoBase || pago.montoTotal || 0;
+                    }
                     
                     // Calcular el monto total sumando servicios y mobiliario
                     let montoTotal = montoBase;
@@ -523,11 +568,28 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                         }
                     }
                     
+                    // Sumar el mobiliario pagado al monto total
+                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                        pago.mobiliarioPagado.forEach(item => {
+                            montoTotal += item.costo || 0;
+                        });
+                    }
+                    
                     // Asegurar que los montos se muestren with 2 decimales, incluso si son null o undefined
                     const montoTotalFormatted = montoTotal.toFixed(2);
                     const montoPagadoFormatted = pago.montoPagado ? pago.montoPagado.toFixed(2) : '0.00';
                     const saldoPendienteFormatted = pago.saldoPendiente ? pago.saldoPendiente.toFixed(2) : '0.00';
 
+                    // Verificar si el inquilino tiene servicios asignados
+                    const inquilinoData = inquilinosSnap.docs.find(doc => doc.id === pago.inquilinoId)?.data();
+                    const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
+                        ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
+                        (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+                    
+                    // Verificar si el inquilino tiene mobiliario asignado
+                    const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado && 
+                        Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
+                    
                     // En la generación de filas de la tabla:
                     const servicios = [];
                     if (pago.serviciosPagados?.internet) {
@@ -539,7 +601,16 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                     if (pago.serviciosPagados?.luz) {
                         servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
                     }
-                    // ...agrega más servicios si los tienes
+                    
+                    // Determinar si hay servicios pendientes
+                    let serviciosHtml = '';
+                    if (servicios.length > 0) {
+                        serviciosHtml = servicios.join('<br>');
+                    } else if (tieneServicios) {
+                        serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                    } else {
+                        serviciosHtml = '-';
+                    }
                     
                     // Calcular total de mobiliario
                     let mobiliarioTotal = 0;
@@ -548,9 +619,15 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                             mobiliarioTotal += item.costo || 0;
                         });
                     }
-                    const mobiliarioHtml = mobiliarioTotal > 0 ? 
-                        `${mobiliarioTotal.toFixed(2)}` : 
-                        '-';
+                    
+                    // Determinar si hay mobiliario pendiente
+                    let mobiliarioHtml = '';
+                    if (mobiliarioTotal > 0) {
+                        mobiliarioHtml = `${mobiliarioTotal.toFixed(2)}`;
+                    } else {
+                        // Siempre mostrar "Pendiente" cuando no hay mobiliario pagado
+                        mobiliarioHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                    }
 
 
                     tablaFilas += `
@@ -558,11 +635,11 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                             <td class="px-4 py-2 text-sm text-gray-800">${pago.nombreInmueble}</td>
                             <td class="px-4 py-2 text-sm text-gray-700">${pago.nombreInquilino}</td>
                             <td class="px-4 py-2 text-sm text-gray-800">${montoTotalFormatted}</td>
-                            <td class="px-4 py-2 text-sm text-gray-800">${montoPagadoFormatted}</td>
+                            <td class="px-4 py-2 text-sm text-gray-800">${montoBase.toFixed(2)}</td>
                             <td class="px-4 py-2 text-sm text-gray-800">${saldoPendienteFormatted}</td>
                             <td class="px-4 py-2 text-sm"><span class="${estadoClass}">${pago.estado || 'N/A'}</span></td>
                             <td class="px-4 py-2 text-sm text-gray-700">${pago.mesCorrespondiente || 'N/A'}</td>
-                            <td class="px-4 py-2 text-sm text-gray-800">${servicios.join('<br>') || '-'}</td>
+                            <td class="px-4 py-2 text-sm text-gray-800">${serviciosHtml}</td>
                             <td class="px-4 py-2 text-sm text-gray-800">${mobiliarioHtml}</td>
                             <td class="px-4 py-2 text-sm text-right">
                                 <div class="flex flex-wrap justify-end gap-1">
@@ -1933,10 +2010,94 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         });
 
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
-        const nombreInquilino = inquilinoDoc.exists() ? inquilinoDoc.data().nombre : 'Inquilino Desconocido';
+        const inquilinoData = inquilinoDoc.exists() ? inquilinoDoc.data() : null;
+        const nombreInquilino = inquilinoData ? inquilinoData.nombre : 'Inquilino Desconocido';
+        
+        // Verificar si el inquilino tiene servicios asignados
+        const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
+            ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
+            (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+        
+        // Verificar si el inquilino tiene inmueble asignado
+        const tieneInmueble = inquilinoData && inquilinoData.inmuebleAsociadoId;
+        const inmuebleAsociado = tieneInmueble ? inmueblesMap.get(inquilinoData.inmuebleAsociadoId) || 'Inmueble Desconocido' : 'Sin inmueble asignado';
+
+        // Obtener el mes y año actual para verificar pagos pendientes
+        const fechaActual = new Date();
+        const mesActual = fechaActual.getMonth(); // 0-11
+        const anioActual = fechaActual.getFullYear();
+        const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const mesActualNombre = mesesNombres[mesActual];
+
+        // Verificar si hay pago para el mes actual
+        let pagoMesActual = null;
+        if (pagosSnap.size > 0) {
+            pagosSnap.forEach(doc => {
+                const pago = doc.data();
+                if (pago.mesCorrespondiente === mesActualNombre && pago.anioCorrespondiente === anioActual) {
+                    pagoMesActual = { id: doc.id, ...pago };
+                }
+            });
+        }
+
+        // Información de servicios
+        let serviciosInfo = '';
+        if (tieneServicios) {
+            serviciosInfo = `
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                Este inquilino tiene servicios asignados. 
+                                ${pagoMesActual ? 
+                                    (pagoMesActual.serviciosPagados ? 
+                                        '<span class="font-semibold text-green-600">Servicios pagados para el mes actual.</span>' : 
+                                        '<span class="font-semibold text-red-600">Servicios pendientes de pago para el mes actual.</span>') : 
+                                    '<span class="font-semibold text-red-600">No hay registro de pago para el mes actual.</span>'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Información de inmueble
+        let inmuebleInfo = '';
+        if (tieneInmueble) {
+            inmuebleInfo = `
+                <div class="bg-green-50 border-l-4 border-green-400 p-3 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700">
+                                Inmueble asignado: <span class="font-semibold">${inmuebleAsociado}</span>
+                                ${pagoMesActual ? 
+                                    (pagoMesActual.estado === 'pagado' ? 
+                                        '<span class="ml-2 font-semibold text-green-600">Renta pagada para el mes actual.</span>' : 
+                                        '<span class="ml-2 font-semibold text-red-600">Renta pendiente o parcial para el mes actual.</span>') : 
+                                    '<span class="ml-2 font-semibold text-red-600">No hay registro de pago para el mes actual.</span>'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
         let historialPagosHtml = `
             <h3 class="text-xl font-semibold mb-4">Historial de Pagos de ${nombreInquilino}</h3>
+            
+            ${inmuebleInfo}
+            ${serviciosInfo}
+            
             <div class="overflow-x-auto">
                 <table class="min-w-full leading-normal">
                     <thead>
@@ -1960,6 +2121,12 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                                 Estado
                             </th>
                             <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Servicios
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Mobiliario
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Abonos
                             </th>
                         </tr>
@@ -1970,49 +2137,135 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         if (pagosSnap.empty) {
             historialPagosHtml += `
                         <tr>
-                            <td colspan="7" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                            <td colspan="9" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
                                 No hay pagos registrados para este inquilino.
                             </td>
                         </tr>
             `;
         } else {
+            // Ordenar pagos por fecha (más reciente primero)
+            const pagosOrdenados = [];
             pagosSnap.forEach(doc => {
-                const pago = doc.data();
+                pagosOrdenados.push({ id: doc.id, ...doc.data() });
+            });
+            
+            pagosOrdenados.sort((a, b) => {
+                const mesA = mesesNombres.indexOf(a.mesCorrespondiente);
+                const mesB = mesesNombres.indexOf(b.mesCorrespondiente);
+                if (a.anioCorrespondiente !== b.anioCorrespondiente) {
+                    return b.anioCorrespondiente - a.anioCorrespondiente;
+                }
+                return mesB - mesA;
+            });
+
+            pagosOrdenados.forEach(pago => {
                 let abonosDetalleHtml = '';
                 if (pago.abonos && pago.abonos.length > 0) {
                     // Ordenar abonos por fecha para mostrarlos cronológicamente
                     pago.abonos.sort((a, b) => new Date(a.fechaAbono) - new Date(b.fechaAbono));
                     abonosDetalleHtml += `<ul class="list-disc list-inside text-xs text-gray-700">`;
                     pago.abonos.forEach(abono => {
-                        abonosDetalleHtml += `<li>$${(abono.montoAbonado || 0).toFixed(2)} (${abono.fechaAbono})</li>`;
+                        abonosDetalleHtml += `<li>${(abono.montoAbonado || 0).toFixed(2)} (${abono.fechaAbono})</li>`;
                     });
                     abonosDetalleHtml += `</ul>`;
                 } else {
                     abonosDetalleHtml = `<span class="text-xs text-gray-500">Sin abonos</span>`;
                 }
 
+                // Verificar servicios pagados
+                let serviciosHtml = '';
+                if (pago.serviciosPagados) {
+                    const servicios = [];
+                    if (pago.serviciosPagados.internet) servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
+                    if (pago.serviciosPagados.agua) servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)}`);
+                    if (pago.serviciosPagados.luz) servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
+                    
+                    if (servicios.length > 0) {
+                        serviciosHtml = `
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Pagados
+                            </span>
+                            <ul class="list-disc list-inside text-xs text-gray-700 mt-1">
+                                ${servicios.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        `;
+                    } else {
+                        serviciosHtml = `<span class="text-xs text-gray-500">Sin servicios</span>`;
+                    }
+                } else if (tieneServicios) {
+                    serviciosHtml = `
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Pendientes
+                        </span>
+                    `;
+                } else {
+                    serviciosHtml = `<span class="text-xs text-gray-500">N/A</span>`;
+                }
+                
+                // Verificar mobiliario pagado
+                let mobiliarioHtml = '';
+                
+                // Calcular total de mobiliario
+                let mobiliarioTotal = 0;
+                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                    pago.mobiliarioPagado.forEach(item => {
+                        mobiliarioTotal += item.costo || 0;
+                    });
+                    
+                    if (mobiliarioTotal > 0) {
+                        mobiliarioHtml = `
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Pagado
+                            </span>
+                            <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
+                        `;
+                    } else {
+                        mobiliarioHtml = `
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Pendiente
+                            </span>
+                        `;
+                    }
+                } else {
+                    mobiliarioHtml = `
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Pendiente
+                        </span>
+                    `;
+                }
+
+                // Resaltar el mes actual
+                const esMesActual = pago.mesCorrespondiente === mesActualNombre && pago.anioCorrespondiente === anioActual;
+                const claseFila = esMesActual ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50';
+
                 historialPagosHtml += `
-                            <tr class="hover:bg-gray-50">
+                            <tr class="${claseFila}">
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                     <p class="text-gray-900 whitespace-no-wrap">${inmueblesMap.get(pago.inmuebleId) || 'Desconocido'}</p>
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">${pago.mesCorrespondiente} / ${pago.anioCorrespondiente}</p>
+                                    <p class="text-gray-900 whitespace-no-wrap ${esMesActual ? 'font-bold' : ''}">${pago.mesCorrespondiente} / ${pago.anioCorrespondiente} ${esMesActual ? '(Actual)' : ''}</p>
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">$${(pago.montoTotal || 0).toFixed(2)}</p>
+                                    <p class="text-gray-900 whitespace-no-wrap">${(pago.montoTotal || 0).toFixed(2)}</p>
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">$${(pago.montoPagado || 0).toFixed(2)}</p>
+                                    <p class="text-gray-900 whitespace-no-wrap">${(pago.montoPagado || 0).toFixed(2)}</p>
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">$${(pago.saldoPendiente || 0).toFixed(2)}</p>
+                                    <p class="text-gray-900 whitespace-no-wrap">${(pago.saldoPendiente || 0).toFixed(2)}</p>
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                     <span class="relative inline-block px-3 py-1 font-semibold leading-tight">
                                         <span aria-hidden="true" class="absolute inset-0 ${pago.estado === 'pagado' ? 'bg-green-200' : pago.estado === 'pendiente' ? 'bg-orange-200' : pago.estado === 'vencido' ? 'bg-red-200' : 'bg-yellow-200'} opacity-50 rounded-full"></span>
                                         <span class="relative text-gray-900">${pago.estado}</span>
                                     </span>
+                                </td>
+                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    ${serviciosHtml}
+                                </td>
+                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    ${mobiliarioHtml}
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                     ${abonosDetalleHtml}
@@ -2081,6 +2334,9 @@ export async function mostrarHistorialPagosInmueble(inmuebleId) {
                                 Estado
                             </th>
                             <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Mobiliario
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Abonos
                             </th>
                         </tr>
@@ -2091,7 +2347,7 @@ export async function mostrarHistorialPagosInmueble(inmuebleId) {
         if (pagosSnap.empty) {
             historialPagosHtml += `
                         <tr>
-                            <td colspan="7" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                            <td colspan="8" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
                                 No hay pagos registrados para este inmueble.
                             </td>
                         </tr>
@@ -2132,6 +2388,11 @@ export async function mostrarHistorialPagosInmueble(inmuebleId) {
                                         <span aria-hidden="true" class="absolute inset-0 ${pago.estado === 'pagado' ? 'bg-green-200' : pago.estado === 'pendiente' ? 'bg-orange-200' : pago.estado === 'vencido' ? 'bg-red-200' : 'bg-yellow-200'} opacity-50 rounded-full"></span>
                                         <span class="relative text-gray-900">${pago.estado}</span>
                                     </span>
+                                </td>
+                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    ${pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0 
+                                        ? generarMobiliarioHtml(pago) 
+                                        : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`}
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                     ${abonosDetalleHtml}
@@ -2234,7 +2495,7 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh) {
  * @param {string} inquilinoId
  * @param {string} inmuebleId
  * @param {Date} fechaOcupacion
- * @returns {Promise<Array<{mes: string, anio: number}>>}
+ * @returns {Promise<Array<{mes: string, anio: number, montoTotal: number, serviciosPendientes: boolean}>>}
  */
 export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fechaOcupacion) {
     try {
@@ -2252,6 +2513,13 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
             console.error("Fecha de ocupación inválida:", fechaOcupacion);
             return [];
         }
+
+        // Obtener información del inquilino para verificar servicios
+        const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
+        const inquilinoData = inquilinoDoc.exists() ? inquilinoDoc.data() : null;
+        const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
+            ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
+            (inquilinoData.tipoServicio && inquilinoData.montoServicio));
 
         let fechaIter = new Date(fechaOcupacion.getFullYear(), fechaOcupacion.getMonth(), 1);
         if (fechaOcupacion.getDate() > 1) {
@@ -2299,6 +2567,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
 
             // Si NO hay ningún pago con estado "pagado", se considera pendiente
             let pagado = false;
+            let serviciosPagados = false;
+            
             pagosMes.forEach(pago => {
                 if (
                     typeof pago.estado === "string" &&
@@ -2307,6 +2577,17 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
                     pagado = true;
                     console.log(`Mes ${mes} ${anio} está pagado (ID: ${pago.id})`);
                 }
+                
+                // Verificar si los servicios están pagados
+                if (tieneServicios && pago.serviciosPagados) {
+                    const tieneServiciosPagados = pago.serviciosPagados.internet || 
+                                                pago.serviciosPagados.agua || 
+                                                pago.serviciosPagados.luz;
+                    if (tieneServiciosPagados) {
+                        serviciosPagados = true;
+                        console.log(`Servicios para ${mes} ${anio} están pagados (ID: ${pago.id})`);
+                    }
+                }
             });
 
             if (!pagado) {
@@ -2314,7 +2595,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
                 mesesPendientes.push({ 
                     mes, 
                     anio,
-                    montoTotal: montoRenta // Incluir el monto de renta para mostrarlo
+                    montoTotal: montoRenta, // Incluir el monto de renta para mostrarlo
+                    serviciosPendientes: tieneServicios && !serviciosPagados // Indicar si hay servicios pendientes
                 });
             }
 
@@ -2350,6 +2632,28 @@ function calcularTotalServicios(serviciosPagados) {
         total += parseFloat(serviciosPagados.luzMonto) || 0;
     }
     return total;
+}
+
+/**
+ * Genera el HTML para mostrar la información del mobiliario en la tabla de pagos
+ * @param {Object} pago - Objeto con la información del pago
+ * @returns {string} - HTML para mostrar el mobiliario
+ */
+function generarMobiliarioHtml(pago) {
+    // Calcular total de mobiliario
+    let mobiliarioTotal = 0;
+    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+        pago.mobiliarioPagado.forEach(item => {
+            mobiliarioTotal += item.costo || 0;
+        });
+        
+        if (mobiliarioTotal > 0) {
+            return `${mobiliarioTotal.toFixed(2)}`;
+        }
+    }
+    
+    // Si no hay mobiliario pagado, mostrar pendiente
+    return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
 }
 
 /**
