@@ -205,7 +205,9 @@ export async function generarReciboPDF(pagoId) {
     yDer += 6 * periodoLineas.length;
 
     // --- Descargar PDF ---
-    pdf.save(`Recibo_${pago.mesCorrespondiente}_${pago.anioCorrespondiente}.pdf`);
+    // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
+    const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
+    pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
 }
 
 window.generarReciboPDF = generarReciboPDF;
