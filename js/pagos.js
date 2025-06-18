@@ -2237,61 +2237,98 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh) {
  * @returns {Promise<Array<{mes: string, anio: number}>>}
  */
 export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fechaOcupacion) {
-    const mesesNombres = [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+    try {
+        console.log(`Calculando meses adeudados para inquilino ${inquilinoId}, inmueble ${inmuebleId}, fecha ocupación:`, fechaOcupacion);
+        
+        const mesesNombres = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
 
-    let fechaIter = new Date(fechaOcupacion.getFullYear(), fechaOcupacion.getMonth(), 1);
-    if (fechaOcupacion.getDate() > 1) {
-        fechaIter.setMonth(fechaIter.getMonth() + 1);
-    }
-
-    let fin = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    let mesesPendientes = [];
-
-    // Trae todos los pagos del inquilino/inmueble una sola vez
-    const pagosQuery = query(
-        collection(db, "pagos"),
-        where("inquilinoId", "==", inquilinoId),
-        where("inmuebleId", "==", inmuebleId)
-    );
-    const pagosSnap = await getDocs(pagosQuery);
-    const pagosList = [];
-    pagosSnap.forEach(doc => pagosList.push(doc.data()));
-
-    while (fechaIter <= fin) {
-        let mes = mesesNombres[fechaIter.getMonth()];
-        let anio = fechaIter.getFullYear();
-
-        // Busca pagos de ese mes/año (ignorando mayúsculas y espacios)
-       const pagosMes = pagosList.filter(p =>
-    p.mesCorrespondiente &&
-    p.anioCorrespondiente &&
-    p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === mes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
-    Number(p.anioCorrespondiente) === anio
-);
-
-        // Si NO hay ningún pago con estado "pagado", se considera pendiente
-        let pagado = false;
-        pagosMes.forEach(pago => {
-            if (
-                typeof pago.estado === "string" &&
-                pago.estado.trim().toLowerCase() === "pagado"
-            ) {
-                pagado = true;
-            }
-        });
-
-        if (!pagado) {
-            mesesPendientes.push({ mes, anio });
+        // Validar fecha de ocupación
+        if (!fechaOcupacion || isNaN(fechaOcupacion.getTime())) {
+            console.error("Fecha de ocupación inválida:", fechaOcupacion);
+            return [];
         }
 
-        fechaIter.setMonth(fechaIter.getMonth() + 1);
+        let fechaIter = new Date(fechaOcupacion.getFullYear(), fechaOcupacion.getMonth(), 1);
+        if (fechaOcupacion.getDate() > 1) {
+            fechaIter.setMonth(fechaIter.getMonth() + 1);
+        }
+
+        let fin = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        let mesesPendientes = [];
+
+        console.log(`Buscando pagos desde ${fechaIter.toISOString()} hasta ${fin.toISOString()}`);
+
+        // Trae todos los pagos del inquilino/inmueble una sola vez
+        const pagosQuery = query(
+            collection(db, "pagos"),
+            where("inquilinoId", "==", inquilinoId),
+            where("inmuebleId", "==", inmuebleId)
+        );
+        const pagosSnap = await getDocs(pagosQuery);
+        const pagosList = [];
+        pagosSnap.forEach(doc => {
+            const pagoData = doc.data();
+            pagosList.push({...pagoData, id: doc.id});
+            console.log(`Pago encontrado: ${doc.id}, mes: ${pagoData.mesCorrespondiente}, año: ${pagoData.anioCorrespondiente}, estado: ${pagoData.estado}`);
+        });
+
+        // Obtener el inmueble para conocer el monto de renta
+        const inmuebleDoc = await getDoc(doc(db, "inmuebles", inmuebleId));
+        const montoRenta = inmuebleDoc.exists() ? (inmuebleDoc.data().rentaMensual || 0) : 0;
+        console.log(`Monto de renta del inmueble: ${montoRenta}`);
+
+        while (fechaIter <= fin) {
+            let mes = mesesNombres[fechaIter.getMonth()];
+            let anio = fechaIter.getFullYear();
+            console.log(`Verificando mes: ${mes} ${anio}`);
+
+            // Busca pagos de ese mes/año (ignorando mayúsculas y espacios)
+            const pagosMes = pagosList.filter(p =>
+                p.mesCorrespondiente &&
+                p.anioCorrespondiente &&
+                p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === mes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
+                Number(p.anioCorrespondiente) === anio
+            );
+
+            console.log(`Pagos encontrados para ${mes} ${anio}: ${pagosMes.length}`);
+
+            // Si NO hay ningún pago con estado "pagado", se considera pendiente
+            let pagado = false;
+            pagosMes.forEach(pago => {
+                if (
+                    typeof pago.estado === "string" &&
+                    pago.estado.trim().toLowerCase() === "pagado"
+                ) {
+                    pagado = true;
+                    console.log(`Mes ${mes} ${anio} está pagado (ID: ${pago.id})`);
+                }
+            });
+
+            if (!pagado) {
+                console.log(`Mes ${mes} ${anio} NO está pagado, agregando a meses pendientes`);
+                mesesPendientes.push({ 
+                    mes, 
+                    anio,
+                    montoTotal: montoRenta // Incluir el monto de renta para mostrarlo
+                });
+            }
+
+            fechaIter.setMonth(fechaIter.getMonth() + 1);
+        }
+        
+        console.log(`Total meses pendientes encontrados: ${mesesPendientes.length}`);
+        console.log("Meses pendientes:", mesesPendientes);
+        
+        return mesesPendientes;
+    } catch (error) {
+        console.error("Error en obtenerMesesAdeudadosHistorico:", error);
+        return [];
     }
-    return mesesPendientes;
 }
 
 /**

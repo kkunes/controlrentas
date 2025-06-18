@@ -1,5 +1,6 @@
 // js/dashboard.js
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { obtenerMesesAdeudadosHistorico } from './pagos.js';
 import { db } from './firebaseConfig.js';
 import { mostrarNotificacion } from './ui.js';
 import { mostrarInmuebles } from './inmuebles.js';
@@ -353,6 +354,127 @@ proximoPago.setHours(0, 0, 0, 0);
         console.log('Ingresos Abonos:', ingresosAbonosFavor);
         console.log('Total Ingresos:', ingresosEsteMes);
 
+        // Calcular adeudos históricos para cada inquilino activo
+        const inquilinosActivos = Array.from(inquilinosSnap.docs)
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(inquilino => inquilino.activo);
+            
+        // Crear un mapa para almacenar adeudos por inquilino
+        const adeudosPorInquilino = new Map();
+        
+        // Primero procesar los pagos vencidos existentes
+        listaPagosVencidos.forEach(pago => {
+            const inquilinoId = pago.inquilinoId;
+            if (!adeudosPorInquilino.has(inquilinoId)) {
+                adeudosPorInquilino.set(inquilinoId, {
+                    inquilinoId: inquilinoId,
+                    nombreInquilino: pago.nombreInquilino,
+                    nombreInmueble: pago.nombreInmueble,
+                    mesesAdeudados: [],
+                    adeudosSet: new Set()
+                });
+            }
+            
+            const inquilinoAdeudos = adeudosPorInquilino.get(inquilinoId);
+            // Verificar que mes y año no sean undefined o null
+            if (pago.mesCorrespondiente && pago.anioCorrespondiente) {
+                const key = `${inquilinoId}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}`;
+                
+                if (!inquilinoAdeudos.adeudosSet.has(key)) {
+                    inquilinoAdeudos.mesesAdeudados.push({
+                        mes: pago.mesCorrespondiente,
+                        anio: pago.anioCorrespondiente,
+                        montoTotal: pago.montoTotal || 0,
+                        esAdeudoHistorico: false
+                    });
+                    inquilinoAdeudos.adeudosSet.add(key);
+                    console.log(`Agregado mes adeudado: ${pago.mesCorrespondiente} ${pago.anioCorrespondiente} para ${pago.nombreInquilino}`);
+                }
+            } else {
+                console.log(`Pago sin mes o año correspondiente para inquilino ${pago.nombreInquilino || inquilinoId}:`, pago);
+            }
+        });
+        
+        // Luego calcular y añadir los adeudos históricos
+        for (const inquilino of inquilinosActivos) {
+            if (inquilino.fechaOcupacion && inquilino.inmuebleAsociadoId) {
+                try {
+                    console.log(`Obteniendo meses adeudados históricos para ${inquilino.nombre} (ID: ${inquilino.id})`);
+                    const mesesAdeudados = await obtenerMesesAdeudadosHistorico(
+                        inquilino.id,
+                        inquilino.inmuebleAsociadoId,
+                        new Date(inquilino.fechaOcupacion)
+                    );
+                    
+                    console.log(`Resultado para ${inquilino.nombre}:`, mesesAdeudados);
+                    
+                    // Asegurarse de que mesesAdeudados sea un array y tenga elementos
+                    if (Array.isArray(mesesAdeudados) && mesesAdeudados.length > 0) {
+                        if (!adeudosPorInquilino.has(inquilino.id)) {
+                            adeudosPorInquilino.set(inquilino.id, {
+                                inquilinoId: inquilino.id,
+                                nombreInquilino: inquilino.nombre,
+                                nombreInmueble: inquilinosMap.get(inquilino.id)?.nombreInmueble || 'No especificado',
+                                mesesAdeudados: [],
+                                adeudosSet: new Set()
+                            });
+                        }
+                        
+                        const inquilinoAdeudos = adeudosPorInquilino.get(inquilino.id);
+                        
+                        mesesAdeudados.forEach(mes => {
+                            // Verificar que mes y año no sean undefined o null
+                            if (mes && mes.mes && mes.anio) {
+                                const key = `${inquilino.id}-${mes.mes}-${mes.anio}`;
+                                if (!inquilinoAdeudos.adeudosSet.has(key)) {
+                                    inquilinoAdeudos.mesesAdeudados.push({
+                                        mes: mes.mes,
+                                        anio: mes.anio,
+                                        montoTotal: 0,
+                                        esAdeudoHistorico: true
+                                    });
+                                    inquilinoAdeudos.adeudosSet.add(key);
+                                    console.log(`Agregado mes adeudado histórico: ${mes.mes} ${mes.anio} para ${inquilino.nombre}`);
+                                }
+                            } else {
+                                console.log(`Mes adeudado histórico inválido para ${inquilino.nombre}:`, mes);
+                            }
+                        });
+                    } else {
+                        console.log(`No se encontraron meses adeudados históricos para ${inquilino.nombre}`);
+                    }
+                } catch (error) {
+                    console.error(`Error al obtener meses adeudados para inquilino ${inquilino.id}:`, error);
+                }
+            } else {
+                console.log(`Inquilino ${inquilino.nombre} (ID: ${inquilino.id}) no tiene fecha de ocupación o inmueble asociado`);
+            }
+        }
+        
+        // Limpiar la lista de pagos vencidos y reconstruirla con los adeudos agrupados
+        listaPagosVencidos = [];
+        
+        // Convertir el mapa a un array y añadir a la lista de pagos vencidos
+        adeudosPorInquilino.forEach(inquilinoAdeudos => {
+            // Ordenar los meses adeudados por año y mes
+            inquilinoAdeudos.mesesAdeudados.sort((a, b) => {
+                if (a.anio !== b.anio) return a.anio - b.anio;
+                
+                const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                               "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                return meses.indexOf(a.mes) - meses.indexOf(b.mes);
+            });
+            
+            // Añadir el total de adeudos
+            inquilinoAdeudos.totalAdeudos = inquilinoAdeudos.mesesAdeudados.length;
+            
+            // Eliminar el set de control que ya no necesitamos
+            delete inquilinoAdeudos.adeudosSet;
+            
+            // Añadir a la lista de pagos vencidos
+            listaPagosVencidos.push(inquilinoAdeudos);
+        });
+
         // Actualiza las listas globales de pagos
         window.listaPagosPendientes = listaPagosPendientes;
         window.listaPagosParciales = listaPagosParciales;
@@ -485,7 +607,7 @@ proximoPago.setHours(0, 0, 0, 0);
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-base sm:text-lg font-semibold text-rose-700 text-center">Pagos Vencidos</p>
+                                    <p class="text-base sm:text-lg font-semibold text-rose-700 text-center">Pagos Vencidos y Adeudos</p>
                                     <p class="text-3xl sm:text-4xl font-bold text-rose-800 mt-1 sm:mt-2">${listaPagosVencidos.length}</p>
                                 </div>
                             </div>
@@ -554,6 +676,8 @@ export async function mostrarInmueblesFiltrados(estado) {
 window.mostrarInmueblesFiltrados = mostrarInmueblesFiltrados;
 
 window.mostrarListaPagosDashboard = function(tipo) {
+    console.log(`Mostrando lista de pagos tipo: ${tipo}`);
+    
     let lista = [];
     let titulo = '';
     let colorFondo = '';
@@ -588,12 +712,116 @@ window.mostrarListaPagosDashboard = function(tipo) {
         colorGradiente = 'from-orange-50 to-orange-100';
     } else if (tipo === 'vencidos') {
         lista = window.listaPagosVencidos;
-        titulo = 'Pagos Vencidos';
+        titulo = 'Pagos Vencidos y Adeudos';
         colorFondo = 'bg-red-600';
         colorTexto = 'text-red-700';
         colorBorde = 'border-red-200';
         colorIcono = 'text-red-500';
         colorGradiente = 'from-red-50 to-red-100';
+        
+        console.log(`Lista de pagos vencidos:`, lista);
+        
+        // Agrupar adeudos por inquilino
+        const adeudosPorInquilino = new Map();
+        
+        // Verificar si la lista contiene objetos con mesesAdeudados
+        const tieneObjetosConMesesAdeudados = lista.some(item => item.mesesAdeudados && Array.isArray(item.mesesAdeudados));
+        
+        if (tieneObjetosConMesesAdeudados) {
+            // La lista ya contiene objetos agrupados con mesesAdeudados
+            console.log("La lista ya contiene objetos agrupados con mesesAdeudados");
+            lista.forEach(inquilino => {
+                if (inquilino.inquilinoId && inquilino.mesesAdeudados) {
+                    adeudosPorInquilino.set(inquilino.inquilinoId, {
+                        inquilinoId: inquilino.inquilinoId,
+                        nombreInquilino: inquilino.nombreInquilino,
+                        nombreInmueble: inquilino.nombreInmueble,
+                        mesesAdeudados: Array.isArray(inquilino.mesesAdeudados) ? inquilino.mesesAdeudados : [],
+                        totalAdeudos: inquilino.totalAdeudos || 0
+                    });
+                }
+            });
+        } else {
+            // Procesar pagos individuales
+            console.log("Procesando pagos individuales para agrupar por inquilino");
+            lista.forEach(pago => {
+                const inquilinoId = pago.inquilinoId;
+                if (!inquilinoId) {
+                    console.error("Pago sin inquilinoId:", pago);
+                    return;
+                }
+                
+                if (!adeudosPorInquilino.has(inquilinoId)) {
+                    adeudosPorInquilino.set(inquilinoId, {
+                        inquilinoId: inquilinoId,
+                        nombreInquilino: pago.nombreInquilino || "Inquilino sin nombre",
+                        nombreInmueble: pago.nombreInmueble || "Inmueble no especificado",
+                        mesesAdeudados: [],
+                        totalAdeudos: 0
+                    });
+                }
+                
+                const inquilinoAdeudos = adeudosPorInquilino.get(inquilinoId);
+                // Verificar que mes y año no sean undefined o null
+                if (pago.mesCorrespondiente && pago.anioCorrespondiente) {
+                    inquilinoAdeudos.mesesAdeudados.push({
+                        mes: pago.mesCorrespondiente,
+                        anio: pago.anioCorrespondiente,
+                        montoTotal: pago.montoTotal || 0,
+                        esAdeudoHistorico: pago.esAdeudoHistorico || false
+                    });
+                    inquilinoAdeudos.totalAdeudos++;
+                    console.log(`Agregado mes adeudado: ${pago.mesCorrespondiente} ${pago.anioCorrespondiente} para ${pago.nombreInquilino || inquilinoId}`);
+                } else {
+                    console.log(`Pago sin mes o año correspondiente para inquilino ${pago.nombreInquilino || inquilinoId}`);
+                }
+            });
+        }
+        
+        // Asegurarse de que cada inquilino tenga sus meses adeudados correctamente
+        adeudosPorInquilino.forEach((inquilino) => {
+            // Verificar si hay meses adeudados y ordenarlos
+            if (inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados)) {
+                // Filtrar meses inválidos
+                inquilino.mesesAdeudados = inquilino.mesesAdeudados.filter(mes => mes && mes.mes && mes.anio);
+                
+                if (inquilino.mesesAdeudados.length > 0) {
+                    // Ordenar por año y mes
+                    inquilino.mesesAdeudados.sort((a, b) => {
+                        if (a.anio !== b.anio) return parseInt(a.anio) - parseInt(b.anio);
+                        
+                        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                                      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                        return meses.indexOf(a.mes) - meses.indexOf(b.mes);
+                    });
+                    
+                    // Asegurarse de que el total de adeudos sea correcto
+                    inquilino.totalAdeudos = inquilino.mesesAdeudados.length;
+                    
+                    // Crear una lista de meses adeudados como texto para mostrar en el resumen
+                    inquilino.resumenAdeudos = inquilino.mesesAdeudados
+                        .map(mes => `${mes.mes} ${mes.anio}`)
+                        .join(', ');
+                } else {
+                    inquilino.totalAdeudos = 0;
+                    inquilino.resumenAdeudos = "No hay meses adeudados";
+                }
+            } else {
+                inquilino.mesesAdeudados = [];
+                inquilino.totalAdeudos = 0;
+                inquilino.resumenAdeudos = "No hay meses adeudados";
+            }
+            
+            // Depuración para verificar los meses adeudados
+            console.log(`Inquilino: ${inquilino.nombreInquilino}, Meses adeudados: ${inquilino.totalAdeudos}`, 
+                        inquilino.mesesAdeudados ? JSON.stringify(inquilino.mesesAdeudados) : "[]");
+        });
+        
+        // Reemplazar la lista original con la lista agrupada
+        lista = Array.from(adeudosPorInquilino.values());
+        
+        // Ordenar la lista por nombre de inquilino
+        lista.sort((a, b) => a.nombreInquilino.localeCompare(b.nombreInquilino));
     }
 
     let html = `
@@ -618,33 +846,104 @@ window.mostrarListaPagosDashboard = function(tipo) {
                 </div>
             ` : `
                 <div class="grid grid-cols-1 gap-4 sm:gap-6">
-                    ${lista.map(pago => {
-                        const inquilinoData = window.inquilinosMap && window.inquilinosMap.get(pago.inquilinoId);
-                        const nombreInquilino = (pago.nombreInquilino || (inquilinoData && inquilinoData.nombre)) || pago.inquilinoId;
-                        const nombreInmueble = pago.nombreInmueble || (inquilinoData && inquilinoData.nombreInmueble) || 'No especificado';
-                        const fechaPago = pago.estado === 'Próximo (Ocupación)'
-                            ? (() => {
-                                const d = new Date(pago.proximoPago);
-                                const dia = String(d.getDate()+2).padStart(2, '0');
-                                const mes = String(d.getMonth() + 1).padStart(2, '0');
-                                const anio = d.getFullYear();
-                                return `${dia}/${mes}/${anio}`;
-                            })()
-                            : (pago.mesCorrespondiente || '') + ' / ' + (pago.anioCorrespondiente || '');
-
-                        return `
+                    ${tipo === 'vencidos' ? 
+                        // Vista agrupada por inquilino para pagos vencidos
+                        lista.map(inquilino => `
                             <div class="bg-white rounded-lg shadow-sm border ${colorBorde} hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
                                 <div class="p-3 sm:p-6">
-                                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 sm:gap-6">
-                                        <!-- Información del Inquilino -->
+                                    <!-- Encabezado con información del inquilino -->
+                                    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
+                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
+                                            <svg class="w-6 h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                        </div>
                                         <div class="flex-1">
-                                            <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                                                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
-                                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                                    </svg>
-                                                </div>
-                                                <div>
+                                            <h4 class="text-lg font-bold text-gray-900">${inquilino.nombreInquilino}</h4>
+                                            <p class="text-sm text-gray-600">${inquilino.nombreInmueble}</p>
+                                        </div>
+                                        <div class="bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-full">
+                                            ${inquilino.totalAdeudos} adeudo${inquilino.totalAdeudos !== 1 ? 's' : ''}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Lista de meses adeudados -->
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h5 class="text-sm font-semibold text-gray-700">Meses adeudados:</h5>
+                                            <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
+                                                ${inquilino.totalAdeudos} mes(es)
+                                            </span>
+                                        </div>
+                                        <!-- Resumen de meses adeudados -->
+                                        <div class="bg-red-50 border border-red-100 rounded-lg p-3 mb-3">
+                                            <p class="text-sm text-red-800 font-medium">
+                                                ${inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados) && inquilino.mesesAdeudados.length > 0 ? 
+                                                    inquilino.mesesAdeudados.map(mes => `${mes.mes} ${mes.anio}`).join(', ') : 
+                                                    'No hay meses adeudados'}
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- Detalle de meses adeudados -->
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                            ${inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados) && inquilino.mesesAdeudados.length > 0 ? 
+                                                inquilino.mesesAdeudados.map(mes => `
+                                                    <div class="bg-red-50 border border-red-100 rounded-lg p-2 text-center">
+                                                        <p class="font-medium text-red-800">${mes.mes && mes.anio ? `${mes.mes} ${mes.anio}` : 'Mes pendiente'}</p>
+                                                        ${mes.esAdeudoHistorico ? 
+                                                            `<span class="text-xs text-red-600 block mt-1">Adeudo histórico</span>` : 
+                                                            `<span class="text-xs text-gray-600 block mt-1">${parseFloat(mes.montoTotal).toFixed(2)}</span>`
+                                                        }
+                                                    </div>
+                                                `).join('') : 
+                                                `<div class="col-span-2 sm:col-span-3 md:col-span-4 bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                                                    <p class="text-gray-500">No hay meses adeudados registrados</p>
+                                                </div>`
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Botón de acción -->
+                                    <div class="mt-4 pt-3 border-t border-gray-200">
+                                        <button class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg shadow-sm transition-colors duration-200 flex items-center justify-center gap-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Registrar Pago
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')
+                    : 
+                        // Vista normal para otros tipos de pagos
+                        lista.map(pago => {
+                            const inquilinoData = window.inquilinosMap && window.inquilinosMap.get(pago.inquilinoId);
+                            const nombreInquilino = (pago.nombreInquilino || (inquilinoData && inquilinoData.nombre)) || pago.inquilinoId;
+                            const nombreInmueble = pago.nombreInmueble || (inquilinoData && inquilinoData.nombreInmueble) || 'No especificado';
+                            const fechaPago = pago.estado === 'Próximo (Ocupación)'
+                                ? (() => {
+                                    const d = new Date(pago.proximoPago);
+                                    const dia = String(d.getDate()+2).padStart(2, '0');
+                                    const mes = String(d.getMonth() + 1).padStart(2, '0');
+                                    const anio = d.getFullYear();
+                                    return `${dia}/${mes}/${anio}`;
+                                })()
+                                : (pago.mesCorrespondiente || '') + ' / ' + (pago.anioCorrespondiente || '');
+
+                            return `
+                                <div class="bg-white rounded-lg shadow-sm border ${colorBorde} hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+                                    <div class="p-3 sm:p-6">
+                                        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 sm:gap-6">
+                                            <!-- Información del Inquilino -->
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                                                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${colorGradiente} flex items-center justify-center">
+                                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 ${colorIcono}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
                                                     <h4 class="text-base sm:text-lg font-semibold text-gray-900">${nombreInquilino}</h4>
                                                     <p class="text-xs sm:text-sm text-gray-500">Inquilino</p>
                                                 </div>
@@ -665,13 +964,25 @@ window.mostrarListaPagosDashboard = function(tipo) {
 
                                             <!-- Detalles del Pago -->
                                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
+                                                ${pago.esAdeudoHistorico ? `
+                                                <div class="col-span-2 md:col-span-4 bg-red-100 border-l-4 border-red-500 p-2 sm:p-3 rounded-r-lg">
+                                                    <div class="flex items-center">
+                                                        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                        </svg>
+                                                        <p class="text-xs sm:text-sm text-red-700">
+                                                            Adeudo histórico detectado. Se requiere regularización.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                ` : ''}
                                                 <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-2 sm:p-4 shadow-sm">
                                                     <p class="text-xs sm:text-sm font-medium ${colorTexto}">Fecha</p>
                                                     <p class="text-xs sm:text-sm font-semibold text-gray-900 mt-1">${fechaPago}</p>
                                                 </div>
                                                 <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-2 sm:p-4 shadow-sm">
                                                     <p class="text-xs sm:text-sm font-medium ${colorTexto}">Monto Total</p>
-                                                    <p class="text-xs sm:text-sm font-semibold text-gray-900 mt-1">${(pago.montoTotal || 0).toFixed(2)}</p>
+                                                    <p class="text-xs sm:text-sm font-semibold text-gray-900 mt-1">${pago.esAdeudoHistorico ? 'Pendiente' : (pago.montoTotal || 0).toFixed(2)}</p>
                                                 </div>
                                                 <div class="bg-gradient-to-br ${colorGradiente} rounded-lg p-2 sm:p-4 shadow-sm">
                                                     <p class="text-xs sm:text-sm font-medium ${colorTexto}">Pagado</p>
