@@ -1311,8 +1311,13 @@ export async function mostrarFormularioPagoServicio() {
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                 const inmuebleId = inquilinoDoc.data().inmuebleAsociadoId;
                 
-                // Crear objeto de servicios pagados
-                const serviciosPagados = {};
+                // Crear objeto de servicios pagados con fecha y forma de pago específicas
+                const serviciosPagados = {
+                    fechaRegistroServicio: fechaRegistro,
+                    formaPagoServicio: formaPago
+                };
+                
+                console.log("Creando servicios pagados con fecha:", fechaRegistro, "y forma de pago:", formaPago);
                 if (servicioInternet) {
                     serviciosPagados.internet = true;
                     serviciosPagados.internetMonto = montoInternet;
@@ -1345,6 +1350,10 @@ export async function mostrarFormularioPagoServicio() {
                     // Combinar servicios existentes con nuevos
                     const serviciosActualizados = pagoExistente.serviciosPagados || {};
                     
+                    // Agregar fecha y forma de pago específicas para servicios
+                    serviciosActualizados.fechaRegistroServicio = fechaRegistro;
+                    serviciosActualizados.formaPagoServicio = formaPago;
+                    
                     if (servicioInternet) {
                         serviciosActualizados.internet = true;
                         serviciosActualizados.internetMonto = montoInternet;
@@ -1358,9 +1367,13 @@ export async function mostrarFormularioPagoServicio() {
                         serviciosActualizados.luzMonto = montoLuz;
                     }
                     
-                    // Actualizar documento existente
+                    // Actualizar documento existente con fecha y forma de pago específicas
                     await updateDoc(doc(db, "pagos", pagoDoc.id), {
-                        serviciosPagados: serviciosActualizados
+                        serviciosPagados: {
+                            ...serviciosActualizados,
+                            fechaRegistroServicio: fechaRegistro,
+                            formaPagoServicio: formaPago
+                        }
                     });
                     
                     mostrarNotificacion("Servicios agregados al pago existente.", "success");
@@ -1380,7 +1393,11 @@ export async function mostrarFormularioPagoServicio() {
                         fechaRegistro,
                         formaPago,
                         tipoPago: "servicios",
-                        serviciosPagados
+                        serviciosPagados: {
+                            ...serviciosPagados,
+                            fechaRegistroServicio: fechaRegistro,
+                            formaPagoServicio: formaPago
+                        }
                     });
                     
                     mostrarNotificacion("Pago de servicios registrado con éxito.", "success");
@@ -1658,11 +1675,13 @@ export async function mostrarFormularioPagoMobiliario() {
                 );
                 const querySnapshot = await getDocs(q);
                 
-                // Preparar datos del mobiliario
+                // Preparar datos del mobiliario con fecha y forma de pago específicas
                 const nuevoMobiliario = mobiliarioSeleccionado.map(checkbox => ({
                     mobiliarioId: checkbox.value,
                     costo: parseFloat(checkbox.dataset.costo),
-                    asignacionId: checkbox.dataset.asignacionId || null
+                    asignacionId: checkbox.dataset.asignacionId || null,
+                    fechaRegistroMobiliario: fechaRegistro,
+                    formaPagoMobiliario: formaPago
                 }));
                 
                 if (!querySnapshot.empty) {
@@ -1705,7 +1724,11 @@ export async function mostrarFormularioPagoMobiliario() {
                         }],
                         formaPago,
                         tipoPago: "mobiliario",
-                        mobiliarioPagado: nuevoMobiliario
+                        mobiliarioPagado: nuevoMobiliario.map(item => ({
+                            ...item,
+                            fechaRegistroMobiliario: fechaRegistro,
+                            formaPagoMobiliario: formaPago
+                        }))
                     };
                     
                     await addDoc(collection(db, "pagos"), pagoData);
@@ -1924,6 +1947,78 @@ export async function mostrarDetallePago(pagoId) {
             } catch (e) {}
         }
 
+        // Generar HTML para servicios pagados
+        let serviciosHtml = '';
+        if (pago.serviciosPagados) {
+            const servicios = [];
+            // Usar explícitamente los campos específicos de servicios
+            const fechaServicio = pago.serviciosPagados.fechaRegistroServicio || pago.fechaRegistro || 'N/A';
+            const formaPagoServicio = pago.serviciosPagados.formaPagoServicio || pago.formaPago || 'N/A';
+            
+            console.log("Detalle pago - Fecha servicio:", fechaServicio, "Forma pago servicio:", formaPagoServicio);
+            console.log("Campos disponibles en serviciosPagados:", Object.keys(pago.serviciosPagados));
+            
+            if (pago.serviciosPagados.internet) {
+                servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
+            }
+            if (pago.serviciosPagados.agua) {
+                servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
+            }
+            if (pago.serviciosPagados.luz) {
+                servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
+            }
+            
+            if (servicios.length > 0) {
+                serviciosHtml = `
+                    <h4 class="text-lg font-semibold mt-6 mb-2 text-gray-800">Servicios Pagados:</h4>
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <ul class="list-disc list-inside space-y-1">
+                            ${servicios.map(s => `<li class="text-blue-800">${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // Generar HTML para mobiliario pagado
+        let mobiliarioHtml = '';
+        if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+            let mobiliarioTotal = 0;
+            const mobiliarioItems = [];
+            
+            for (const item of pago.mobiliarioPagado) {
+                const costo = item.costo || 0;
+                mobiliarioTotal += costo;
+                
+                // Obtener fecha y forma de pago específicas del mobiliario o usar las del pago general
+                const fechaMobiliario = item.fechaRegistroMobiliario || pago.fechaRegistro || 'N/A';
+                const formaPagoMobiliario = item.formaPagoMobiliario || pago.formaPago || 'N/A';
+                
+                console.log("Fecha mobiliario:", fechaMobiliario, "Forma pago mobiliario:", formaPagoMobiliario);
+                
+                // Intentar obtener el nombre del mobiliario
+                let nombreMobiliario = 'Mobiliario';
+                try {
+                    const mobDoc = await getDoc(doc(db, "mobiliario", item.mobiliarioId));
+                    if (mobDoc.exists()) {
+                        nombreMobiliario = mobDoc.data().nombre || 'Mobiliario';
+                    }
+                } catch (e) {}
+                
+                mobiliarioItems.push(`${nombreMobiliario}: ${costo.toFixed(2)} | Fecha: ${fechaMobiliario} | Forma de pago: ${formaPagoMobiliario}`);
+            }
+            
+            mobiliarioHtml = `
+                <h4 class="text-lg font-semibold mt-6 mb-2 text-gray-800">Mobiliario Pagado:</h4>
+                <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <ul class="list-disc list-inside space-y-1">
+                        ${mobiliarioItems.map(m => `<li class="text-green-800">${m}</li>`).join('')}
+                    </ul>
+                    <p class="mt-2 font-semibold text-green-800">Total Mobiliario: ${mobiliarioTotal.toFixed(2)}</p>
+                </div>
+            `;
+        }
+
         let abonosHtml = '';
         if (pago.abonos && pago.abonos.length > 0) {
             abonosHtml = `
@@ -1945,7 +2040,7 @@ export async function mostrarDetallePago(pagoId) {
                     abonosHtml += `
                         <tr>
                             <td class="px-4 py-2 text-sm text-gray-500">${idx + 1}</td>
-                            <td class="px-4 py-2 text-sm text-green-700 font-bold">$${(abono.montoAbonado || 0).toFixed(2)}</td>
+                            <td class="px-4 py-2 text-sm text-green-700 font-bold">${(abono.montoAbonado || 0).toFixed(2)}</td>
                             <td class="px-4 py-2 text-sm text-gray-700">${abono.fechaAbono}</td>
                         </tr>
                     `;
@@ -1970,14 +2065,16 @@ export async function mostrarDetallePago(pagoId) {
                     <div><strong>Inquilino:</strong> <span class="text-blue-900">${nombreInquilino}</span></div>
                     <div><strong>Mes Correspondiente:</strong> <span>${pago.mesCorrespondiente}</span></div>
                     <div><strong>Año Correspondiente:</strong> <span>${pago.anioCorrespondiente}</span></div>
-                    <div><strong>Monto Total:</strong> <span class="text-green-700 font-bold">$${(pago.montoTotal || 0).toFixed(2)}</span></div>
-                    <div><strong>Monto Pagado:</strong> <span class="text-green-700 font-bold">$${(pago.montoPagado || 0).toFixed(2)}</span></div>
-                    <div><strong>Saldo Pendiente:</strong> <span class="text-red-700 font-bold">$${(pago.saldoPendiente || 0).toFixed(2)}</span></div>
+                    <div><strong>Monto Total:</strong> <span class="text-green-700 font-bold">${(pago.montoTotal || 0).toFixed(2)}</span></div>
+                    <div><strong>Monto Pagado:</strong> <span class="text-green-700 font-bold">${(pago.montoPagado || 0).toFixed(2)}</span></div>
+                    <div><strong>Saldo Pendiente:</strong> <span class="text-red-700 font-bold">${(pago.saldoPendiente || 0).toFixed(2)}</span></div>
                     <div><strong>Estado:</strong> <span class="inline-block px-3 py-1 rounded-full font-semibold ${pago.estado === 'pagado' ? 'bg-green-100 text-green-800' : pago.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' : pago.estado === 'vencido' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${pago.estado}</span></div>
                     <div><strong>Fecha de Registro:</strong> <span>${pago.fechaRegistro}</span></div>
                     <div><strong>Forma de Pago:</strong> <span>${pago.formaPago || 'N/A'}</span></div>
                     <div><strong>Propietario:</strong> <span>${nombrePropietario}</span></div>
                 </div>
+                ${serviciosHtml}
+                ${mobiliarioHtml}
                 ${abonosHtml}
             </div>
             <div class="flex justify-end mt-6">
@@ -2790,7 +2887,11 @@ export async function gestionarServiciosPago(pagoId) {
             e.preventDefault();
             
             // Recopilar datos del formulario
-            const nuevoServicios = {};
+            const nuevoServicios = {
+                // Agregar fecha y forma de pago específicas para servicios
+                fechaRegistroServicio: fechaRegistro,
+                formaPagoServicio: formaPago
+            };
             
             // Internet
             if (document.getElementById('serviciointernet').checked) {
