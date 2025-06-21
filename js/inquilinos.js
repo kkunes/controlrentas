@@ -312,10 +312,15 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         // Actualizar badges de adeudos
         for (const inquilino of inquilinosList) {
             if (!inquilino.fechaOcupacion || !inquilino.inmuebleAsociadoId) continue;
+            // Asegurarse de que la fecha de ocupación se procese correctamente
+            const fechaOcupacion = new Date(inquilino.fechaOcupacion);
+            // Asegurarse de que la fecha esté en UTC para evitar problemas con zonas horarias
+            fechaOcupacion.setHours(12, 0, 0, 0);
+            
             const mesesAdeudados = await obtenerMesesAdeudadosHistorico(
                 inquilino.id,
                 inquilino.inmuebleAsociadoId,
-                new Date(inquilino.fechaOcupacion)
+                fechaOcupacion
             );
             const badge = document.getElementById(`badge-adeudos-${inquilino.id}`);
             if (badge) {
@@ -331,10 +336,14 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
                     newBadge.title = "Haz clic para ver los meses adeudados";
                     newBadge.addEventListener('click', async () => {
+                        // Usar la misma fecha procesada para el modal
+                        const fechaOcupacion = new Date(inquilino.fechaOcupacion);
+                        fechaOcupacion.setHours(12, 0, 0, 0);
+                        
                         const mesesActualizados = await obtenerMesesAdeudadosHistorico(
                             inquilino.id,
                             inquilino.inmuebleAsociadoId,
-                            new Date(inquilino.fechaOcupacion)
+                            fechaOcupacion
                         );
                         
                         // Contar servicios pendientes actualizados

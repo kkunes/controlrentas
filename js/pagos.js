@@ -708,6 +708,56 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
 }
 
 /**
+ * Determina el mes correspondiente a un pago según la fecha de registro.
+ * Si el pago se realiza el día 1 o el día 15 o posterior, corresponde al mes actual.
+ * @param {Date} fechaPago - La fecha en que se realiza el pago
+ * @returns {Object} - Objeto con el mes y año correspondientes
+ */
+function determinarMesCorrespondiente(fechaPago) {
+    const mesesNombres = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    
+    // Siempre corresponde al mes actual, independientemente del día
+    const mesActual = fechaPago.getMonth();
+    const anioActual = fechaPago.getFullYear();
+    
+    // Siempre devolvemos el mes actual
+    return {
+        mes: mesesNombres[mesActual],
+        anio: anioActual
+    };
+}
+
+/**
+ * Actualiza el mes correspondiente en el formulario según la fecha de registro.
+ * Si la fecha es el día 15 o posterior, corresponde al mes actual.
+ * @param {HTMLElement} fechaRegistroInput - El input de fecha de registro
+ */
+function actualizarMesCorrespondiente(fechaRegistroInput) {
+    const mesesNombres = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    
+    const fechaValue = fechaRegistroInput.value;
+    if (!fechaValue) return;
+    
+    const fecha = new Date(fechaValue);
+    const mesCorrespondienteObj = determinarMesCorrespondiente(fecha);
+    
+    // Actualizar los campos del formulario
+    const mesSelect = document.getElementById('mesCorrespondiente');
+    const anioSelect = document.getElementById('anioCorrespondiente');
+    
+    if (mesSelect && anioSelect) {
+        mesSelect.value = mesCorrespondienteObj.mes;
+        anioSelect.value = mesCorrespondienteObj.anio;
+    }
+}
+
+/**
  * Muestra el formulario para registrar o editar un pago.
  * @param {string} id - El ID del pago a editar (opcional).
  */
@@ -844,6 +894,7 @@ export async function mostrarFormularioNuevoPago(id = null) {
                 <select id="mesCorrespondiente" name="mesCorrespondiente" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
                     ${mesesOptions}
                 </select>
+                <span class="text-xs text-blue-500">Los pagos corresponden a partir del mes de ocupación.</span>
             </div>
             <div>
                 <label for="anioCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">Año Correspondiente</label>
@@ -855,6 +906,7 @@ export async function mostrarFormularioNuevoPago(id = null) {
                 <label for="fechaRegistro" class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Registro</label>
                 <input type="date" id="fechaRegistro" name="fechaRegistro" value="${fechaRegistro}" required
                     class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <span class="text-xs text-gray-500">Al cambiar la fecha, se actualiza el mes correspondiente.</span>
             </div>
         </div>
 
@@ -949,8 +1001,22 @@ export async function mostrarFormularioNuevoPago(id = null) {
     // Si es edición, selecciona los valores actuales
     inmuebleSelect.value = selectedInmueble;
     inquilinoSelect.value = selectedInquilino;
-    document.getElementById('mesCorrespondiente').value = selectedMes;
-    document.getElementById('anioCorrespondiente').value = selectedAnio;
+    
+    // Si es un nuevo pago, determinar el mes correspondiente según la fecha de registro
+    if (!id) {
+        const fechaRegistroInput = document.getElementById('fechaRegistro');
+        actualizarMesCorrespondiente(fechaRegistroInput);
+        
+        // Actualizar mes correspondiente cuando cambie la fecha de registro
+        fechaRegistroInput.addEventListener('change', function() {
+            actualizarMesCorrespondiente(this);
+        });
+    } else {
+        // Si es edición, mantener los valores originales
+        document.getElementById('mesCorrespondiente').value = selectedMes;
+        document.getElementById('anioCorrespondiente').value = selectedAnio;
+    }
+    
     montoTotalInput.value = montoTotal;
     montoPagoInput.value = montoPagado;
 
@@ -992,6 +1058,12 @@ export async function mostrarFormularioNuevoPago(id = null) {
         } else if (montoPago > 0) {
             estado = "parcial";
         }
+        
+        // Determinar el mes correspondiente según la fecha de pago
+        // Si el pago se realiza el día 15, se considera como pago del mes actual
+        const fechaPago = new Date(fechaRegistro);
+        const diaPago = fechaPago.getDate();
+        // No modificamos mesCorrespondiente ni anioCorrespondiente ya que el usuario los selecciona manualmente
 
         // --- AQUÍ VA EL FRAGMENTO DE SALDO A FAVOR ---
     if (montoPago > montoTotal) {
@@ -1575,23 +1647,17 @@ export async function mostrarFormularioPagoMobiliario() {
             mobiliarioInquilino.forEach(mob => {
                 const asignacion = mob.asignacionesActivas.find(a => a.inquilinoId === inquilinoId);
                 if (asignacion) {
-                    // Determinar si debe cobrarse en el mes actual o siguiente
+                    // Determinar el mes de cobro según la fecha de asignación
+                    // Si la fecha de asignación es el día 15 o posterior, se cobra en el mes actual
                     const fechaAsignacion = new Date(asignacion.fechaAsignacion);
                     const diaAsignacion = fechaAsignacion.getDate();
-                    const cobroEnMesActual = diaAsignacion < 15;
                     
-                    // Calcular mes de cobro
-                    let mesCobro, anioCobro;
-                    if (cobroEnMesActual) {
-                        mesCobro = meses[fechaAsignacion.getMonth()];
-                        anioCobro = fechaAsignacion.getFullYear();
-                    } else {
-                        // Si es después del día 15, cobrar el siguiente mes
-                        const fechaSiguienteMes = new Date(fechaAsignacion);
-                        fechaSiguienteMes.setMonth(fechaAsignacion.getMonth() + 1);
-                        mesCobro = meses[fechaSiguienteMes.getMonth()];
-                        anioCobro = fechaSiguienteMes.getFullYear();
-                    }
+                    // Siempre se cobra en el mes actual, independientemente del día
+                    const mesCobro = meses[fechaAsignacion.getMonth()];
+                    const anioCobro = fechaAsignacion.getFullYear();
+                    
+                    // Indicador para mostrar en la interfaz
+                    const cobroEnMesActual = true; // Siempre es true con la nueva regla
                     
                     const costoTotal = (mob.costoRenta || 0) * asignacion.cantidad;
                     
@@ -1607,9 +1673,8 @@ export async function mostrarFormularioPagoMobiliario() {
                                 <div class="ml-3">
                                     <p class="font-medium">${mob.nombre} (${asignacion.cantidad} unidades)</p>
                                     <p class="text-sm text-gray-600">Costo: ${costoTotal.toFixed(2)}</p>
-                                    <p class="text-sm ${cobroEnMesActual ? 'text-green-600' : 'text-blue-600'}">
-                                        ${cobroEnMesActual ? 'Cobrar en mes actual' : 'Cobrar en mes siguiente'}: 
-                                        ${mesCobro} ${anioCobro}
+                                    <p class="text-sm text-green-600">
+                                        Cobrar en mes actual: ${mesCobro} ${anioCobro}
                                     </p>
                                     <p class="text-xs text-gray-500">
                                         Asignado: ${new Date(asignacion.fechaAsignacion).toLocaleDateString()}
@@ -2589,6 +2654,7 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh) {
 
 /**
  * Devuelve los meses (mes/año) que un inquilino debe desde su ocupación hasta el mes actual.
+ * Solo considera los meses a partir de la fecha de ocupación.
  * @param {string} inquilinoId
  * @param {string} inmuebleId
  * @param {Date} fechaOcupacion
@@ -2596,15 +2662,12 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh) {
  */
 export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fechaOcupacion) {
     try {
-        console.log(`Calculando meses adeudados para inquilino ${inquilinoId}, inmueble ${inmuebleId}, fecha ocupación:`, fechaOcupacion);
-        
         const mesesNombres = [
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
         ];
         const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-
+        
         // Validar fecha de ocupación
         if (!fechaOcupacion || isNaN(fechaOcupacion.getTime())) {
             console.error("Fecha de ocupación inválida:", fechaOcupacion);
@@ -2618,15 +2681,9 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
             ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
             (inquilinoData.tipoServicio && inquilinoData.montoServicio));
 
-        let fechaIter = new Date(fechaOcupacion.getFullYear(), fechaOcupacion.getMonth(), 1);
-        if (fechaOcupacion.getDate() > 1) {
-            fechaIter.setMonth(fechaIter.getMonth() + 1);
-        }
-
-        let fin = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        let mesesPendientes = [];
-
-        console.log(`Buscando pagos desde ${fechaIter.toISOString()} hasta ${fin.toISOString()}`);
+        // Obtener el inmueble para conocer el monto de renta
+        const inmuebleDoc = await getDoc(doc(db, "inmuebles", inmuebleId));
+        const montoRenta = inmuebleDoc.exists() ? (inmuebleDoc.data().rentaMensual || 0) : 0;
 
         // Trae todos los pagos del inquilino/inmueble una sola vez
         const pagosQuery = query(
@@ -2637,42 +2694,85 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         const pagosSnap = await getDocs(pagosQuery);
         const pagosList = [];
         pagosSnap.forEach(doc => {
-            const pagoData = doc.data();
-            pagosList.push({...pagoData, id: doc.id});
-            console.log(`Pago encontrado: ${doc.id}, mes: ${pagoData.mesCorrespondiente}, año: ${pagoData.anioCorrespondiente}, estado: ${pagoData.estado}`);
+            pagosList.push({...doc.data(), id: doc.id});
         });
 
-        // Obtener el inmueble para conocer el monto de renta
-        const inmuebleDoc = await getDoc(doc(db, "inmuebles", inmuebleId));
-        const montoRenta = inmuebleDoc.exists() ? (inmuebleDoc.data().rentaMensual || 0) : 0;
-        console.log(`Monto de renta del inmueble: ${montoRenta}`);
-
-        while (fechaIter <= fin) {
-            let mes = mesesNombres[fechaIter.getMonth()];
-            let anio = fechaIter.getFullYear();
-            console.log(`Verificando mes: ${mes} ${anio}`);
-
-            // Busca pagos de ese mes/año (ignorando mayúsculas y espacios)
-            const pagosMes = pagosList.filter(p =>
-                p.mesCorrespondiente &&
+        // Mes y año de ocupación
+        const fechaOcupacionObj = new Date(fechaOcupacion);
+        const diaOcupacion = fechaOcupacionObj.getDate();
+        const mesOcupacion = fechaOcupacionObj.getMonth();
+        const anioOcupacion = fechaOcupacionObj.getFullYear();
+        
+        // Mes y año actual
+        const mesActual = hoy.getMonth();
+        const anioActual = hoy.getFullYear();
+        
+        let mesesPendientes = [];
+        
+        // Determinar el mes inicial basado en el día de ocupación
+        // Si el día de ocupación es 15 o menor, se considera ese mes
+        // Si es mayor a 15, se considera a partir del mes siguiente
+        let mesInicial = mesOcupacion;
+        let anioInicial = anioOcupacion;
+        
+        if (diaOcupacion > 15) {
+            // Si es después del día 15, avanzar al mes siguiente
+            mesInicial = mesOcupacion + 1;
+            if (mesInicial > 11) {
+                mesInicial = 0;
+                anioInicial = anioOcupacion + 1;
+            }
+        }
+        
+        // Crear un array de meses a verificar
+        const mesesAVerificar = [];
+        
+        // Verificar si la fecha de ocupación es posterior a la fecha actual
+        if (anioInicial > anioActual || (anioInicial === anioActual && mesInicial > mesActual)) {
+            // Si la fecha de ocupación es futura, no hay adeudos
+            return [];
+        }
+        
+        // Año inicial
+        if (anioInicial === anioOcupacion) {
+            for (let mes = mesInicial; mes <= 11 && (anioInicial < anioActual || mes <= mesActual); mes++) {
+                mesesAVerificar.push({ mes, anio: anioInicial });
+            }
+        }
+        
+        // Años intermedios (completos)
+        for (let anio = anioInicial + 1; anio < anioActual; anio++) {
+            for (let mes = 0; mes <= 11; mes++) {
+                mesesAVerificar.push({ mes, anio });
+            }
+        }
+        
+        // Año actual (hasta el mes actual)
+        if (anioActual > anioInicial) {
+            for (let mes = 0; mes <= mesActual; mes++) {
+                mesesAVerificar.push({ mes, anio: anioActual });
+            }
+        }
+        
+        // Verificar cada mes
+        for (const { mes, anio } of mesesAVerificar) {
+            const nombreMes = mesesNombres[mes];
+            
+            // Buscar pagos para este mes/año
+            const pagosMes = pagosList.filter(p => 
+                p.mesCorrespondiente && 
                 p.anioCorrespondiente &&
-                p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === mes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
+                p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === nombreMes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
                 Number(p.anioCorrespondiente) === anio
             );
-
-            console.log(`Pagos encontrados para ${mes} ${anio}: ${pagosMes.length}`);
-
-            // Si NO hay ningún pago con estado "pagado", se considera pendiente
+            
+            // Verificar si hay algún pago con estado "pagado"
             let pagado = false;
             let serviciosPagados = false;
             
             pagosMes.forEach(pago => {
-                if (
-                    typeof pago.estado === "string" &&
-                    pago.estado.trim().toLowerCase() === "pagado"
-                ) {
+                if (typeof pago.estado === "string" && pago.estado.trim().toLowerCase() === "pagado") {
                     pagado = true;
-                    console.log(`Mes ${mes} ${anio} está pagado (ID: ${pago.id})`);
                 }
                 
                 // Verificar si los servicios están pagados
@@ -2682,26 +2782,20 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
                                                 pago.serviciosPagados.luz;
                     if (tieneServiciosPagados) {
                         serviciosPagados = true;
-                        console.log(`Servicios para ${mes} ${anio} están pagados (ID: ${pago.id})`);
                     }
                 }
             });
-
+            
+            // Si no está pagado, agregar a la lista de meses pendientes
             if (!pagado) {
-                console.log(`Mes ${mes} ${anio} NO está pagado, agregando a meses pendientes`);
-                mesesPendientes.push({ 
-                    mes, 
-                    anio,
-                    montoTotal: montoRenta, // Incluir el monto de renta para mostrarlo
-                    serviciosPendientes: tieneServicios && !serviciosPagados // Indicar si hay servicios pendientes
+                mesesPendientes.push({
+                    mes: nombreMes,
+                    anio: anio,
+                    montoTotal: montoRenta,
+                    serviciosPendientes: tieneServicios && !serviciosPagados
                 });
             }
-
-            fechaIter.setMonth(fechaIter.getMonth() + 1);
         }
-        
-        console.log(`Total meses pendientes encontrados: ${mesesPendientes.length}`);
-        console.log("Meses pendientes:", mesesPendientes);
         
         return mesesPendientes;
     } catch (error) {
