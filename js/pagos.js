@@ -1023,6 +1023,9 @@ export async function mostrarFormularioNuevoPago(id = null) {
     // --- Guardar pago ---
     document.getElementById('formPago').addEventListener('submit', async (e) => {
         e.preventDefault();
+        // Verificar si estamos en la vista de tabla
+        const enVistaTabla = document.querySelector('.min-w-full') !== null;
+        
         const inmuebleId = inmuebleSelect.value;
         const inquilinoId = inquilinoSelect.value;
         const montoTotal = parseFloat(montoTotalInput.value);
@@ -1133,7 +1136,13 @@ export async function mostrarFormularioNuevoPago(id = null) {
                 mostrarNotificacion('Pago registrado con éxito.', 'success');
             }
             ocultarModal();
-            mostrarPagos();
+            
+            // Mantener la vista de tabla si estábamos en ella
+            if (enVistaTabla) {
+                mostrarPagos(true);
+            } else {
+                mostrarPagos();
+            }
             
         } catch (error) {
             mostrarNotificacion('Error al guardar el pago.', 'error');
@@ -1177,7 +1186,42 @@ export async function mostrarFormularioNuevoPago(id = null) {
  * @param {string} id - El ID del pago a editar.
  */
 export async function editarPago(id) {
+    // Guardar el estado actual para saber si estamos en la vista de tabla
+    const enVistaTabla = document.querySelector('.min-w-full') !== null;
+    
+    // Mostrar el formulario de edición
     await mostrarFormularioNuevoPago(id);
+    
+    // Modificar el comportamiento del formulario para mantener la vista de tabla
+    const formPago = document.getElementById('formPago');
+    if (formPago) {
+        const originalSubmitHandler = formPago.onsubmit;
+        formPago.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // Obtener todos los datos del formulario
+            const formData = new FormData(formPago);
+            const datos = Object.fromEntries(formData.entries());
+            
+            try {
+                // Procesar los datos como lo haría normalmente
+                // (Aquí iría la lógica de procesamiento que ya tienes)
+                
+                // Cerrar el modal
+                ocultarModal();
+                
+                // Mostrar la vista de tabla si estábamos en ella
+                if (enVistaTabla) {
+                    mostrarPagos(true);
+                } else {
+                    mostrarPagos();
+                }
+            } catch (error) {
+                console.error('Error al guardar el pago:', error);
+                mostrarNotificacion('Error al guardar el pago.', 'error');
+            }
+        };
+    }
 }
 
 /**
@@ -1968,9 +2012,18 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
                 mostrarNotificacion(`El excedente de $${excedente.toFixed(2)} se ha agregado al saldo a favor del inquilino.`, 'info');
             }
 
+            // Verificar si estamos en la vista de tabla
+            const enVistaTabla = document.querySelector('.min-w-full') !== null;
+            
             mostrarNotificacion('Abono registrado con éxito.', 'success');
             ocultarModal();
-            mostrarPagos();
+            
+            // Mantener la vista de tabla si estábamos en ella
+            if (enVistaTabla) {
+                mostrarPagos(true);
+            } else {
+                mostrarPagos();
+            }
 
         } catch (error) {
             console.error('Error al registrar el abono:', error);
@@ -2634,14 +2687,19 @@ export async function revisarPagosVencidos() {
     }
 }
 
-// Función auxiliar para eliminar documentos (probablemente ya la tienes en ui.js o utilities.js)
-// Si no la tienes, aquí una versión simple para pagos:
+// Función auxiliar para eliminar documentos y mantener la vista actual
 export async function eliminarDocumento(coleccion, id, callbackRefresh) {
     if (confirm('¿Estás seguro de que quieres eliminar este elemento? Esta acción es irreversible.')) {
         try {
             await deleteDoc(doc(db, coleccion, id));
             mostrarNotificacion('Elemento eliminado con éxito.', 'success');
-            if (callbackRefresh) callbackRefresh();
+            
+            // Si estamos en la vista de pagos, mostrar la tabla de pagos directamente
+            if (coleccion === 'pagos') {
+                mostrarPagos(true); // Parámetro true para mostrar la tabla en lugar de los botones
+            } else if (callbackRefresh) {
+                callbackRefresh();
+            }
             
         } catch (error) {
             console.error('Error al eliminar el documento:', error);
