@@ -12,40 +12,15 @@ import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/fireb
  */
 export function confirmarAccion(mensaje, botonConfirmar = 'Confirmar', botonCancelar = 'Cancelar', tipo = 'warning') {
     return new Promise((resolve) => {
-        // Colores según el tipo
-        let colorPrincipal, colorHover, colorBorde;
-        
-        switch (tipo) {
-            case 'danger':
-                colorPrincipal = 'from-rose-500 to-red-600';
-                colorHover = 'hover:from-rose-600 hover:to-red-700';
-                colorBorde = 'border-rose-400/30';
-                break;
-            case 'warning':
-                colorPrincipal = 'from-amber-500 to-yellow-600';
-                colorHover = 'hover:from-amber-600 hover:to-yellow-700';
-                colorBorde = 'border-amber-400/30';
-                break;
-            case 'info':
-            default:
-                colorPrincipal = 'from-indigo-500 to-blue-600';
-                colorHover = 'hover:from-indigo-600 hover:to-blue-700';
-                colorBorde = 'border-indigo-400/30';
-                break;
-        }
-        
         const modalHtml = `
             <div class="p-6 max-w-md mx-auto">
                 ${mensaje}
                 
                 <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
-                    <button id="btn-cancelar"
-                            class="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center border border-gray-200">
+                    <button id="btn-cancelar" class="w-full sm:w-auto btn-secundario">
                         ${botonCancelar}
                     </button>
-                    <button id="btn-confirmar"
-                            class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-br ${colorPrincipal} ${colorHover}
-                            text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center border ${colorBorde}">
+                    <button id="btn-confirmar" class="w-full sm:w-auto ${obtenerClasesBoton(tipo)}">
                         ${botonConfirmar}
                     </button>
                 </div>
@@ -117,26 +92,15 @@ export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 3500) {
     const prev = document.getElementById('toast-notificacion');
     if (prev) prev.remove();
 
-    // Colores y estilos por tipo
-    let bg = 'bg-blue-600', border = 'border-blue-700', icon = 'ℹ️';
-    if (tipo === 'success') {
-        bg = 'bg-green-600'; border = 'border-green-700'; icon = '✔️';
-    } else if (tipo === 'error') {
-        bg = 'bg-red-600'; border = 'border-red-700'; icon = '❌';
-    } else if (tipo === 'warning') {
-        bg = 'bg-yellow-500'; border = 'border-yellow-600'; icon = '⚠️';
-    }
+    const estilosToast = obtenerEstilosToast(tipo);
 
     const toast = document.createElement('div');
     toast.id = 'toast-notificacion';
-    toast.className = `
-        fixed top-6 right-6 z-50 max-w-xs w-full
-        ${bg} ${border} border-l-4 text-white px-5 py-4 rounded-lg shadow-lg flex items-center animate-fade-in
-    `;
+    toast.className = `toast-base ${estilosToast.clases}`;
     toast.innerHTML = `
-        <span class="mr-3 text-xl">${icon}</span>
-        <span class="flex-1">${mensaje}</span>
-        <button onclick="this.parentElement.remove()" class="ml-4 text-white hover:text-gray-200 text-lg font-bold focus:outline-none">&times;</button>
+        <span class="toast-icono">${estilosToast.icono}</span>
+        <span class="toast-mensaje">${mensaje}</span>
+        <button onclick="this.parentElement.remove()" class="toast-cerrar">&times;</button>
     `;
 
     document.body.appendChild(toast);
@@ -146,13 +110,7 @@ export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 3500) {
     }, duracion);
 }
 
-// Animación fade-in (puedes poner esto en tu CSS global)
-const style = document.createElement('style');
-style.innerHTML = `
-@keyframes fade-in { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: none; } }
-.animate-fade-in { animation: fade-in 0.3s ease; }
-`;
-document.head.appendChild(style);
+// Los estilos y animaciones ahora están en css/styles.css
 
 /**
  * Elimina un documento de una colección específica en Firestore.
@@ -172,5 +130,32 @@ export async function eliminarDocumento(db, collectionName, docId) {
     } catch (error) {
         console.error(`Error al eliminar documento en ${collectionName}/${docId}:`, error);
         throw new Error("No se pudo eliminar el documento. Intente de nuevo.");
+    }
+}
+
+// --- Funciones de utilidad para los estilos (pueden ir en otro archivo si es necesario) ---
+function obtenerClasesBoton(tipo) {
+    switch (tipo) {
+        case 'danger':
+            return 'btn-peligro';
+        case 'warning':
+            return 'btn-alerta';
+        case 'info':
+        default:
+            return 'btn-info';
+    }
+}
+
+function obtenerEstilosToast(tipo) {
+    switch (tipo) {
+        case 'success':
+            return { clases: 'toast-success', icono: '✔️' };
+        case 'error':
+            return { clases: 'toast-error', icono: '❌' };
+        case 'warning':
+            return { clases: 'toast-warning', icono: '⚠️' };
+        case 'info':
+        default:
+            return { clases: 'toast-info', icono: 'ℹ️' };
     }
 }
