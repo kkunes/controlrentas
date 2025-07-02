@@ -466,47 +466,46 @@ window.editarMueble = async function(id) {
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                            </svg>
-                            Cantidad Total *
-                        </label>
-                        <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                        <p class="text-xs text-gray-500 mt-1">Mínimo: ${mueble.cantidadAsignada || 0} (cantidad actualmente asignada)</p>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Condición
-                        </label>
-                        <select id="condicionMuebleEdit" 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                            <option value="excelente" ${mueble.condicion === 'excelente' ? 'selected' : ''}>Excelente</option>
-                            <option value="buena" ${mueble.condicion === 'buena' ? 'selected' : ''}>Buena</option>
-                            <option value="regular" ${mueble.condicion === 'regular' ? 'selected' : ''}>Regular</option>
-                            <option value="necesita_reparacion" ${mueble.condicion === 'necesita_reparacion' ? 'selected' : ''}>Necesita Reparación</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-3 mt-8">
-                    <button type="button" onclick="ocultarModal()" 
-                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
-                        Cancelar
-                    </button>
-                    <button type="submit" 
-                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Actualizar
-                    </button>
+                        Cantidad Total *
+                    </label>
+                    <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                 </div>
-            </form>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Condición
+                    </label>
+                    <select id="condicionMuebleEdit" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        <option value="excelente" ${mueble.condicion === 'excelente' ? 'selected' : ''}>Excelente</option>
+                        <option value="buena" ${mueble.condicion === 'buena' ? 'selected' : ''}>Buena</option>
+                        <option value="regular" ${mueble.condicion === 'regular' ? 'selected' : ''}>Regular</option>
+                        <option value="necesita_reparacion" ${mueble.condicion === 'necesita_reparacion' ? 'selected' : ''}>Necesita Reparación</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-8">
+                <button type="button" onclick="ocultarModal()" 
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancelar
+                </button>
+                <button type="submit" 
+                    class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                    text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Actualizar
+                </button>
+            </div>
+        </form>
         `;
         mostrarModal(formHtml);
 
@@ -676,24 +675,24 @@ window.asignarMueble = async function(id) {
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                            </svg>
-                            Cantidad a asignar *
-                        </label>
-                        <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        </svg>
+                        Cantidad a asignar *
+                    </label>
+                    <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                         <p class="text-xs text-gray-500 mt-1">Máximo disponible: ${disponibles}</p>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            Fecha de Asignación *
-                        </label>
-                        <input type="date" id="fechaAsignacion" value="${new Date().toISOString().split('T')[0]}" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                        <p class="text-xs text-gray-500 mt-1">Si la asignación es antes del día 15, se cobrará en el mes actual. Si es a partir del día 15, se cobrará en el siguiente mes.</p>
-                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Fecha de Asignación *
+                    </label>
+                    <input type="date" id="fechaAsignacion" value="${new Date().toISOString().split('T')[0]}" required 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                    <p class="text-xs text-gray-500 mt-1">Si la asignación es antes del día 15, se cobrará en el mes actual. Si es a partir del día 15, se cobrará en el siguiente mes.</p>
+                </div>
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -860,7 +859,7 @@ window.liberarMobiliario = async function(id) {
                             <div class="text-sm text-gray-500 mt-1">
                                 <div class="flex items-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                     </svg>
                                     <span>Cantidad asignada: ${a.cantidad}</span>
                                 </div>
@@ -889,17 +888,16 @@ window.liberarMobiliario = async function(id) {
                                 <label class="text-sm text-gray-600 flex items-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                                    </svg>
-                                    <span>Cantidad a liberar:</span>
-                                </label>
-                                <input type="number" 
-                                       name="cantidadLiberar_${a.inquilinoId}" 
-                                       min="1" 
-                                       max="${a.cantidad}" 
-                                       value="${a.cantidad}"
-                                       class="mt-1 block w-24 border border-gray-300 rounded-lg shadow-sm py-1.5 px-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                       disabled>
-                            </div>
+                                </svg>
+                                <span>Cantidad a liberar:</span>
+                            </label>
+                            <input type="number" 
+                                   name="cantidadLiberar_${a.inquilinoId}" 
+                                   min="1" 
+                                   max="${a.cantidad}" 
+                                   value="${a.cantidad}"
+                                   class="mt-1 block w-24 border border-gray-300 rounded-lg shadow-sm py-1.5 px-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                   disabled>
                         </div>
                     </div>
                 </div>
@@ -944,46 +942,44 @@ window.liberarMobiliario = async function(id) {
                     <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center">
                         <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                        </svg>
-                        Selecciona las asignaciones a liberar:
-                    </label>
-                    <div class="space-y-3 max-h-60 overflow-y-auto">
-                        ${opcionesLiberacion}
-                    </div>
+                    </svg>
+                    Selecciona las asignaciones a liberar:
+                </label>
+                <div class="space-y-3 max-h-60 overflow-y-auto">
+                    ${opcionesLiberacion}
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Condición al liberar
-                        </label>
-                        <select id="condicionLiberacion" 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                            <option value="excelente">Excelente</option>
-                            <option value="buena" selected>Buena</option>
-                            <option value="regular">Regular</option>
-                            <option value="necesita_reparacion">Necesita Reparación</option>
-                            <option value="dañado">Dañado</option>
-                        </select>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Motivo de liberación
-                        </label>
-                        <select id="motivoLiberacion" 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                            <option value="fin_contrato">Fin de contrato</option>
-                            <option value="cambio_inmueble">Cambio de inmueble</option>
-                            <option value="solicitud_inquilino">Solicitud del inquilino</option>
-                            <option value="mantenimiento">Mantenimiento</option>
-                            <option value="otro">Otro</option>
-                        </select>
-                    </div>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Condición al liberar
+                    </label>
+                    <select id="condicionLiberacion" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        <option value="excelente">Excelente</option>
+                        <option value="buena" selected>Buena</option>
+                        <option value="regular">Regular</option>
+                        <option value="necesita_reparacion">Necesita Reparación</option>
+                        <option value="dañado">Dañado</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Motivo de liberación
+                    </label>
+                    <select id="motivoLiberacion" 
+                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        <option value="fin_contrato">Fin de contrato</option>
+                        <option value="cambio_inmueble">Cambio de inmueble</option>
+                        <option value="solicitud_inquilino">Solicitud del inquilino</option>
+                        <option value="mantenimiento">Mantenimiento</option>
+                        <option value="otro">Otro</option>
+                    </select>
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -1250,7 +1246,6 @@ window.verHistorialMobiliario = async function(id) {
                         </div>
                     </div>
                 </div>
-
                 <div>
                     <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1293,7 +1288,7 @@ window.verHistorialMobiliario = async function(id) {
                     </div>
                 </div>
 
-                <div class="flex justify-end mt-8">
+                <div class="flex justify-end mt-8 gap-3">
                     <button onclick="ocultarModal()" 
                         class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
                         text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
@@ -1302,10 +1297,34 @@ window.verHistorialMobiliario = async function(id) {
                         </svg>
                         Cerrar
                     </button>
+                    <button onclick="limpiarHistorialMueble('${id}')" 
+                        class="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Limpiar Historial
+                    </button>
                 </div>
             </div>
         `;
         mostrarModal(modalHtml);
+
+        // Agrega la función global para limpiar historial:
+        window.limpiarHistorialMueble = async function(id) {
+            if (confirm("¿Estás seguro de que deseas limpiar el historial de este mobiliario? Esta acción no se puede deshacer.")) {
+                try {
+                    await updateDoc(doc(db, "mobiliario", id), {
+                        historial: []
+                    });
+                    mostrarNotificacion("Historial limpiado correctamente.", "success");
+                    ocultarModal();
+                    mostrarInventarioMobiliario();
+                } catch (error) {
+                    mostrarNotificacion("Error al limpiar el historial.", "error");
+                }
+            }
+        };
     } catch (error) {
         console.error("Error al cargar historial:", error);
         mostrarNotificacion("Error al cargar el historial del mobiliario.", "error");

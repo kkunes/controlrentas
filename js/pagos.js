@@ -314,13 +314,17 @@ export async function mostrarPagos(mostrarTabla = false) {
             `<option value="${id}">${nombre}</option>`).join('');
         const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) =>
             `<option value="${id}">${nombre}</option>`).join('');
-        const meses = [
+                const meses = [
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
         ];
         const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
         const estados = ["pagado", "parcial", "pendiente", "vencido"];
         const estadosOptions = estados.map(e => `<option value="${e}">${e.charAt(0).toUpperCase() + e.slice(1)}</option>`).join('');
+        // NUEVO: Opciones de año para filtro
+        const anioActual = new Date().getFullYear();
+        const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
+        const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
         // Filtros UI
         const filtrosHtml = `
@@ -344,6 +348,13 @@ export async function mostrarPagos(mostrarTabla = false) {
                     <select id="filtroMes" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
                         <option value="">Todos</option>
                         ${mesesOptions}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Año</label>
+                    <select id="filtroAnio" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
+                        <option value="">Todos</option>
+                        ${aniosOptions}
                     </select>
                 </div>
                 <div>
@@ -503,17 +514,19 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
             });
         });
 
-        // --- Filtros interactivos ---
+ // --- Filtros interactivos ---
         function aplicarFiltros() {
             const filtroInmueble = document.getElementById('filtroInmueble').value;
             const filtroInquilino = document.getElementById('filtroInquilino').value;
             const filtroMes = document.getElementById('filtroMes').value;
+            const filtroAnio = document.getElementById('filtroAnio').value;
             const filtroEstado = document.getElementById('filtroEstado').value;
 
             let pagosFiltrados = pagosList.filter(pago => {
                 return (!filtroInmueble || pago.inmuebleId === filtroInmueble)
                     && (!filtroInquilino || pago.inquilinoId === filtroInquilino)
                     && (!filtroMes || pago.mesCorrespondiente === filtroMes)
+                    && (!filtroAnio || pago.anioCorrespondiente == filtroAnio)
                     && (!filtroEstado || pago.estado === filtroEstado);
             });
 
@@ -686,20 +699,77 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                 });
             }
             document.querySelector('.min-w-full tbody').innerHTML = tablaFilas;
+
+document.querySelectorAll('.btn-detalle-pago').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const pagoId = e.currentTarget.dataset.pagoId;
+        mostrarDetallePago(pagoId);
+    });
+});
+document.querySelectorAll('.btn-abonar-pago').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const pagoId = e.currentTarget.dataset.pagoId;
+        const pagoData = pagosList.find(p => p.id === pagoId);
+        if (pagoData) {
+            mostrarFormularioRegistrarAbono(pagoId, pagoData.montoTotal, pagoData.montoPagado);
+        } else {
+            mostrarNotificacion("Error: No se encontró la información del pago para abonar.", 'error');
+        }
+    });
+});
+document.querySelectorAll('.btn-editar-pago').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const pagoId = e.currentTarget.dataset.pagoId;
+        editarPago(pagoId);
+    });
+});
+document.querySelectorAll('.btn-eliminar-pago').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const pagoId = e.currentTarget.dataset.pagoId;
+        eliminarDocumento('pagos', pagoId, mostrarPagos);
+    });
+});
+document.querySelectorAll('.btn-gestionar-servicios').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const pagoId = e.currentTarget.dataset.pagoId;
+        gestionarServiciosPago(pagoId);
+    });
+});
+document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const pagoId = e.currentTarget.dataset.pagoId;
+        generarReciboPDF(pagoId);
+    });
+});
+document.querySelectorAll('.btn-gestionar-mobiliario').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const pagoId = e.currentTarget.dataset.pagoId;
+        gestionarMobiliarioPago(pagoId);
+    });
+});
+
         }
 
-        // Listeners de filtros
+            // Listeners de filtros
         document.getElementById('filtroInmueble').addEventListener('change', aplicarFiltros);
         document.getElementById('filtroInquilino').addEventListener('change', aplicarFiltros);
         document.getElementById('filtroMes').addEventListener('change', aplicarFiltros);
+        document.getElementById('filtroAnio').addEventListener('change', aplicarFiltros);
         document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
         document.getElementById('btnLimpiarFiltros').addEventListener('click', () => {
             document.getElementById('filtroInmueble').value = "";
             document.getElementById('filtroInquilino').value = "";
             document.getElementById('filtroMes').value = "";
+            document.getElementById('filtroAnio').value = "";
             document.getElementById('filtroEstado').value = "";
             aplicarFiltros();
         });
+ if (!document.getElementById('filtroMes').value && !document.getElementById('filtroAnio').value) {
+            const fechaActual = new Date();
+            document.getElementById('filtroMes').value = meses[fechaActual.getMonth()];
+            document.getElementById('filtroAnio').value = fechaActual.getFullYear();
+        }
+        aplicarFiltros();
 
     } catch (error) {
         console.error("Error al mostrar pagos:", error);
