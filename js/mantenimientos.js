@@ -132,6 +132,10 @@ export async function mostrarMantenimientos() {
         const categoriasOptions = categorias.map(cat =>
             `<option value="${cat}">${cat}</option>`
         ).join('');
+        const estados = ["Pendiente", "En Progreso", "Completado", "Cancelado"];
+        const estadosOptions = estados.map(est =>
+            `<option value="${est}">${est}</option>`
+        ).join('');
         const mesesOptions = meses.map((mes, idx) =>
             `<option value="${idx + 1}">${mes}</option>`
         ).join('');
@@ -154,6 +158,13 @@ export async function mostrarMantenimientos() {
                     <select id="filtroCategoria" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
                         <option value="">Todas</option>
                         ${categoriasOptions}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Estado</label>
+                    <select id="filtroEstado" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
+                        <option value="">Todos</option>
+                        ${estadosOptions}
                     </select>
                 </div>
                 <div>
@@ -203,6 +214,7 @@ export async function mostrarMantenimientos() {
         function renderTablaMantenimientos() {
             const filtroInmueble = document.getElementById('filtroInmueble').value;
             const filtroCategoria = document.getElementById('filtroCategoria').value;
+            const filtroEstado = document.getElementById('filtroEstado').value;
             const filtroMes = document.getElementById('filtroMes').value !== "" ? Number(document.getElementById('filtroMes').value) : null;
             const filtroAnio = document.getElementById('filtroAnio').value !== "" ? Number(document.getElementById('filtroAnio').value) : null;
 
@@ -215,6 +227,7 @@ export async function mostrarMantenimientos() {
                 }
                 return (!filtroInmueble || m.inmuebleId === filtroInmueble)
                     && (!filtroCategoria || m.categoria === filtroCategoria)
+                    && (!filtroEstado || m.estado === filtroEstado)
                     && (filtroMes === null || (mes !== null && mes === filtroMes))
                     && (filtroAnio === null || (anio !== null && anio === filtroAnio));
             });
@@ -296,11 +309,13 @@ export async function mostrarMantenimientos() {
         // Listeners de filtros
         document.getElementById('filtroInmueble').addEventListener('change', renderTablaMantenimientos);
         document.getElementById('filtroCategoria').addEventListener('change', renderTablaMantenimientos);
+        document.getElementById('filtroEstado').addEventListener('change', renderTablaMantenimientos);
         document.getElementById('filtroMes').addEventListener('change', renderTablaMantenimientos);
         document.getElementById('filtroAnio').addEventListener('change', renderTablaMantenimientos);
         document.getElementById('btnLimpiarFiltros').addEventListener('click', () => {
             document.getElementById('filtroInmueble').value = "";
             document.getElementById('filtroCategoria').value = "";
+            document.getElementById('filtroEstado').value = "";
             document.getElementById('filtroMes').value = "";
             document.getElementById('filtroAnio').value = "";
             renderTablaMantenimientos();
