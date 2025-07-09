@@ -13,6 +13,8 @@ import { mostrarReportes } from './reportes.js';
 import { mostrarAbonos, mostrarFormularioNuevoAbono, editarAbono, eliminarAbono, aplicarSaldoFavorManual } from './abonos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { renderComisiones } from './comision.js';
+import { collection, doc, setDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
 const provider = new GoogleAuthProvider();
 
@@ -199,3 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Nueva función para mostrar comisiones
+window.mostrarComisiones = function() {
+    renderComisiones();
+    if (typeof setActiveSection === 'function') setActiveSection('comisiones');
+};
