@@ -25,6 +25,52 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
             inmueblesList.push({ id: doc.id, ...doc.data() });
         });
 
+        // Obtener todos los inquilinos
+const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+let inquilinosList = [];
+inquilinosSnap.forEach(doc => {
+    inquilinosList.push({ id: doc.id, ...doc.data() });
+});
+
+// Para cada inmueble, busca el inquilino actual
+inmueblesList.forEach(inmueble => {
+    if (inmueble.estado !== "Ocupado") {
+        inmueble.inquilinoActual = null;
+        return;
+    }
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    // Filtra inquilinos asignados a este inmueble y con contrato/desocupación vigente
+    const posibles = inquilinosList.filter(i => {
+        // Normaliza y compara IDs como string
+        if (String(i.inmuebleAsociadoId).trim() !== String(inmueble.id).trim()) return false;
+
+        // Normaliza fechas
+        const finContrato = i.fechaFinContrato ? i.fechaFinContrato.slice(0, 10) : null;
+        const desocupacion = i.fechaDesocupacion ? i.fechaDesocupacion.slice(0, 10) : null;
+
+        // Es actual si:
+        // - No tiene fecha de fin de contrato o es hoy/futuro
+        // - Y no tiene fecha de desocupación o es hoy/futuro
+        const contratoVigente = !finContrato || finContrato >= hoy;
+        const desocupacionVigente = !desocupacion || desocupacion >= hoy;
+
+        return contratoVigente && desocupacionVigente;
+    });
+
+    // Si hay varios, toma el más reciente por fechaInicioContrato o fechaInicio
+    if (posibles.length > 0) {
+        posibles.sort((a, b) => {
+            const aInicio = a.fechaInicioContrato || a.fechaInicio || '';
+            const bInicio = b.fechaInicioContrato || b.fechaInicio || '';
+            return bInicio.localeCompare(aInicio); // descendente
+        });
+        inmueble.inquilinoActual = posibles[0];
+    } else {
+        inmueble.inquilinoActual = null;
+    }
+});
+
         // Filtrar por estado si se solicita
         if (estadoFiltro && estadoFiltro !== "Todos") {
             inmueblesList = inmueblesList.filter(inmueble => inmueble.estado && inmueble.estado.toLowerCase() === estadoFiltro.toLowerCase());
@@ -37,6 +83,7 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
         // Ordenar los inmuebles para que los disponibles salgan primero
         inmueblesList.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 
+        // Generar el HTML de las tarjetas
         let tarjetasInmueblesHtml = "";
         if (inmueblesList.length === 0) {
             tarjetasInmueblesHtml = `<p class="text-gray-500 text-center py-8">No hay inmuebles registrados.</p>`;
@@ -116,9 +163,22 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                                     <span class="text-xs text-gray-500 ml-1">/mes</span>
                                 </div>
                                 
+                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    <span class="text-sm font-medium">
+        ${
+            inmueble.inquilinoActual
+                ? `<button onclick="mostrarTarjetaInquilino('${inmueble.inquilinoActual.id}')" class="text-indigo-600 hover:underline font-semibold">${inmueble.inquilinoActual.nombre}</button>`
+                : '<span class="text-gray-400 italic">Sin inquilino actual</span>'
+        }
+    </span>
+</div>
+
                                 ${inmueble.numeroCFE ? `
                                 <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                     <span class="text-sm font-medium">CFE: ${inmueble.numeroCFE}</span>
@@ -333,8 +393,8 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label for="nombre" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
                             Nombre/Identificador
                         </label>
@@ -345,8 +405,8 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                     </div>
                     <div class="space-y-2">
                         <label for="tipo" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             Tipo de Inmueble
                         </label>
@@ -366,8 +426,8 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
             <!-- Ubicación -->
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     Ubicación
@@ -375,8 +435,8 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                 <div class="space-y-4">
                     <div>
                         <label for="direccion" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             Dirección Completa
@@ -390,8 +450,8 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="latitud" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                                 </svg>
                                 Latitud
                             </label>
@@ -402,8 +462,8 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                         </div>
                         <div>
                             <label for="longitud" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                                 </svg>
                                 Longitud
                             </label>
@@ -438,8 +498,8 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label for="rentaMensual" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Renta Mensual
                         </label>
@@ -455,7 +515,7 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                     </div>
                     <div class="space-y-2">
                         <label for="estado" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Estado del Inmueble
@@ -483,16 +543,16 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
             <!-- Servicios -->
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     Servicios
                 </h4>
                 <div class="space-y-4">
                     <div>
                         <label for="numeroCFE" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                             Número de Servicio CFE
                         </label>
@@ -513,14 +573,14 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
             <!-- Documentación -->
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Documentación
                 </h4>
                 <div class="space-y-2">
                     <label for="urlContrato" class="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                         URL del Contrato
@@ -531,7 +591,7 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                         placeholder="Ej: https://drive.google.com/file/...">
                     <p class="mt-1 text-xs text-gray-500 flex items-center gap-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 12h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.
                     </p>
@@ -764,18 +824,14 @@ function mostrarFormularioUbicacionManual() {
                 </div>
             </div>
             
-            <div class="flex justify-between mt-6 pt-4 border-t border-gray-200">
-                <button type="button" onclick="ocultarModal()" 
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
-                    Cancelar
-                </button>
-                
-                <button id="btnGuardarUbicacionManual" 
-                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
+            <div class="flex justify-center">
+                <button type="button" id="btnObtenerUbicacion" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    Guardar Ubicación
+                    Obtener Mi Ubicación Actual
                 </button>
             </div>
         </div>
@@ -818,7 +874,7 @@ function mostrarFormularioUbicacionManual() {
 }
 
 /**
- * Muestra un formulario para añadir coordenadas a un inmueble
+ * Muestra un formulario para añadir coordenas a un inmueble
  * @param {string} inmuebleId - ID del inmueble
  * @param {Object} inmueble - Datos del inmueble
  */
@@ -831,27 +887,19 @@ export async function mostrarFormularioUbicacion(inmuebleId, inmueble) {
         
         <form id="formUbicacion" class="space-y-6">
             <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
-                <div class="flex items-center gap-2 text-yellow-700 mb-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p class="font-medium">Inmueble: ${inmueble.nombre}</p>
-                </div>
-                <p class="text-sm text-yellow-600">Para compartir la ubicación, necesitas añadir las coordenadas geográficas.</p>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="latitudForm" class="block text-sm font-medium text-gray-700">Latitud</label>
-                    <input type="text" id="latitudForm" name="latitud" 
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
-                        placeholder="Ej: 19.4326" required>
-                </div>
-                <div>
-                    <label for="longitudForm" class="block text-sm font-medium text-gray-700">Longitud</label>
-                    <input type="text" id="longitudForm" name="longitud" 
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div class="flex-1">
+                        <label for="latitud" class="block text-sm font-medium text-gray-700">Latitud</label>
+                        <input type="text" id="latitud" name="latitud" 
+                            class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" 
+                            placeholder="Ej: 19.4326" required>
+                    </div>
+                    <div class="flex-1">
+                        <label for="longitud" class="block text-sm font-medium text-gray-700">Longitud</label>
+                        <input type="text" id="longitud" name="longitud" 
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
                         placeholder="Ej: -99.1332" required>
+                    </div>
                 </div>
             </div>
             
@@ -1034,269 +1082,6 @@ function mostrarFormularioUbicacionManualParaForm(inmuebleId) {
     });
 }
 
-// Hacer las funciones disponibles globalmente
-window.mostrarMapaInmueble = mostrarMapaInmueble;
-window.mostrarFormularioUbicacion = mostrarFormularioUbicacion;
-window.mostrarFormularioUbicacionManual = mostrarFormularioUbicacionManual;
-window.mostrarFormularioUbicacionManualParaForm = mostrarFormularioUbicacionManualParaForm;
-
-/**
- * Muestra el historial de inquilinos de un inmueble en un modal.
- * @param {string} inmuebleId - ID del inmueble.
- * @param {string} inmuebleNombre - Nombre del inmueble.
- */
-/**
- * Comparte la ubicación de un inmueble
- * @param {string|number} latitud - Latitud del inmueble
- * @param {string|number} longitud - Longitud del inmueble
- * @param {string} nombre - Nombre del inmueble
- */
-export function compartirUbicacion(latitud, longitud, nombre) {
-    try {
-        // Validar que las coordenadas sean números válidos
-        const lat = parseFloat(latitud);
-        const lng = parseFloat(longitud);
-        
-        if (isNaN(lat) || isNaN(lng)) {
-            throw new Error("Coordenadas inválidas");
-        }
-        
-        // Crear URL de Google Maps
-        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        
-        // Usar directamente el método alternativo de compartir
-        copiarAlPortapapeles(mapsUrl);
-        mostrarOpcionesCompartir(mapsUrl, nombre);
-    } catch (error) {
-        console.error("Error al compartir ubicación:", error);
-        mostrarNotificacion("Error al compartir: " + error.message, "error");
-    }
-}
-
-/**
- * Copia un texto al portapapeles
- * @param {string} texto - Texto a copiar
- */
-function copiarAlPortapapeles(texto) {
-    // Usar la API moderna del portapapeles si está disponible
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(texto)
-            .then(() => {
-                mostrarNotificacion("URL de ubicación copiada al portapapeles", "success");
-            })
-            .catch(err => {
-                console.error("Error al copiar con Clipboard API:", err);
-                copiarAlPortapapelesLegacy(texto);
-            });
-    } else {
-        // Método alternativo para navegadores que no soportan Clipboard API
-        copiarAlPortapapelesLegacy(texto);
-    }
-}
-
-/**
- * Método alternativo para copiar al portapapeles
- * @param {string} texto - Texto a copiar
- */
-function copiarAlPortapapelesLegacy(texto) {
-    // Crear un elemento temporal
-    const input = document.createElement('input');
-    input.value = texto;
-    input.style.position = 'fixed';
-    input.style.opacity = '0';
-    document.body.appendChild(input);
-    input.select();
-    
-    try {
-        // Ejecutar el comando de copia
-        const exito = document.execCommand('copy');
-        if (exito) {
-            mostrarNotificacion("URL de ubicación copiada al portapapeles", "success");
-        } else {
-            throw new Error("No se pudo copiar");
-        }
-    } catch (err) {
-        console.error("Error al copiar:", err);
-        mostrarNotificacion("No se pudo copiar la URL. " + texto, "info", 5000);
-    }
-    
-    // Eliminar el elemento temporal
-    document.body.removeChild(input);
-}
-
-/**
- * Muestra opciones alternativas para compartir cuando la API Web Share no está disponible
- * @param {string} url - URL a compartir
- * @param {string} nombre - Nombre del inmueble
- */
-function mostrarOpcionesCompartir(url, nombre) {
-    const modalContent = `
-        <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-xl font-bold text-center">Compartir Ubicación</h3>
-            <p class="text-center text-blue-100 text-sm">Ubicación de ${nombre}</p>
-        </div>
-        
-        <div class="mb-4">
-            <p class="text-gray-700 mb-2">La URL de la ubicación ha sido copiada al portapapeles. También puedes:</p>
-            
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <div class="w-full overflow-hidden">
-                        <input type="text" value="${url}" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm overflow-ellipsis">
-                    </div>
-                    <button id="btnCopiarURL" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg whitespace-nowrap">
-                        Copiar
-                    </button>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-3">
-                <a href="https://wa.me/?text=${encodeURIComponent(`Ubicación de ${nombre}: ${url}`)}" target="_blank" 
-                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg text-center flex items-center justify-center gap-2 text-base font-medium">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                    WhatsApp
-                </a>
-                <a href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(`Ubicación de ${nombre}`)}" target="_blank" 
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg text-center flex items-center justify-center gap-2 text-base font-medium">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                    </svg>
-                    Telegram
-                </a>
-            </div>
-        </div>
-        
-        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
-            <button onclick="ocultarModal()" 
-                class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-colors duration-200">
-                Cerrar
-            </button>
-        </div>
-    `;
-    
-    mostrarModal(modalContent);
-    
-    // Evento para el botón de copiar
-    document.getElementById('btnCopiarURL').addEventListener('click', () => {
-        copiarAlPortapapeles(url);
-    });
-}
-
-// Hacer la función disponible globalmente
-window.compartirUbicacion = compartirUbicacion;
-
-export async function mostrarHistorialInquilinosInmueble(inmuebleId, inmuebleNombre) {
-    try {
-        // Buscar todos los inquilinos que han estado asociados a este inmueble
-        const inquilinosSnap = await getDocs(query(
-            collection(db, "inquilinos"),
-            where("inmuebleId", "==", inmuebleId)
-        ));
-
-        let historial = [];
-        const hoy = new Date().toISOString().slice(0, 10);
-
-        inquilinosSnap.forEach(doc => {
-            const data = doc.data();
-            // Usa siempre fechaInicioContrato y fechaFinContrato si existen, si no, usa fechaDesocupacion
-            const fechaInicio = data.fechaInicioContrato || data.fechaInicio || '';
-            const fechaFin = data.fechaFinContrato || data.fechaDesocupacion || '';
-            // Considera actual si no hay fecha de fin o si la fecha de fin es en el futuro
-            const esActual = !fechaFin || fechaFin === '' || fechaFin === null || fechaFin >= hoy;
-            historial.push({
-                nombre: data.nombre,
-                fechaInicio,
-                fechaFin,
-                telefono: data.telefono || '',
-                correo: data.correo || '',
-                actual: esActual
-            });
-        });
-
-        // Ordenar por fecha de inicio descendente (más reciente primero)
-        historial.sort((a, b) => new Date(b.fechaInicio) - new Date(a.fechaInicio));
-
-        let tablaHtml = '';
-        if (historial.length === 0) {
-            tablaHtml = `
-                <div class="text-center py-8">
-                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <p class="text-gray-500 text-lg">Este inmueble no tiene historial de inquilinos.</p>
-                </div>`;
-        } else {
-            tablaHtml = `
-                <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mt-4">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-indigo-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Inquilino</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Fecha Inicio</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Fecha Fin</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Teléfono</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Correo</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-indigo-700 uppercase tracking-wider">Actual</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            ${historial.map(h => `
-                                <tr class="hover:bg-indigo-50 transition-colors duration-200">
-                                    <td class="px-4 py-3 text-sm text-gray-900">${h.nombre}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900">${h.fechaInicio || '-'}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900">${h.fechaFin || '-'}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900">${h.telefono || '-'}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900">${h.correo || '-'}</td>
-                                    <td class="px-4 py-3 text-center">
-                                        ${h.actual ? 
-                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actual</span>' : 
-                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Anterior</span>'
-                                        }
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        mostrarModal(`
-            <div class="bg-gradient-to-br from-cyan-600 via-cyan-700 to-cyan-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
-                <div class="px-6 py-4">
-                    <div class="flex items-center justify-center gap-3">
-                        <svg class="w-8 h-8 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <div>
-                            <h3 class="text-2xl font-bold text-center">Historial de Inquilinos</h3>
-                            <p class="text-center text-cyan-100 mt-1">${inmuebleNombre}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            ${tablaHtml}
-            <div class="flex justify-end mt-6">
-                <button onclick="ocultarModal()" 
-                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Cerrar
-                </button>
-            </div>
-        `);
-
-    } catch (error) {
-        console.error("Error al obtener historial de inquilinos:", error);
-        mostrarNotificacion("Error al cargar el historial de inquilinos.", 'error');
-    }
-}
-
-window.mostrarHistorialInquilinosInmueble = mostrarHistorialInquilinosInmueble;
-
 /**
  * Función para eliminar un documento de Firestore.
  * @param {string} coleccion - Nombre de la colección.
@@ -1339,7 +1124,7 @@ export async function eliminarDocumento(coleccion, id, callback, callbackDashboa
     }
 }
 
-window.mostrarFormularioNuevoPropietario = async function() {
+window.mostrarPropietarios = async function() {
     try {
         // Obtener lista de propietarios
         const propietariosSnap = await getDocs(collection(db, "propietarios"));
@@ -1430,7 +1215,7 @@ window.mostrarFormularioNuevoPropietario = async function() {
                 <div class="px-6 py-4">
                     <div class="flex items-center justify-center gap-3">
                         <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         <div>
                             <h3 class="text-2xl font-bold text-center">Propietarios</h3>
@@ -1445,7 +1230,7 @@ window.mostrarFormularioNuevoPropietario = async function() {
                 <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         Lista de Propietarios
                     </h4>
@@ -1455,7 +1240,7 @@ window.mostrarFormularioNuevoPropietario = async function() {
                 <!-- Formulario de Registro -->
                 <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         Registrar Nuevo Propietario
@@ -1618,7 +1403,6 @@ export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmueble
                 <div class="text-center py-8">
                     <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <p class="text-gray-500 text-lg">Este inmueble no tiene historial de mantenimientos.</p>
                 </div>`;
@@ -1701,10 +1485,165 @@ export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmueble
     }
 }
 
-window.mostrarHistorialMantenimientoInmueble = mostrarHistorialMantenimientoInmueble;
+window.mostrarTarjetaInquilino = async function(id) {
+    try {
+        const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js");
+        const { db } = await import('./firebaseConfig.js');
+        const docSnap = await getDoc(doc(db, "inquilinos", id));
+        if (!docSnap.exists()) {
+            mostrarNotificacion("Inquilino no encontrado", "error");
+            return;
+        }
+        const inquilino = docSnap.data();
 
-// Hacer las funciones disponibles globalmente
-window.mostrarPropietarios = mostrarPropietarios;
-window.editarPropietario = editarPropietario;
-window.eliminarPropietario = eliminarPropietario;
+        // Obtener nombre del inmueble relacionado
+        let nombreInmueble = '';
+        if (inquilino.inmuebleAsociadoId) {
+            const inmuebleSnap = await getDoc(doc(db, "inmuebles", inquilino.inmuebleAsociadoId));
+            if (inmuebleSnap.exists()) {
+                const inmueble = inmuebleSnap.data();
+                nombreInmueble = inmueble.nombre || '';
+            }
+        }
+
+        // Servicios
+        let serviciosHtml = '';
+        if (inquilino.pagaServicios && inquilino.servicios && Array.isArray(inquilino.servicios) && inquilino.servicios.length > 0) {
+            serviciosHtml = `
+                <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-medium">Servicios:</span>
+                        ${inquilino.servicios.map(servicio => 
+                            `<span class="text-xs text-gray-600">${servicio.tipo}: $${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        } else if (inquilino.pagaServicios && inquilino.tipoServicio && inquilino.montoServicio) {
+            serviciosHtml = `
+                <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span class="text-sm font-medium">Servicio: ${inquilino.tipoServicio} - $${parseFloat(inquilino.montoServicio).toFixed(2)}/mes</span>
+                </div>
+            `;
+        }
+
+        // Depósito
+        let depositoHtml = '';
+        if (inquilino.depositoRecibido && inquilino.montoDeposito && inquilino.fechaDeposito) {
+            depositoHtml = `
+                <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-sm font-medium">Depósito: $${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
+                </div>
+            `;
+        }
+
+        // Identificación
+        let identificacionHtml = '';
+        if (inquilino.urlIdentificacion) {
+            identificacionHtml = `
+                <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Identificación</a>
+                </div>
+            `;
+        }
+
+        // Contrato
+        let contratoHtml = '';
+        if (inquilino.urlContrato) {
+            contratoHtml = `
+                <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <a href="${inquilino.urlContrato}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Contrato</a>
+                </div>
+            `;
+        }
+
+        // Tarjeta completa
+        mostrarModal(`
+            <div class="bg-white rounded-xl shadow-lg border-l-4 ${inquilino.activo ? 'border-green-500' : 'border-red-500'} overflow-hidden">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">${inquilino.nombre}</h3>
+                            <span class="text-sm font-medium text-gray-600">${inquilino.telefono || ''}</span>
+                        </div>
+                        <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${inquilino.activo ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}" />
+                        </svg>
+                            ${inquilino.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        ${nombreInmueble ? `
+                        <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span class="text-sm font-medium">Inmueble: ${nombreInmueble}</span>
+                        </div>
+                        ` : ''}
+                        <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span class="text-sm font-medium">${inquilino.direccion || '-'}</span>
+                        </div>
+                        ${inquilino.fechaInicioContrato ? `
+                        <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span class="text-sm font-medium">Contrato: ${inquilino.fechaInicioContrato} a ${inquilino.fechaFinContrato || '-'}</span>
+                        </div>
+                        ` : ''}
+                        ${inquilino.correo ? `
+                        <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12H8m8 0a4 4 0 11-8 0 4 4 0 018 0zm0 0v1a4 4 0 01-8 0v-1" />
+                            </svg>
+                            <span class="text-sm font-medium">${inquilino.correo}</span>
+                        </div>
+                        ` : ''}
+                        ${serviciosHtml}
+                        ${depositoHtml}
+                        ${identificacionHtml}
+                        ${contratoHtml}
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+                        <button onclick="editarInquilino('${id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow transition-all duration-200">Editar</button>
+                        <button onclick="mostrarHistorialPagosInquilino('${id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow transition-all duration-200">Pagos</button>
+                        <button onclick="mostrarMobiliarioAsignadoInquilino('${id}', '${inquilino.nombre}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow transition-all duration-200">Mobiliario</button>
+                        <button onclick="confirmarDesocupacionInquilino('${id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow transition-all duration-200">Desocupar</button>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        `);
+    } catch (error) {
+        mostrarNotificacion("Error al cargar el inquilino.", "error");
+    }
+};
 

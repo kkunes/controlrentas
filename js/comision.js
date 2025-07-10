@@ -55,7 +55,8 @@ async function obtenerPagosRentaComisiones() {
             pagos.push({
                 id: docSnap.id,
                 monto: montoTotal,
-                fechaPago: fechaPago
+                fechaPago: fechaPago,
+                inmuebleId: data.inmuebleId || null // <-- asegúrate de incluir esto
             });
             // Depuración: muestra el pago que sí se va a mostrar
             console.log('Pago válido para mostrar:', {
@@ -164,6 +165,16 @@ export async function renderComisiones() {
         return;
     }
 
+    // Obtén la lista global de inmuebles ocupados antes del bucle
+    const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+    const inmueblesOcupadosGlobal = [];
+    inmueblesSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.estado === "Ocupado") {
+            inmueblesOcupadosGlobal.push({ id: doc.id, nombre: data.nombre });
+        }
+    });
+
     mesesFiltrados.sort().forEach(mes => {
         const pagos = pagosPorMes[mes];
         const totalRentas = pagos.reduce((sum, p) => sum + p.monto, 0);
@@ -172,6 +183,44 @@ export async function renderComisiones() {
         const comisionMes = comisionesEstado[mes];
         const cobrado = comisionMes?.cobrado === true;
         const fechaCobro = comisionMes?.fechaCobro ? new Date(comisionMes.fechaCobro).toLocaleString('es-MX') : '';
+
+        // --- NUEVO: Verifica si hay inmuebles ocupados sin pago ---
+        let faltanPagos = false;
+        let faltantesNombres = [];
+        // Esta parte debe ser async, así que lo hacemos antes del bucle o con una promesa, pero para mantenerlo simple:
+        // (esto es síncrono porque ya tienes los datos en pagosPorMes y puedes traer los inmuebles ocupados antes del bucle)
+        // Supón que tienes inmueblesOcupados y pagosInmuebleIds disponibles aquí:
+        // (Si no, deberás traerlos antes del bucle y pasarlos aquí)
+        // Por ejemplo:
+        // const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        // const inmueblesOcupados = [];
+        // inmueblesSnap.forEach(doc => {
+        //     const data = doc.data();
+        //     if (data.estado === "Ocupado") {
+        //         inmueblesOcupados.push({ id: doc.id, nombre: data.nombre });
+        //     }
+        // });
+        // const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
+        // const faltantes = inmueblesOcupados.filter(inm => !pagosInmuebleIds.includes(inm.id));
+        // faltanPagos = faltantes.length > 0;
+        // faltantesNombres = faltantes.map(f => f.nombre);
+
+        // Para hacerlo en el contexto actual, agrega arriba del bucle:
+        // (esto es solo una vez, fuera del bucle)
+        // const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        // const inmueblesOcupadosGlobal = [];
+        // inmueblesSnap.forEach(doc => {
+        //     const data = doc.data();
+        //     if (data.estado === "Ocupado") {
+        //         inmueblesOcupadosGlobal.push({ id: doc.id, nombre: data.nombre });
+        //     }
+        // });
+
+        // Y dentro del bucle:
+        const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
+        const faltantes = inmueblesOcupadosGlobal.filter(inm => !pagosInmuebleIds.includes(inm.id));
+        faltanPagos = faltantes.length > 0;
+        faltantesNombres = faltantes.map(f => f.nombre);
 
         html += `
         <div class="mb-8 bg-white rounded-xl shadow-lg p-6 transition hover:shadow-2xl">
@@ -196,16 +245,28 @@ export async function renderComisiones() {
                     ${cobrado ? 'Cobrado' : 'No cobrado'}
                 </span>
                 <button class="marcar-cobrado ml-2 px-3 py-1 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold transition"
-                    data-mes="${mes}" data-cobrado="${cobrado}">
+                    data-mes="${mes}" data-cobrado="${cobrado}" ${faltanPagos ? 'disabled title="No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado."' : ''}>
                     ${cobrado ? 'Desmarcar' : 'Marcar cobrado'}
                 </button>
+                ${faltanPagos ? `
+    <span 
+        class="ml-4 px-3 py-1.5 rounded-lg bg-red-100 border border-red-400 text-red-800 text-sm font-bold flex items-center gap-2 animate-pulse shadow"
+        title="Faltan pagos de: ${faltantesNombres.join(', ')}"
+        style="display:inline-flex;"
+    >
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        ¡Faltan pagos!
+    </span>
+` : ''}
                 ${cobrado && fechaCobro ? `<span class="ml-2 text-xs text-gray-500">(${fechaCobro})</span>` : ''}
             </div>
             <div class="mb-2">
                 <span class="font-medium text-gray-700">Pagos incluidos:</span>
-                <ul class="list-disc ml-8 mt-2 text-gray-600">
-                    ${pagos.map(p => `<li class="mb-1">${new Date(p.fechaPago).toLocaleDateString('es-MX')} - <span class="font-semibold">$${p.monto.toFixed(2)}</span></li>`).join('')}
-                </ul>
+                <button class="ml-2 px-2 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold transition btn-ver-pagos" data-mes="${mes}">Ver detalles</button>
+                <button class="ml-2 px-2 py-1 rounded bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-xs font-semibold transition btn-ver-faltantes" data-mes="${mes}">Ver inmuebles sin pago</button>
+
             </div>
         </div>
         `;
@@ -230,7 +291,11 @@ export async function renderComisiones() {
 
     // 6. Asigna eventos a los botones de cobrado
     document.querySelectorAll('.marcar-cobrado').forEach(btn => {
-        btn.addEventListener('click', async function() {
+        btn.addEventListener('click', async function(e) {
+            if (this.disabled) {
+                mostrarNotificacion("No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado.", "warning");
+                return;
+            }
             const mes = this.getAttribute('data-mes');
             const cobradoActual = this.getAttribute('data-cobrado') === 'true';
             const pagos = pagosPorMes[mes];
@@ -256,6 +321,114 @@ export async function renderComisiones() {
                 }, { merge: true });
             }
             renderComisiones();
+        });
+    });
+
+    document.querySelectorAll('.btn-ver-pagos').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const mes = this.getAttribute('data-mes');
+            const pagos = pagosPorMes[mes];
+
+            // Trae todos los inmuebles para mapear id -> nombre
+            const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+            const inmueblesMap = {};
+            inmueblesSnap.forEach(doc => {
+                const data = doc.data();
+                inmueblesMap[doc.id] = data.nombre || '';
+            });
+
+            let tabla = `
+                <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+                    <h3 class="text-xl font-bold text-center">Pagos incluidos</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 mb-4">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Inmueble</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${pagos.map(p => `
+                                <tr>
+                                    <td class="px-4 py-2">${new Date(p.fechaPago).toLocaleDateString('es-MX')}</td>
+                                    <td class="px-4 py-2">$${p.monto.toFixed(2)}</td>
+                                    <td class="px-4 py-2">${inmueblesMap[p.inmuebleId] || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cerrar
+                    </button>
+                </div>
+            `;
+            mostrarModal(tabla);
+        });
+    });
+
+    document.querySelectorAll('.btn-ver-faltantes').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const mes = this.getAttribute('data-mes');
+            const [anio, mesNum] = mes.split('-');
+            // 1. Trae todos los inmuebles ocupados
+            const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+            const inmueblesOcupados = [];
+            inmueblesSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.estado === "Ocupado") {
+                    inmueblesOcupados.push({ id: doc.id, nombre: data.nombre });
+                }
+            });
+            // 2. Obtén los pagos de ese mes
+            const pagos = pagosPorMes[mes] || [];
+            const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
+
+            // 3. Filtra los inmuebles ocupados que no tienen pago ese mes
+            const faltantes = inmueblesOcupados.filter(inm => !pagosInmuebleIds.includes(inm.id));
+
+            let tabla = `
+                <div class="px-4 py-3 bg-yellow-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow flex flex-col items-center">
+                    <h3 class="text-xl font-bold text-center mb-1">Inmuebles ocupados sin pago en el mes</h3>
+                    <div class="flex items-center gap-2 mt-1 mb-2">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-yellow-600 font-extrabold text-lg shadow">${faltantes.length}</span>
+                        <span class="text-sm text-yellow-100 font-medium">sin pago</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    ${
+                        faltantes.length > 0
+                        ? `<ul class="divide-y divide-yellow-100 bg-yellow-50 rounded-lg shadow p-4">
+                            ${faltantes.map(inm => `
+                                <li class="flex items-center gap-3 py-2">
+                                    <svg class="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span class="font-medium text-yellow-900">${inm.nombre}</span>
+                                </li>
+                            `).join('')}
+                        </ul>`
+                        : `<div class="p-6 text-center text-green-700 font-semibold bg-green-50 rounded-lg shadow">Todos los inmuebles ocupados tienen pago registrado.</div>`
+                    }
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cerrar
+                    </button>
+                </div>
+            `;
+            mostrarModal(tabla);
         });
     });
 }

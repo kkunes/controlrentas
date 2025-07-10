@@ -76,19 +76,20 @@ export async function mostrarDashboard() {
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
         totalInmuebles = inmueblesSnap.size;
 
-        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
-        const inmueblesOcupadosSet = new Set(); // Usaremos un Set para evitar duplicados de inmuebles ocupados
+        let inmueblesOcupados = 0;
+        let inmueblesDisponibles = 0;
 
-        inquilinosSnap.forEach(doc => {
-            const inquilino = doc.data();
-            if (inquilino.inmuebleId) { // Si el inquilino está asociado a un inmueble
-                inmueblesOcupadosSet.add(inquilino.inmuebleId);
+        inmueblesSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.estado === "Ocupado") {
+                inmueblesOcupados++;
+            } else if (data.estado === "Disponible") {
+                inmueblesDisponibles++;
             }
         });
-        inmueblesOcupados = inmueblesOcupadosSet.size;
-        inmueblesDisponibles = totalInmuebles - inmueblesOcupados;
 
         // Conteo de Inquilinos
+        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         totalInquilinos = inquilinosSnap.size; // Esto sigue siendo el total de inquilinos, no de inmuebles ocupados.
 
         // Crear un mapa de inmuebles para búsqueda rápida
