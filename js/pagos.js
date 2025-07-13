@@ -230,21 +230,33 @@ export async function mostrarPagos(mostrarTabla = false) {
                 }
                 
                 // Calcular total de mobiliario
-                let mobiliarioTotal = 0;
-                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-                    pago.mobiliarioPagado.forEach(item => {
-                        mobiliarioTotal += item.costo || 0;
-                    });
-                }
-                
-                // Determinar si hay mobiliario pendiente
-                let mobiliarioHtml = '';
-                if (mobiliarioTotal > 0) {
-                    mobiliarioHtml = `${mobiliarioTotal.toFixed(2)}`;
-                } else {
-                    // Siempre mostrar "Pendiente" cuando no hay mobiliario pagado
-                    mobiliarioHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
-                }
+let mobiliarioTotal = 0;
+if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+    pago.mobiliarioPagado.forEach(item => {
+        mobiliarioTotal += item.costo || 0;
+    });
+}
+
+// Determinar si hay mobiliario pendiente
+let mobiliarioHtml = '';
+if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+    let mobiliarioTotal = 0;
+    pago.mobiliarioPagado.forEach(item => {
+        mobiliarioTotal += item.costo || 0;
+    });
+    mobiliarioHtml = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Pagado
+        </span>
+        <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
+    `;
+} else {
+    mobiliarioHtml = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            Pendiente
+        </span>
+    `;
+}
 
 
                 tablaFilas += `
@@ -634,13 +646,25 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                     }
                     
                     // Determinar si hay mobiliario pendiente
-                    let mobiliarioHtml = '';
-                    if (mobiliarioTotal > 0) {
-                        mobiliarioHtml = `${mobiliarioTotal.toFixed(2)}`;
-                    } else {
-                        // Siempre mostrar "Pendiente" cuando no hay mobiliario pagado
-                        mobiliarioHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
-                    }
+                  let mobiliarioHtml = '';
+if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+    let mobiliarioTotal = 0;
+    pago.mobiliarioPagado.forEach(item => {
+        mobiliarioTotal += item.costo || 0;
+    });
+    mobiliarioHtml = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Pagado
+        </span>
+        <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
+    `;
+} else {
+    mobiliarioHtml = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            Pendiente
+        </span>
+    `;
+}
 
 
                     tablaFilas += `
@@ -2489,35 +2513,24 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                 
                 // Verificar mobiliario pagado
                 let mobiliarioHtml = '';
-                
-                // Calcular total de mobiliario
-                let mobiliarioTotal = 0;
-                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-                    pago.mobiliarioPagado.forEach(item => {
-                        mobiliarioTotal += item.costo || 0;
-                    });
-                    
-                    if (mobiliarioTotal > 0) {
-                        mobiliarioHtml = `
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Pagado
-                            </span>
-                            <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
-                        `;
-                    } else {
-                        mobiliarioHtml = `
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Pendiente
-                            </span>
-                        `;
-                    }
-                } else {
-                    mobiliarioHtml = `
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Pendiente
-                        </span>
-                    `;
-                }
+if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+    let mobiliarioTotal = 0;
+    pago.mobiliarioPagado.forEach(item => {
+        mobiliarioTotal += item.costo || 0;
+    });
+    mobiliarioHtml = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Pagado
+        </span>
+        <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
+    `;
+} else {
+    mobiliarioHtml = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            Pendiente
+        </span>
+    `;
+}
 
                 // Resaltar el mes actual
                 const esMesActual = pago.mesCorrespondiente === mesActualNombre && pago.anioCorrespondiente === anioActual;
@@ -2965,14 +2978,18 @@ function generarMobiliarioHtml(pago) {
         pago.mobiliarioPagado.forEach(item => {
             mobiliarioTotal += item.costo || 0;
         });
-        
-        if (mobiliarioTotal > 0) {
-            return `${mobiliarioTotal.toFixed(2)}`;
+        // Mostrar "Pagado" si hay elementos en el array, aunque el total sea 0
+        if (pago.mobiliarioPagado.length > 0) {
+            return `
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Pagado
+                </span>
+                <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
+            `;
         }
     }
-    
     // Si no hay mobiliario pagado, mostrar pendiente
-    return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
 }
 
 /**
