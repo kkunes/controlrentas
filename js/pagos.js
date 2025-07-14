@@ -515,7 +515,7 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
         document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
             button.addEventListener('click', (e) => {
                 const pagoId = e.currentTarget.dataset.pagoId;
-                generarReciboPDF(pagoId);
+                seleccionarFirmaYGenerarRecibo(pagoId);
             });
         });
 
@@ -762,7 +762,7 @@ document.querySelectorAll('.btn-gestionar-servicios').forEach(button => {
 document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
     button.addEventListener('click', (e) => {
         const pagoId = e.currentTarget.dataset.pagoId;
-        generarReciboPDF(pagoId);
+        seleccionarFirmaYGenerarRecibo(pagoId);
     });
 });
 document.querySelectorAll('.btn-gestionar-mobiliario').forEach(button => {

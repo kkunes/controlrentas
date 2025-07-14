@@ -1,8 +1,57 @@
 import { db } from './firebaseConfig.js';
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
+
+
+window.seleccionarFirmaYGenerarRecibo = function (pagoId) {
+    const modalHtml = `
+        <div class="p-6">
+            <h3 class="text-xl font-semibold mb-4 text-center text-gray-700">Selecciona una firma para el recibo</h3>
+            <div class="flex flex-col items-center gap-6">
+                <div class="flex gap-4">
+                    <button class="firma-option" data-firma="firmaCarlos.png">
+                        <img src="./img/firmaCarlos.png" alt="Firma Carlos" class="h-20 border rounded shadow hover:ring-2 ring-blue-500">
+                        <p class="mt-2 text-sm text-center text-gray-600">Carlos</p>
+                    </button>
+                    <button class="firma-option" data-firma="firmaKarla.png">
+                        <img src="./img/firmaKarla.png" alt="Firma Karla" class="h-20 border rounded shadow hover:ring-2 ring-blue-500">
+                        <p class="mt-2 text-sm text-center text-gray-600">Karla</p>
+                    </button>
+                </div>
+                <button class="mt-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-medium firma-option" data-firma="">Usar sin firma</button>
+            </div>
+        </div>
+    `;
+
+    const modalContenedor = document.createElement('div');
+    modalContenedor.id = 'modalFirma';
+    modalContenedor.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
+    modalContenedor.innerHTML = `
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md relative animate-fade-in">
+            <button id="cerrarModalFirma" class="absolute top-3 right-3 text-gray-600 hover:text-black text-xl">×</button>
+            ${modalHtml}
+        </div>
+    `;
+    document.body.appendChild(modalContenedor);
+
+    document.getElementById('cerrarModalFirma').addEventListener('click', () => {
+        document.body.removeChild(modalContenedor);
+    });
+
+    document.querySelectorAll('.firma-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const firma = btn.getAttribute('data-firma');
+            document.body.removeChild(modalContenedor);
+            generarReciboPDF(pagoId, firma);
+        });
+    });
+};
+
+
+
+
 // Asegúrate de que jsPDF esté disponible globalmente (inclúyelo en tu index.html)
-export async function generarReciboPDF(pagoId) {
+export async function generarReciboPDF(pagoId, firma = '') {
     const { jsPDF } = window.jspdf;
 
     // --- Datos ---
@@ -152,62 +201,136 @@ export async function generarReciboPDF(pagoId) {
     pdf.setTextColor(55, 65, 81);
     pdf.text("Firma", xIzq + 45, yIzq + 5, { align: "center" });
 
-    // Mensaje de agradecimiento
-    yIzq += 15;
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.setTextColor(37, 99, 235);
-    pdf.text("¡Gracias por su pago!", xIzq + 45, yIzq, { align: "center" });
+     // --- AGREGAR FIRMA COMO IMAGEN SOLO SI SE SELECCIONÓ ---
+    if (firma) {
+        const firmaImg = new Image();
+        firmaImg.src = './img/' + firma;
 
-    // --- Columna derecha: Detalle del Pago ---
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(37, 99, 235);
-    pdf.text("Detalle del Pago", xDer, yDer);
+        firmaImg.onload = () => {
+            // Agregar imagen encima de la línea de firma
+            pdf.addImage(firmaImg, 'PNG', xIzq + 20, yIzq - 20, 40, 20); 
+            // x, y, width, height
 
-    yDer += 7;
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(55, 65, 81);
-    pdf.text(`Mes:`, xDer, yDer);
-    pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
-    yDer += 6;
-    // Calcular el monto total sumando servicios pagados
-    let montoTotal = pago.montoTotal || 0;
-    if (pago.serviciosPagados) {
-        if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
-            montoTotal += pago.serviciosPagados.internetMonto;
-        }
-        if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
-            montoTotal += pago.serviciosPagados.aguaMonto;
-        }
-        if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
-            montoTotal += pago.serviciosPagados.luzMonto;
-        }
+            // Mensaje de agradecimiento
+            yIzq += 15;
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(37, 99, 235);
+            pdf.text("¡Gracias por su pago!", xIzq + 45, yIzq, { align: "center" });
+
+            // --- Columna derecha: Detalle del Pago ---
+            pdf.setFont("helvetica", "bold");
+            pdf.setTextColor(37, 99, 235);
+            pdf.text("Detalle del Pago", xDer, yDer);
+
+            yDer += 7;
+            pdf.setFont("helvetica", "normal");
+            pdf.setTextColor(55, 65, 81);
+            pdf.text(`Mes:`, xDer, yDer);
+            pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
+            yDer += 6;
+            // Calcular el monto total sumando servicios pagados
+            let montoTotal = pago.montoTotal || 0;
+            if (pago.serviciosPagados) {
+                if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
+                    montoTotal += pago.serviciosPagados.internetMonto;
+                }
+                if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
+                    montoTotal += pago.serviciosPagados.aguaMonto;
+                }
+                if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
+                    montoTotal += pago.serviciosPagados.luzMonto;
+                }
+            }
+            pdf.text(`Monto total:`, xDer, yDer);
+            pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
+            yDer += 6;
+            pdf.text(`Monto pagado:`, xDer, yDer);
+            pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
+            yDer += 6;
+            pdf.text(`Saldo pendiente:`, xDer, yDer);
+            pdf.text(`$${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
+            yDer += 6;
+            pdf.text(`Fecha de pago:`, xDer, yDer);
+            pdf.text(`${pago.fechaPago || pago.fechaRegistro || ''}`, xDer + 35, yDer);
+            yDer += 6;
+            pdf.text(`Estado:`, xDer, yDer);
+            pdf.text(`${pago.estado}`, xDer + 35, yDer);
+            yDer += 6;
+            pdf.text(`Periodo:`, xDer, yDer);
+            // Ajusta el periodo para que no se corte
+            let periodoLineas = pdf.splitTextToSize(periodoTexto || 'N/A', 60);
+            pdf.text(periodoLineas, xDer + 35, yDer);
+            yDer += 6 * periodoLineas.length;
+
+            // --- Descargar PDF ---
+            // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
+            const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
+            pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
+        };
+    } else {
+        // Si no hay firma, solo finaliza y descarga el PDF
+        finalizarPDF();
     }
-    pdf.text(`Monto total:`, xDer, yDer);
-    pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
-    yDer += 6;
-    pdf.text(`Monto pagado:`, xDer, yDer);
-    pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
-    yDer += 6;
-    pdf.text(`Saldo pendiente:`, xDer, yDer);
-    pdf.text(`$${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
-    yDer += 6;
-    pdf.text(`Fecha de pago:`, xDer, yDer);
-    pdf.text(`${pago.fechaPago || pago.fechaRegistro || ''}`, xDer + 35, yDer);
-    yDer += 6;
-    pdf.text(`Estado:`, xDer, yDer);
-    pdf.text(`${pago.estado}`, xDer + 35, yDer);
-    yDer += 6;
-    pdf.text(`Periodo:`, xDer, yDer);
-    // Ajusta el periodo para que no se corte
-    let periodoLineas = pdf.splitTextToSize(periodoTexto || 'N/A', 60);
-    pdf.text(periodoLineas, xDer + 35, yDer);
-    yDer += 6 * periodoLineas.length;
 
-    // --- Descargar PDF ---
-    // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
-    const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
-    pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
+    function finalizarPDF() {
+        // Mensaje de agradecimiento
+        yIzq += 15;
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(12);
+        pdf.setTextColor(37, 99, 235);
+        pdf.text("¡Gracias por su pago!", xIzq + 45, yIzq, { align: "center" });
+
+        // --- Columna derecha: Detalle del Pago ---
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(37, 99, 235);
+        pdf.text("Detalle del Pago", xDer, yDer);
+
+        yDer += 7;
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(55, 65, 81);
+        pdf.text(`Mes:`, xDer, yDer);
+        pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
+        yDer += 6;
+        // Calcular el monto total sumando servicios pagados
+        let montoTotal = pago.montoTotal || 0;
+        if (pago.serviciosPagados) {
+            if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
+                montoTotal += pago.serviciosPagados.internetMonto;
+            }
+            if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
+                montoTotal += pago.serviciosPagados.aguaMonto;
+            }
+            if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
+                montoTotal += pago.serviciosPagados.luzMonto;
+            }
+        }
+        pdf.text(`Monto total:`, xDer, yDer);
+        pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
+        yDer += 6;
+        pdf.text(`Monto pagado:`, xDer, yDer);
+        pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
+        yDer += 6;
+        pdf.text(`Saldo pendiente:`, xDer, yDer);
+        pdf.text(`$${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
+        yDer += 6;
+        pdf.text(`Fecha de pago:`, xDer, yDer);
+        pdf.text(`${pago.fechaPago || pago.fechaRegistro || ''}`, xDer + 35, yDer);
+        yDer += 6;
+        pdf.text(`Estado:`, xDer, yDer);
+        pdf.text(`${pago.estado}`, xDer + 35, yDer);
+        yDer += 6;
+        pdf.text(`Periodo:`, xDer, yDer);
+        // Ajusta el periodo para que no se corte
+        let periodoLineas = pdf.splitTextToSize(periodoTexto || 'N/A', 60);
+        pdf.text(periodoLineas, xDer + 35, yDer);
+        yDer += 6 * periodoLineas.length;
+
+        // --- Descargar PDF ---
+        // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
+        const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
+        pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
+    }
 }
 
 window.generarReciboPDF = generarReciboPDF;
