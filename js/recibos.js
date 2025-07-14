@@ -122,155 +122,174 @@ export async function generarReciboPDF(pagoId, firma = '') {
     // --- Encabezado color ---
     pdf.setFillColor(37, 99, 235); // azul
     pdf.rect(0, 0, 215.9, 20, "F");
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    pdf.text("RECIBO DE PAGO DE RENTA", 108, 13, { align: "center" });
 
-    // --- Cuerpo del recibo ---
-    let y = 26;
-    pdf.setFontSize(11);
-    pdf.setTextColor(37, 99, 235);
-    pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 170, y);
+    // --- Icono de renta (casa) ---
+    const iconoImg = new Image();
+    iconoImg.src = './img/iconoRenta.png';
+    iconoImg.onload = () => {
+        pdf.addImage(iconoImg, 'PNG', 12, 4, 12, 12); // x, y, width, height
 
-    // --- Servicios pagados (arriba de la línea, posición fija) ---
-    let serviciosTexto = '';
-    if (pago.serviciosPagados && typeof pago.serviciosPagados === 'object') {
-        const servicios = [];
-        for (const key in pago.serviciosPagados) {
-            if (key.endsWith('Monto')) continue; // Saltar los montos, los usamos abajo
-            if (pago.serviciosPagados[key] === true) {
-                // Busca el monto correspondiente
-                const montoKey = key + 'Monto';
-                const monto = pago.serviciosPagados[montoKey];
-                servicios.push(`${key.charAt(0).toUpperCase() + key.slice(1)}${monto ? `: $${parseFloat(monto).toFixed(2)}` : ''}`);
-            }
-        }
-        serviciosTexto = servicios.join('   |   ');
-        if (serviciosTexto) {
-            pdf.setFont("helvetica", "bold");
-            pdf.setTextColor(37, 99, 235);
-            let serviciosLineas = pdf.splitTextToSize(serviciosTexto, 80); // ancho más pequeño
-            pdf.text(serviciosLineas, 12, y); // X=12 (izquierda), Y=y (misma línea que la fecha)
-        }
-    }
+        // --- Título centrado ---
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(18);
+        pdf.text("RECIBO DE PAGO DE RENTA", 108, 13, { align: "center" });
 
-    // La línea y el bloque de inquilino siempre en la misma posición
-    let yLinea = y + 10; // Fijo, no depende de si hay servicios o no
+        // --- Subtítulo elegante ---
+        pdf.setFontSize(10);
+        pdf.setTextColor(220, 220, 255);
+        pdf.text("Control de Rentas", 108, 18, { align: "center" });
 
-    pdf.setDrawColor(37, 99, 235);
-    pdf.line(10, yLinea, 205, yLinea);
+        // --- Resto del recibo ---
+        dibujarCuerpo();
+    };
 
-    let yIzq = yLinea + 7;   // Para la columna izquierda
-    let yDer = yLinea + 7;   // Para la columna derecha
-    const xIzq = 12;
-    const xDer = 100; // <-- Antes 120, ahora más a la izquierda
+    // Si la imagen tarda en cargar, dibuja el cuerpo después
+    function dibujarCuerpo() {
+        let y = 26;
+        pdf.setFontSize(11);
+        pdf.setTextColor(37, 99, 235);
+        pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 170, y);
 
-    // --- Columna izquierda: Inquilino e inmueble ---
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(55, 65, 81);
-    pdf.text("Inquilino:", xIzq, yIzq);
-    pdf.setFont("helvetica", "normal");
-    let inquilinoNombre = pdf.splitTextToSize(`${inquilino.nombre || ''}`, 80);
-    pdf.text(inquilinoNombre, xIzq + 28, yIzq);
-    yIzq += 6 * inquilinoNombre.length;
-
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Inmueble:", xIzq, yIzq);
-    pdf.setFont("helvetica", "normal");
-    let inmuebleNombre = pdf.splitTextToSize(`${inmueble.nombre || ''}`, 80);
-    pdf.text(inmuebleNombre, xIzq + 28, yIzq);
-    yIzq += 6 * inmuebleNombre.length;
-
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Dirección:", xIzq, yIzq);
-    pdf.setFont("helvetica", "normal");
-    let direccion = pdf.splitTextToSize(`${inmueble.direccion || ''}`, 80);
-    pdf.text(direccion, xIzq + 28, yIzq);
-    yIzq += 6 * direccion.length;
-
-    yIzq += 17; // Dos saltos de línea (2 x 6px)
-
-    // Línea de firma
-    pdf.setDrawColor(203, 213, 225);
-    pdf.line(xIzq + 10, yIzq, xIzq + 80, yIzq);
-
-    // Texto "Firma y sello"
-    pdf.setFont("helvetica", "italic");
-    pdf.setFontSize(10);
-    pdf.setTextColor(55, 65, 81);
-    pdf.text("Firma", xIzq + 45, yIzq + 5, { align: "center" });
-
-     // --- AGREGAR FIRMA COMO IMAGEN SOLO SI SE SELECCIONÓ ---
-    if (firma) {
-        const firmaImg = new Image();
-        firmaImg.src = './img/' + firma;
-
-        firmaImg.onload = () => {
-            // Agregar imagen encima de la línea de firma
-            pdf.addImage(firmaImg, 'PNG', xIzq + 20, yIzq - 20, 40, 20); 
-            // x, y, width, height
-
-            // Mensaje de agradecimiento
-            yIzq += 15;
-            pdf.setFont("helvetica", "bold");
-            pdf.setFontSize(12);
-            pdf.setTextColor(37, 99, 235);
-            pdf.text("¡Gracias por su pago!", xIzq + 45, yIzq, { align: "center" });
-
-            // --- Columna derecha: Detalle del Pago ---
-            pdf.setFont("helvetica", "bold");
-            pdf.setTextColor(37, 99, 235);
-            pdf.text("Detalle del Pago", xDer, yDer);
-
-            yDer += 7;
-            pdf.setFont("helvetica", "normal");
-            pdf.setTextColor(55, 65, 81);
-            pdf.text(`Mes:`, xDer, yDer);
-            pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
-            yDer += 6;
-            // Calcular el monto total sumando servicios pagados
-            let montoTotal = pago.montoTotal || 0;
-            if (pago.serviciosPagados) {
-                if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
-                    montoTotal += pago.serviciosPagados.internetMonto;
-                }
-                if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
-                    montoTotal += pago.serviciosPagados.aguaMonto;
-                }
-                if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
-                    montoTotal += pago.serviciosPagados.luzMonto;
+        // --- Servicios pagados (arriba de la línea, posición fija) ---
+        let serviciosTexto = '';
+        if (pago.serviciosPagados && typeof pago.serviciosPagados === 'object') {
+            const servicios = [];
+            for (const key in pago.serviciosPagados) {
+                if (key.endsWith('Monto')) continue; // Saltar los montos, los usamos abajo
+                if (pago.serviciosPagados[key] === true) {
+                    // Busca el monto correspondiente
+                    const montoKey = key + 'Monto';
+                    const monto = pago.serviciosPagados[montoKey];
+                    servicios.push(`${key.charAt(0).toUpperCase() + key.slice(1)}${monto ? `: $${parseFloat(monto).toFixed(2)}` : ''}`);
                 }
             }
-            pdf.text(`Monto total:`, xDer, yDer);
-            pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
-            yDer += 6;
-            pdf.text(`Monto pagado:`, xDer, yDer);
-            pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
-            yDer += 6;
-            pdf.text(`Saldo pendiente:`, xDer, yDer);
-            pdf.text(`$${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
-            yDer += 6;
-            pdf.text(`Fecha de pago:`, xDer, yDer);
-            pdf.text(`${pago.fechaPago || pago.fechaRegistro || ''}`, xDer + 35, yDer);
-            yDer += 6;
-            pdf.text(`Estado:`, xDer, yDer);
-            pdf.text(`${pago.estado}`, xDer + 35, yDer);
-            yDer += 6;
-            pdf.text(`Periodo:`, xDer, yDer);
-            // Ajusta el periodo para que no se corte
-            let periodoLineas = pdf.splitTextToSize(periodoTexto || 'N/A', 60);
-            pdf.text(periodoLineas, xDer + 35, yDer);
-            yDer += 6 * periodoLineas.length;
+            serviciosTexto = servicios.join('   |   ');
+            if (serviciosTexto) {
+                pdf.setFont("helvetica", "bold");
+                pdf.setTextColor(37, 99, 235);
+                let serviciosLineas = pdf.splitTextToSize(serviciosTexto, 80); // ancho más pequeño
+                pdf.text(serviciosLineas, 12, y); // X=12 (izquierda), Y=y (misma línea que la fecha)
+            }
+        }
 
-            // --- Descargar PDF ---
-            // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
-            const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
-            pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
-        };
-    } else {
-        // Si no hay firma, solo finaliza y descarga el PDF
-        finalizarPDF();
+        // La línea y el bloque de inquilino siempre en la misma posición
+        let yLinea = y + 10; // Fijo, no depende de si hay servicios o no
+
+        pdf.setDrawColor(37, 99, 235);
+        pdf.line(10, yLinea, 205, yLinea);
+
+        let yIzq = yLinea + 7;   // Para la columna izquierda
+        let yDer = yLinea + 7;   // Para la columna derecha
+        const xIzq = 12;
+        const xDer = 100; // <-- Antes 120, ahora más a la izquierda
+
+        // --- Columna izquierda: Inquilino e inmueble ---
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(55, 65, 81);
+        pdf.text("Inquilino:", xIzq, yIzq);
+        pdf.setFont("helvetica", "normal");
+        let inquilinoNombre = pdf.splitTextToSize(`${inquilino.nombre || ''}`, 80);
+        pdf.text(inquilinoNombre, xIzq + 28, yIzq);
+        yIzq += 6 * inquilinoNombre.length;
+
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Inmueble:", xIzq, yIzq);
+        pdf.setFont("helvetica", "normal");
+        let inmuebleNombre = pdf.splitTextToSize(`${inmueble.nombre || ''}`, 80);
+        pdf.text(inmuebleNombre, xIzq + 28, yIzq);
+        yIzq += 6 * inmuebleNombre.length;
+
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Dirección:", xIzq, yIzq);
+        pdf.setFont("helvetica", "normal");
+        let direccion = pdf.splitTextToSize(`${inmueble.direccion || ''}`, 80);
+        pdf.text(direccion, xIzq + 28, yIzq);
+        yIzq += 6 * direccion.length;
+
+        yIzq += 17; // Dos saltos de línea (2 x 6px)
+
+        // Línea de firma
+        pdf.setDrawColor(203, 213, 225);
+        pdf.line(xIzq + 10, yIzq, xIzq + 80, yIzq);
+
+        // Texto "Firma y sello"
+        pdf.setFont("helvetica", "italic");
+        pdf.setFontSize(10);
+        pdf.setTextColor(55, 65, 81);
+        pdf.text("Firma", xIzq + 45, yIzq + 5, { align: "center" });
+
+         // --- AGREGAR FIRMA COMO IMAGEN SOLO SI SE SELECCIONÓ ---
+        if (firma) {
+            const firmaImg = new Image();
+            firmaImg.src = './img/' + firma;
+
+            firmaImg.onload = () => {
+                // Agregar imagen encima de la línea de firma
+                pdf.addImage(firmaImg, 'PNG', xIzq + 20, yIzq - 20, 40, 20); 
+                // x, y, width, height
+
+                // Mensaje de agradecimiento
+                yIzq += 15;
+                pdf.setFont("helvetica", "bold");
+                pdf.setFontSize(12);
+                pdf.setTextColor(37, 99, 235);
+                pdf.text("¡Gracias por su pago!", xIzq + 45, yIzq, { align: "center" });
+
+                // --- Columna derecha: Detalle del Pago ---
+                pdf.setFont("helvetica", "bold");
+                pdf.setTextColor(37, 99, 235);
+                pdf.text("Detalle del Pago", xDer, yDer);
+
+                yDer += 7;
+                pdf.setFont("helvetica", "normal");
+                pdf.setTextColor(55, 65, 81);
+                pdf.text(`Mes:`, xDer, yDer);
+                pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
+                yDer += 6;
+                // Calcular el monto total sumando servicios pagados
+                let montoTotal = pago.montoTotal || 0;
+                if (pago.serviciosPagados) {
+                    if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
+                        montoTotal += pago.serviciosPagados.internetMonto;
+                    }
+                    if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
+                        montoTotal += pago.serviciosPagados.aguaMonto;
+                    }
+                    if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
+                        montoTotal += pago.serviciosPagados.luzMonto;
+                    }
+                }
+                pdf.text(`Monto total:`, xDer, yDer);
+                pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
+                yDer += 6;
+                pdf.text(`Monto pagado:`, xDer, yDer);
+                pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
+                yDer += 6;
+                pdf.text(`Saldo pendiente:`, xDer, yDer);
+                pdf.text(`$${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
+                yDer += 6;
+                pdf.text(`Fecha de pago:`, xDer, yDer);
+                pdf.text(`${pago.fechaPago || pago.fechaRegistro || ''}`, xDer + 35, yDer);
+                yDer += 6;
+                pdf.text(`Estado:`, xDer, yDer);
+                pdf.text(`${pago.estado}`, xDer + 35, yDer);
+                yDer += 6;
+                pdf.text(`Periodo:`, xDer, yDer);
+                // Ajusta el periodo para que no se corte
+                let periodoLineas = pdf.splitTextToSize(periodoTexto || 'N/A', 60);
+                pdf.text(periodoLineas, xDer + 35, yDer);
+                yDer += 6 * periodoLineas.length;
+
+                // --- Descargar PDF ---
+                // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
+                const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
+                pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
+            };
+        } else {
+            // Si no hay firma, solo finaliza y descarga el PDF
+            finalizarPDF();
+        }
     }
 
     function finalizarPDF() {
