@@ -1082,6 +1082,117 @@ function mostrarFormularioUbicacionManualParaForm(inmuebleId) {
     });
 }
 
+export async function mostrarHistorialInquilinosInmueble(inmuebleId, inmuebleNombre) {
+    try {
+        // Buscar todos los inquilinos que han estado asociados a este inmueble
+        const inquilinosSnap = await getDocs(query(
+            collection(db, "inquilinos"),
+            where("inmuebleId", "==", inmuebleId)
+        ));
+
+        let historial = [];
+        const hoy = new Date().toISOString().slice(0, 10);
+
+        inquilinosSnap.forEach(doc => {
+            const data = doc.data();
+            // Usa siempre fechaInicioContrato y fechaFinContrato si existen, si no, usa fechaDesocupacion
+            const fechaInicio = data.fechaInicioContrato || data.fechaInicio || '';
+            const fechaFin = data.fechaFinContrato || data.fechaDesocupacion || '';
+            // Considera actual si no hay fecha de fin o si la fecha de fin es en el futuro
+            const esActual = !fechaFin || fechaFin === '' || fechaFin === null || fechaFin >= hoy;
+            historial.push({
+                nombre: data.nombre,
+                fechaInicio,
+                fechaFin,
+                telefono: data.telefono || '',
+                correo: data.correo || '',
+                actual: esActual
+            });
+        });
+
+        // Ordenar por fecha de inicio descendente (más reciente primero)
+        historial.sort((a, b) => new Date(b.fechaInicio) - new Date(a.fechaInicio));
+
+        let tablaHtml = '';
+        if (historial.length === 0) {
+            tablaHtml = `
+                <div class="text-center py-8">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <p class="text-gray-500 text-lg">Este inmueble no tiene historial de inquilinos.</p>
+                </div>`;
+        } else {
+            tablaHtml = `
+                <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mt-4">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-indigo-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Inquilino</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Fecha Inicio</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Fecha Fin</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Teléfono</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Correo</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-indigo-700 uppercase tracking-wider">Actual</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${historial.map(h => `
+                                <tr class="hover:bg-indigo-50 transition-colors duration-200">
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.nombre}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.fechaInicio || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.fechaFin || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.telefono || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">${h.correo || '-'}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        ${h.actual ? 
+                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actual</span>' : 
+                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Anterior</span>'
+                                        }
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        mostrarModal(`
+            <div class="bg-gradient-to-br from-cyan-600 via-cyan-700 to-cyan-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-center gap-3">
+                        <svg class="w-8 h-8 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold text-center">Historial de Inquilinos</h3>
+                            <p class="text-center text-cyan-100 mt-1">${inmuebleNombre}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ${tablaHtml}
+            <div class="flex justify-end mt-6">
+                <button onclick="ocultarModal()" 
+                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cerrar
+                </button>
+            </div>
+        `);
+
+    } catch (error) {
+        console.error("Error al obtener historial de inquilinos:", error);
+        mostrarNotificacion("Error al cargar el historial de inquilinos.", 'error');
+    }
+}
+
+window.mostrarHistorialInquilinosInmueble = mostrarHistorialInquilinosInmueble;
+
+
 /**
  * Función para eliminar un documento de Firestore.
  * @param {string} coleccion - Nombre de la colección.
