@@ -175,7 +175,7 @@ export async function renderComisiones() {
         }
     });
 
-    mesesFiltrados.sort().forEach(mes => {
+    mesesFiltrados.sort().reverse().forEach(mes => {
         const pagos = pagosPorMes[mes];
         const totalRentas = pagos.reduce((sum, p) => sum + p.monto, 0);
         const totalComision = totalRentas * 0.10;
