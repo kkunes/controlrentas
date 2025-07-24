@@ -2990,9 +2990,15 @@ function calcularTotalServicios(serviciosPagados) {
 /**
  * Genera el HTML para mostrar la información del mobiliario en la tabla de pagos
  * @param {Object} pago - Objeto con la información del pago
+ * @param {boolean} tieneMobiliarioAsignado - Si el inquilino tiene mobiliario asignado
  * @returns {string} - HTML para mostrar el mobiliario
  */
-function generarMobiliarioHtml(pago) {
+function generarMobiliarioHtml(pago, tieneMobiliarioAsignado = true) {
+    // Si no tiene mobiliario asignado, mostrar guión
+    if (!tieneMobiliarioAsignado) {
+        return '-';
+    }
+    
     // Calcular total de mobiliario
     let mobiliarioTotal = 0;
     if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
@@ -3009,7 +3015,7 @@ function generarMobiliarioHtml(pago) {
             `;
         }
     }
-    // Si no hay mobiliario pagado, mostrar pendiente
+    // Si tiene mobiliario asignado pero no ha pagado, mostrar pendiente
     return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
 }
 
