@@ -2731,9 +2731,16 @@ export async function mostrarHistorialPagosInmueble(inmuebleId) {
                                     </span>
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    ${pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0 
-                                        ? generarMobiliarioHtml(pago) 
-                                        : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`}
+                                    ${(() => {
+                                        const tieneMobiliarioAsignado = mobiliarioAsignadoMap.has(pago.inquilinoId);
+                                        if (!tieneMobiliarioAsignado) {
+                                            return '-';
+                                        } else if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                                            return generarMobiliarioHtml(pago, tieneMobiliarioAsignado);
+                                        } else {
+                                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                                        }
+                                    })()}
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                     ${abonosDetalleHtml}
