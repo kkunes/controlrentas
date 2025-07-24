@@ -113,6 +113,7 @@ export async function mostrarPagos(mostrarTabla = false) {
         const pagosSnap = await getDocs(collection(db, "pagos"));
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
 
         const inmueblesMap = new Map();
         inmueblesSnap.forEach(doc => {
@@ -122,6 +123,27 @@ export async function mostrarPagos(mostrarTabla = false) {
         const inquilinosMap = new Map();
         inquilinosSnap.forEach(doc => {
             inquilinosMap.set(doc.id, doc.data().nombre);
+        });
+
+        // Crear mapa de mobiliario asignado por inquilino
+        const mobiliarioAsignadoMap = new Map();
+        mobiliarioSnap.forEach(doc => {
+            const muebleData = doc.data();
+            if (muebleData.asignaciones && Array.isArray(muebleData.asignaciones)) {
+                muebleData.asignaciones.forEach(asignacion => {
+                    if (asignacion.activa !== false && asignacion.inquilinoId) {
+                        if (!mobiliarioAsignadoMap.has(asignacion.inquilinoId)) {
+                            mobiliarioAsignadoMap.set(asignacion.inquilinoId, []);
+                        }
+                        mobiliarioAsignadoMap.get(asignacion.inquilinoId).push({
+                            muebleId: doc.id,
+                            muebleNombre: muebleData.nombre,
+                            cantidad: asignacion.cantidad,
+                            costoRenta: muebleData.costoRenta
+                        });
+                    }
+                });
+            }
         });
 
         let pagosList = [];
