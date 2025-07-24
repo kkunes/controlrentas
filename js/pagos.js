@@ -2625,6 +2625,28 @@ export async function mostrarHistorialPagosInmueble(inmuebleId) {
             inquilinosMap.set(doc.id, doc.data().nombre);
         });
 
+        // Consultar mobiliario asignado
+        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+        const mobiliarioAsignadoMap = new Map();
+        mobiliarioSnap.forEach(doc => {
+            const muebleData = doc.data();
+            if (muebleData.asignaciones && Array.isArray(muebleData.asignaciones)) {
+                muebleData.asignaciones.forEach(asignacion => {
+                    if (asignacion.activa !== false && asignacion.inquilinoId) {
+                        if (!mobiliarioAsignadoMap.has(asignacion.inquilinoId)) {
+                            mobiliarioAsignadoMap.set(asignacion.inquilinoId, []);
+                        }
+                        mobiliarioAsignadoMap.get(asignacion.inquilinoId).push({
+                            muebleId: doc.id,
+                            muebleNombre: muebleData.nombre,
+                            cantidad: asignacion.cantidad,
+                            costoRenta: muebleData.costoRenta
+                        });
+                    }
+                });
+            }
+        });
+
         const inmuebleDoc = await getDoc(doc(db, "inmuebles", inmuebleId));
         const nombreInmueble = inmuebleDoc.exists() ? inmuebleDoc.data().nombre : 'Inmueble Desconocido';
 
