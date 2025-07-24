@@ -251,34 +251,33 @@ export async function mostrarPagos(mostrarTabla = false) {
                     serviciosHtml = '-';
                 }
                 
-                // Calcular total de mobiliario
-let mobiliarioTotal = 0;
-if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-    pago.mobiliarioPagado.forEach(item => {
-        mobiliarioTotal += item.costo || 0;
-    });
-}
-
-// Determinar si hay mobiliario pendiente
-let mobiliarioHtml = '';
-if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
-    let mobiliarioTotal = 0;
-    pago.mobiliarioPagado.forEach(item => {
-        mobiliarioTotal += item.costo || 0;
-    });
-    mobiliarioHtml = `
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            Pagado
-        </span>
-        <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
-    `;
-} else {
-    mobiliarioHtml = `
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            Pendiente
-        </span>
-    `;
-}
+                // Lógica para mostrar mobiliario según las nuevas reglas
+                let mobiliarioHtml = '';
+                const tieneMobiliarioAsignado = mobiliarioAsignadoMap.has(pago.inquilinoId);
+                
+                if (!tieneMobiliarioAsignado) {
+                    // Si no tiene mobiliario asignado, mostrar guión
+                    mobiliarioHtml = '-';
+                } else if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                    // Si tiene mobiliario asignado y ya pagó, mostrar total + "Pagado"
+                    let mobiliarioTotal = 0;
+                    pago.mobiliarioPagado.forEach(item => {
+                        mobiliarioTotal += item.costo || 0;
+                    });
+                    mobiliarioHtml = `
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Pagado
+                        </span>
+                        <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
+                    `;
+                } else {
+                    // Si tiene mobiliario asignado pero no ha pagado, mostrar "Pendiente"
+                    mobiliarioHtml = `
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Pendiente
+                        </span>
+                    `;
+                }
 
 
                 tablaFilas += `
