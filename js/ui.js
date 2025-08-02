@@ -82,33 +82,59 @@ export function ocultarModal() {
 }
 
 /**
- * Muestra una notificación temporal.
- * @param {string} message - El mensaje a mostrar.
- * @param {'success'|'error'|'info'|'warning'} type - El tipo de notificación para estilos (success, error, info, warning).
- * @param {number} duration - Duración en milisegundos (por defecto 3000ms).
+ * Muestra una notificación flotante (toast) con un mensaje y estilo.
+ * Las notificaciones aparecen en el contenedor con id 'notificacionContainer'.
+ *
+ * @param {string} mensaje - El texto que se mostrará en la notificación.
+ * @param {'success'|'error'|'info'|'warning'} [tipo='info'] - El tipo de notificación, que determina el color y el ícono.
+ * @param {number} [duracion=4000] - El tiempo en milisegundos que la notificación permanecerá visible.
  */
-export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 3500) {
-    // Elimina notificaciones previas
-    const prev = document.getElementById('toast-notificacion');
-    if (prev) prev.remove();
+export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
+    // Forzar la duración para las advertencias para asegurar que se auto-cierren.
+    if (tipo === 'warning') {
+        duracion = 4000;
+    }
 
-    const estilosToast = obtenerEstilosToast(tipo);
+    const contenedor = document.getElementById('notificacionContainer');
+    if (!contenedor) {
+        console.error('El contenedor de notificaciones con id "notificacionContainer" no se encontró en el DOM.');
+        return;
+    }
 
     const toast = document.createElement('div');
-    toast.id = 'toast-notificacion';
-    toast.className = `toast-base ${estilosToast.clases}`;
+    const estilos = obtenerEstilosToast(tipo);
+
+    toast.className = `toast-notification ${estilos.clases}`;
     toast.innerHTML = `
-        <span class="toast-icono">${estilosToast.icono}</span>
-        <span class="toast-mensaje">${mensaje}</span>
-        <button onclick="this.parentElement.remove()" class="toast-cerrar">&times;</button>
+        <div class="toast-icon">${estilos.icono}</div>
+        <div class="toast-content">
+            <p class="toast-title">${estilos.titulo}</p>
+            <p class="toast-message">${mensaje}</p>
+        </div>
+        <button class="toast-close-btn" aria-label="Cerrar">&times;</button>
     `;
 
-    document.body.appendChild(toast);
+    contenedor.appendChild(toast);
 
-    setTimeout(() => {
-        toast.remove();
-    }, duracion);
+    // Forzar la animación de entrada.
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    const cerrarToast = () => {
+        if (!toast.classList.contains('show')) return;
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    };
+
+    const temporizador = setTimeout(cerrarToast, duracion);
+
+    toast.querySelector('.toast-close-btn').addEventListener('click', () => {
+        clearTimeout(temporizador);
+        cerrarToast();
+    });
 }
+
 
 // Los estilos y animaciones ahora están en css/styles.css
 
@@ -146,16 +172,21 @@ function obtenerClasesBoton(tipo) {
     }
 }
 
+/**
+ * Devuelve las clases CSS, el ícono y el título para un tipo de notificación.
+ * @param {'success'|'error'|'info'|'warning'} tipo - El tipo de notificación.
+ * @returns {{clases: string, icono: string, titulo: string}}
+ */
 function obtenerEstilosToast(tipo) {
     switch (tipo) {
         case 'success':
-            return { clases: 'toast-success', icono: '✔️' };
+            return { clases: 'toast-success', icono: '✔️', titulo: 'Éxito' };
         case 'error':
-            return { clases: 'toast-error', icono: '❌' };
+            return { clases: 'toast-error', icono: '❌', titulo: 'Error' };
         case 'warning':
-            return { clases: 'toast-warning', icono: '⚠️' };
+            return { clases: 'toast-warning', icono: '⚠️', titulo: 'Advertencia' };
         case 'info':
         default:
-            return { clases: 'toast-info', icono: 'ℹ️' };
+            return { clases: 'toast-info', icono: 'ℹ️', titulo: 'Información' };
     }
 }

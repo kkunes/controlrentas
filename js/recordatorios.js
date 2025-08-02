@@ -95,40 +95,60 @@ export async function verificarContratosProximosARenovar() {
     }
 }
 
-/**
- * Muestra los recordatorios de renovación de contratos en el dashboard
- */
+let recordatoriosYaMostrados = false;
+
 export async function mostrarRecordatoriosRenovacion() {
+    if (recordatoriosYaMostrados) {
+        return; // Evitar ejecuciones múltiples
+    }
+    recordatoriosYaMostrados = true;
+
     const contratosProximos = await verificarContratosProximosARenovar();
-    
+
     if (contratosProximos.length === 0) {
         return; // No hay contratos próximos a renovar
     }
-    
+
+    // Evitar duplicados si el contenedor ya existe
+    if (document.getElementById('recordatorios-container')) {
+        return;
+    }
+
     // Crear elemento para mostrar recordatorios
     const recordatoriosContainer = document.createElement('div');
     recordatoriosContainer.id = 'recordatorios-container';
-    recordatoriosContainer.className = 'fixed bottom-4 right-4 z-50';
-    
-    // Crear botón de notificación
+    recordatoriosContainer.className = 'fixed bottom-4 right-4 z-50 recordatorio-burbuja';
+
+    // Crear botón de notificación con estilos mejorados
     const notificacionBtn = document.createElement('button');
-    notificacionBtn.className = 'bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center relative';
+    notificacionBtn.className = 'bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white p-3 rounded-full shadow-xl flex items-center justify-center relative transform hover:scale-110 transition-all duration-300 animate-pulse-slow';
     notificacionBtn.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
-        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">${contratosProximos.length}</span>
+        <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">${contratosProximos.length}</span>
     `;
-    
+
     // Agregar evento para mostrar detalles
     notificacionBtn.addEventListener('click', () => {
+        notificacionBtn.classList.remove('animate-pulse-slow');
         mostrarDetallesRenovacion(contratosProximos);
     });
-    
+
     recordatoriosContainer.appendChild(notificacionBtn);
     document.body.appendChild(recordatoriosContainer);
-    
-    // Mostrar notificación inicial
+
+    // Forzar reflow para la animación de entrada
+    requestAnimationFrame(() => {
+        recordatoriosContainer.classList.add('show');
+    });
+
+    // Si el usuario hace clic, la burbuja ya no necesita pulsar
+    notificacionBtn.addEventListener('click', () => {
+        notificacionBtn.classList.remove('animate-pulse-slow');
+    });
+
+    // Mostrar notificación inicial tipo toast
     mostrarNotificacion(`Hay ${contratosProximos.length} contrato(s) próximo(s) a renovar`, 'warning', 5000);
 }
 
@@ -141,17 +161,17 @@ export function mostrarDetallesRenovacion(contratos) {
     contratos.sort((a, b) => a.diasRestantes - b.diasRestantes);
     
     let contenidoHTML = `
-        <div class="px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
+        <div class="px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative modal-header-responsive">
             <button id="btnCerrarModal" class="absolute top-3 right-3 text-white hover:text-yellow-200 transition-colors duration-200 focus:outline-none">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-            <h3 class="text-2xl font-bold text-center">Contratos Próximos a Renovar</h3>
+            <h3 class="text-2xl font-bold text-center modal-title-responsive">Contratos Próximos a Renovar</h3>
             <p class="text-center text-yellow-100 mt-1">Se renuevan cada 6 meses</p>
         </div>
         
-        <div class="space-y-4 max-h-[60vh] overflow-y-auto px-2">
+        <div class="space-y-4 max-h-[60vh] overflow-y-auto px-2 modal-responsive-padding">
     `;
     
     contratos.forEach(contrato => {

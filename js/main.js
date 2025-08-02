@@ -192,14 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadContent();
     // Revisar pagos vencidos al cargar la aplicación
     revisarPagosVencidos();
-    
-    // Verificar contratos próximos a renovar
-    verificarContratosProximosARenovar().then(contratos => {
-        if (contratos.length > 0) {
-            // Mostrar notificación si hay contratos próximos a renovar
-            mostrarNotificacion(`Hay ${contratos.length} contrato(s) próximo(s) a renovar`, 'warning', 5000);
-        }
-    });
 });
 
 // Nueva función para mostrar comisiones

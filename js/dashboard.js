@@ -493,51 +493,51 @@ proximoPago.setHours(0, 0, 0, 0);
                     <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 text-center sm:text-left">Dashboard General</h2>
 
                     <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles()">
+                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 dashboard-card" onclick="mostrarInmuebles()">
                             <div class="flex flex-col items-center">
-                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
-                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md dashboard-card-icon-container">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white dashboard-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                     </svg>
                                 </div>
-                                <p class="text-sm sm:text-lg font-semibold text-indigo-700 text-center">Total Inmuebles</p>
-                                <p class="text-2xl sm:text-4xl font-bold text-indigo-800 mt-1 sm:mt-2">${totalInmuebles}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-indigo-700 text-center dashboard-card-title">Total Inmuebles</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-indigo-800 mt-1 sm:mt-2 dashboard-card-value">${totalInmuebles}</p>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Ocupado')">
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 dashboard-card" onclick="mostrarInmuebles('Ocupado')">
                             <div class="flex flex-col items-center">
-                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
-                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md dashboard-card-icon-container">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white dashboard-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                     </svg>
                                 </div>
-                                <p class="text-sm sm:text-lg font-semibold text-orange-700 text-center">Inmuebles Ocupados</p>
-                                <p class="text-2xl sm:text-4xl font-bold text-orange-800 mt-1 sm:mt-2">${inmueblesOcupados}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-orange-700 text-center dashboard-card-title">Inmuebles Ocupados</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-orange-800 mt-1 sm:mt-2 dashboard-card-value">${inmueblesOcupados}</p>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInmuebles('Disponible')">
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 dashboard-card" onclick="mostrarInmuebles('Disponible')">
                             <div class="flex flex-col items-center">
-                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
-                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md dashboard-card-icon-container">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white dashboard-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                     </svg>
                                 </div>
-                                <p class="text-sm sm:text-lg font-semibold text-teal-700 text-center">Inmuebles Disponibles</p>
-                                <p class="text-2xl sm:text-4xl font-bold text-teal-800 mt-1 sm:mt-2">${inmueblesDisponibles}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-teal-700 text-center dashboard-card-title">Inmuebles Disponibles</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-teal-800 mt-1 sm:mt-2 dashboard-card-value">${inmueblesDisponibles}</p>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" onclick="mostrarInquilinos()">
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-3 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 dashboard-card" onclick="mostrarInquilinos()">
                             <div class="flex flex-col items-center">
-                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md">
-                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mb-2 sm:mb-4 shadow-md dashboard-card-icon-container">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white dashboard-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                     </svg>
                                 </div>
-                                <p class="text-sm sm:text-lg font-semibold text-green-700 text-center">Total Inquilinos</p>
-                                <p class="text-2xl sm:text-4xl font-bold text-green-800 mt-1 sm:mt-2">${totalInquilinos}</p>
+                                <p class="text-sm sm:text-lg font-semibold text-green-700 text-center dashboard-card-title">Total Inquilinos</p>
+                                <p class="text-2xl sm:text-4xl font-bold text-green-800 mt-1 sm:mt-2 dashboard-card-value">${totalInquilinos}</p>
                             </div>
                         </div>
                     </div>
@@ -826,9 +826,9 @@ window.mostrarListaPagosDashboard = function(tipo) {
     }
 
     let html = `
-        <div class="px-3 sm:px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6">
+        <div class="px-3 sm:px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6 modal-header-responsive">
             <div class="flex items-center justify-between">
-                <h3 class="text-xl sm:text-2xl font-bold">${titulo}</h3>
+                <h3 class="text-xl sm:text-2xl font-bold modal-title-responsive">${titulo}</h3>
                 <button onclick="ocultarModal()" class="text-white hover:text-gray-200 transition-colors duration-200">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -837,7 +837,7 @@ window.mostrarListaPagosDashboard = function(tipo) {
             </div>
         </div>
 
-        <div class="overflow-x-auto -mx-6 px-3 sm:px-6">
+        <div class="overflow-x-auto -mx-6 px-3 sm:px-6 modal-responsive-padding">
             ${lista.length === 0 ? `
                 <div class="flex flex-col items-center justify-center py-8 sm:py-12 bg-gradient-to-br ${colorGradiente} rounded-lg">
                     <svg class="w-12 h-12 sm:w-16 sm:h-16 ${colorIcono} mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -846,7 +846,7 @@ window.mostrarListaPagosDashboard = function(tipo) {
                     <p class="text-lg sm:text-xl text-gray-600 font-medium">No hay pagos en esta categoría</p>
                 </div>
             ` : `
-                <div class="grid grid-cols-1 gap-4 sm:gap-6">
+                <div class="grid grid-cols-1 gap-4 sm:gap-6 modal-grid-responsive">
                     ${tipo === 'vencidos' ? 
                         // Vista agrupada por inquilino para pagos vencidos
                         lista.map(inquilino => `
