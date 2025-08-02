@@ -231,7 +231,7 @@ inmueblesList.forEach(inmueble => {
                                     </svg>
                                     <span>Eliminar</span>
                                 </button>
-                                <button onclick="mostrarHistorialInquilinosInmueble('${inmueble.id}', '${inmueble.nombre}')" 
+                                <button onclick="mostrarHistorialInquilinos('${inmueble.id}', '${inmueble.nombre}')" 
                                     title="Ver historial de inquilinos del inmueble"
                                     class="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1794,7 +1794,7 @@ window.mostrarTarjetaInquilino = async function(id) {
                     <div class="flex flex-col">
                         <span class="text-sm font-medium">Servicios:</span>
                         ${inquilino.servicios.map(servicio => 
-                            `<span class="text-xs text-gray-600">${servicio.tipo}: $${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
+                            `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
                         ).join('')}
                     </div>
                 </div>
@@ -1805,7 +1805,7 @@ window.mostrarTarjetaInquilino = async function(id) {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    <span class="text-sm font-medium">Servicio: ${inquilino.tipoServicio} - $${parseFloat(inquilino.montoServicio).toFixed(2)}/mes</span>
+                    <span class="text-sm font-medium">Servicio: ${inquilino.tipoServicio} - ${parseFloat(inquilino.montoServicio).toFixed(2)}/mes</span>
                 </div>
             `;
         }
@@ -1818,7 +1818,7 @@ window.mostrarTarjetaInquilino = async function(id) {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="text-sm font-medium">Depósito: $${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
+                    <span class="text-sm font-medium">Depósito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
                 </div>
             `;
         }
@@ -1884,7 +1884,7 @@ window.mostrarTarjetaInquilino = async function(id) {
                         ${inquilino.fechaInicioContrato ? `
                         <div class="flex items-center text-gray-600 bg-gray-50 p-2 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <span class="text-sm font-medium">Contrato: ${inquilino.fechaInicioContrato} a ${inquilino.fechaFinContrato || '-'}</span>
                         </div>
@@ -1923,4 +1923,115 @@ window.mostrarTarjetaInquilino = async function(id) {
         mostrarNotificacion("Error al cargar el inquilino.", "error");
     }
 };
+
+/**
+ * Formatea una fecha (YYYY-MM-DD) a un formato más legible (DD de Mes de YYYY).
+ * @param {string} fechaString - La fecha en formato YYYY-MM-DD.
+ * @returns {string} La fecha formateada o 'Fecha no válida' si la entrada es incorrecta.
+ */
+function formatearFecha(fechaString) {
+    if (!fechaString || typeof fechaString !== 'string') {
+        return 'Fecha no especificada';
+    }
+    const partes = fechaString.split('-');
+    if (partes.length !== 3) {
+        return fechaString; // Devuelve el string original si no tiene el formato esperado
+    }
+    const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+    if (isNaN(fecha.getTime())) {
+        return 'Fecha no válida';
+    }
+    const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+    return fecha.toLocaleDateString('es-ES', opciones);
+}
+
+/**
+ * Muestra el historial de inquilinos de un inmueble específico en un modal.
+ * @param {string} inmuebleId - El ID del inmueble a consultar.
+ * @param {string} nombreInmueble - El nombre del inmueble para mostrar en el título.
+ */
+export async function mostrarHistorialInquilinos(inmuebleId, nombreInmueble) {
+    try {
+        mostrarLoader();
+
+        // Consultar todos los inquilinos que han estado asociados a este inmueble
+        const q = query(collection(db, "inquilinos"), where("inmuebleAsociadoId", "==", inmuebleId));
+        const inquilinosSnap = await getDocs(q);
+
+        let inquilinoActual = null;
+        const historialInquilinos = [];
+
+        inquilinosSnap.forEach(doc => {
+            const inquilino = { id: doc.id, ...doc.data() };
+            if (inquilino.activo) {
+                inquilinoActual = inquilino;
+            } else {
+                historialInquilinos.push(inquilino);
+            }
+        });
+
+        // Ordenar el historial por fecha de llegada (más recientes primero)
+        historialInquilinos.sort((a, b) => new Date(b.fechaLlegada) - new Date(a.fechaLlegada));
+
+        let contenidoHTML = `
+            <div class="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative modal-header-responsive">
+                <button onclick="ocultarModal()" class="absolute top-3 right-3 text-white hover:text-gray-200 transition-colors duration-200 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <h3 class="text-2xl font-bold text-center modal-title-responsive">Historial de Inquilinos</h3>
+                <p class="text-center text-gray-300 mt-1">${nombreInmueble}</p>
+            </div>
+            <div class="space-y-6 modal-responsive-padding">
+        `;
+
+        // Sección para el Inquilino Actual
+        contenidoHTML += `<div><h4 class="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Inquilino Actual</h4>`;
+        if (inquilinoActual) {
+            contenidoHTML += `
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-md">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold text-green-800">${inquilinoActual.nombre}</p>
+                            <p class="text-sm text-gray-600">Tel: ${inquilinoActual.telefono || 'No disponible'}</p>
+                            <p class="text-sm text-gray-600">Llegada: ${formatearFecha(inquilinoActual.fechaLlegada)}</p>
+                        </div>
+                        <span class="px-3 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full">OCUPANDO</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            contenidoHTML += `<p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">Este inmueble está actualmente disponible.</p>`;
+        }
+        contenidoHTML += `</div>`;
+
+        // Sección para el Historial de Inquilinos
+        contenidoHTML += `<div><h4 class="text-lg font-semibold text-gray-800 mb-3 mt-6 border-b pb-2">Historial</h4>`;
+        if (historialInquilinos.length > 0) {
+            contenidoHTML += `<div class="space-y-3">`;
+            historialInquilinos.forEach(inquilino => {
+                contenidoHTML += `
+                    <div class="bg-white p-3 rounded-lg border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <p class="font-semibold text-gray-700">${inquilino.nombre}</p>
+                            <p class="text-xs text-gray-500">Periodo: ${formatearFecha(inquilino.fechaLlegada)} - ${inquilino.fechaSalida ? formatearFecha(inquilino.fechaSalida) : 'Presente'}</p>
+                        </div>
+                        <span class="text-xs font-medium text-gray-500">Finalizado</span>
+                    </div>
+                `;
+            });
+            contenidoHTML += `</div>`;
+        } else {
+            contenidoHTML += `<p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">No hay historial de inquilinos anteriores.</p>`;
+        }
+        contenidoHTML += `</div></div>`;
+
+        mostrarModal(contenidoHTML);
+
+    } catch (error) {
+        console.error("Error al mostrar el historial de inquilinos:", error);
+        mostrarNotificacion("No se pudo cargar el historial.", "error");
+    } finally {
+        ocultarLoader();
+    }
+}
 

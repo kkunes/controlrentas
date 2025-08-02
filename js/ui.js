@@ -122,6 +122,7 @@ export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
     });
 
     const cerrarToast = () => {
+        console.log("Intentando cerrar notificación..."); // Log de depuración
         if (!toast.classList.contains('show')) return;
         toast.classList.remove('show');
         toast.addEventListener('transitionend', () => toast.remove(), { once: true });

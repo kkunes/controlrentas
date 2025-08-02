@@ -135,193 +135,138 @@ export async function mostrarPagos(mostrarTabla = false) {
         // Ordenar los pagos por fecha de registro (el más reciente primero)
         pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
 
-        let tablaFilas = "";
+        let pagosHtml = "";
         if (pagosList.length === 0) {
-            tablaFilas = `<tr><td colspan="10" class="text-center py-4 text-gray-500">No hay pagos registrados.</td></tr>`;
+            pagosHtml = `<p class="text-gray-500 text-center py-8">No hay pagos registrados.</p>`;
         } else {
-            pagosList.forEach(pago => {
-                // Clases para el estado del pago
-                let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
+            pagosHtml = pagosList.map(pago => {
+                // Define color de borde y fondo según estado
+                let borderColor = '';
+                let bgColor = '';
+                let textColor = '';
+                let icon = '';
+                let iconColor = '';
+
                 switch (pago.estado) {
                     case "pagado":
-                        estadoClass += " bg-green-100 text-green-800";
+                        borderColor = 'border-green-500';
+                        bgColor = 'bg-green-50';
+                        textColor = 'text-green-800';
+                        icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                        iconColor = 'text-green-600';
                         break;
                     case "parcial":
-                        estadoClass += " bg-yellow-100 text-yellow-800";
+                        borderColor = 'border-yellow-500';
+                        bgColor = 'bg-yellow-50';
+                        textColor = 'text-yellow-800';
+                        icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                        iconColor = 'text-yellow-600';
                         break;
                     case "pendiente":
-                        estadoClass += " bg-red-100 text-red-800";
+                        borderColor = 'border-red-500';
+                        bgColor = 'bg-red-50';
+                        textColor = 'text-red-800';
+                        icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                        iconColor = 'text-red-600';
                         break;
                     case "vencido":
-                        estadoClass += " bg-purple-100 text-purple-800";
+                        borderColor = 'border-purple-500';
+                        bgColor = 'bg-purple-50';
+                        textColor = 'text-purple-800';
+                        icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                        iconColor = 'text-purple-600';
                         break;
                     default:
-                        estadoClass += " bg-gray-100 text-gray-800";
+                        borderColor = 'border-gray-500';
+                        bgColor = 'bg-gray-50';
+                        textColor = 'text-gray-800';
+                        icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>`;
+                        iconColor = 'text-gray-600';
                         break;
                 }
 
-                // Obtener el costo real del inmueble desde la colección de inmuebles
-                let montoBase = 0;
-                const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
-                if (inmuebleData && inmuebleData.rentaMensual) {
-                    montoBase = inmuebleData.rentaMensual;
-                } else {
-                    montoBase = pago.montoBase || pago.montoTotal || 0;
-                }
-                
-                // Calcular el monto total sumando servicios y mobiliario
-                let montoTotal = montoBase;
-                
-                // Sumar montos de servicios pagados
-                if (pago.serviciosPagados) {
-                    if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
-                        montoTotal += pago.serviciosPagados.internetMonto;
-                    }
-                    if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
-                        montoTotal += pago.serviciosPagados.aguaMonto;
-                    }
-                    if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
-                        montoTotal += pago.serviciosPagados.luzMonto;
-                    }
-                }
-                
-                // Sumar el mobiliario pagado al monto total
-                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-                    pago.mobiliarioPagado.forEach(item => {
-                        montoTotal += item.costo || 0;
-                    });
-                }
-                
-                // Asegurar que los montos se muestren con 2 decimales, incluso si son null o undefined
-                const montoTotalFormatted = montoTotal.toFixed(2);
+                const montoTotalFormatted = pago.montoTotal ? pago.montoTotal.toFixed(2) : '0.00';
                 const montoPagadoFormatted = pago.montoPagado ? pago.montoPagado.toFixed(2) : '0.00';
                 const saldoPendienteFormatted = pago.saldoPendiente ? pago.saldoPendiente.toFixed(2) : '0.00';
 
-                // Verificar si el inquilino tiene servicios asignados
-                const inquilinoData = inquilinosSnap.docs.find(doc => doc.id === pago.inquilinoId)?.data();
-                const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
-                    ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
-                    (inquilinoData.tipoServicio && inquilinoData.montoServicio));
-                
-                // Verificar si el inquilino tiene mobiliario asignado
-                const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado && 
-                    Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
-                
-                // En la generación de filas de la tabla:
-                const servicios = [];
-                if (pago.serviciosPagados?.internet) {
-                    servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
+                // Servicios y Mobiliario
+                let serviciosInfo = '';
+                if (pago.serviciosPagados && Object.keys(pago.serviciosPagados).length > 0) {
+                    const serviciosList = [];
+                    if (pago.serviciosPagados.internetMonto) serviciosList.push(`Internet: ${pago.serviciosPagados.internetMonto.toFixed(2)}`);
+                    if (pago.serviciosPagados.aguaMonto) serviciosList.push(`Agua: ${pago.serviciosPagados.aguaMonto.toFixed(2)}`);
+                    if (pago.serviciosPagados.luzMonto) serviciosList.push(`Luz: ${pago.serviciosPagados.luzMonto.toFixed(2)}`);
+                    serviciosInfo = `<p class="text-xs text-gray-600">Servicios: ${serviciosList.join(', ')}</p>`;
                 }
-                if (pago.serviciosPagados?.agua) {
-                    servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)}`);
-                }
-                if (pago.serviciosPagados?.luz) {
-                    servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
-                }
-                
-                // Determinar si hay servicios pendientes
-                let serviciosHtml = '';
-                if (servicios.length > 0) {
-                    serviciosHtml = servicios.join('<br>');
-                } else if (tieneServicios) {
-                    serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
-                } else {
-                    serviciosHtml = '-';
-                }
-                
-                // Calcular total de mobiliario
-let mobiliarioTotal = 0;
-if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-    pago.mobiliarioPagado.forEach(item => {
-        mobiliarioTotal += item.costo || 0;
-    });
-}
 
-// BLOQUE PRINCIPAL
-// Determinar si hay mobiliario pendiente
-let mobiliarioHtml = '';
-if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
-    let mobiliarioTotal = 0;
-    pago.mobiliarioPagado.forEach(item => {
-        mobiliarioTotal += item.costo || 0;
-    });
-    mobiliarioHtml = `
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            Pagado
-        </span>
-        <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
-    `;
-} else if (tieneMobiliario) {
-    mobiliarioHtml = `
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            Pendiente
-        </span>
-    `;
-} else {
-    mobiliarioHtml = '-';
-}
+                let mobiliarioInfo = '';
+                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                    const mobiliarioList = pago.mobiliarioPagado.map(item => `${item.nombre || 'Mobiliario'}: ${item.costo.toFixed(2)}`);
+                    mobiliarioInfo = `<p class="text-xs text-gray-600">Mobiliario: ${mobiliarioList.join(', ')}</p>`;
+                }
 
+                return `
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${borderColor} overflow-hidden transform hover:-translate-y-1">
+                        <div class="p-4 sm:p-5 md:p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800">${pago.nombreInmueble}</h3>
+                                    <p class="text-sm text-gray-600">Inquilino: ${pago.nombreInquilino}</p>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${bgColor} ${textColor}">
+                                    ${icon}
+                                    ${pago.estado}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Monto Total:</span>
+                                    <span class="text-sm font-semibold text-gray-900">${montoTotalFormatted}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Pagado:</span>
+                                    <span class="text-sm font-semibold text-gray-900">${montoPagadoFormatted}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Saldo Pendiente:</span>
+                                    <span class="text-sm font-semibold text-red-600">${saldoPendienteFormatted}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Mes:</span>
+                                    <span class="text-sm font-semibold text-gray-900">${pago.mesCorrespondiente} ${pago.anioCorrespondiente}</span>
+                                </div>
+                                ${serviciosInfo}
+                                ${mobiliarioInfo}
+                            </div>
 
-                tablaFilas += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 text-sm text-gray-800">${pago.nombreInmueble}</td>
-                        <td class="px-4 py-2 text-sm text-gray-700">${pago.nombreInquilino}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">${montoTotalFormatted}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">${montoBase.toFixed(2)}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">${saldoPendienteFormatted}</td>
-                        <td class="px-4 py-2 text-sm"><span class="${estadoClass}">${pago.estado || 'N/A'}</span></td>
-                        <td class="px-4 py-2 text-sm text-gray-700">${pago.mesCorrespondiente || 'N/A'}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">${serviciosHtml}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">${mobiliarioHtml}</td>
-                        <td class="px-4 py-2 text-sm text-right">
-                            <div class="flex flex-wrap justify-end gap-1">
-                                <button data-pago-id="${pago.id}" class="btn-detalle-pago bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                <button data-pago-id="${pago.id}" class="btn-detalle-pago bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                     <span>Detalles</span>
                                 </button>
-                                <button data-pago-id="${pago.id}" class="btn-abonar-pago bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
+                                ${pago.estado !== 'pagado' ? `
+                                <button data-pago-id="${pago.id}" class="btn-abonar-pago bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <span>Abonar</span>
-                                </button>
-                                <button data-pago-id="${pago.id}" class="btn-editar-pago bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
+                                </button>` : ''}
+                                <button data-pago-id="${pago.id}" class="btn-editar-pago bg-orange-500 hover:bg-orange-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     <span>Editar</span>
                                 </button>
-                                <button data-pago-id="${pago.id}" class="btn-gestionar-servicios bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                    </svg>
-                                    <span>Servicios</span>
-                                </button>
-                                ${mobiliarioTotal > 0 ? `<button data-pago-id="${pago.id}" class="btn-gestionar-mobiliario bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                    </svg>
-                                    <span>Mobiliario</span>
-                                </button>` : ''}
-                                <button data-pago-id="${pago.id}" class="btn-eliminar-pago bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
+                                <button data-pago-id="${pago.id}" class="btn-eliminar-pago bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     <span>Eliminar</span>
                                 </button>
-                                <button data-pago-id="${pago.id}" class="btn-recibo-pdf bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded-md text-xs transition-colors duration-200 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                    </svg>
+                                <button data-pago-id="${pago.id}" class="btn-recibo-pdf bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                     <span>PDF</span>
                                 </button>
                             </div>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 `;
-            });
+            }).join('');
         }
 
         // Opciones para los filtros
@@ -384,7 +329,7 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
         `;
 
         contenedor.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                 <h2 class="text-2xl font-semibold text-gray-700">Listado de Pagos de Renta</h2>
                 <div class="flex gap-2">
                     <button id="btnNuevoPago" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Pago</button>
@@ -392,26 +337,8 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
                 </div>
             </div>
             ${filtrosHtml}
-            <div class="shadow overflow-x-auto border-b border-gray-200 sm:rounded-lg">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inmueble</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inquilino</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Total</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago de Renta</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Pendiente</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mes Corresp.</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servicios Pagados</th>
-                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobiliario</th>
-                            <th scope="col" class="relative px-4 py-2 text-right"><span class="sr-only">Acciones</span></th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        ${tablaFilas}
-                    </tbody>
-                </table>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                ${pagosHtml}
             </div>
         `;
 document.getElementById('btnPagoServicio').addEventListener('click', () => {
@@ -2273,28 +2200,62 @@ export async function mostrarDetallePago(pagoId) {
 
 
         const detalleHtml = `
-            <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
-                <h3 class="text-2xl font-bold text-center">Detalles del Pago</h3>
+            <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow modal-header-responsive">
+                <h3 class="text-2xl font-bold text-center modal-title-responsive">Detalles del Pago</h3>
             </div>
-            <div class="space-y-3 text-gray-700 px-2">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><strong>Inmueble:</strong> <span class="text-blue-900">${nombreInmueble}</span></div>
-                    <div><strong>Inquilino:</strong> <span class="text-blue-900">${nombreInquilino}</span></div>
-                    <div><strong>Mes Correspondiente:</strong> <span>${pago.mesCorrespondiente}</span></div>
-                    <div><strong>Año Correspondiente:</strong> <span>${pago.anioCorrespondiente}</span></div>
-                    <div><strong>Monto Total:</strong> <span class="text-green-700 font-bold">${(pago.montoTotal || 0).toFixed(2)}</span></div>
-                    <div><strong>Monto Pagado:</strong> <span class="text-green-700 font-bold">${(pago.montoPagado || 0).toFixed(2)}</span></div>
-                    <div><strong>Saldo Pendiente:</strong> <span class="text-red-700 font-bold">${(pago.saldoPendiente || 0).toFixed(2)}</span></div>
-                    <div><strong>Estado:</strong> <span class="inline-block px-3 py-1 rounded-full font-semibold ${pago.estado === 'pagado' ? 'bg-green-100 text-green-800' : pago.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' : pago.estado === 'vencido' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${pago.estado}</span></div>
-                    <div><strong>Fecha de Registro:</strong> <span>${pago.fechaRegistro}</span></div>
-                    <div><strong>Forma de Pago:</strong> <span>${pago.formaPago || 'N/A'}</span></div>
-                    <div><strong>Propietario:</strong> <span>${nombrePropietario}</span></div>
+            <div class="space-y-4 text-gray-700 px-2 modal-responsive-padding">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-sm font-medium">Inmueble:</p>
+                        <p class="font-semibold text-blue-800">${nombreInmueble}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-sm font-medium">Inquilino:</p>
+                        <p class="font-semibold text-blue-800">${nombreInquilino}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-sm font-medium">Mes Correspondiente:</p>
+                        <p class="font-semibold">${pago.mesCorrespondiente} ${pago.anioCorrespondiente}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-sm font-medium">Fecha de Registro:</p>
+                        <p class="font-semibold">${pago.fechaRegistro}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-sm font-medium">Forma de Pago:</p>
+                        <p class="font-semibold">${pago.formaPago || 'N/A'}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-sm font-medium">Propietario:</p>
+                        <p class="font-semibold">${nombrePropietario}</p>
+                    </div>
                 </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                    <div class="bg-blue-100 p-3 rounded-lg border border-blue-300 text-center">
+                        <p class="text-sm font-medium text-blue-800">Monto Total</p>
+                        <p class="text-lg font-bold text-blue-900">${(pago.montoTotal || 0).toFixed(2)}</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-lg border border-green-300 text-center">
+                        <p class="text-sm font-medium text-green-800">Monto Pagado</p>
+                        <p class="text-lg font-bold text-green-900">${(pago.montoPagado || 0).toFixed(2)}</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-lg border border-red-300 text-center">
+                        <p class="text-sm font-medium text-red-800">Saldo Pendiente</p>
+                        <p class="text-lg font-bold text-red-900">${(pago.saldoPendiente || 0).toFixed(2)}</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <p class="text-sm font-medium">Estado:</p>
+                    <span class="inline-block px-3 py-1 rounded-full font-semibold ${pago.estado === 'pagado' ? 'bg-green-100 text-green-800' : pago.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' : pago.estado === 'vencido' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${pago.estado}</span>
+                </div>
+
                 ${serviciosHtml}
                 ${mobiliarioHtml}
                 ${abonosHtml}
             </div>
-            <div class="flex justify-end mt-6">
+            <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
                 <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
             </div>
         `;
@@ -2407,55 +2368,25 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         }
 
         let historialPagosHtml = `
-            <h3 class="text-xl font-semibold mb-4">Historial de Pagos de ${nombreInquilino}</h3>
+            <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow modal-header-responsive">
+                <h3 class="text-2xl font-bold text-center modal-title-responsive">Historial de Pagos de ${nombreInquilino}</h3>
+            </div>
+            <div class="space-y-4 text-gray-700 px-2 modal-responsive-padding">
             
             ${inmuebleInfo}
             ${serviciosInfo}
             
-            <div class="overflow-x-auto">
-                <table class="min-w-full leading-normal">
-                    <thead>
-                        <tr>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Inmueble
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Mes / Año
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Monto Total
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Monto Pagado
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Saldo Pendiente
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Estado
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Servicios
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Mobiliario
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Abonos
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <div class="grid grid-cols-1 gap-4">
         `;
 
         if (pagosSnap.empty) {
             historialPagosHtml += `
-                        <tr>
-                            <td colspan="9" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
-                                No hay pagos registrados para este inquilino.
-                            </td>
-                        </tr>
-            `;
+                <div class="text-center py-8 bg-gray-50 rounded-lg">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <p class="text-gray-500 text-lg">No hay pagos registrados para este inquilino.</p>
+                </div>`;
         } else {
             // Ordenar pagos por fecha (más reciente primero)
             const pagosOrdenados = [];
@@ -2542,46 +2473,74 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
                 const claseFila = esMesActual ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50';
 
                 historialPagosHtml += `
-                            <tr class="${claseFila}">
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">${inmueblesMap.get(pago.inmuebleId) || 'Desconocido'}</p>
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap ${esMesActual ? 'font-bold' : ''}">${pago.mesCorrespondiente} / ${pago.anioCorrespondiente} ${esMesActual ? '(Actual)' : ''}</p>
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">${(pago.montoTotal || 0).toFixed(2)}</p>
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">${(pago.montoPagado || 0).toFixed(2)}</p>
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap">${(pago.saldoPendiente || 0).toFixed(2)}</p>
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <span class="relative inline-block px-3 py-1 font-semibold leading-tight">
-                                        <span aria-hidden="true" class="absolute inset-0 ${pago.estado === 'pagado' ? 'bg-green-200' : pago.estado === 'pendiente' ? 'bg-orange-200' : pago.estado === 'vencido' ? 'bg-red-200' : 'bg-yellow-200'} opacity-50 rounded-full"></span>
-                                        <span class="relative text-gray-900">${pago.estado}</span>
-                                    </span>
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    ${serviciosHtml}
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    ${mobiliarioHtml}
-                                </td>
-                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    ${abonosDetalleHtml}
-                                </td>
-                            </tr>
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${pago.estado === 'pagado' ? 'border-green-500' : pago.estado === 'pendiente' ? 'border-orange-500' : pago.estado === 'vencido' ? 'border-red-500' : 'border-yellow-500'} overflow-hidden transform hover:-translate-y-1">
+                        <div class="p-4 sm:p-5 md:p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 class="text-lg sm:text-xl font-bold text-gray-800">${inmueblesMap.get(pago.inmuebleId) || 'Desconocido'}</h4>
+                                    <p class="text-sm text-gray-600">Mes: ${pago.mesCorrespondiente} ${pago.anioCorrespondiente}</p>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${pago.estado === 'pagado' ? 'bg-green-100 text-green-800' : pago.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' : pago.estado === 'vencido' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
+                                    ${pago.estado}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Monto Total:</span>
+                                    <span class="text-sm font-semibold text-gray-900">${(pago.montoTotal || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Pagado:</span>
+                                    <span class="text-sm font-semibold text-gray-900">${(pago.montoPagado || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Saldo Pendiente:</span>
+                                    <span class="text-sm font-semibold text-red-600">${(pago.saldoPendiente || 0).toFixed(2)}</span>
+                                </div>
+                                ${serviciosHtml !== '<span class="text-xs text-gray-500">N/A</span>' ? `
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Servicios:</span>
+                                    <span>${serviciosHtml}</span>
+                                </div>` : ''}
+                                ${mobiliarioHtml !== '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>' && mobiliarioHtml !== '-' ? `
+                                <div class="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                    <span class="text-sm font-medium">Mobiliario:</span>
+                                    <span>${mobiliarioHtml}</span>
+                                </div>` : ''}
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                <button data-pago-id="${pago.id}" class="btn-detalle-pago bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span>Detalles</span>
+                                </button>
+                                ${pago.estado !== 'pagado' ? `
+                                <button data-pago-id="${pago.id}" class="btn-abonar-pago bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>Abonar</span>
+                                </button>` : ''}
+                                <button data-pago-id="${pago.id}" class="btn-editar-pago bg-orange-500 hover:bg-orange-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    <span>Editar</span>
+                                </button>
+                                <button data-pago-id="${pago.id}" class="btn-eliminar-pago bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    <span>Eliminar</span>
+                                </button>
+                                <button data-pago-id="${pago.id}" class="btn-recibo-pdf bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    <span>PDF</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 `;
             });
         }
         historialPagosHtml += `
-                    </tbody>
-                </table>
             </div>
-            <div class="flex justify-end mt-6">
+            <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
                 <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
             </div>
         `;

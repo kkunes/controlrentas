@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/f
 import { mostrarDashboard } from './dashboard.js';
 import { verificarContratosProximosARenovar, mostrarDetallesRenovacion } from './recordatorios.js';
 // Asegúrate de que eliminarDocumento se importa con un alias de cada módulo
-import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, eliminarDocumento as eliminarInmuebleDoc } from './inmuebles.js';
+import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, eliminarDocumento as eliminarInmuebleDoc, mostrarHistorialInquilinos } from './inmuebles.js';
 import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, confirmarDesocupacionInquilino, confirmarReactivacionInquilino, eliminarDocumento as eliminarInquilinoDoc, mostrarHistorialAbonosInquilino, mostrarSaldoFavorInquilino } from './inquilinos.js';
 import { mostrarPagos, mostrarFormularioNuevoPago, editarPago, mostrarFormularioRegistrarAbono, revisarPagosVencidos, mostrarHistorialPagosInmueble, eliminarDocumento as eliminarPagoDoc, mostrarHistorialPagosInquilino } from './pagos.js'; // Added mostrarHistorialPagosInquilino import
 import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc } from './mantenimientos.js';
@@ -78,6 +78,7 @@ window.ocultarLoader = () => document.getElementById('loader').classList.add('hi
 // Funciones de recordatorios de renovación de contratos
 window.verificarContratosProximosARenovar = verificarContratosProximosARenovar;
 window.mostrarDetallesRenovacion = mostrarDetallesRenovacion;
+window.mostrarHistorialInquilinos = mostrarHistorialInquilinos; // Nueva línea
 
 // ***** Centralización de la función eliminarDocumento *****
 // Esta función global manejará la confirmación y delegará la eliminación a la función específica de cada módulo.
