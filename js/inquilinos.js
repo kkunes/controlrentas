@@ -942,6 +942,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         const pagosSnap = await getDocs(collection(db, "pagos"));
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
         const inquilinoSnap = await getDoc(doc(db, "inquilinos", inquilinoId));
+        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
 
         if (!inquilinoSnap.exists()) {
             mostrarNotificacion("Inquilino no encontrado.", "error");
@@ -952,6 +953,19 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         const inmueblesMap = new Map();
         inmueblesSnap.forEach(doc => {
             inmueblesMap.set(doc.id, doc.data().nombre);
+        });
+
+        const inquilinosConMobiliario = new Set();
+        mobiliarioSnap.forEach(doc => {
+            const mob = doc.data();
+            if (Array.isArray(mob.asignaciones)) {
+                mob.asignaciones.forEach(a => {
+                    // CORRECCIÓN: Se comprueba estrictamente que `activa` sea `true`.
+                    if (a.inquilinoId && a.activa === true && a.cantidad > 0) {
+                        inquilinosConMobiliario.add(a.inquilinoId);
+                    }
+                });
+            }
         });
 
         // Filtrar pagos de este inquilino
@@ -967,24 +981,29 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
 
         // Ejemplo de integración en mostrarHistorialPagosInquilino
-        const mesesAdeudados = await obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fechaOcupacion);
-        let adeudosHtml = '';
-        if (mesesAdeudados.length > 0) {
-            adeudosHtml = `
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
-                    <strong>Meses adeudados:</strong>
-                    <ul class="list-disc list-inside">
-                        ${mesesAdeudados.map(m => `<li>${m.mes} ${m.anio}</li>`).join('')}
-                    </ul>
-                </div>
-            `;
-        } else {
-            adeudosHtml = `
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
-                    <strong>¡Sin adeudos!</strong>
-                </div>
-            `;
+        // FIX: This was buggy, `inmuebleId` and `fechaOcupacion` were not defined.
+        // Using the main inquilino data instead.
+        if (inquilino.inmuebleAsociadoId && inquilino.fechaOcupacion) {
+            const mesesAdeudados = await obtenerMesesAdeudadosHistorico(inquilinoId, inquilino.inmuebleAsociadoId, new Date(inquilino.fechaOcupacion));
+                                                                                         let adeudosHtml = '';
+            if (mesesAdeudados.length > 0) {
+                adeudosHtml = `
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
+                        <strong>Meses adeudados:</strong>
+                        <ul class="list-disc list-inside">
+                            ${mesesAdeudados.map(m => `<li>${m.mes} ${m.anio}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            } else {
+                adeudosHtml = `
+                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+                        <strong>¡Sin adeudos!</strong>
+                    </div>
+                `;
+            }
         }
+
 
         let historialHtml = `
             <div class="px-4 py-3 bg-purple-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
@@ -1000,6 +1019,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pagado</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Saldo</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mobiliario</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Abonos</th>
                         </tr>
                     </thead>
@@ -1009,7 +1029,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         if (pagosList.length === 0) {
             historialHtml += `
                 <tr>
-                    <td colspan="7" class="text-center py-8 text-gray-500">No hay pagos registrados para este inquilino.</td>
+                    <td colspan="8" class="text-center py-8 text-gray-500">No hay pagos registrados para este inquilino.</td>
                 </tr>
             `;
         } else {
@@ -1039,7 +1059,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                 if (pago.abonos && pago.abonos.length > 0) {
                     abonosDetalleHtml = pago.abonos.map(abono => `
                         <div class="mb-1">
-                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded font-semibold mr-1">$${parseFloat(abono.montoAbonado).toFixed(2)}</span>
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded font-semibold mr-1">${parseFloat(abono.montoAbonado).toFixed(2)}</span>
                             <span class="text-xs text-gray-500">${abono.fechaAbono}</span>
                             ${abono.origen ? `<span class="ml-1 text-xs text-cyan-700">(${abono.origen})</span>` : ""}
                         </div>
@@ -1048,14 +1068,48 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     abonosDetalleHtml = `<span class="text-xs text-gray-400">Sin abonos</span>`;
                 }
 
+                // Lógica para el estado del mobiliario
+                let mobiliarioHtml = '-';
+
+                // Verifica si el inquilino tiene mobiliario asignado para el inmueble de este pago
+                let tieneMobiliarioAsignado = false;
+                mobiliarioSnap.forEach(doc => {
+                    const mob = doc.data();
+                    if (Array.isArray(mob.asignaciones)) {
+                        mob.asignaciones.forEach(a => {
+                            // Solo cuenta como asignado si está activa, cantidad > 0, inquilinoId coincide y el inmuebleId coincide con el del pago
+                            if (
+                                a.inquilinoId === inquilinoId &&
+                                a.activa === true &&
+                                a.cantidad > 0 &&
+                                a.inmuebleId === pago.inmuebleId // <-- esta línea es clave
+                            ) {
+                                tieneMobiliarioAsignado = true;
+                            }
+                        });
+                    }
+                });
+
+                // SOLO muestra pendiente/pagado si tiene mobiliario asignado para ese inmueble
+                if (tieneMobiliarioAsignado) {
+                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                        mobiliarioHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Pagado</span>`;
+                    } else {
+                        mobiliarioHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                    }
+                } else {
+                    mobiliarioHtml = '-';
+                }
+
                 historialHtml += `
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-2 text-sm text-gray-800">${inmueblesMap.get(pago.inmuebleId) || 'Desconocido'}</td>
                         <td class="px-4 py-2 text-sm text-gray-700">${pago.mesCorrespondiente || ''} / ${pago.anioCorrespondiente || ''}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">$${(pago.montoTotal || 0).toFixed(2)}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">$${(pago.montoPagado || 0).toFixed(2)}</td>
-                        <td class="px-4 py-2 text-sm text-gray-800">$${(pago.saldoPendiente || 0).toFixed(2)}</td>
+                        <td class="px-4 py-2 text-sm text-gray-800">${(pago.montoTotal || 0).toFixed(2)}</td>
+                        <td class="px-4 py-2 text-sm text-gray-800">${(pago.montoPagado || 0).toFixed(2)}</td>
+                        <td class="px-4 py-2 text-sm text-gray-800">${(pago.saldoPendiente || 0).toFixed(2)}</td>
                         <td class="px-4 py-2 text-sm"><span class="${estadoClass}">${pago.estado || 'N/A'}</span></td>
+                        <td class="px-4 py-2 text-sm">${mobiliarioHtml}</td>
                         <td class="px-4 py-2 text-sm">${abonosDetalleHtml}</td>
                     </tr>
                 `;

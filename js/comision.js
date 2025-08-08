@@ -81,7 +81,7 @@ async function obtenerPagosRentaComisiones() {
 // --- Filtros globales ---
 let filtroAnio = '';
 let filtroMes = '';
-let filtroEstado = ''; // Nuevo filtro
+let filtroEstadoCobro = ''; // Nuevo filtro para estado de cobro
 
 // Renderiza la tabla de pagos agrupados por mes, con comisión calculada y opción de marcar como cobrado
 export async function renderComisiones() {
@@ -107,37 +107,38 @@ export async function renderComisiones() {
     // 3. Construcción de filtros
     const mesesDisponibles = Object.keys(pagosPorMes);
     const anios = [...new Set(mesesDisponibles.map(m => m.split('-')[0]))].sort();
-    const meses = [...new Set(mesesDisponibles.map(m => m.split('-')[1]))].sort();
+    const mesesNumeros = [...new Set(mesesDisponibles.map(m => m.split('-')[1]))].sort();
 
     let filtrosHtml = `
-    <div class="flex flex-wrap gap-4 mb-6 items-end">
-        <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Año</label>
-            <select id="filtroAnio" class="mt-1 block w-28 rounded-lg border-gray-300 shadow focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">Todos</option>
-                ${anios.map(anio => `<option value="${anio}" ${filtroAnio === anio ? 'selected' : ''}>${anio}</option>`).join('')}
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Mes</label>
-            <select id="filtroMes" class="mt-1 block w-32 rounded-lg border-gray-300 shadow focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">Todos</option>
-                ${meses.map(mes => {
-                    const nombreMes = new Date(2000, parseInt(mes, 10) - 1, 1).toLocaleString('es-MX', { month: 'long' });
-                    return `<option value="${mes}" ${filtroMes === mes ? 'selected' : ''}>${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}</option>`;
-                }).join('')}
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Estado</label>
-            <select id="filtroEstado" class="mt-1 block w-36 rounded-lg border-gray-300 shadow focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">Todos</option>
-                <option value="cobrado" ${filtroEstado === 'cobrado' ? 'selected' : ''}>Cobrado</option>
-                <option value="nocobrado" ${filtroEstado === 'nocobrado' ? 'selected' : ''}>No cobrado</option>
-            </select>
-        </div>
+<div class="flex flex-wrap gap-4 mb-6 items-end">
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Año</label>
+        <select id="filtroAnio" class="mt-1 block w-28 rounded-lg border-gray-300 shadow focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="">Todos</option>
+            ${anios.map(anio => `<option value="${anio}" ${filtroAnio === anio ? 'selected' : ''}>${anio}</option>`).join('')}
+        </select>
     </div>
-    `;
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Mes</label>
+        <select id="filtroMes" class="mt-1 block w-32 rounded-lg border-gray-300 shadow focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="">Todos</option>
+            ${mesesNumeros.map(mesNum => {
+                const mesStr = String(mesNum).padStart(2, '0');
+                const nombreMes = new Date(2000, parseInt(mesNum, 10) - 1, 1).toLocaleString('es-MX', { month: 'long' });
+                return `<option value="${mesStr}" ${filtroMes === mesStr ? 'selected' : ''}>${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}</option>`;
+            }).join('')}
+        </select>
+    </div>
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Estado de cobro</label>
+        <select id="filtroEstadoCobro" class="mt-1 block w-36 rounded-lg border-gray-300 shadow focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="">Todos</option>
+            <option value="cobrado" ${filtroEstadoCobro === 'cobrado' ? 'selected' : ''}>Cobrados</option>
+            <option value="nocobrado" ${filtroEstadoCobro === 'nocobrado' ? 'selected' : ''}>No cobrados</option>
+        </select>
+    </div>
+</div>
+`;
 
     // 4. Construcción del HTML de pagos agrupados y filtrados
     let html = `
@@ -148,15 +149,20 @@ export async function renderComisiones() {
 
     // Filtrar meses según los filtros seleccionados
     let mesesFiltrados = Object.keys(pagosPorMes).filter(mes => {
-        const [anio, mesNum] = mes.split('-');
+        const [anio, mesNum] = mes.split('-'); // mesNum SIEMPRE es string de dos dígitos
         const coincideAnio = !filtroAnio || filtroAnio === anio;
         const coincideMes = !filtroMes || filtroMes === mesNum;
         const comisionMes = comisionesEstado[mes];
-        const cobrado = comisionMes?.cobrado === true;
-        let coincideEstado = true;
-        if (filtroEstado === 'cobrado') coincideEstado = cobrado;
-        if (filtroEstado === 'nocobrado') coincideEstado = !cobrado;
-        return coincideAnio && coincideMes && coincideEstado;
+        const estado = filtroEstadoCobro || '';
+
+        if (estado === 'cobrado') {
+            return coincideAnio && coincideMes && !!comisionMes && comisionMes.cobrado === true;
+        }
+        if (estado === 'nocobrado') {
+            return coincideAnio && coincideMes && (!comisionMes || comisionMes.cobrado !== true);
+        }
+        // Si es "Todos" (""), muestra todos
+        return coincideAnio && coincideMes;
     });
 
     if (mesesFiltrados.length === 0) {
@@ -184,90 +190,60 @@ export async function renderComisiones() {
         const cobrado = comisionMes?.cobrado === true;
         const fechaCobro = comisionMes?.fechaCobro ? new Date(comisionMes.fechaCobro).toLocaleString('es-MX') : '';
 
-        // --- NUEVO: Verifica si hay inmuebles ocupados sin pago ---
-        let faltanPagos = false;
-        let faltantesNombres = [];
-        // Esta parte debe ser async, así que lo hacemos antes del bucle o con una promesa, pero para mantenerlo simple:
-        // (esto es síncrono porque ya tienes los datos en pagosPorMes y puedes traer los inmuebles ocupados antes del bucle)
-        // Supón que tienes inmueblesOcupados y pagosInmuebleIds disponibles aquí:
-        // (Si no, deberás traerlos antes del bucle y pasarlos aquí)
-        // Por ejemplo:
-        // const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        // const inmueblesOcupados = [];
-        // inmueblesSnap.forEach(doc => {
-        //     const data = doc.data();
-        //     if (data.estado === "Ocupado") {
-        //         inmueblesOcupados.push({ id: doc.id, nombre: data.nombre });
-        //     }
-        // });
-        // const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
-        // const faltantes = inmueblesOcupados.filter(inm => !pagosInmuebleIds.includes(inm.id));
-        // faltanPagos = faltantes.length > 0;
-        // faltantesNombres = faltantes.map(f => f.nombre);
-
-        // Para hacerlo en el contexto actual, agrega arriba del bucle:
-        // (esto es solo una vez, fuera del bucle)
-        // const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        // const inmueblesOcupadosGlobal = [];
-        // inmueblesSnap.forEach(doc => {
-        //     const data = doc.data();
-        //     if (data.estado === "Ocupado") {
-        //         inmueblesOcupadosGlobal.push({ id: doc.id, nombre: data.nombre });
-        //     }
-        // });
-
-        // Y dentro del bucle:
         const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
         const faltantes = inmueblesOcupadosGlobal.filter(inm => !pagosInmuebleIds.includes(inm.id));
-        faltanPagos = faltantes.length > 0;
-        faltantesNombres = faltantes.map(f => f.nombre);
+        const faltanPagos = faltantes.length > 0;
+        const faltantesNombres = faltantes.map(f => f.nombre);
 
         html += `
-        <div class="mb-8 bg-white rounded-xl shadow-lg p-6 transition hover:shadow-2xl">
-            <h3 class="text-xl font-semibold text-indigo-600 mb-3 flex items-center gap-2">
-                <span class="inline-block bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
-                    ${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)} ${mes.split('-')[0]}
-                </span>
-            </h3>
-            <div class="mb-2 flex flex-wrap gap-6">
-                <div>
-                    <span class="font-medium text-gray-700">Total rentas pagadas:</span>
-                    <span class="text-lg font-bold text-gray-900">$${totalRentas.toFixed(2)}</span>
+        <div class="mb-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-xl p-8 transition hover:shadow-2xl border border-indigo-100">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <span class="inline-block bg-indigo-600 text-white px-4 py-2 rounded-full text-lg font-bold shadow">${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)} ${mes.split('-')[0]}</span>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${cobrado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} shadow">
+                        ${cobrado ? 
+                            `<svg class="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Cobrado` : 
+                            `<svg class="w-4 h-4 mr-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01" /></svg> No cobrado`
+                        }
+                    </span>
+                    ${cobrado && fechaCobro ? `<span class="ml-2 text-xs text-gray-500">(${fechaCobro})</span>` : ''}
                 </div>
-                <div>
-                    <span class="font-medium text-gray-700">Comisión (10%):</span>
-                    <span class="text-lg font-bold text-indigo-700">$${totalComision.toFixed(2)}</span>
+                <div class="flex gap-2">
+                    <button class="marcar-cobrado px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold shadow transition flex items-center gap-2"
+                        data-mes="${mes}" data-cobrado="${cobrado}" ${faltanPagos ? 'disabled title="No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado."' : ''}>
+                        ${cobrado ? 
+                            `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg> Desmarcar` : 
+                            `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Marcar cobrado`
+                        }
+                    </button>
+                    <button class="px-4 py-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold shadow transition btn-ver-pagos flex items-center gap-2" data-mes="${mes}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        Ver pagos
+                    </button>
+                    <button class="px-4 py-2 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-xs font-semibold shadow transition btn-ver-faltantes flex items-center gap-2" data-mes="${mes}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        Inmuebles sin pago
+                    </button>
                 </div>
             </div>
-            <div class="mb-2 flex items-center gap-3">
-                <span class="font-medium text-gray-700">Estado:</span>
-                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${cobrado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                    ${cobrado ? 'Cobrado' : 'No cobrado'}
-                </span>
-                <button class="marcar-cobrado ml-2 px-3 py-1 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold transition"
-                    data-mes="${mes}" data-cobrado="${cobrado}" ${faltanPagos ? 'disabled title="No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado."' : ''}>
-                    ${cobrado ? 'Desmarcar' : 'Marcar cobrado'}
-                </button>
-                ${faltanPagos ? `
-    <span 
-        class="ml-4 px-3 py-1.5 rounded-lg bg-red-100 border border-red-400 text-red-800 text-sm font-bold flex items-center gap-2 animate-pulse shadow"
-        title="Faltan pagos de: ${faltantesNombres.join(', ')}"
-        style="display:inline-flex;"
-    >
-        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        ¡Faltan pagos!
-    </span>
-` : ''}
-                ${cobrado && fechaCobro ? `<span class="ml-2 text-xs text-gray-500">(${fechaCobro})</span>` : ''}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
+                <div class="bg-white rounded-xl shadow p-5 flex flex-col items-center border border-indigo-100">
+                    <span class="text-gray-500 text-sm mb-1">Total rentas pagadas</span>
+                    <span class="text-2xl font-extrabold text-indigo-700">$${totalRentas.toFixed(2)}</span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-5 flex flex-col items-center border border-indigo-100">
+                    <span class="text-gray-500 text-sm mb-1">Comisión (10%)</span>
+                    <span class="text-2xl font-extrabold text-green-600">$${totalComision.toFixed(2)}</span>
+                </div>
             </div>
-            <div class="mb-2">
-                <span class="font-medium text-gray-700">Pagos incluidos:</span>
-                <button class="ml-2 px-2 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold transition btn-ver-pagos" data-mes="${mes}">Ver detalles</button>
-                <button class="ml-2 px-2 py-1 rounded bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-xs font-semibold transition btn-ver-faltantes" data-mes="${mes}">Ver inmuebles sin pago</button>
-
-            </div>
+            ${faltanPagos ? `
+                <div class="flex items-center gap-2 mt-2 mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 font-semibold shadow animate-pulse">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    ¡Faltan pagos de: ${faltantesNombres.join(', ')}!
+                </div>
+            ` : ''}
         </div>
         `;
     });
@@ -284,8 +260,8 @@ export async function renderComisiones() {
         filtroMes = this.value;
         renderComisiones();
     });
-    document.getElementById('filtroEstado').addEventListener('change', function() {
-        filtroEstado = this.value;
+    document.getElementById('filtroEstadoCobro').addEventListener('change', function() {
+        filtroEstadoCobro = this.value || '';
         renderComisiones();
     });
 
@@ -337,40 +313,70 @@ export async function renderComisiones() {
                 inmueblesMap[doc.id] = data.nombre || '';
             });
 
+            // --- Para el modal de "Ver Pagos" ---
             let tabla = `
-                <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
-                    <h3 class="text-xl font-bold text-center">Pagos incluidos</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 mb-4">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Inmueble</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            ${pagos.map(p => `
-                                <tr>
-                                    <td class="px-4 py-2">${new Date(p.fechaPago).toLocaleDateString('es-MX')}</td>
-                                    <td class="px-4 py-2">$${p.monto.toFixed(2)}</td>
-                                    <td class="px-4 py-2">${inmueblesMap[p.inmuebleId] || '-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="flex justify-end mt-6">
-                    <button onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="relative">
+                    <button onclick="ocultarModal()" class="absolute top-2 right-2 z-20 bg-white/80 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition-all focus:outline-none focus:ring-2 focus:ring-red-400" style="font-size:1.5rem;line-height:1;">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        Cerrar
                     </button>
+                    <div class="px-6 py-5 bg-gradient-to-r from-indigo-600 to-indigo-400 text-white rounded-t-2xl -mx-6 -mt-6 mb-6 shadow flex flex-col items-center">
+                        <h3 class="text-2xl font-extrabold text-center mb-1 tracking-tight">Pagos incluidos</h3>
+                        <span class="text-indigo-100 text-sm font-medium">${pagos.length} pago${pagos.length === 1 ? '' : 's'} registrados</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-indigo-100 rounded-xl shadow bg-white">
+                            <thead class="bg-indigo-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">Monto</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">Inmueble</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-indigo-50">
+                                ${pagos.map(p => `
+                                    <tr class="hover:bg-indigo-50 transition">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${new Date(p.fechaPago).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">$${p.monto.toFixed(2)}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-indigo-900 font-semibold">${inmueblesMap[p.inmuebleId] || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+                        <div class="flex flex-col items-center sm:items-start">
+                            <span class="text-xs text-gray-500 mb-1">Total de pagos</span>
+                            <span class="text-2xl font-extrabold text-indigo-700">$${pagos.reduce((sum, p) => sum + p.monto, 0).toFixed(2)}</span>
+                        </div>
+                        <button onclick="ocultarModal()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all duration-200 flex items-center gap-2 mt-4 sm:mt-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Cerrar
+                        </button>
+                    </div>
                 </div>
+                <style>
+                    @media (max-width: 640px) {
+                        .modal-content table th, .modal-content table td {
+                            padding-left: 0.5rem !important;
+                            padding-right: 0.5rem !important;
+                            font-size: 0.95rem;
+                        }
+                        .modal-content .flex {
+                            flex-direction: column !important;
+                            gap: 1rem !important;
+                        }
+                        .modal-content .absolute.top-2.right-2 {
+                            top: 0.5rem !important;
+                            right: 0.5rem !important;
+                        }
+                    }
+                </style>
             `;
-            mostrarModal(tabla);
+            mostrarModal(`<div class="modal-content">${tabla}</div>`);
         });
     });
 
@@ -394,41 +400,49 @@ export async function renderComisiones() {
             // 3. Filtra los inmuebles ocupados que no tienen pago ese mes
             const faltantes = inmueblesOcupados.filter(inm => !pagosInmuebleIds.includes(inm.id));
 
-            let tabla = `
-                <div class="px-4 py-3 bg-yellow-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow flex flex-col items-center">
-                    <h3 class="text-xl font-bold text-center mb-1">Inmuebles ocupados sin pago en el mes</h3>
-                    <div class="flex items-center gap-2 mt-1 mb-2">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-yellow-600 font-extrabold text-lg shadow">${faltantes.length}</span>
-                        <span class="text-sm text-yellow-100 font-medium">sin pago</span>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    ${
-                        faltantes.length > 0
-                        ? `<ul class="divide-y divide-yellow-100 bg-yellow-50 rounded-lg shadow p-4">
-                            ${faltantes.map(inm => `
-                                <li class="flex items-center gap-3 py-2">
-                                    <svg class="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <span class="font-medium text-yellow-900">${inm.nombre}</span>
-                                </li>
-                            `).join('')}
-                        </ul>`
-                        : `<div class="p-6 text-center text-green-700 font-semibold bg-green-50 rounded-lg shadow">Todos los inmuebles ocupados tienen pago registrado.</div>`
-                    }
-                </div>
-                <div class="flex justify-end mt-6">
-                    <button onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            // --- Para el modal de "Inmuebles sin pago" ---
+            let tablaFaltantes = `
+                <div class="relative">
+                    <button onclick="ocultarModal()" class="absolute top-2 right-2 z-20 bg-white/80 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition-all focus:outline-none focus:ring-2 focus:ring-red-400" style="font-size:1.5rem;line-height:1;">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        Cerrar
                     </button>
+                    <div class="px-4 py-3 bg-yellow-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow flex flex-col items-center">
+                        <h3 class="text-xl font-bold text-center mb-1">Inmuebles ocupados sin pago en el mes</h3>
+                        <div class="flex items-center gap-2 mt-1 mb-2">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-yellow-600 font-extrabold text-lg shadow">${faltantes.length}</span>
+                            <span class="text-sm text-yellow-100 font-medium">sin pago</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        ${
+                            faltantes.length > 0
+                            ? `<ul class="divide-y divide-yellow-100 bg-yellow-50 rounded-lg shadow p-4">
+                                ${faltantes.map(inm => `
+                                    <li class="flex items-center gap-3 py-2">
+                                        <svg class="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span class="font-medium text-yellow-900">${inm.nombre}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>`
+                            : `<div class="p-6 text-center text-green-700 font-semibold bg-green-50 rounded-lg shadow">Todos los inmuebles ocupados tienen pago registrado.</div>`
+                        }
+                    </div>
+                    <div class="flex justify-end mt-6">
+                        <button onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Cerrar
+                        </button>
+                    </div>
                 </div>
             `;
-            mostrarModal(tabla);
+            mostrarModal(tablaFaltantes);
         });
     });
 }
