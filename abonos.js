@@ -259,15 +259,6 @@ export async function mostrarAbonos() {
                                 </div>
                             </div>
 
-                            ${abono.descripcion ? `
-                                <div class="mt-4 text-sm text-gray-600">
-                                    <span class="font-medium">Descripción:</span>
-                                    <p class="mt-1">${abono.descripcion}</p>
-                                </div>
-                            ` : ''}
-
-                            ${historialAplicacionesHtml}
-
                             <div class="mt-4 flex flex-wrap gap-2 sm:gap-3">
                                 <button onclick="mostrarFormularioNuevoAbono('${abono.id}')"
                                         class="flex-1 bg-gradient-to-br from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700
@@ -277,6 +268,15 @@ export async function mostrarAbonos() {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                     Actualizar
+                                </button>
+                                <button onclick="mostrarHistorialDescripciones('${abono.descripcion?.replace(/'/g, "\\'").replace(/"/g, '&quot;') || ''}', '${abono.nombreInquilino}', '${abono.inmuebleNombre}')"
+                                        class="flex-1 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700
+                                        text-white text-sm font-medium px-3 py-2.5 sm:py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
+                                        flex items-center justify-center gap-1.5 border border-yellow-400/30">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17l4 4 4-4m0-5V3"/>
+                                    </svg>
+                                    Historial
                                 </button>
                                 ${abono.saldoRestante > 0 ? `
                                     <button onclick="aplicarSaldoFavorManual('${abono.id}', '${abono.inquilinoId}')"
@@ -299,6 +299,8 @@ export async function mostrarAbonos() {
                                     Eliminar
                                 </button>
                             </div>
+
+                            ${historialAplicacionesHtml}
                         </div>
                     </div>
                 `;
@@ -744,6 +746,43 @@ export async function eliminarAbono(id, inquilinoId = null) {
         mostrarNotificacion('Error al eliminar el saldo a favor.', 'error');
     }
 }
+
+// Agrega esta función para mostrar el historial de descripciones en un modal elegante
+function mostrarHistorialDescripciones(descripciones, nombreInquilino, inmuebleNombre) {
+    // Separar las descripciones por el separador " | "
+    const historial = descripciones.split(' | ').filter(d => d.trim() !== '');
+    const historialHtml = historial.length > 0
+        ? historial.map((desc, idx) => `
+            <div class="bg-white rounded-lg shadow p-3 mb-2 border border-gray-100 flex items-start gap-2">
+                <span class="text-indigo-500 font-bold">${idx + 1}.</span>
+                <span class="text-gray-700">${desc}</span>
+            </div>
+        `).join('')
+        : `<div class="text-gray-500 text-center py-4">No hay historial de descripciones.</div>`;
+
+    const modalHtml = `
+        <div class="max-w-lg w-full mx-auto">
+            <div class="bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-t-xl px-6 py-4 flex items-center justify-between">
+                <div>
+                    <div class="font-bold text-lg">Historial de Descripciones</div>
+                    <div class="text-sm opacity-80">${nombreInquilino} <span class="text-xs">|</span> <span class="italic">${inmuebleNombre}</span></div>
+                </div>
+                <button onclick="ocultarModal()" class="text-white hover:bg-red-100 hover:text-red-600 rounded-full p-2 transition-all" aria-label="Cerrar">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="bg-white rounded-b-xl px-6 py-5 max-h-96 overflow-y-auto">
+                ${historialHtml}
+            </div>
+        </div>
+    `;
+    mostrarModal(modalHtml);
+}
+
+// Hacer la función global para que se pueda llamar desde los botones
+window.mostrarHistorialDescripciones = mostrarHistorialDescripciones;
 
 // Hacer funciones globales para los botones en HTML
 window.mostrarAbonos = mostrarAbonos;
