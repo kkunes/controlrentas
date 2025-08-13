@@ -2827,7 +2827,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
         ];
         const hoy = new Date();
-        
+        hoy.setHours(0, 0, 0, 0); // Normalize 'hoy' to start of day for accurate comparison
+
         // Validar fecha de ocupación
         if (!fechaOcupacion || isNaN(fechaOcupacion.getTime())) {
             console.error("Fecha de ocupación inválida:", fechaOcupacion);
@@ -2837,8 +2838,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         // Obtener información del inquilino para verificar servicios
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
         const inquilinoData = inquilinoDoc.exists() ? inquilinoDoc.data() : null;
-        const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
-            ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
+        const tieneServicios = inquilinoData && inquilinoData.pagaServicios &&
+            ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) ||
             (inquilinoData.tipoServicio && inquilinoData.montoServicio));
 
         // Obtener el inmueble para conocer el monto de renta
@@ -2859,104 +2860,93 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
 
         // Mes y año de ocupación
         const fechaOcupacionObj = new Date(fechaOcupacion);
-        const diaOcupacion = fechaOcupacionObj.getDate();
+        const diaDePago = fechaOcupacionObj.getDate(); // Use this as the payment day
         const mesOcupacion = fechaOcupacionObj.getMonth();
         const anioOcupacion = fechaOcupacionObj.getFullYear();
-        
+
         // Mes y año actual
         const mesActual = hoy.getMonth();
         const anioActual = hoy.getFullYear();
-        
+
         let mesesPendientes = [];
-        
-        // Determinar el mes inicial basado en el día de ocupación
-        // Si el día de ocupación es 15 o menor, se considera ese mes
-        // Si es mayor a 15, se considera a partir del mes siguiente
-        let mesInicial = mesOcupacion;
-        let anioInicial = anioOcupacion;
-        
-        if (diaOcupacion > 15) {
-            // Si es después del día 15, avanzar al mes siguiente
-            mesInicial = mesOcupacion + 1;
-            if (mesInicial > 11) {
-                mesInicial = 0;
-                anioInicial = anioOcupacion + 1;
-            }
-        }
-        
-        // Crear un array de meses a verificar
-        const mesesAVerificar = [];
-        
-        // Verificar si la fecha de ocupación es posterior a la fecha actual
-        if (anioInicial > anioActual || (anioInicial === anioActual && mesInicial > mesActual)) {
-            // Si la fecha de ocupación es futura, no hay adeudos
-            return [];
-        }
-        
-        // Año inicial
-        if (anioInicial === anioOcupacion) {
-            for (let mes = mesInicial; mes <= 11 && (anioInicial < anioActual || mes <= mesActual); mes++) {
-                mesesAVerificar.push({ mes, anio: anioInicial });
-            }
-        }
-        
-        // Años intermedios (completos)
-        for (let anio = anioInicial + 1; anio < anioActual; anio++) {
-            for (let mes = 0; mes <= 11; mes++) {
-                mesesAVerificar.push({ mes, anio });
-            }
-        }
-        
-        // Año actual (hasta el mes actual)
-        if (anioActual > anioInicial) {
-            for (let mes = 0; mes <= mesActual; mes++) {
-                mesesAVerificar.push({ mes, anio: anioActual });
-            }
-        }
-        
-        // Verificar cada mes
-        for (const { mes, anio } of mesesAVerificar) {
-            const nombreMes = mesesNombres[mes];
-            
-            // Buscar pagos para este mes/año
-            const pagosMes = pagosList.filter(p => 
-                p.mesCorrespondiente && 
-                p.anioCorrespondiente &&
-                p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === nombreMes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
-                Number(p.anioCorrespondiente) === anio
-            );
-            
-            // Verificar si hay algún pago con estado "pagado"
-            let pagado = false;
-            let serviciosPagados = false;
-            
-            pagosMes.forEach(pago => {
-                if (typeof pago.estado === "string" && pago.estado.trim().toLowerCase() === "pagado") {
-                    pagado = true;
-                }
-                
-                // Verificar si los servicios están pagados
-                if (tieneServicios && pago.serviciosPagados) {
-                    const tieneServiciosPagados = pago.serviciosPagados.internet || 
-                                                pago.serviciosPagados.agua || 
-                                                pago.serviciosPagados.luz;
-                    if (tieneServiciosPagados) {
-                        serviciosPagados = true;
+
+        // Start iteration from the month of occupation
+        let currentIterMonth = mesOcupacion;
+        let currentIterYear = anioOcupacion;
+
+        // Loop through months from occupation date up to current month
+        while (currentIterYear < anioActual || (currentIterYear === anioActual && currentIterMonth <= mesActual)) {
+            const nombreMes = mesesNombres[currentIterMonth];
+
+            // Check if this is the current month being processed
+            const esMesActualIteracion = currentIterMonth === mesActual && currentIterYear === anioActual;
+
+            // Only check for debts from occupation month onwards
+            const isBeforeOccupationMonth = currentIterYear < anioOcupacion ||
+                                            (currentIterYear === anioOcupacion &&
+                                             currentIterMonth < mesOcupacion);
+
+            if (!isBeforeOccupationMonth) {
+                // Search payments for this month/year
+                const pagosMes = pagosList.filter(p =>
+                    p.mesCorrespondiente &&
+                    p.anioCorrespondiente &&
+                    p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === nombreMes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
+                    Number(p.anioCorrespondiente) === currentIterYear
+                );
+
+                let pagado = false;
+                let serviciosPagados = false;
+
+                pagosMes.forEach(pago => {
+                    if (typeof pago.estado === "string" && pago.estado.trim().toLowerCase() === "pagado") {
+                        pagado = true;
                     }
-                }
-            });
-            
-            // Si no está pagado, agregar a la lista de meses pendientes
-            if (!pagado) {
-                mesesPendientes.push({
-                    mes: nombreMes,
-                    anio: anio,
-                    montoTotal: montoRenta,
-                    serviciosPendientes: tieneServicios && !serviciosPagados
+
+                    if (tieneServicios && pago.serviciosPagados) {
+                        const tieneServiciosPagados = pago.serviciosPagados.internet ||
+                                                    pago.serviciosPagados.agua ||
+                                                    pago.serviciosPagados.luz;
+                        if (tieneServiciosPagados) {
+                            serviciosPagados = true;
+                        }
+                    }
                 });
+
+                // Apply the payment day logic for the current month being iterated
+                const shouldConsiderRentDebt = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
+                const shouldConsiderServiceDebt = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
+
+                let adeudoRenta = false;
+                let adeudoServicios = false;
+
+                if (shouldConsiderRentDebt && !pagado) {
+                    adeudoRenta = true;
+                }
+
+                if (shouldConsiderServiceDebt && tieneServicios && !serviciosPagados) {
+                    adeudoServicios = true;
+                }
+
+                if (adeudoRenta || adeudoServicios) {
+                    mesesPendientes.push({
+                        mes: nombreMes,
+                        anio: currentIterYear,
+                        montoTotal: montoRenta, // This is rent amount, services are separate
+                        rentaPendiente: adeudoRenta,
+                        serviciosPendientes: adeudoServicios
+                    });
+                }
+            }
+
+            // Move to the next month
+            currentIterMonth++;
+            if (currentIterMonth > 11) {
+                currentIterMonth = 0;
+                currentIterYear++;
             }
         }
-        
+
         return mesesPendientes;
     } catch (error) {
         console.error("Error en obtenerMesesAdeudadosHistorico:", error);

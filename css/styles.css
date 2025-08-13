@@ -737,7 +737,20 @@
 .btn-peligro,
 .btn-advertencia,
 .btn-secundario {
-  @apply btn-fluent-base;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: var(--fluent-radius-sm);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s var(--fluent-transition);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Responsive */

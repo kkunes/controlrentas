@@ -389,7 +389,6 @@ proximoPago.setHours(0, 0, 0, 0);
                         esAdeudoHistorico: false
                     });
                     inquilinoAdeudos.adeudosSet.add(key);
-                    console.log(`Agregado mes adeudado: ${pago.mesCorrespondiente} ${pago.anioCorrespondiente} para ${pago.nombreInquilino}`);
                 }
             } else {
                 console.log(`Pago sin mes o año correspondiente para inquilino ${pago.nombreInquilino || inquilinoId}:`, pago);
@@ -400,14 +399,17 @@ proximoPago.setHours(0, 0, 0, 0);
         for (const inquilino of inquilinosActivos) {
             if (inquilino.fechaOcupacion && inquilino.inmuebleAsociadoId) {
                 try {
-                    console.log(`Obteniendo meses adeudados históricos para ${inquilino.nombre} (ID: ${inquilino.id})`);
+                    const parts = inquilino.fechaOcupacion.split('-');
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+                    const day = parseInt(parts[2], 10);
+                    const fechaOcupacionCorrected = new Date(year, month, day);
+
                     const mesesAdeudados = await obtenerMesesAdeudadosHistorico(
                         inquilino.id,
                         inquilino.inmuebleAsociadoId,
-                        new Date(inquilino.fechaOcupacion)
+                        fechaOcupacionCorrected
                     );
-                    
-                    console.log(`Resultado para ${inquilino.nombre}:`, mesesAdeudados);
                     
                     // Asegurarse de que mesesAdeudados sea un array y tenga elementos
                     if (Array.isArray(mesesAdeudados) && mesesAdeudados.length > 0) {
@@ -435,7 +437,6 @@ proximoPago.setHours(0, 0, 0, 0);
                                         esAdeudoHistorico: true
                                     });
                                     inquilinoAdeudos.adeudosSet.add(key);
-                                    console.log(`Agregado mes adeudado histórico: ${mes.mes} ${mes.anio} para ${inquilino.nombre}`);
                                 }
                             } else {
                                 console.log(`Mes adeudado histórico inválido para ${inquilino.nombre}:`, mes);
@@ -891,9 +892,11 @@ window.mostrarListaPagosDashboard = function(tipo) {
                                                 inquilino.mesesAdeudados.map(mes => `
                                                     <div class="bg-red-50 border border-red-100 rounded-lg p-2 text-center">
                                                         <p class="font-medium text-red-800">${mes.mes && mes.anio ? `${mes.mes} ${mes.anio}` : 'Mes pendiente'}</p>
-                                                        ${mes.esAdeudoHistorico ? 
-                                                            `<span class="text-xs text-red-600 block mt-1">Adeudo histórico</span>` : 
-                                                            `<span class="text-xs text-gray-600 block mt-1">${parseFloat(mes.montoTotal).toFixed(2)}</span>`
+                                                        ${mes.rentaPendiente && mes.serviciosPendientes ? 
+                                                            `<span class="text-xs text-red-600 block mt-1">Renta y Servicios Pendientes</span>` : 
+                                                            mes.rentaPendiente ? 
+                                                                `<span class="text-xs text-red-600 block mt-1">Renta Pendiente</span>` : 
+                                                                `<span class="text-xs text-red-600 block mt-1">Servicios Pendientes</span>`
                                                         }
                                                     </div>
                                                 `).join('') : 

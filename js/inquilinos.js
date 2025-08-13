@@ -1,5 +1,5 @@
 // js/inquilinos.js
-import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // Alias para evitar conflicto
@@ -312,69 +312,118 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         // Actualizar badges de adeudos
         for (const inquilino of inquilinosList) {
             if (!inquilino.fechaOcupacion || !inquilino.inmuebleAsociadoId) continue;
-            // Asegurarse de que la fecha de ocupación se procese correctamente
-            const fechaOcupacion = new Date(inquilino.fechaOcupacion);
-            // Asegurarse de que la fecha esté en UTC para evitar problemas con zonas horarias
-            fechaOcupacion.setHours(12, 0, 0, 0);
-            
-            const mesesAdeudados = await obtenerMesesAdeudadosHistorico(
-                inquilino.id,
-                inquilino.inmuebleAsociadoId,
-                fechaOcupacion
-            );
+
+            // Se obtienen todos los pagos de una vez
+            const pagosQuery = query(collection(db, "pagos"), where("inquilinoId", "==", inquilino.id));
+            const pagosInquilinoSnap = await getDocs(pagosQuery);
+            const pagosMap = new Map();
+            pagosInquilinoSnap.forEach(doc => {
+                const pago = doc.data();
+                const clave = `${pago.mesCorrespondiente}-${pago.anioCorrespondiente}`;
+                pagosMap.set(clave, pago);
+            });
+
+            const todosLosAdeudos = [];
+            const parts = inquilino.fechaOcupacion.split('-'); // ["YYYY", "MM", "DD"]
+            const yearOcupacion = parseInt(parts[0], 10);
+            const monthOcupacion = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+            const dayOcupacion = parseInt(parts[2], 10);
+
+            const fechaInicioOcupacion = new Date(yearOcupacion, monthOcupacion, dayOcupacion); // Construct in local timezone
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0); // Normalize 'hoy' to start of day for accurate comparison
+
+            let fechaIteracion = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1); // Start from the 1st of the occupation month
+
+            const diaDePago = fechaInicioOcupacion.getDate(); // Get the day from fechaOcupacion
+
+            while (fechaIteracion <= hoy) {
+                const mes = fechaIteracion.toLocaleString('es-MX', { month: 'long' });
+                const anio = fechaIteracion.getFullYear();
+                const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
+                const clavePago = `${mesCapitalizado}-${anio}`;
+                const pagoRegistrado = pagosMap.get(clavePago);
+
+                let adeudoRenta = false;
+                let adeudoServicios = false;
+
+                // Check if this is the current month being processed
+                const esMesActualIteracion = fechaIteracion.getMonth() === hoy.getMonth() && fechaIteracion.getFullYear() === hoy.getFullYear();
+
+                // Only check for debts from occupation month onwards
+                const isBeforeOccupationMonth = fechaIteracion.getFullYear() < fechaInicioOcupacion.getFullYear() ||
+                                                (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                                                 fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
+
+                if (!isBeforeOccupationMonth) {
+                    // 1. Verificar adeudo de renta
+                    // Only consider rent debt if:
+                    // a) It's not the current month, OR
+                    // b) It is the current month AND today's day is >= diaDePago
+                    const shouldCheckRent = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
+
+                    if (shouldCheckRent && (!pagoRegistrado || pagoRegistrado.estado !== 'pagado')) {
+                        adeudoRenta = true;
+                    }
+
+                    // 2. Verificar adeudo de servicios
+                    const shouldCheckServices = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
+
+                    if (shouldCheckServices && inquilino.pagaServicios && inquilino.servicios && inquilino.servicios.length > 0) {
+                        for (const servicio of inquilino.servicios) {
+                            const servicioKey = servicio.tipo.toLowerCase();
+                            if (!pagoRegistrado || !pagoRegistrado.serviciosPagados || !pagoRegistrado.serviciosPagados[servicioKey]) {
+                                adeudoServicios = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (adeudoRenta || adeudoServicios) {
+                    todosLosAdeudos.push({
+                        mes: mesCapitalizado,
+                        anio: anio,
+                        rentaPendiente: adeudoRenta,
+                        serviciosPendientes: adeudoServicios
+                    });
+                }
+
+                fechaIteracion.setMonth(fechaIteracion.getMonth() + 1);
+            }
+
+            const adeudosFinales = todosLosAdeudos; // Renaming for clarity
+
             const badge = document.getElementById(`badge-adeudos-${inquilino.id}`);
             if (badge) {
-                // Limpia listeners previos
                 const newBadge = badge.cloneNode(true);
                 badge.parentNode.replaceChild(newBadge, badge);
 
-                if (mesesAdeudados.length > 0) {
-                    // Contar servicios pendientes
-                    const serviciosPendientes = mesesAdeudados.filter(m => m.serviciosPendientes).length;
-                    
-                    newBadge.textContent = `${mesesAdeudados.length} adeudo${mesesAdeudados.length > 1 ? 's' : ''}${serviciosPendientes > 0 ? ` + ${serviciosPendientes} serv.` : ''}`;
+                const totalAdeudosRenta = adeudosFinales.filter(a => a.rentaPendiente).length;
+                const totalAdeudosServicios = adeudosFinales.filter(a => a.serviciosPendientes && !a.rentaPendiente).length;
+
+                if (totalAdeudosRenta > 0 || totalAdeudosServicios > 0) {
+                    let textoBadge = [];
+                    if (totalAdeudosRenta > 0) {
+                        textoBadge.push(`${totalAdeudosRenta} adeudo${totalAdeudosRenta > 1 ? 's' : ''}`);
+                    }
+                    if (totalAdeudosServicios > 0) {
+                        textoBadge.push(`${totalAdeudosServicios} serv.`);
+                    }
+                    newBadge.textContent = textoBadge.join(' + ');
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
-                    newBadge.title = "Haz clic para ver los meses adeudados";
-                    newBadge.addEventListener('click', async () => {
-                        // Usar la misma fecha procesada para el modal
-                        const fechaOcupacion = new Date(inquilino.fechaOcupacion);
-                        fechaOcupacion.setHours(12, 0, 0, 0);
-                        
-                        const mesesActualizados = await obtenerMesesAdeudadosHistorico(
-                            inquilino.id,
-                            inquilino.inmuebleAsociadoId,
-                            fechaOcupacion
-                        );
-                        
-                        // Contar servicios pendientes actualizados
-                        const serviciosPendientesActualizados = mesesActualizados.filter(m => m.serviciosPendientes).length;
-                        
-                        mostrarModal(`
+                    newBadge.title = "Haz clic para ver los detalles de adeudos";
+
+                    newBadge.addEventListener('click', () => {
+                        const modalContentHtml = `
                             <div class="px-4 py-3 bg-red-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
                                 <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
                             </div>
                             <div class="space-y-4">
                                 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h4 class="text-lg font-semibold text-gray-800 flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Resumen de Adeudos
-                                        </h4>
-                                        <div class="flex items-center gap-2">
-                                            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
-                                                ${mesesActualizados.length} mes${mesesActualizados.length > 1 ? 'es' : ''} adeudado${mesesActualizados.length > 1 ? 's' : ''}
-                                            </span>
-                                            ${serviciosPendientesActualizados > 0 ? `
-                                                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                                                    ${serviciosPendientesActualizados} servicio${serviciosPendientesActualizados > 1 ? 's' : ''} pendiente${serviciosPendientesActualizados > 1 ? 's' : ''}
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Adeudos</h4>
                                     <div class="space-y-3">
-                                        ${mesesActualizados.map(m => `
+                                        ${adeudosFinales.map(m => `
                                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                                                 <div class="flex items-center">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -383,7 +432,8 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                                     <span class="font-medium text-gray-800">${m.mes} ${m.anio}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-sm text-red-600 font-medium">Renta pendiente</span>
+                                                    ${m.rentaPendiente ? `<span class="text-sm text-red-600 font-medium">Renta pendiente</span>` : ''}
+                                                    ${m.serviciosPendientes && m.rentaPendiente ? '<span class="text-gray-300">|</span>' : ''}
                                                     ${m.serviciosPendientes ? `
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                                             Servicios pendientes
@@ -394,30 +444,17 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         `).join('')}
                                     </div>
                                 </div>
-                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
-                                    <div class="flex">
-                                        <div class="flex-shrink-0">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm text-yellow-700">
-                                                Se recomienda contactar al inquilino para regularizar los pagos pendientes.
-                                                ${serviciosPendientesActualizados > 0 ? ' También tiene servicios pendientes de pago.' : ''}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                             <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
-                                <button onclick="ocultarModal()" 
+                                <button onclick="ocultarModal()"
                                     class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-lg shadow-sm transition-colors duration-200">
                                     Cerrar
                                 </button>
                             </div>
-                        `);
+                        `;
+                        mostrarModal(modalContentHtml);
                     });
+
                 } else {
                     newBadge.textContent = "Sin adeudos";
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
@@ -1553,5 +1590,3 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
         </div>
     `);
 };
-
-
