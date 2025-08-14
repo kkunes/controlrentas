@@ -1379,7 +1379,7 @@ window.actualizarAsignacionesInmuebles = async function() {
 };
 
 // Llamar a la función para actualizar las asignaciones
-window.actualizarAsignacionesInmuebles();
+// window.actualizarAsignacionesInmuebles();
 
 /**
  * Obtiene el color del borde según la acción del historial
