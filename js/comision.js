@@ -15,40 +15,61 @@ function agruparPorMes(pagos) {
 
 // Obtiene los pagos de renta pagados desde Firestore (usando mesCorrespondiente/anioCorrespondiente si no hay fechaPago)
 async function obtenerPagosRentaComisiones() {
+    // 1. Obtener todos los inquilinos y mapear su día de pago
+    const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+    const diaDePagoInquilinoMap = new Map();
+    inquilinosSnap.forEach(doc => {
+        const inquilino = doc.data();
+        if (inquilino.fechaOcupacion) {
+            try {
+                // Asegurarse de que la fecha se interprete en la zona horaria local y no en UTC
+                const dia = new Date(inquilino.fechaOcupacion + 'T00:00:00').getDate();
+                diaDePagoInquilinoMap.set(doc.id, dia);
+            } catch (e) {
+                console.error(`Fecha de ocupación inválida para el inquilino ${doc.id}: ${inquilino.fechaOcupacion}`);
+            }
+        }
+    });
+    console.log("Mapa de días de pago de inquilinos:", diaDePagoInquilinoMap);
+
+    // 2. Obtener todos los pagos pagados
     const pagosRef = collection(db, "pagos");
     const pagosQuery = query(pagosRef, where("estado", "==", "pagado"));
     const snapshot = await getDocs(pagosQuery);
     const pagos = [];
+
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
+        console.log("Procesando pago:", docSnap.id, data);
 
         // Toma el primer monto válido
         let montoTotal = 0;
         if (typeof data.montoPagado === 'number') montoTotal = data.montoPagado;
         else if (typeof data.montoTotal === 'number') montoTotal = data.montoTotal;
         else if (typeof data.monto === 'number') montoTotal = data.monto;
-        // NO sumes mobiliarioPagado aquí si ya está incluido
 
         // Determinar la fecha de pago
         let fechaPago = null;
-        if (data.fechaPago && typeof data.fechaPago === 'object' && typeof data.fechaPago.toDate === 'function') {
+        if (data.fechaPago && typeof data.fechaPago.toDate === 'function') {
             fechaPago = data.fechaPago.toDate();
         } else if (data.fechaPago && typeof data.fechaPago === 'string') {
             fechaPago = new Date(data.fechaPago);
         } else if (data.mesCorrespondiente && data.anioCorrespondiente) {
-            // Construir fecha usando mesCorrespondiente y anioCorrespondiente
-            // mesCorrespondiente puede ser "Enero", "Febrero", etc.
             const mesesNombres = [
                 "enero", "febrero", "marzo", "abril", "mayo", "junio",
                 "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
             ];
-            let mesNum = mesesNombres.findIndex(
+            const mesNum = mesesNombres.findIndex(
                 m => m === String(data.mesCorrespondiente).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
             );
+
             if (mesNum !== -1) {
-                fechaPago = new Date(Number(data.anioCorrespondiente), mesNum, 1);
+                const diaPago = diaDePagoInquilinoMap.get(data.inquilinoId) || 1;
+                console.log(`Para pago ${docSnap.id}, inquilino ${data.inquilinoId}, día de pago encontrado: ${diaPago}`);
+                fechaPago = new Date(Number(data.anioCorrespondiente), mesNum, diaPago);
             }
         }
+        console.log(`Fecha final calculada para ${docSnap.id}:`, fechaPago);
 
         // Solo agrega si la fecha es válida y el monto es mayor a 0
         if (montoTotal > 0 && fechaPago instanceof Date && !isNaN(fechaPago)) {
@@ -56,25 +77,13 @@ async function obtenerPagosRentaComisiones() {
                 id: docSnap.id,
                 monto: montoTotal,
                 fechaPago: fechaPago,
-                inmuebleId: data.inmuebleId || null // <-- asegúrate de incluir esto
-            });
-            // Depuración: muestra el pago que sí se va a mostrar
-            console.log('Pago válido para mostrar:', {
-                id: docSnap.id,
-                monto: montoTotal,
-                fechaPago: fechaPago
-            });
-        } else {
-            // Depuración: muestra por qué no se muestra
-            console.warn('Pago ignorado:', {
-                id: docSnap.id,
-                monto: montoTotal,
-                fechaPago: fechaPago,
-                mesCorrespondiente: data.mesCorrespondiente,
-                anioCorrespondiente: data.anioCorrespondiente
+                inmuebleId: data.inmuebleId || null,
+                inquilinoId: data.inquilinoId || null
             });
         }
     });
+
+    console.log("Lista final de pagos para comisiones:", pagos);
     return pagos;
 }
 
@@ -171,18 +180,35 @@ export async function renderComisiones() {
         return;
     }
 
-    // Obtén la lista global de inmuebles ocupados antes del bucle
+    // Obtén la lista de todos los inmuebles que tienen o han tenido una fecha de ocupación.
+    // Esto es crucial para verificar pagos de meses pasados, incluso si el inmueble ya no está "Ocupado".
     const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-    const inmueblesOcupadosGlobal = [];
+    const inmueblesConOcupacion = [];
     inmueblesSnap.forEach(doc => {
         const data = doc.data();
-        if (data.estado === "Ocupado") {
-            inmueblesOcupadosGlobal.push({ id: doc.id, nombre: data.nombre });
+        if (data.fechaOcupacion) {
+            inmueblesConOcupacion.push({
+                id: doc.id,
+                nombre: data.nombre,
+                fechaOcupacion: data.fechaOcupacion
+                // Nota: Para una lógica 100% precisa, se necesitaría una 'fechaDesocupacion'.
+                // Sin ella, un inmueble que fue desocupado podría seguir apareciendo como que le falta pago 
+                // en meses posteriores a su desocupación.
+            });
         }
     });
 
     mesesFiltrados.sort().reverse().forEach(mes => {
-        const pagos = pagosPorMes[mes];
+        const [anio, mesNum] = mes.split('-').map(Number);
+        const finDeMes = new Date(anio, mesNum, 0);
+
+        const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
+            if (!inmueble.fechaOcupacion) return false;
+            const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
+            return fechaOcupacion <= finDeMes;
+        });
+
+        const pagos = pagosPorMes[mes] || [];
         const totalRentas = pagos.reduce((sum, p) => sum + p.monto, 0);
         const totalComision = totalRentas * 0.10;
         const nombreMes = new Date(2000, parseInt(mes.split('-')[1], 10) - 1, 1).toLocaleString('es-MX', { month: 'long' });
@@ -191,7 +217,7 @@ export async function renderComisiones() {
         const fechaCobro = comisionMes?.fechaCobro ? new Date(comisionMes.fechaCobro).toLocaleString('es-MX') : '';
 
         const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
-        const faltantes = inmueblesOcupadosGlobal.filter(inm => !pagosInmuebleIds.includes(inm.id));
+        const faltantes = inmueblesOcupadosEsteMes.filter(inm => !pagosInmuebleIds.includes(inm.id));
         const faltanPagos = faltantes.length > 0;
         const faltantesNombres = faltantes.map(f => f.nombre);
 
@@ -229,11 +255,11 @@ export async function renderComisiones() {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
                 <div class="bg-white rounded-xl shadow p-5 flex flex-col items-center border border-indigo-100">
                     <span class="text-gray-500 text-sm mb-1">Total rentas pagadas</span>
-                    <span class="text-2xl font-extrabold text-indigo-700">$${totalRentas.toFixed(2)}</span>
+                    <span class="text-2xl font-extrabold text-indigo-700">${totalRentas.toFixed(2)}</span>
                 </div>
                 <div class="bg-white rounded-xl shadow p-5 flex flex-col items-center border border-indigo-100">
                     <span class="text-gray-500 text-sm mb-1">Comisión (10%)</span>
-                    <span class="text-2xl font-extrabold text-green-600">$${totalComision.toFixed(2)}</span>
+                    <span class="text-2xl font-extrabold text-green-600">${totalComision.toFixed(2)}</span>
                 </div>
             </div>
             ${faltanPagos ? `
@@ -338,7 +364,7 @@ export async function renderComisiones() {
                                 ${pagos.map(p => `
                                     <tr class="hover:bg-indigo-50 transition">
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${new Date(p.fechaPago).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">$${p.monto.toFixed(2)}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">${p.monto.toFixed(2)}</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-indigo-900 font-semibold">${inmueblesMap[p.inmuebleId] || '-'}</td>
                                     </tr>
                                 `).join('')}
@@ -348,7 +374,7 @@ export async function renderComisiones() {
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
                         <div class="flex flex-col items-center sm:items-start">
                             <span class="text-xs text-gray-500 mb-1">Total de pagos</span>
-                            <span class="text-2xl font-extrabold text-indigo-700">$${pagos.reduce((sum, p) => sum + p.monto, 0).toFixed(2)}</span>
+                            <span class="text-2xl font-extrabold text-indigo-700">${pagos.reduce((sum, p) => sum + p.monto, 0).toFixed(2)}</span>
                         </div>
                         <button onclick="ocultarModal()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all duration-200 flex items-center gap-2 mt-4 sm:mt-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,22 +409,21 @@ export async function renderComisiones() {
     document.querySelectorAll('.btn-ver-faltantes').forEach(btn => {
         btn.addEventListener('click', async function() {
             const mes = this.getAttribute('data-mes');
-            const [anio, mesNum] = mes.split('-');
-            // 1. Trae todos los inmuebles ocupados
-            const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-            const inmueblesOcupados = [];
-            inmueblesSnap.forEach(doc => {
-                const data = doc.data();
-                if (data.estado === "Ocupado") {
-                    inmueblesOcupados.push({ id: doc.id, nombre: data.nombre });
+            const [anio, mesNum] = mes.split('-').map(Number);
+            const finDeMes = new Date(anio, mesNum, 0);
+
+            const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
+                if (!inmueble.fechaOcupacion) {
+                    return false;
                 }
+                const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
+                return fechaOcupacion <= finDeMes;
             });
-            // 2. Obtén los pagos de ese mes
+
             const pagos = pagosPorMes[mes] || [];
             const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
 
-            // 3. Filtra los inmuebles ocupados que no tienen pago ese mes
-            const faltantes = inmueblesOcupados.filter(inm => !pagosInmuebleIds.includes(inm.id));
+            const faltantes = inmueblesOcupadosEsteMes.filter(inm => !pagosInmuebleIds.includes(inm.id));
 
             // --- Para el modal de "Inmuebles sin pago" ---
             let tablaFaltantes = `
@@ -446,6 +471,13 @@ export async function renderComisiones() {
         });
     });
 }
+
+// Integración con el menú lateral
+window.mostrarComisiones = function() {
+    renderComisiones();
+    if (typeof setActiveSection === 'function') setActiveSection('comisiones');
+};
+
 
 // Integración con el menú lateral
 window.mostrarComisiones = function() {

@@ -52,11 +52,11 @@ export function mostrarModal(htmlContent) {
     const modalContent = document.getElementById('modalContenido');
 
     if (!modal) {
-        console.error("Error UI: Elemento 'miModal' (contenedor del modal) no encontrado en el DOM.");
+        
         return;
     }
     if (!modalContent) {
-        console.error("Error UI: Elemento 'modalContenido' (área de contenido del modal) no encontrado en el DOM.");
+        
         return;
     }
 
@@ -97,7 +97,7 @@ export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
 
     const contenedor = document.getElementById('notificacionContainer');
     if (!contenedor) {
-        console.error('El contenedor de notificaciones con id "notificacionContainer" no se encontró en el DOM.');
+        
         return;
     }
 
@@ -122,7 +122,7 @@ export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
     });
 
     const cerrarToast = () => {
-        console.log("Intentando cerrar notificación..."); // Log de depuración
+        
         if (!toast.classList.contains('show')) return;
         toast.classList.remove('show');
         toast.addEventListener('transitionend', () => toast.remove(), { once: true });
@@ -155,7 +155,7 @@ export async function eliminarDocumento(db, collectionName, docId) {
         await deleteDoc(doc(db, collectionName, docId));
         // No mostrar notificación aquí; la maneja la función global en main.js
     } catch (error) {
-        console.error(`Error al eliminar documento en ${collectionName}/${docId}:`, error);
+        
         throw new Error("No se pudo eliminar el documento. Intente de nuevo.");
     }
 }

@@ -2841,6 +2841,10 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         const tieneServicios = inquilinoData && inquilinoData.pagaServicios &&
             ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) ||
             (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+        
+        // FIX: Determine the end date for debt calculation
+        const fechaFinCalculo = inquilinoData && inquilinoData.fechaDesocupacion ? new Date(inquilinoData.fechaDesocupacion) : hoy;
+        fechaFinCalculo.setHours(0, 0, 0, 0);
 
         // Obtener el inmueble para conocer el monto de renta
         const inmuebleDoc = await getDoc(doc(db, "inmuebles", inmuebleId));
@@ -2864,9 +2868,9 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         const mesOcupacion = fechaOcupacionObj.getMonth();
         const anioOcupacion = fechaOcupacionObj.getFullYear();
 
-        // Mes y año actual
-        const mesActual = hoy.getMonth();
-        const anioActual = hoy.getFullYear();
+        // Mes y año de fin de cálculo
+        const mesFin = fechaFinCalculo.getMonth();
+        const anioFin = fechaFinCalculo.getFullYear();
 
         let mesesPendientes = [];
 
@@ -2874,8 +2878,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         let currentIterMonth = mesOcupacion;
         let currentIterYear = anioOcupacion;
 
-        // Loop through months from occupation date up to current month
-        while (currentIterYear < anioActual || (currentIterYear === anioActual && currentIterMonth <= mesActual)) {
+        // Loop through months from occupation date up to the end date
+        while (currentIterYear < anioFin || (currentIterYear === anioFin && currentIterMonth <= mesFin)) {
             const nombreMes = mesesNombres[currentIterMonth];
 
             // Check if this is the current month being processed

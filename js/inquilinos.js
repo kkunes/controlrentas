@@ -333,11 +333,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0); // Normalize 'hoy' to start of day for accurate comparison
 
+            // FIX: Determine the end date for debt calculation
+            const fechaFinCalculo = inquilino.fechaDesocupacion ? new Date(inquilino.fechaDesocupacion) : hoy;
+            fechaFinCalculo.setHours(0, 0, 0, 0);
+
+
             let fechaIteracion = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1); // Start from the 1st of the occupation month
 
             const diaDePago = fechaInicioOcupacion.getDate(); // Get the day from fechaOcupacion
 
-            while (fechaIteracion <= hoy) {
+            while (fechaIteracion <= fechaFinCalculo) {
                 const mes = fechaIteracion.toLocaleString('es-MX', { month: 'long' });
                 const anio = fechaIteracion.getFullYear();
                 const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
