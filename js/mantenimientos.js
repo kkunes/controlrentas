@@ -16,8 +16,9 @@ export async function mostrarMantenimientos() {
 
     try {
         const mantenimientosSnap = await getDocs(collection(db, "mantenimientos"));
-        const inmueblesSnap = await getDocs(collection(db, "inmuebles")); // Para asociar mantenimiento a inmueble
-        const inquilinosSnap = await getDocs(collection(db, "inquilinos")); // Obtener todos los inquilinos
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+        const pagosSnap = await getDocs(collection(db, "pagos"));
 
         const inmueblesMap = new Map();
         inmueblesSnap.forEach(doc => {
@@ -26,7 +27,12 @@ export async function mostrarMantenimientos() {
 
         const inquilinosMap = new Map();
         inquilinosSnap.forEach(doc => {
-            inquilinosMap.set(doc.id, doc.data());
+            inquilinosMap.set(doc.id, doc.data().nombre);
+        });
+
+        const pagosList = [];
+        pagosSnap.forEach(doc => {
+            pagosList.push(doc.data());
         });
 
         let mantenimientosList = [];
@@ -34,26 +40,27 @@ export async function mostrarMantenimientos() {
             const data = doc.data();
             const nombreInmueble = data.inmuebleId ? inmueblesMap.get(data.inmuebleId) || 'Inmueble Desconocido' : 'N/A';
 
-            // Buscar inquilino que ocupaba el inmueble en la fecha del mantenimiento
+            // --- NUEVA LÓGICA ---
+            // Buscar inquilino usando la colección de pagos como historial
             let nombreInquilino = "-";
             if (data.inmuebleId && data.fechaMantenimiento) {
-                for (let [id, inq] of inquilinosMap.entries()) {
-                    if (
-                        inq.inmuebleId === data.inmuebleId &&
-                        inq.fechaInicio &&
-                        new Date(inq.fechaInicio) <= new Date(data.fechaMantenimiento) &&
-                        (
-                            !inq.fechaFin ||
-                            new Date(inq.fechaFin) >= new Date(data.fechaMantenimiento)
-                        )
-                    ) {
-                        nombreInquilino = inq.nombre || "-";
-                        break;
-                    }
+                const fechaMantenimiento = new Date(data.fechaMantenimiento + "T00:00:00"); // Asegurar que se interprete como local
+                const mesMantenimiento = fechaMantenimiento.toLocaleString('es-MX', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
+                const anioMantenimiento = fechaMantenimiento.getFullYear();
+
+                const pagoCorrespondiente = pagosList.find(p => 
+                    p.inmuebleId === data.inmuebleId &&
+                    p.mesCorrespondiente === mesMantenimiento &&
+                    p.anioCorrespondiente === anioMantenimiento
+                );
+
+                if (pagoCorrespondiente && pagoCorrespondiente.inquilinoId) {
+                    nombreInquilino = inquilinosMap.get(pagoCorrespondiente.inquilinoId) || "Inquilino no encontrado";
                 }
             }
+            // --- FIN NUEVA LÓGICA ---
 
-            // Nuevo: Determinar quién pagó el mantenimiento
+            // Determinar quién pagó el mantenimiento
             let pagadoPor = "-";
             if (data.pagadoPor === "inquilino") pagadoPor = "Inquilino";
             else if (data.pagadoPor === "propietario") pagadoPor = "Propietario";
@@ -61,94 +68,6 @@ export async function mostrarMantenimientos() {
 
             mantenimientosList.push({ id: doc.id, ...data, nombreInmueble, nombreInquilino, pagadoPor });
         });
-
-        let tablaFilas = "";
-        // Ahora hay 10 columnas (Inmueble, Inquilino, Descripción, Costo, Categoría, Prioridad, Estado, Fecha, Pagado por, Acciones)
-        if (mantenimientosList.length === 0) {
-            tablaFilas = `<tr><td colspan="10" class="text-center py-4 text-gray-500">No hay mantenimientos registrados.</td></tr>`;
-        } else {
-            mantenimientosList.sort((a, b) => new Date(b.fechaMantenimiento) - new Date(a.fechaMantenimiento));
-            mantenimientosList.forEach(mantenimiento => {
-                // Clases para estilo de 'chip' para Prioridad
-                let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
-                switch (mantenimiento.prioridad) {
-                    case "Urgente":
-                        prioridadClass += " bg-red-100 text-red-800";
-                        break;
-                    case "Alta":
-                        prioridadClass += " bg-orange-100 text-orange-800";
-                        break;
-                    case "Media":
-                        prioridadClass += " bg-yellow-100 text-yellow-800";
-                        break;
-                    case "Baja":
-                        prioridadClass += " bg-green-100 text-green-800";
-                        break;
-                    default:
-                        prioridadClass += " bg-gray-100 text-gray-800";
-                        break;
-                }
-
-                // Clases para estilo de 'chip' para Estado
-                let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
-                switch (mantenimiento.estado) {
-                    case "Pendiente":
-                        estadoClass += " bg-red-100 text-red-800";
-                        break;
-                    case "En Progreso":
-                        estadoClass += " bg-yellow-100 text-yellow-800";
-                        break;
-                    case "Completado":
-                        estadoClass += " bg-green-100 text-green-800";
-                        break;
-                    case "Cancelado":
-                        estadoClass += " bg-gray-100 text-gray-800";
-                        break;
-                    default:
-                        estadoClass += " bg-gray-100 text-gray-800";
-                        break;
-                }
-
-
-                tablaFilas += `
-                    <tr class="hover:bg-gray-50 transition-colors duration-200">
-                        <td class="px-6 py-4 text-sm text-gray-800">${mantenimiento.nombreInmueble}</td>
-                        <td class="px-6 py-4 text-sm text-gray-800">${mantenimiento.nombreInquilino}</td>
-                        <td class="px-6 py-4 text-sm text-gray-700 whitespace-normal max-w-xs overflow-hidden text-ellipsis">${mantenimiento.descripcion || 'Sin descripción'}</td>
-                        <td class="px-6 py-4 text-sm text-gray-800 font-medium">$${(mantenimiento.costo ?? 0).toFixed(2)}</td>
-                        <td class="px-6 py-4 text-sm text-gray-700">${mantenimiento.categoria || 'N/A'}</td>
-                        <td class="px-6 py-4 text-sm">
-                            <span class="${prioridadClass}">${mantenimiento.prioridad || 'N/A'}</span>
-                        </td>
-                        <td class="px-6 py-4 text-sm">
-                            <span class="${estadoClass}">${mantenimiento.estado || 'N/A'}</span>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-700">${mantenimiento.fechaMantenimiento || 'N/A'}</td>
-                        <td class="px-6 py-4 text-sm text-gray-800">${mantenimiento.pagadoPor}</td>
-                        <td class="px-6 py-4 text-sm text-right">
-                            <div class="flex flex-col sm:flex-row sm:justify-end sm:space-x-2 space-y-1 sm:space-y-0">
-                                <button onclick="editarMantenimiento('${mantenimiento.id}')" 
-                                    class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
-                                    text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                    Editar
-                                </button>
-                                <button onclick="eliminarDocumento('mantenimientos', '${mantenimiento.id}', mostrarMantenimientos)" 
-                                    class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
-                                    text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                    Eliminar
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
 
         // --- Filtros dinámicos ---
         const meses = [
@@ -180,57 +99,19 @@ export async function mostrarMantenimientos() {
         // Filtros UI
         const filtrosHtml = `
             <div class="flex flex-wrap gap-4 mb-4 items-end">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Inmueble</label>
-                    <select id="filtroInmueble" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
-                        <option value="">Todos</option>
-                        ${inmueblesOptions}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Categoría</label>
-                    <select id="filtroCategoria" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
-                        <option value="">Todas</option>
-                        ${categoriasOptions}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Estado</label>
-                    <select id="filtroEstado" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
-                        <option value="">Todos</option>
-                        ${estadosOptions}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Mes</label>
-                    <select id="filtroMes" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
-                        <option value="">Todos</option>
-                        ${mesesOptions}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Año</label>
-                    <select id="filtroAnio" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
-                        <option value="">Todos</option>
-                        ${aniosOptions}
-                    </select>
-                </div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Inmueble</label><select id="filtroInmueble" class="border border-gray-300 rounded-md px-2 py-1 bg-white"><option value="">Todos</option>${inmueblesOptions}</select></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Categoría</label><select id="filtroCategoria" class="border border-gray-300 rounded-md px-2 py-1 bg-white"><option value="">Todas</option>${categoriasOptions}</select></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Estado</label><select id="filtroEstado" class="border border-gray-300 rounded-md px-2 py-1 bg-white"><option value="">Todos</option>${estadosOptions}</select></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Mes</label><select id="filtroMes" class="border border-gray-300 rounded-md px-2 py-1 bg-white"><option value="">Todos</option>${mesesOptions}</select></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Año</label><select id="filtroAnio" class="border border-gray-300 rounded-md px-2 py-1 bg-white"><option value="">Todos</option>${aniosOptions}</select></div>
                 <button id="btnLimpiarFiltros" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1 rounded-md shadow-sm transition-colors duration-200">Limpiar</button>
             </div>
         `;
 
-        const btnNuevoHtml = `
-            <div class="flex justify-end mb-4">
-                <button id="btnNuevoMantenimiento" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition-colors duration-200 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Registrar mantenimiento
-                </button>
-            </div>
-        `;
+        const btnNuevoHtml = `<div class="flex justify-end mb-4"><button id="btnNuevoMantenimiento" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition-colors duration-200 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Registrar mantenimiento</button></div>`;
 
         contenedor.innerHTML = `
+            <div id="total-mantenimientos-container" class="mb-6"></div>
             ${filtrosHtml}
             ${btnNuevoHtml}
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
@@ -250,118 +131,71 @@ export async function mostrarMantenimientos() {
                                 <th scope="col" class="relative px-2 sm:px-4 py-2 sm:py-3 text-right"><span class="sr-only">Acciones</span></th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="tbodyMantenimientos">
-                            ${tablaFilas}
-                        </tbody>
+                        <tbody class="bg-white divide-y divide-gray-200" id="tbodyMantenimientos"></tbody>
                     </table>
                 </div>
-            </div>
-        `;
+            </div>`;
 
-        // Listener para el botón
-        document.getElementById('btnNuevoMantenimiento').addEventListener('click', () => {
-            mostrarFormularioNuevoMantenimiento();
-        });
+        document.getElementById('btnNuevoMantenimiento').addEventListener('click', () => mostrarFormularioNuevoMantenimiento());
 
-        // --- Filtro y renderizado dinámico ---
         function renderTablaMantenimientos() {
             const filtroInmueble = document.getElementById('filtroInmueble').value;
             const filtroCategoria = document.getElementById('filtroCategoria').value;
             const filtroEstado = document.getElementById('filtroEstado').value;
-            const filtroMes = document.getElementById('filtroMes').value !== "" ? Number(document.getElementById('filtroMes').value) : null;
-            const filtroAnio = document.getElementById('filtroAnio').value !== "" ? Number(document.getElementById('filtroAnio').value) : null;
+            const filtroMes = document.getElementById('filtroMes').value ? Number(document.getElementById('filtroMes').value) : null;
+            const filtroAnio = document.getElementById('filtroAnio').value ? Number(document.getElementById('filtroAnio').value) : null;
 
-            let filtrados = mantenimientosList.filter(m => {
-                let mes = null, anio = null;
-                if (m.fechaMantenimiento && /^\d{4}-\d{2}-\d{2}$/.test(m.fechaMantenimiento)) {
-                    const partes = m.fechaMantenimiento.split("-");
-                    anio = Number(partes[0]);
-                    mes = Number(partes[1]);
-                }
-                return (!filtroInmueble || m.inmuebleId === filtroInmueble)
-                    && (!filtroCategoria || m.categoria === filtroCategoria)
-                    && (!filtroEstado || m.estado === filtroEstado)
-                    && (filtroMes === null || (mes !== null && mes === filtroMes))
-                    && (filtroAnio === null || (anio !== null && anio === filtroAnio));
+            const filtrados = mantenimientosList.filter(m => {
+                const fecha = m.fechaMantenimiento ? new Date(m.fechaMantenimiento + "T00:00:00") : null;
+                const mes = fecha ? fecha.getMonth() + 1 : null;
+                const anio = fecha ? fecha.getFullYear() : null;
+                return (!filtroInmueble || m.inmuebleId === filtroInmueble) &&
+                       (!filtroCategoria || m.categoria === filtroCategoria) &&
+                       (!filtroEstado || m.estado === filtroEstado) &&
+                       (!filtroMes || mes === filtroMes) &&
+                       (!filtroAnio || anio === filtroAnio);
             });
 
-            if (filtrados.length === 0) {
-                document.getElementById('tbodyMantenimientos').innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-500">No hay mantenimientos registrados.</td></tr>`;
-            } else {
-                filtrados.sort((a, b) => new Date(b.fechaMantenimiento) - new Date(a.fechaMantenimiento));
-                document.getElementById('tbodyMantenimientos').innerHTML = filtrados.map(mantenimiento => {
-                    // Clases para estilo de 'chip' para Prioridad
-                    let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
-                    switch (mantenimiento.prioridad) {
-                        case "Urgente": prioridadClass += " bg-red-100 text-red-800"; break;
-                        case "Alta": prioridadClass += " bg-orange-100 text-orange-800"; break;
-                        case "Media": prioridadClass += " bg-yellow-100 text-yellow-800"; break;
-                        case "Baja": prioridadClass += " bg-green-100 text-green-800"; break;
-                        default: prioridadClass += " bg-gray-100 text-gray-800"; break;
-                    }
-                    // Clases para estilo de 'chip' para Estado
-                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
-                    switch (mantenimiento.estado) {
-                        case "Pendiente": estadoClass += " bg-red-100 text-red-800"; break;
-                        case "En Progreso": estadoClass += " bg-yellow-100 text-yellow-800"; break;
-                        case "Completado": estadoClass += " bg-green-100 text-green-800"; break;
-                        case "Cancelado": estadoClass += " bg-gray-100 text-gray-800"; break;
-                        default: estadoClass += " bg-gray-100 text-gray-800"; break;
-                    }
-                    return `
-                        <tr class="hover:bg-gray-50 transition-colors duration-200">
-                            <td class="px-6 py-4 text-sm text-gray-800">${mantenimiento.nombreInmueble}</td>
-                            <td class="px-6 py-4 text-sm text-gray-800">${mantenimiento.nombreInquilino}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700 whitespace-normal max-w-xs overflow-hidden text-ellipsis">${mantenimiento.descripcion || 'Sin descripción'}</td>
-                            <td class="px-6 py-4 text-sm text-gray-800 font-medium">$${(mantenimiento.costo ?? 0).toFixed(2)}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${mantenimiento.categoria || 'N/A'}</td>
-                            <td class="px-6 py-4 text-sm">
-                                <span class="${prioridadClass}">${mantenimiento.prioridad || 'N/A'}</span>
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                <span class="${estadoClass}">${mantenimiento.estado || 'N/A'}</span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${mantenimiento.fechaMantenimiento || 'N/A'}</td>
-                            <td class="px-6 py-4 text-sm text-gray-800">${mantenimiento.pagadoPor}</td>
-                            <td class="px-6 py-4 text-sm text-right">
-                                <div class="flex flex-col sm:flex-row sm:justify-end sm:space-x-2 space-y-1 sm:space-y-0">
-                                    <button class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
-                                        text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center"
-                                        data-id="${mantenimiento.id}">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
-                                        Editar
-                                    </button>
-                                    <button class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
-                                        text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center"
-                                        data-id="${mantenimiento.id}">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                        Eliminar
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+            const totalContainer = document.getElementById('total-mantenimientos-container');
+            if (totalContainer) {
+                const totalCosto = filtrados.reduce((sum, m) => sum + (Number(m.costo) || 0), 0);
+                totalContainer.innerHTML = `
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-xl shadow-lg text-center transition-all duration-300 transform hover:scale-105">
+                        <p class="text-sm sm:text-base font-medium uppercase tracking-wider">Costo Total (Filtro Actual)</p>
+                        <p class="text-2xl sm:text-3xl font-bold mt-1">${totalCosto.toFixed(2)} MXN</p>
+                    </div>`;
             }
 
-            // Reasignar listeners
-            document.querySelectorAll('.btn-editar-mantenimiento').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    editarMantenimiento(e.currentTarget.dataset.id);
-                });
-            });
-            document.querySelectorAll('.btn-eliminar-mantenimiento').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    eliminarDocumento('mantenimientos', e.currentTarget.dataset.id, mostrarMantenimientos);
-                });
-            });
+            const tbody = document.getElementById('tbodyMantenimientos');
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-4 text-gray-500">No hay mantenimientos que coincidan con los filtros.</td></tr>`;
+            } else {
+                filtrados.sort((a, b) => new Date(b.fechaMantenimiento) - new Date(a.fechaMantenimiento));
+                tbody.innerHTML = filtrados.map(m => {
+                    let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Urgente:"bg-red-100 text-red-800",Alta:"bg-orange-100 text-orange-800",Media:"bg-yellow-100 text-yellow-800",Baja:"bg-green-100 text-green-800"}[m.prioridad] || "bg-gray-100 text-gray-800");
+                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Pendiente:"bg-red-100 text-red-800","En Progreso":"bg-yellow-100 text-yellow-800",Completado:"bg-green-100 text-green-800",Cancelado:"bg-gray-100 text-gray-800"}[m.estado] || "bg-gray-100 text-gray-800");
+                    return `
+                        <tr class="hover:bg-gray-50 transition-colors duration-200">
+                            <td class="px-6 py-4 text-sm text-gray-800">${m.nombreInmueble}</td>
+                            <td class="px-6 py-4 text-sm text-gray-800">${m.nombreInquilino}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700 whitespace-normal max-w-xs overflow-hidden text-ellipsis">${m.descripcion || 'Sin descripción'}</td>
+                            <td class="px-6 py-4 text-sm text-gray-800 font-medium">${(Number(m.costo) || 0).toFixed(2)}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">${m.categoria || 'N/A'}</td>
+                            <td class="px-6 py-4 text-sm"><span class="${prioridadClass}">${m.prioridad || 'N/A'}</span></td>
+                            <td class="px-6 py-4 text-sm"><span class="${estadoClass}">${m.estado || 'N/A'}</span></td>
+                            <td class="px-6 py-4 text-sm text-gray-700">${m.fechaMantenimiento || 'N/A'}</td>
+                            <td class="px-6 py-4 text-sm text-gray-800">${m.pagadoPor}</td>
+                            <td class="px-6 py-4 text-sm text-right">
+                                <div class="flex flex-col sm:flex-row sm:justify-end sm:space-x-2 space-y-1 sm:space-y-0">
+                                    <button onclick="editarMantenimiento('${m.id}')" class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Editar</button>
+                                    <button onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Eliminar</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                }).join('');
+            }
         }
 
-        // Listeners de filtros
         document.getElementById('filtroInmueble').addEventListener('change', renderTablaMantenimientos);
         document.getElementById('filtroCategoria').addEventListener('change', renderTablaMantenimientos);
         document.getElementById('filtroEstado').addEventListener('change', renderTablaMantenimientos);
@@ -376,7 +210,6 @@ export async function mostrarMantenimientos() {
             renderTablaMantenimientos();
         });
 
-        // Mostrar solo mes/año actual por defecto
         if (!document.getElementById('filtroMes').value && !document.getElementById('filtroAnio').value) {
             document.getElementById('filtroMes').value = mesActual;
             document.getElementById('filtroAnio').value = anioActual;

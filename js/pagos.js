@@ -2877,6 +2877,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         // Start iteration from the month of occupation
         let currentIterMonth = mesOcupacion;
         let currentIterYear = anioOcupacion;
+        const anioActual = hoy.getFullYear();
+        const mesActual = hoy.getMonth();
 
         // Loop through months from occupation date up to the end date
         while (currentIterYear < anioFin || (currentIterYear === anioFin && currentIterMonth <= mesFin)) {
