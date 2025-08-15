@@ -116,19 +116,19 @@ export async function mostrarMantenimientos() {
             ${btnNuevoHtml}
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                    <table class="w-full table-auto divide-y divide-gray-200 text-xs sm:text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Inmueble</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Inquilino</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Descripción</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Costo</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Categoría</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Prioridad</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Estado</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Fecha</th>
-                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Pagado por</th>
-                                <th scope="col" class="relative px-2 sm:px-4 py-2 sm:py-3 text-right"><span class="sr-only">Acciones</span></th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Inmueble</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Inquilino</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Categoría</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Fecha</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Pagado por</th>
+                                <th scope="col" class="relative px-3 py-2 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="tbodyMantenimientos"></tbody>
@@ -176,19 +176,19 @@ export async function mostrarMantenimientos() {
                     let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Pendiente:"bg-red-100 text-red-800","En Progreso":"bg-yellow-100 text-yellow-800",Completado:"bg-green-100 text-green-800",Cancelado:"bg-gray-100 text-gray-800"}[m.estado] || "bg-gray-100 text-gray-800");
                     return `
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
-                            <td class="px-6 py-4 text-sm text-gray-800">${m.nombreInmueble}</td>
-                            <td class="px-6 py-4 text-sm text-gray-800">${m.nombreInquilino}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700 whitespace-normal max-w-xs overflow-hidden text-ellipsis">${m.descripcion || 'Sin descripción'}</td>
-                            <td class="px-6 py-4 text-sm text-gray-800 font-medium">${(Number(m.costo) || 0).toFixed(2)}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${m.categoria || 'N/A'}</td>
-                            <td class="px-6 py-4 text-sm"><span class="${prioridadClass}">${m.prioridad || 'N/A'}</span></td>
-                            <td class="px-6 py-4 text-sm"><span class="${estadoClass}">${m.estado || 'N/A'}</span></td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${m.fechaMantenimiento || 'N/A'}</td>
-                            <td class="px-6 py-4 text-sm text-gray-800">${m.pagadoPor}</td>
-                            <td class="px-6 py-4 text-sm text-right">
-                                <div class="flex flex-col sm:flex-row sm:justify-end sm:space-x-2 space-y-1 sm:space-y-0">
-                                    <button onclick="editarMantenimiento('${m.id}')" class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Editar</button>
-                                    <button onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Eliminar</button>
+                            <td class="px-3 py-2 text-sm text-gray-800">${m.nombreInmueble}</td>
+                            <td class="px-3 py-2 text-sm text-gray-800">${m.nombreInquilino}</td>
+                            <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal max-w-xs">${m.descripcion || 'Sin descripción'}</td>
+                            <td class="px-3 py-2 text-sm text-gray-800 font-medium">${(Number(m.costo) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.categoria || 'N/A'}</td>
+                            <td class="px-3 py-2 text-sm"><span class="${prioridadClass}">${m.prioridad || 'N/A'}</span></td>
+                            <td class="px-3 py-2 text-sm"><span class="${estadoClass}">${m.estado || 'N/A'}</span></td>
+                            <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.fechaMantenimiento || 'N/A'}</td>
+                            <td class="px-3 py-2 text-sm text-gray-800 hidden lg:table-cell">${m.pagadoPor}</td>
+                            <td class="px-3 py-2 text-sm text-right">
+                                <div class="flex flex-wrap justify-end gap-1">
+                                    <button onclick="editarMantenimiento('${m.id}')" class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Editar</button>
+                                    <button onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Eliminar</button>
                                 </div>
                             </td>
                         </tr>`;
@@ -684,47 +684,3 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh, callback
     }
 }
 
-// --- Ajuste responsivo para la tabla ---
-const style = document.createElement('style');
-style.innerHTML = `
-@media (max-width: 900px) {
-    #contenido table th, #contenido table td {
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-        font-size: 0.92em !important;
-    }
-    #contenido .rounded-xl {
-        border-radius: 0.75rem !important;
-    }
-}
-@media (max-width: 700px) {
-    #contenido table th, #contenido table td {
-        padding-left: 0.25rem !important;
-        padding-right: 0.25rem !important;
-        font-size: 0.85em !important;
-    }
-    #contenido .rounded-xl {
-        border-radius: 0.5rem !important;
-    }
-}
-@media (max-width: 600px) {
-    #contenido table th, #contenido table td {
-        padding-left: 0.15rem !important;
-        padding-right: 0.15rem !important;
-        font-size: 0.78em !important;
-    }
-    #contenido .rounded-xl {
-        border-radius: 0.4rem !important;
-    }
-    #contenido .overflow-x-auto {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-}
-`;
-if (!document.getElementById('mantenimientos-responsive-style')) {
-    style.id = 'mantenimientos-responsive-style';
-    document.head.appendChild(style);
-}
