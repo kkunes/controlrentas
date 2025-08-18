@@ -122,18 +122,30 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
     });
 
     const modalHtml = `
-        <div class="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Ingresos por Propietario</h3>
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-                <select id="filtroPropietarioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${propietariosOptions}</select>
+        <div class="modal-content-responsive bg-white rounded-lg shadow-xl w-full max-w-4xl flex flex-col">
+            <div class="modal-header-responsive bg-gradient-to-r from-blue-500 to-indigo-600 p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-xl font-bold text-white">Ingresos por Propietario</h3>
+                <button id="closeModalBtn" class="modal-close-button text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-            <div id="resumenFiltradoModal" class="mb-4"></div>
-            <div id="tablaModalContainer" class="overflow-y-auto max-h-96"></div>
-            <button onclick="ocultarModal()" class="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+            <div class="p-6 flex-grow overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+                    <select id="filtroPropietarioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${propietariosOptions}</select>
+                </div>
+                <div id="resumenFiltradoModal" class="mb-4"></div>
+                <div id="tablaModalContainer"></div>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button id="closeModalFooterBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+            </div>
         </div>
     `;
 
     mostrarModal(modalHtml);
+
+    document.getElementById('closeModalBtn').addEventListener('click', ocultarModal);
+    document.getElementById('closeModalFooterBtn').addEventListener('click', ocultarModal);
 
     const renderTabla = () => {
         const propietarioId = document.getElementById('filtroPropietarioModal').value;
@@ -146,7 +158,7 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
         });
 
         document.getElementById('resumenFiltradoModal').innerHTML = `
-            <div class="bg-blue-100 p-3 rounded-lg text-center">
+            <div class="bg-gradient-to-r from-blue-100 to-indigo-200 p-3 rounded-lg text-center">
                 <p class="text-sm font-medium text-blue-800">Total Filtrado</p>
                 <p class="text-xl font-bold text-blue-900">${totalFiltrado.toFixed(2)}</p>
             </div>
@@ -155,30 +167,32 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
         let tablaHtml = '<p class="text-center text-gray-500 py-4">No hay movimientos que coincidan con los filtros.</p>';
         if (movimientosFiltrados.length > 0) {
             tablaHtml = `
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propietario</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forma de Pago</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        ${movimientosFiltrados.map(mov => `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.fecha}</td>
-                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.tipo}</td>
-                                <td class="px-4 py-2 text-sm text-gray-700">${mov.descripcion}</td>
-                                <td class="px-4 py-2 text-sm text-gray-700">${mov.propietario}</td>
-                                <td class="px-4 py-2 text-sm text-gray-700">${mov.formaPago || 'N/A'}</td>
-                                <td class="px-4 py-2 text-right text-sm text-gray-700">${mov.monto.toFixed(2)}</td>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propietario</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forma de Pago</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${movimientosFiltrados.map(mov => `
+                                <tr>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.fecha}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.tipo}</td>
+                                    <td class="px-4 py-2 text-sm text-gray-700">${mov.descripcion}</td>
+                                    <td class="px-4 py-2 text-sm text-gray-700">${mov.propietario}</td>
+                                    <td class="px-4 py-2 text-sm text-gray-700">${mov.formaPago || 'N/A'}</td>
+                                    <td class="px-4 py-2 text-right text-sm text-gray-700">${mov.monto.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
         document.getElementById('tablaModalContainer').innerHTML = tablaHtml;

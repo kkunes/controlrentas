@@ -820,3 +820,46 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Estilos para el modal responsivo */
+.modal-content-responsive {
+    max-height: 90vh;
+}
+
+.modal-close-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.modal-close-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+    .modal-content-responsive {
+        width: 95%;
+        max-width: none;
+        height: 90vh;
+    }
+
+    .modal-header-responsive {
+        padding: 1rem;
+    }
+
+    .modal-header-responsive h3 {
+        font-size: 1.125rem;
+    }
+
+    .modal-content-responsive .p-6 {
+        padding: 1rem;
+    }
+
+    #tablaModalContainer {
+        max-height: calc(90vh - 250px);
+    }
+}
