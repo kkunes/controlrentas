@@ -147,10 +147,21 @@ async function generarReporteMensual(mes, anio) {
         const lastDayOfMonth = new Date(anio, mes, 0).getDate();
         const endOfMonth = `${anio}-${String(mes).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
-        // Obtener nombres de inmuebles e inquilinos
+        // Obtener nombres de inmuebles, inquilinos y propietarios
+        const propietariosSnap = await getDocs(collection(db, "propietarios"));
+        const propietariosMap = new Map();
+        propietariosSnap.forEach(doc => propietariosMap.set(doc.id, doc.data().nombre));
+
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
         const inmueblesMap = new Map();
-        inmueblesSnap.forEach(doc => inmueblesMap.set(doc.id, doc.data().nombre));
+        inmueblesSnap.forEach(doc => {
+            const data = doc.data();
+            inmueblesMap.set(doc.id, {
+                nombre: data.nombre,
+                propietarioId: data.propietarioId
+            });
+        });
+
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const inquilinosMap = new Map();
         inquilinosSnap.forEach(doc => inquilinosMap.set(doc.id, doc.data().nombre));
@@ -185,12 +196,16 @@ async function generarReporteMensual(mes, anio) {
                 // Suma solo pagos de renta
                 totalPagosRentaMes += montoPagado;
                 const inquilinoNombre = inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido';
-                const inmuebleNombre = inmueblesMap.get(data.inmuebleId) || 'Inmueble Desconocido';
+                const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
+                const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+                const propietarioNombre = propietariosMap.get(data.propietarioId) || (inmuebleInfo && inmuebleInfo.propietarioId ? propietariosMap.get(inmuebleInfo.propietarioId) : 'N/A');
+
                 pagosDetalle.push({
                     fecha: fechaPago,
                     tipo: 'Ingreso (Pago de Renta)',
                     descripcion: `Pago de ${inquilinoNombre} por ${inmuebleNombre} (Mes: ${data.mesCorrespondiente || 'N/A'})`,
-                    monto: montoPagado
+                    monto: montoPagado,
+                    propietario: propietarioNombre
                 });
 
                 // Sumar servicios pagados
@@ -221,12 +236,15 @@ async function generarReporteMensual(mes, anio) {
                 totalIngresosMes += parseFloat(data.montoDeposito);
                 totalDepositosMes += parseFloat(data.montoDeposito);
                 const nombreInquilino = data.nombre || 'Inquilino Desconocido';
-                const inmuebleNombre = inmueblesMap.get(data.inmuebleAsociadoId) || 'Inmueble Desconocido';
+                const inmuebleInfo = inmueblesMap.get(data.inmuebleAsociadoId);
+                const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+                const propietarioNombre = inmuebleInfo && inmuebleInfo.propietarioId ? propietariosMap.get(inmuebleInfo.propietarioId) : 'N/A';
                 pagosDetalle.push({
                     fecha: data.fechaDeposito,
                     tipo: 'Ingreso (Depósito)',
                     descripcion: `Depósito de ${nombreInquilino} por ${inmuebleNombre}`,
-                    monto: parseFloat(data.montoDeposito)
+                    monto: parseFloat(data.montoDeposito),
+                    propietario: propietarioNombre
                 });
             }
         });
@@ -245,7 +263,9 @@ async function generarReporteMensual(mes, anio) {
         mantenimientosSnap.forEach(doc => {
             const data = doc.data();
             totalGastos += (parseFloat(data.costo) || 0);
-            const inmuebleNombre = inmueblesMap.get(data.inmuebleId) || 'Inmueble Desconocido';
+            const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
+            const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+            const propietarioNombre = inmuebleInfo && inmuebleInfo.propietarioId ? propietariosMap.get(inmuebleInfo.propietarioId) : 'N/A';
             const tipoMantenimiento = data.tipoMantenimiento ? data.tipoMantenimiento : '';
             const descripcionMantenimiento = data.descripcion ? data.descripcion : '';
             const categoriaMantenimiento = data.categoria ? data.categoria : '';
@@ -253,7 +273,8 @@ async function generarReporteMensual(mes, anio) {
                 fecha: data.fechaMantenimiento ? data.fechaMantenimiento.substring(0, 10) : '',
                 tipo: 'Gasto (Mantenimiento)',
                 descripcion: `Mantenimiento${tipoMantenimiento ? ': ' + tipoMantenimiento : ''}${descripcionMantenimiento ? ' - ' + descripcionMantenimiento : ''} (${inmuebleNombre})${categoriaMantenimiento ? ' [' + categoriaMantenimiento + ']' : ''}`,
-                monto: parseFloat(data.costo) || 0
+                monto: parseFloat(data.costo) || 0,
+                propietario: propietarioNombre
             });
         });
 
@@ -272,6 +293,7 @@ async function generarReporteMensual(mes, anio) {
                                 <th class="px-3 py-2 text-left text-xs font-medium text-[#2c3e50] uppercase tracking-wider">Fecha</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-[#2c3e50] uppercase tracking-wider">Tipo</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-[#2c3e50] uppercase tracking-wider">Descripción</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-[#2c3e50] uppercase tracking-wider">Propietario</th>
                                 <th class="px-3 py-2 text-right text-xs font-medium text-[#2c3e50] uppercase tracking-wider">Monto</th>
                             </tr>
                         </thead>
@@ -289,6 +311,7 @@ async function generarReporteMensual(mes, anio) {
                                         </span>
                                     </td>
                                     <td class="px-3 py-2 text-xs text-gray-700">${mov.descripcion}</td>
+                                    <td class="px-3 py-2 text-xs text-gray-700">${mov.propietario || 'N/A'}</td>
                                     <td class="px-3 py-2 text-right font-bold text-xs ${mov.tipo.startsWith('Ingreso') ? 'text-green-700' : 'text-red-700'}">
                                         ${parseFloat(mov.monto).toFixed(2)}
                                     </td>
