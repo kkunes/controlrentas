@@ -1,6 +1,6 @@
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarNotificacion } from './ui.js';
+import { mostrarNotificacion, mostrarModal, ocultarModal } from './ui.js';
 
 /**
  * Muestra la sección principal de reportes y configura los selectores de mes/año.
@@ -115,6 +115,80 @@ export async function mostrarReportes() {
     await generarReporteMensual(new Date().getMonth() + 1, new Date().getFullYear());
 }
 
+function abrirModalPropietarios(movimientos, propietariosMap) {
+    let propietariosOptions = '<option value="">Todos</option>';
+    propietariosMap.forEach((nombre, id) => {
+        propietariosOptions += `<option value="${id}">${nombre}</option>`;
+    });
+
+    const modalHtml = `
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Ingresos por Propietario</h3>
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+                <select id="filtroPropietarioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${propietariosOptions}</select>
+            </div>
+            <div id="resumenFiltradoModal" class="mb-4"></div>
+            <div id="tablaModalContainer" class="overflow-y-auto max-h-96"></div>
+            <button onclick="ocultarModal()" class="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
+        </div>
+    `;
+
+    mostrarModal(modalHtml);
+
+    const renderTabla = () => {
+        const propietarioId = document.getElementById('filtroPropietarioModal').value;
+
+        const movimientosFiltrados = propietarioId ? movimientos.filter(mov => mov.propietarioId === propietarioId) : movimientos;
+
+        let totalFiltrado = 0;
+        movimientosFiltrados.forEach(mov => {
+            totalFiltrado += mov.monto;
+        });
+
+        document.getElementById('resumenFiltradoModal').innerHTML = `
+            <div class="bg-blue-100 p-3 rounded-lg text-center">
+                <p class="text-sm font-medium text-blue-800">Total Filtrado</p>
+                <p class="text-xl font-bold text-blue-900">${totalFiltrado.toFixed(2)}</p>
+            </div>
+        `;
+
+        let tablaHtml = '<p class="text-center text-gray-500 py-4">No hay movimientos que coincidan con los filtros.</p>';
+        if (movimientosFiltrados.length > 0) {
+            tablaHtml = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propietario</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forma de Pago</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${movimientosFiltrados.map(mov => `
+                            <tr>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.fecha}</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.tipo}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">${mov.descripcion}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">${mov.propietario}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">${mov.formaPago || 'N/A'}</td>
+                                <td class="px-4 py-2 text-right text-sm text-gray-700">${mov.monto.toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        document.getElementById('tablaModalContainer').innerHTML = tablaHtml;
+    };
+
+    document.getElementById('filtroPropietarioModal').addEventListener('change', renderTabla);
+
+    renderTabla();
+}
+
 /**
  * Genera y muestra el reporte mensual de ingresos y gastos.
  * @param {number} mes - El mes (1-12).
@@ -198,14 +272,17 @@ async function generarReporteMensual(mes, anio) {
                 const inquilinoNombre = inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido';
                 const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
                 const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
-                const propietarioNombre = propietariosMap.get(data.propietarioId) || (inmuebleInfo && inmuebleInfo.propietarioId ? propietariosMap.get(inmuebleInfo.propietarioId) : 'N/A');
+                const propietarioId = data.propietarioId || (inmuebleInfo ? inmuebleInfo.propietarioId : null);
+                const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
 
                 pagosDetalle.push({
                     fecha: fechaPago,
                     tipo: 'Ingreso (Pago de Renta)',
                     descripcion: `Pago de ${inquilinoNombre} por ${inmuebleNombre} (Mes: ${data.mesCorrespondiente || 'N/A'})`,
                     monto: montoPagado,
-                    propietario: propietarioNombre
+                    propietario: propietarioNombre,
+                    propietarioId,
+                    formaPago: data.formaPago
                 });
 
                 // Sumar servicios pagados
@@ -238,13 +315,16 @@ async function generarReporteMensual(mes, anio) {
                 const nombreInquilino = data.nombre || 'Inquilino Desconocido';
                 const inmuebleInfo = inmueblesMap.get(data.inmuebleAsociadoId);
                 const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
-                const propietarioNombre = inmuebleInfo && inmuebleInfo.propietarioId ? propietariosMap.get(inmuebleInfo.propietarioId) : 'N/A';
+                const propietarioId = inmuebleInfo ? inmuebleInfo.propietarioId : null;
+                const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
                 pagosDetalle.push({
                     fecha: data.fechaDeposito,
                     tipo: 'Ingreso (Depósito)',
                     descripcion: `Depósito de ${nombreInquilino} por ${inmuebleNombre}`,
                     monto: parseFloat(data.montoDeposito),
-                    propietario: propietarioNombre
+                    propietario: propietarioNombre,
+                    propietarioId,
+                    formaPago: 'N/A' // Deposits don't have a payment method in the same way
                 });
             }
         });
@@ -265,7 +345,8 @@ async function generarReporteMensual(mes, anio) {
             totalGastos += (parseFloat(data.costo) || 0);
             const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
             const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
-            const propietarioNombre = inmuebleInfo && inmuebleInfo.propietarioId ? propietariosMap.get(inmuebleInfo.propietarioId) : 'N/A';
+            const propietarioId = inmuebleInfo ? inmuebleInfo.propietarioId : null;
+            const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
             const tipoMantenimiento = data.tipoMantenimiento ? data.tipoMantenimiento : '';
             const descripcionMantenimiento = data.descripcion ? data.descripcion : '';
             const categoriaMantenimiento = data.categoria ? data.categoria : '';
@@ -274,7 +355,9 @@ async function generarReporteMensual(mes, anio) {
                 tipo: 'Gasto (Mantenimiento)',
                 descripcion: `Mantenimiento${tipoMantenimiento ? ': ' + tipoMantenimiento : ''}${descripcionMantenimiento ? ' - ' + descripcionMantenimiento : ''} (${inmuebleNombre})${categoriaMantenimiento ? ' [' + categoriaMantenimiento + ']' : ''}`,
                 monto: parseFloat(data.costo) || 0,
-                propietario: propietarioNombre
+                propietario: propietarioNombre,
+                propietarioId,
+                formaPago: 'N/A' // Maintenance doesn't have a payment method
             });
         });
 
@@ -417,17 +500,24 @@ async function generarReporteMensual(mes, anio) {
                         <p class="text-base sm:text-xl font-bold text-yellow-900">${totalLuz.toFixed(2)}</p>
                     </div>
                 </div>
-                <h4 class="text-sm sm:text-base font-semibold mb-3 border-b border-blue-500/20 pb-2 flex items-center">
-                    <div class="w-6 h-6 bg-[#2c3e50]/20 rounded-lg flex items-center justify-center mr-2 shadow-sm">
-                        <svg class="w-3 h-3 text-[#3a506b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
+                <h4 class="text-sm sm:text-base font-semibold mb-3 border-b border-blue-500/20 pb-2 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-[#2c3e50]/20 rounded-lg flex items-center justify-center mr-2 shadow-sm">
+                            <svg class="w-3 h-3 text-[#3a506b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Detalle de Movimientos</span>
                     </div>
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Detalle de Movimientos</span>
+                    <button id="btnIngresoPropietario" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Ingreso Propietario</button>
                 </h4>
                 ${listaDetalladaMovimientosHtml}
             </div>
         `;
+
+        document.getElementById('btnIngresoPropietario').addEventListener('click', () => {
+            abrirModalPropietarios(todosLosMovimientos, propietariosMap);
+        });
 
     } catch (error) {
         console.error("Error al generar el reporte mensual:", error);
