@@ -37,66 +37,82 @@ async function exportarMobiliarioPDF() {
         // Sort by availability
         mobiliario.sort((a, b) => b.cantidadDisponible - a.cantidadDisponible);
 
-        let y = 15;
-        doc.setFontSize(18);
-        doc.setTextColor(44, 62, 80);
-        doc.text("Inventario de Mobiliario", 105, y, { align: "center" });
-        y += 10;
+        // --- PDF Design ---
+        const header = () => {
+            doc.setFillColor(44, 62, 80); // Dark blue
+            doc.rect(0, 0, doc.internal.pageSize.getWidth(), 20, 'F');
+            doc.setFontSize(20);
+            doc.setTextColor(255, 255, 255);
+            doc.text("Inventario de Mobiliario", doc.internal.pageSize.getWidth() / 2, 12, { align: "center" });
+        };
 
-        mobiliario.forEach(mueble => {
-            if (y > 270) {
+        const footer = () => {
+            const pageCount = doc.internal.getNumberOfPages();
+            doc.setFontSize(10);
+            doc.setTextColor(127, 140, 141); // Gray
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() / 2, 287, { align: 'center' });
+            }
+        };
+
+        let y = 30;
+        header();
+
+        mobiliario.forEach((mueble, index) => {
+            if (y > 220) { // Adjusted for more space
                 doc.addPage();
-                y = 15;
+                header();
+                y = 30;
             }
 
-            doc.setFontSize(14);
-            doc.setTextColor(52, 73, 94);
-            doc.setFillColor(236, 240, 241);
-            doc.rect(10, y, 190, 10, 'F');
-            doc.text(mueble.nombre, 15, y + 7);
-            y += 15;
+            // Container for each item
+            doc.setDrawColor(213, 219, 219); // Light gray border
+            doc.roundedRect(10, y, 190, 60, 3, 3, 'S');
 
+            // Title
+            doc.setFontSize(16);
+            doc.setTextColor(44, 62, 80); // Dark blue
+            doc.text(mueble.nombre, 15, y + 10);
+
+            // Details
             doc.setFontSize(10);
-            doc.setTextColor(44, 62, 80);
-            doc.text(`Descripción: ${mueble.descripcion || 'N/A'}`, 15, y);
-            y += 5;
-            doc.text(`Costo de Renta: $${(mueble.costoRenta || 0).toFixed(2)}`, 15, y);
-            y += 5;
-            doc.text(`Cantidad Total: ${mueble.cantidad || 0}`, 15, y);
-            y += 5;
-            doc.text(`Disponibles: ${mueble.cantidadDisponible}`, 15, y);
-            y += 5;
-            doc.text(`Condición: ${mueble.condicion || 'N/A'}`, 15, y);
-            y += 10;
+            doc.setTextColor(52, 73, 94); // Dark gray
+            doc.text(`Costo de Renta: $${(mueble.costoRenta || 0).toFixed(2)}`, 15, y + 20);
+            doc.text(`Cantidad Total: ${mueble.cantidad || 0}`, 15, y + 25);
+            doc.text(`Disponibles: ${mueble.cantidadDisponible}`, 15, y + 30);
+            doc.text(`Condición: ${mueble.condicion || 'N/A'}`, 15, y + 35);
 
+            // Description
+            doc.setFontSize(9);
+            doc.setTextColor(127, 140, 141); // Gray
+            const splitDescription = doc.splitTextToSize(mueble.descripcion || 'Sin descripción.', 80);
+            doc.text(splitDescription, 115, y + 20);
+
+
+            // Assigned Tenants
             if (mueble.asignaciones && mueble.asignaciones.length > 0) {
                 const asignacionesActivas = mueble.asignaciones.filter(a => a.activa !== false);
                 if (asignacionesActivas.length > 0) {
-                    doc.setFontSize(12);
+                    doc.setFontSize(10);
                     doc.setTextColor(44, 62, 80);
-                    doc.text("Asignaciones Activas:", 15, y);
-                    y += 7;
-
+                    doc.text("Asignado a:", 15, y + 45);
+                    let listY = y + 50;
                     asignacionesActivas.forEach(asignacion => {
                         const inquilino = inquilinosMap.get(asignacion.inquilinoId);
                         const inmueble = asignacion.inmuebleAsociadoId ? inmueblesMap.get(asignacion.inmuebleAsociadoId) : null;
                         const inquilinoNombre = inquilino ? inquilino.nombre : 'Inquilino Desconocido';
                         const inmuebleNombre = inmueble ? inmueble.nombre : 'No especificado';
-
-                        doc.setFontSize(10);
                         doc.setTextColor(52, 73, 94);
-                        doc.text(`- Inquilino: ${inquilinoNombre}`, 20, y);
-                        y += 5;
-                        doc.text(`  Inmueble: ${inmuebleNombre}`, 20, y);
-                        y += 5;
-                        doc.text(`  Cantidad: ${asignacion.cantidad}`, 20, y);
-                        y += 7;
+                        doc.text(`- ${inquilinoNombre} (${asignacion.cantidad}) en ${inmuebleNombre}`, 20, listY);
+                        listY += 5;
                     });
                 }
             }
-            y += 5; // Espacio entre muebles
+            y += 70; // Space for next item
         });
 
+        footer();
         doc.save("inventario_mobiliario.pdf");
     } catch (error) {
         console.error("Error al exportar el inventario de mobiliario a PDF:", error);
@@ -790,9 +806,9 @@ window.asignarMueble = async function(id) {
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                            </svg>
-                            Cantidad a asignar *
-                        </label>
+                        </svg>
+                        Cantidad a asignar *
+                    </label>
                         <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
                             class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                         <p class="text-xs text-gray-500 mt-1">Máximo disponible: ${disponibles}</p>
