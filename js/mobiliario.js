@@ -380,9 +380,19 @@ export async function mostrarInventarioMobiliario() {
                 const nombre = fila.dataset.nombre || '';
                 const estadoFila = fila.dataset.estado || '';
                 const condicionFila = fila.dataset.condicion || '';
+                const cantidadDisponible = parseInt(fila.cells[5].textContent, 10);
 
                 const coincideBusqueda = nombre.includes(busqueda);
-                const coincideEstado = !estado || estadoFila.includes(estado);
+                
+                let coincideEstado = true;
+                if (estado) {
+                    if (estado === 'disponible') {
+                        coincideEstado = cantidadDisponible > 0;
+                    } else {
+                        coincideEstado = estadoFila.includes(estado);
+                    }
+                }
+
                 const coincideCondicion = !condicion || condicionFila.includes(condicion);
 
                 fila.style.display = coincideBusqueda && coincideEstado && coincideCondicion ? '' : 'none';
