@@ -2,6 +2,108 @@ import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, 
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 
+async function exportarMobiliarioPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    try {
+        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+        const mobiliario = [];
+
+        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+        const inquilinosMap = new Map();
+        inquilinosSnap.forEach(doc => {
+            inquilinosMap.set(doc.id, doc.data());
+        });
+
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            inmueblesMap.set(doc.id, doc.data());
+        });
+
+        mobiliarioSnap.forEach(doc => {
+            const data = doc.data();
+            const cantidadTotal = data.cantidad || 0;
+            const cantidadAsignada = data.cantidadAsignada || 0;
+            const cantidadDisponible = cantidadTotal - cantidadAsignada;
+            mobiliario.push({
+                id: doc.id,
+                ...data,
+                cantidadDisponible,
+            });
+        });
+
+        // Sort by availability
+        mobiliario.sort((a, b) => b.cantidadDisponible - a.cantidadDisponible);
+
+        let y = 15;
+        doc.setFontSize(18);
+        doc.setTextColor(44, 62, 80);
+        doc.text("Inventario de Mobiliario", 105, y, { align: "center" });
+        y += 10;
+
+        mobiliario.forEach(mueble => {
+            if (y > 270) {
+                doc.addPage();
+                y = 15;
+            }
+
+            doc.setFontSize(14);
+            doc.setTextColor(52, 73, 94);
+            doc.setFillColor(236, 240, 241);
+            doc.rect(10, y, 190, 10, 'F');
+            doc.text(mueble.nombre, 15, y + 7);
+            y += 15;
+
+            doc.setFontSize(10);
+            doc.setTextColor(44, 62, 80);
+            doc.text(`Descripción: ${mueble.descripcion || 'N/A'}`, 15, y);
+            y += 5;
+            doc.text(`Costo de Renta: $${(mueble.costoRenta || 0).toFixed(2)}`, 15, y);
+            y += 5;
+            doc.text(`Cantidad Total: ${mueble.cantidad || 0}`, 15, y);
+            y += 5;
+            doc.text(`Disponibles: ${mueble.cantidadDisponible}`, 15, y);
+            y += 5;
+            doc.text(`Condición: ${mueble.condicion || 'N/A'}`, 15, y);
+            y += 10;
+
+            if (mueble.asignaciones && mueble.asignaciones.length > 0) {
+                const asignacionesActivas = mueble.asignaciones.filter(a => a.activa !== false);
+                if (asignacionesActivas.length > 0) {
+                    doc.setFontSize(12);
+                    doc.setTextColor(44, 62, 80);
+                    doc.text("Asignaciones Activas:", 15, y);
+                    y += 7;
+
+                    asignacionesActivas.forEach(asignacion => {
+                        const inquilino = inquilinosMap.get(asignacion.inquilinoId);
+                        const inmueble = asignacion.inmuebleAsociadoId ? inmueblesMap.get(asignacion.inmuebleAsociadoId) : null;
+                        const inquilinoNombre = inquilino ? inquilino.nombre : 'Inquilino Desconocido';
+                        const inmuebleNombre = inmueble ? inmueble.nombre : 'No especificado';
+
+                        doc.setFontSize(10);
+                        doc.setTextColor(52, 73, 94);
+                        doc.text(`- Inquilino: ${inquilinoNombre}`, 20, y);
+                        y += 5;
+                        doc.text(`  Inmueble: ${inmuebleNombre}`, 20, y);
+                        y += 5;
+                        doc.text(`  Cantidad: ${asignacion.cantidad}`, 20, y);
+                        y += 7;
+                    });
+                }
+            }
+            y += 5; // Espacio entre muebles
+        });
+
+        doc.save("inventario_mobiliario.pdf");
+    } catch (error) {
+        console.error("Error al exportar el inventario de mobiliario a PDF:", error);
+        mostrarNotificacion("Error al exportar el inventario a PDF.", "error");
+    }
+}
+
 /**
  * Muestra el inventario de mobiliario con estado mejorado.
  */
@@ -56,14 +158,24 @@ export async function mostrarInventarioMobiliario() {
                     </svg>
                     Inventario de Mobiliario
                 </h2>
-                <button onclick="mostrarFormularioNuevoMueble()" 
-                    class="w-full sm:w-auto bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
-                    text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center font-medium text-sm sm:text-base">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
-                    Agregar Mobiliario
-                </button>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button id="btn-agregar-mobiliario" 
+                        class="w-full sm:w-auto bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                        text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center font-medium text-sm sm:text-base">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Agregar Mobiliario
+                    </button>
+                    <button id="btn-exportar-pdf"
+                        class="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
+                        text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center font-medium text-sm sm:text-base">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Exportar a PDF
+                    </button>
+                </div>
             </div>
 
             <!-- Filtros -->
@@ -233,6 +345,9 @@ export async function mostrarInventarioMobiliario() {
         `;
 
         document.getElementById("contenido").innerHTML = html;
+
+        document.getElementById('btn-agregar-mobiliario').addEventListener('click', mostrarFormularioNuevoMueble);
+        document.getElementById('btn-exportar-pdf').addEventListener('click', exportarMobiliarioPDF);
 
         // Agregar event listeners para los filtros
         const filtroBusqueda = document.getElementById('filtroBusqueda');
@@ -466,11 +581,11 @@ window.editarMueble = async function(id) {
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                        </svg>
-                        Cantidad Total *
-                    </label>
-                    <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                            </svg>
+                            Cantidad Total *
+                        </label>
+                        <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -675,11 +790,11 @@ window.asignarMueble = async function(id) {
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                        </svg>
-                        Cantidad a asignar *
-                    </label>
-                    <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                            </svg>
+                            Cantidad a asignar *
+                        </label>
+                        <input type="number" id="cantidadAsignar" min="1" max="${disponibles}" value="1" required 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
                         <p class="text-xs text-gray-500 mt-1">Máximo disponible: ${disponibles}</p>
                 </div>
                 <div class="space-y-2">
@@ -888,10 +1003,10 @@ window.liberarMobiliario = async function(id) {
                                 <label class="text-sm text-gray-600 flex items-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                                </svg>
-                                <span>Cantidad a liberar:</span>
-                            </label>
-                            <input type="number" 
+                                    </svg>
+                                    <span>Cantidad a liberar:</span>
+                                </label>
+                                <input type="number" 
                                    name="cantidadLiberar_${a.inquilinoId}" 
                                    min="1" 
                                    max="${a.cantidad}" 
@@ -953,448 +1068,439 @@ window.liberarMobiliario = async function(id) {
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                        </svg>
-                        Condición al liberar
-                    </label>
-                    <select id="condicionLiberacion" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                        <option value="excelente">Excelente</option>
-                        <option value="buena" selected>Buena</option>
-                        <option value="regular">Regular</option>
-                        <option value="necesita_reparacion">Necesita Reparación</option>
-                        <option value="dañado">Dañado</option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Motivo de liberación
-                    </label>
-                    <select id="motivoLiberacion" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
-                        <option value="fin_contrato">Fin de contrato</option>
-                        <option value="cambio_inmueble">Cambio de inmueble</option>
-                        <option value="solicitud_inquilino">Solicitud del inquilino</option>
-                        <option value="mantenimiento">Mantenimiento</option>
-                        <option value="otro">Otro</option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
-                        </svg>
-                        Notas de liberación
-                    </label>
-                    <textarea id="notasLiberacion" rows="3" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700" 
-                        placeholder="Observaciones sobre el estado del mobiliario al liberarlo..."></textarea>
-                </div>
-                <div class="flex justify-end space-x-3 mt-8">
-                    <button type="button" onclick="ocultarModal()" 
-                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        Cancelar
-                    </button>
-                    <button type="submit" 
-                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Liberar Seleccionados
-                    </button>
-                </div>
-            </form>
-        `;
-        mostrarModal(formHtml);
+                            </svg>
+                            Condición al liberar
+                        </label>
+                        <select id="condicionLiberacion" 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                            <option value="excelente">Excelente</option>
+                            <option value="buena" selected>Buena</option>
+                            <option value="regular">Regular</option>
+                            <option value="necesita_reparacion">Necesita Reparación</option>
+                            <option value="dañado">Dañado</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Motivo de liberación
+                        </label>
+                        <select id="motivoLiberacion" 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                            <option value="fin_contrato">Fin de contrato</option>
+                            <option value="cambio_inmueble">Cambio de inmueble</option>
+                            <option value="solicitud_inquilino">Solicitud del inquilino</option>
+                            <option value="mantenimiento">Mantenimiento</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                            </svg>
+                            Notas de liberación
+                        </label>
+                        <textarea id="notasLiberacion" rows="3" 
+                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700" 
+                            placeholder="Observaciones sobre el estado del mobiliario al liberarlo..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-8">
+                        <button type="button" onclick="ocultarModal()" 
+                            class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Cancelar
+                        </button>
+                        <button type="submit" 
+                            class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                            text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Liberar Seleccionados
+                        </button>
+                    </div>
+                </form>
+            `;
+            mostrarModal(formHtml);
 
-        document.getElementById('formLiberarMueble').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const checkboxes = document.querySelectorAll('input[name="liberarAsignacion"]:checked');
-            if (checkboxes.length === 0) {
-                mostrarNotificacion("Selecciona al menos una asignación para liberar.", "error");
-                return;
-            }
+            document.getElementById('formLiberarMueble').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const checkboxes = document.querySelectorAll('input[name="liberarAsignacion"]:checked');
+                if (checkboxes.length === 0) {
+                    mostrarNotificacion("Selecciona al menos una asignación para liberar.", "error");
+                    return;
+                }
 
-            const condicionLiberacion = document.getElementById('condicionLiberacion').value;
-            const motivoLiberacion = document.getElementById('motivoLiberacion').value;
-            const notasLiberacion = document.getElementById('notasLiberacion').value.trim();
+                const condicionLiberacion = document.getElementById('condicionLiberacion').value;
+                const motivoLiberacion = document.getElementById('motivoLiberacion').value;
+                const notasLiberacion = document.getElementById('notasLiberacion').value.trim();
 
-            try {
-                let asignaciones = [...(mueble.asignaciones || [])];
-                let historial = [...(mueble.historial || [])];
-                let cantidadLiberada = 0;
+                try {
+                    let asignaciones = [...(mueble.asignaciones || [])];
+                    let historial = [...(mueble.historial || [])];
+                    let cantidadLiberada = 0;
 
-                // Procesar cada asignación seleccionada
-                checkboxes.forEach(checkbox => {
-                    const inquilinoId = checkbox.value;
-                    const cantidadALiberar = parseInt(document.querySelector(`input[name="cantidadLiberar_${inquilinoId}"]`).value, 10);
-                    const asignacionIndex = asignaciones.findIndex(a => a.inquilinoId === inquilinoId && a.activa !== false);
-                    
-                    if (asignacionIndex >= 0) {
-                        const asignacion = asignaciones[asignacionIndex];
+                    // Procesar cada asignación seleccionada
+                    checkboxes.forEach(checkbox => {
+                        const inquilinoId = checkbox.value;
+                        const cantidadALiberar = parseInt(document.querySelector(`input[name="cantidadLiberar_${inquilinoId}"]`).value, 10);
+                        const asignacionIndex = asignaciones.findIndex(a => a.inquilinoId === inquilinoId && a.activa !== false);
                         
-                        if (cantidadALiberar > asignacion.cantidad) {
-                            throw new Error(`La cantidad a liberar no puede ser mayor a la cantidad asignada`);
-                        }
-
-                        cantidadLiberada += cantidadALiberar;
-                        
-                        if (cantidadALiberar === asignacion.cantidad) {
-                            // Si se libera todo, marcar como inactiva
-                            asignaciones[asignacionIndex] = {
-                                ...asignacion,
-                                activa: false,
-                                fechaLiberacion: new Date().toISOString(),
-                                condicionLiberacion,
-                                motivoLiberacion,
-                                notasLiberacion
-                            };
-                        } else {
-                            // Si se libera parcialmente, crear una nueva asignación con la cantidad restante
-                            const cantidadRestante = asignacion.cantidad - cantidadALiberar;
+                        if (asignacionIndex >= 0) {
+                            const asignacion = asignaciones[asignacionIndex];
                             
-                            // Marcar la asignación actual como inactiva
-                            asignaciones[asignacionIndex] = {
-                                ...asignacion,
-                                activa: false,
-                                fechaLiberacion: new Date().toISOString(),
-                                condicionLiberacion,
-                                motivoLiberacion,
-                                notasLiberacion,
-                                cantidad: cantidadALiberar
-                            };
+                            if (cantidadALiberar > asignacion.cantidad) {
+                                throw new Error(`La cantidad a liberar no puede ser mayor a la cantidad asignada`);
+                            }
 
-                            // Agregar nueva asignación con la cantidad restante
-                            asignaciones.push({
-                                ...asignacion,
-                                cantidad: cantidadRestante,
-                                fechaAsignacion: new Date().toISOString(),
-                                activa: true
+                            cantidadLiberada += cantidadALiberar;
+                            
+                            if (cantidadALiberar === asignacion.cantidad) {
+                                // Si se libera todo, marcar como inactiva
+                                asignaciones[asignacionIndex] = {
+                                    ...asignacion,
+                                    activa: false,
+                                    fechaLiberacion: new Date().toISOString(),
+                                    condicionLiberacion,
+                                    motivoLiberacion,
+                                    notasLiberacion
+                                };
+                            } else {
+                                // Si se libera parcialmente, crear una nueva asignación con la cantidad restante
+                                const cantidadRestante = asignacion.cantidad - cantidadALiberar;
+                                
+                                // Marcar la asignación actual como inactiva
+                                asignaciones[asignacionIndex] = {
+                                    ...asignacion,
+                                    activa: false,
+                                    fechaLiberacion: new Date().toISOString(),
+                                    condicionLiberacion,
+                                    motivoLiberacion,
+                                    notasLiberacion,
+                                    cantidad: cantidadALiberar
+                                };
+
+                                // Agregar nueva asignación con la cantidad restante
+                                asignaciones.push({
+                                    ...asignacion,
+                                    cantidad: cantidadRestante,
+                                    fechaAsignacion: new Date().toISOString(),
+                                    activa: true
+                                });
+                            }
+
+                            // Agregar al historial
+                            const nombreInquilino = inquilinosMap.get(inquilinoId) || 'Inquilino Desconocido';
+                            historial.push({
+                                fecha: new Date().toISOString(),
+                                accion: "liberado",
+                                descripcion: `${cantidadALiberar} unidad(es) liberada(s) de ${nombreInquilino}`,
+                                inquilinoId,
+                                cantidad: cantidadALiberar,
+                                motivo: motivoLiberacion,
+                                condicion: condicionLiberacion,
+                                notas: notasLiberacion
                             });
                         }
-
-                        // Agregar al historial
-                        const nombreInquilino = inquilinosMap.get(inquilinoId) || 'Inquilino Desconocido';
-                        historial.push({
-                            fecha: new Date().toISOString(),
-                            accion: "liberado",
-                            descripcion: `${cantidadALiberar} unidad(es) liberada(s) de ${nombreInquilino}`,
-                            inquilinoId,
-                            cantidad: cantidadALiberar,
-                            motivo: motivoLiberacion,
-                            condicion: condicionLiberacion,
-                            notas: notasLiberacion
-                        });
-                    }
-                });
-
-                const nuevaCantidadAsignada = (mueble.cantidadAsignada || 0) - cantidadLiberada;
-                let nuevoEstado = "disponible";
-                if (nuevaCantidadAsignada > 0) {
-                    nuevoEstado = nuevaCantidadAsignada >= (mueble.cantidad || 0) ? "totalmente_asignado" : "parcialmente_asignado";
-                }
-
-                await updateDoc(doc(db, "mobiliario", id), {
-                    cantidadAsignada: nuevaCantidadAsignada,
-                    estado: nuevoEstado,
-                    condicion: condicionLiberacion,
-                    asignaciones,
-                    historial,
-                    fechaUltimaLiberacion: new Date().toISOString()
-                });
-
-                mostrarNotificacion(`${cantidadLiberada} unidad(es) de mobiliario liberada(s) correctamente.`, "success");
-                ocultarModal();
-                mostrarInventarioMobiliario();
-            } catch (error) {
-                console.error("Error al liberar mobiliario:", error);
-                mostrarNotificacion(error.message || "Error al liberar mobiliario.", "error");
-            }
-        });
-
-        // Agregar el event listener para habilitar/deshabilitar el input de cantidad
-        document.querySelectorAll('input[name="liberarAsignacion"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const cantidadInput = document.querySelector(`input[name="cantidadLiberar_${this.value}"]`);
-                if (cantidadInput) {
-                    cantidadInput.disabled = !this.checked;
-                }
-            });
-        });
-    } catch (error) {
-        console.error("Error al preparar liberación:", error);
-        mostrarNotificacion("Error al cargar datos para la liberación.", "error");
-    }
-};
-
-/**
- * Ver historial completo del mobiliario.
- */
-/**
- * Ver historial completo del mobiliario.
- * @param {string} id - ID del mobiliario a consultar.
- */
-window.verHistorialMobiliario = async function(id) {
-    try {
-        const muebleDoc = await getDoc(doc(db, "mobiliario", id));
-        if (!muebleDoc.exists()) {
-            mostrarNotificacion("Mobiliario no encontrado.", "error");
-            return;
-        }
-
-        const mueble = muebleDoc.data();
-        const historial = mueble.historial || [];
-
-        // Obtener nombres de inquilinos
-        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
-        const inquilinosMap = new Map();
-        inquilinosSnap.forEach(doc => {
-            inquilinosMap.set(doc.id, doc.data().nombre);
-        });
-
-        // Obtener nombres de inmuebles
-        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        const inmueblesMap = new Map();
-        inmueblesSnap.forEach(doc => {
-            inmueblesMap.set(doc.id, doc.data().nombre);
-        });
-
-        // Ordenar historial por fecha (más reciente primero)
-        historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-        const historialHtml = historial.map(h => {
-            const fecha = new Date(h.fecha).toLocaleString();
-            let descripcion = h.descripcion;
-            
-            // Si hay un inquilino asociado, mostrar su nombre y el inmueble
-            if (h.inquilinoId) {
-                const nombreInquilino = inquilinosMap.get(h.inquilinoId) || 'Inquilino Desconocido';
-                const nombreInmueble = h.inmuebleAsociadoId ? inmueblesMap.get(h.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
-                descripcion = descripcion.replace('Inquilino Desconocido', `${nombreInquilino} - Inmueble: ${nombreInmueble}`);
-            }
-
-            return `
-                <div class="border-l-4 ${getColorBorde(h.accion)} pl-4 py-2">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-medium text-gray-900">${descripcion}</p>
-                            ${h.notas ? `<p class="text-sm text-gray-500 mt-1">${h.notas}</p>` : ''}
-                        </div>
-                        <span class="text-sm text-gray-500">${fecha}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // Obtener asignaciones activas
-        const asignacionesActivas = (mueble.asignaciones || []).filter(a => a.activa !== false);
-        const resumenAsignaciones = asignacionesActivas.map(a => {
-            const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
-            const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
-            return `
-                <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-medium text-gray-900">${nombreInquilino} - Inmueble: ${nombreInmueble}</p>
-                            <p class="text-sm text-gray-500">Cantidad: ${a.cantidad}</p>
-                            <p class="text-sm text-gray-500">Asignado: ${new Date(a.fechaAsignacion).toLocaleDateString()}</p>
-                            ${a.notas ? `<p class="text-sm text-gray-500 mt-1">${a.notas}</p>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        const modalHtml = `
-            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
-                <div class="px-6 py-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <h3 class="text-xl font-bold">Historial de ${mueble.nombre}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="space-y-6 px-4">
-                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-md mb-6 border border-indigo-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                            </svg>
-                            <div>
-                                <p class="text-sm font-medium text-indigo-800">Total en inventario</p>
-                                <p class="text-lg font-bold text-indigo-900">${mueble.cantidad || 0} unidades</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            <div>
-                                <p class="text-sm font-medium text-indigo-800">Asignaciones activas</p>
-                                <p class="text-lg font-bold text-indigo-900">${asignacionesActivas.length}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Historial de Movimientos
-                    </h4>
-                    <div class="flex flex-wrap gap-2 mb-3 text-xs text-gray-500">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 border-l-4 border-green-500 mr-1"></div>
-                            <span>Creado</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 border-l-4 border-blue-500 mr-1"></div>
-                            <span>Asignado</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 border-l-4 border-orange-500 mr-1"></div>
-                            <span>Liberado</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 border-l-4 border-yellow-500 mr-1"></div>
-                            <span>Editado</span>
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        ${resumenAsignaciones || '<p class="text-gray-500">No hay asignaciones activas</p>'}
-                    </div>
-                </div>
-
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Historial de Movimientos
-                    </h4>
-                    <div class="space-y-3">
-                        ${historialHtml || '<p class="text-gray-500">No hay historial disponible</p>'}
-                    </div>
-                </div>
-
-                <div class="flex justify-end mt-8 gap-3">
-                    <button onclick="ocultarModal()" 
-                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        Cerrar
-                    </button>
-                    <button onclick="limpiarHistorialMueble('${id}')" 
-                        class="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                        Limpiar Historial
-                    </button>
-                </div>
-            </div>
-        `;
-        mostrarModal(modalHtml);
-
-        // Agrega la función global para limpiar historial:
-        window.limpiarHistorialMueble = async function(id) {
-            if (confirm("¿Estás seguro de que deseas limpiar el historial de este mobiliario? Esta acción no se puede deshacer.")) {
-                try {
-                    await updateDoc(doc(db, "mobiliario", id), {
-                        historial: []
                     });
-                    mostrarNotificacion("Historial limpiado correctamente.", "success");
+
+                    const nuevaCantidadAsignada = (mueble.cantidadAsignada || 0) - cantidadLiberada;
+                    let nuevoEstado = "disponible";
+                    if (nuevaCantidadAsignada > 0) {
+                        nuevoEstado = nuevaCantidadAsignada >= (mueble.cantidad || 0) ? "totalmente_asignado" : "parcialmente_asignado";
+                    }
+
+                    await updateDoc(doc(db, "mobiliario", id), {
+                        cantidadAsignada: nuevaCantidadAsignada,
+                        estado: nuevoEstado,
+                        condicion: condicionLiberacion,
+                        asignaciones,
+                        historial,
+                        fechaUltimaLiberacion: new Date().toISOString()
+                    });
+
+                    mostrarNotificacion(`${cantidadLiberada} unidad(es) de mobiliario liberada(s) correctamente.`, "success");
                     ocultarModal();
                     mostrarInventarioMobiliario();
                 } catch (error) {
-                    mostrarNotificacion("Error al limpiar el historial.", "error");
+                    console.error("Error al liberar mobiliario:", error);
+                    mostrarNotificacion(error.message || "Error al liberar mobiliario.", "error");
                 }
+            });
+
+            // Agregar el event listener para habilitar/deshabilitar el input de cantidad
+            document.querySelectorAll('input[name="liberarAsignacion"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const cantidadInput = document.querySelector(`input[name="cantidadLiberar_${this.value}"]`);
+                    if (cantidadInput) {
+                        cantidadInput.disabled = !this.checked;
+                    }
+                });
+            });
+        } catch (error) {
+            console.error("Error al preparar liberación:", error);
+            mostrarNotificacion("Error al cargar datos para la liberación.", "error");
+        }
+    };
+
+    /**
+     * Ver historial completo del mobiliario.
+     */
+    /**
+     * Ver historial completo del mobiliario.
+     * @param {string} id - ID del mobiliario a consultar.
+     */
+    window.verHistorialMobiliario = async function(id) {
+        try {
+            const muebleDoc = await getDoc(doc(db, "mobiliario", id));
+            if (!muebleDoc.exists()) {
+                mostrarNotificacion("Mobiliario no encontrado.", "error");
+                return;
             }
-        };
-    } catch (error) {
-        console.error("Error al cargar historial:", error);
-        mostrarNotificacion("Error al cargar el historial del mobiliario.", "error");
-    }
-};
 
-// Exportar funciones globales
-window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;
-window.mostrarFormularioNuevoMueble = mostrarFormularioNuevoMueble;
-window.eliminarMueble = eliminarMueble;
-window.verHistorialMobiliario = verHistorialMobiliario;
+            const mueble = muebleDoc.data();
+            const historial = mueble.historial || [];
 
-window.actualizarAsignacionesInmuebles = async function() {
-    try {
-        // Obtener todos los documentos de mobiliario
-        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
-        
-        for (const mobDoc of mobiliarioSnap.docs) {
-            const mobiliario = mobDoc.data();
-            const asignaciones = mobiliario.asignaciones || [];
-            let asignacionesActualizadas = false;
+            // Obtener nombres de inquilinos
+            const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+            const inquilinosMap = new Map();
+            inquilinosSnap.forEach(doc => {
+                inquilinosMap.set(doc.id, doc.data().nombre);
+            });
 
-            // Actualizar cada asignación
-            for (let asignacion of asignaciones) {
-                if (asignacion.activa !== false && !asignacion.inmuebleAsociadoId) {
-                    // Obtener el inquilino
-                    const inquilinoDoc = await getDoc(doc(db, "inquilinos", asignacion.inquilinoId));
-                    if (inquilinoDoc.exists()) {
-                        const inmuebleAsociadoId = inquilinoDoc.data()?.inmuebleAsociadoId;
-                        if (inmuebleAsociadoId) {
-                            asignacion.inmuebleAsociadoId = inmuebleAsociadoId;
-                            asignacionesActualizadas = true;
+            // Obtener nombres de inmuebles
+            const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+            const inmueblesMap = new Map();
+            inmueblesSnap.forEach(doc => {
+                inmueblesMap.set(doc.id, doc.data().nombre);
+            });
+
+            // Ordenar historial por fecha (más reciente primero)
+            historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            const historialHtml = historial.map(h => {
+                const fecha = new Date(h.fecha).toLocaleString();
+                let descripcion = h.descripcion;
+                
+                // Si hay un inquilino asociado, mostrar su nombre y el inmueble
+                if (h.inquilinoId) {
+                    const nombreInquilino = inquilinosMap.get(h.inquilinoId) || 'Inquilino Desconocido';
+                    const nombreInmueble = h.inmuebleAsociadoId ? inmueblesMap.get(h.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+                    descripcion = descripcion.replace('Inquilino Desconocido', `${nombreInquilino} - Inmueble: ${nombreInmueble}`);
+                }
+
+                return `
+                    <div class="border-l-4 ${getColorBorde(h.accion)} pl-4 py-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-gray-900">${descripcion}</p>
+                                ${h.notas ? `<p class="text-sm text-gray-500 mt-1">${h.notas}</p>` : ''}
+                            </div>
+                            <span class="text-sm text-gray-500">${fecha}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Obtener asignaciones activas
+            const asignacionesActivas = (mueble.asignaciones || []).filter(a => a.activa !== false);
+            const resumenAsignaciones = asignacionesActivas.map(a => {
+                const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
+                const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+                return `
+                    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium text-gray-900">${nombreInquilino} - Inmueble: ${nombreInmueble}</p>
+                                <p class="text-sm text-gray-500">Cantidad: ${a.cantidad}</p>
+                                <p class="text-sm text-gray-500">Asignado: ${new Date(a.fechaAsignacion).toLocaleDateString()}</p>
+                                ${a.notas ? `<p class="text-sm text-gray-500 mt-1">${a.notas}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const modalHtml = `
+                <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                    <div class="px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-bold">Historial de ${mueble.nombre}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6 px-4">
+                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-md mb-6 border border-indigo-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-medium text-indigo-800">Total en inventario</p>
+                                    <p class="text-lg font-bold text-indigo-900">${mueble.cantidad || 0} unidades</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-medium text-indigo-800">Asignaciones activas</p>
+                                    <p class="text-lg font-bold text-indigo-900">${asignacionesActivas.length}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Historial de Movimientos
+                        </h4>
+                        <div class="flex flex-wrap gap-2 mb-3 text-xs text-gray-500">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 border-l-4 border-green-500 mr-1"></div>
+                                <span>Creado</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 border-l-4 border-blue-500 mr-1"></div>
+                                <span>Asignado</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 border-l-4 border-orange-500 mr-1"></div>
+                                <span>Liberado</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 border-l-4 border-yellow-500 mr-1"></div>
+                                <span>Editado</span>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            ${resumenAsignaciones || '<p class="text-gray-500">No hay asignaciones activas</p>'}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Historial de Movimientos
+                        </h4>
+                        <div class="space-y-3">
+                            ${historialHtml || '<p class="text-gray-500">No hay historial disponible</p>'}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-8 gap-3">
+                        <button onclick="ocultarModal()" 
+                            class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 
+                            text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Cerrar
+                        </button>
+                        <button onclick="limpiarHistorialMueble('${id}')" 
+                            class="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
+                            text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Limpiar Historial
+                        </button>
+                    </div>
+                </div>
+            `;
+            mostrarModal(modalHtml);
+
+            // Agrega la función global para limpiar historial:
+            window.limpiarHistorialMueble = async function(id) {
+                if (confirm("¿Estás seguro de que deseas limpiar el historial de este mobiliario? Esta acción no se puede deshacer.")) {
+                    try {
+                        await updateDoc(doc(db, "mobiliario", id), {
+                            historial: []
+                        });
+                        mostrarNotificacion("Historial limpiado correctamente.", "success");
+                        ocultarModal();
+                        mostrarInventarioMobiliario();
+                    } catch (error) {
+                        mostrarNotificacion("Error al limpiar el historial.", "error");
+                    }
+                }
+            };
+        } catch (error) {
+            console.error("Error al cargar historial:", error);
+            mostrarNotificacion("Error al cargar el historial del mobiliario.", "error");
+        }
+    };
+
+    window.actualizarAsignacionesInmuebles = async function() {
+        try {
+            // Obtener todos los documentos de mobiliario
+            const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+            
+            for (const mobDoc of mobiliarioSnap.docs) {
+                const mobiliario = mobDoc.data();
+                const asignaciones = mobiliario.asignaciones || [];
+                let asignacionesActualizadas = false;
+
+                // Actualizar cada asignación
+                for (let asignacion of asignaciones) {
+                    if (asignacion.activa !== false && !asignacion.inmuebleAsociadoId) {
+                        // Obtener el inquilino
+                        const inquilinoDoc = await getDoc(doc(db, "inquilinos", asignacion.inquilinoId));
+                        if (inquilinoDoc.exists()) {
+                            const inmuebleAsociadoId = inquilinoDoc.data()?.inmuebleAsociadoId;
+                            if (inmuebleAsociadoId) {
+                                asignacion.inmuebleAsociadoId = inmuebleAsociadoId;
+                                asignacionesActualizadas = true;
+                            }
                         }
                     }
                 }
+
+                // Si se actualizaron asignaciones, guardar los cambios
+                if (asignacionesActualizadas) {
+                    await updateDoc(doc(db, "mobiliario", mobDoc.id), {
+                        asignaciones: asignaciones
+                    });
+                }
             }
 
-            // Si se actualizaron asignaciones, guardar los cambios
-            if (asignacionesActualizadas) {
-                await updateDoc(doc(db, "mobiliario", mobDoc.id), {
-                    asignaciones: asignaciones
-                });
-            }
+            // No mostrar notificación
+            mostrarInventarioMobiliario();
+        } catch (error) {
+            console.error("Error al actualizar asignaciones:", error);
+            mostrarNotificacion("Error al actualizar las asignaciones.", "error");
         }
+    };
 
-        // No mostrar notificación
-        mostrarInventarioMobiliario();
-    } catch (error) {
-        console.error("Error al actualizar asignaciones:", error);
-        mostrarNotificacion("Error al actualizar las asignaciones.", "error");
+    /**
+     * Obtiene el color del borde según la acción del historial
+     */
+    function getColorBorde(accion) {
+        switch (accion) {
+            case 'creado':
+                return 'border-green-500';
+            case 'asignado':
+                return 'border-blue-500';
+            case 'liberado':
+                return 'border-orange-500';
+            case 'editado':
+                return 'border-yellow-500';
+            default:
+                return 'border-gray-500';
+        }
     }
-};
-
-// Llamar a la función para actualizar las asignaciones
-// window.actualizarAsignacionesInmuebles();
-
-/**
- * Obtiene el color del borde según la acción del historial
- */
-function getColorBorde(accion) {
-    switch (accion) {
-        case 'creado':
-            return 'border-green-500';
-        case 'asignado':
-            return 'border-blue-500';
-        case 'liberado':
-            return 'border-orange-500';
-        case 'editado':
-            return 'border-yellow-500';
-        default:
-            return 'border-gray-500';
-    }
-}
