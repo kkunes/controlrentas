@@ -108,7 +108,22 @@ export async function mostrarMantenimientos() {
             </div>
         `;
 
-        const btnNuevoHtml = `<div class="flex justify-end mb-4"><button id="btnNuevoMantenimiento" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition-colors duration-200 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Registrar mantenimiento</button></div>`;
+        const btnNuevoHtml = `
+            <div class="flex justify-start gap-3 mb-4">
+                <button id="btnNuevoMantenimiento" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition-colors duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Registrar mantenimiento
+                </button>
+                <button id="btnDescargarPDFMantenimientos" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition-colors duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Descargar PDF
+                </button>
+            </div>
+        `;
 
         contenedor.innerHTML = `
             <div id="total-mantenimientos-container" class="mb-6"></div>
@@ -137,6 +152,137 @@ export async function mostrarMantenimientos() {
             </div>`;
 
         document.getElementById('btnNuevoMantenimiento').addEventListener('click', () => mostrarFormularioNuevoMantenimiento());
+        document.getElementById('btnDescargarPDFMantenimientos').addEventListener('click', generarPDFMantenimientos);
+
+        async function generarPDFMantenimientos() {
+            const filtroInmueble = document.getElementById('filtroInmueble').value;
+            const filtroCategoria = document.getElementById('filtroCategoria').value;
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const filtroMes = document.getElementById('filtroMes').value ? Number(document.getElementById('filtroMes').value) : null;
+            const filtroAnio = document.getElementById('filtroAnio').value ? Number(document.getElementById('filtroAnio').value) : null;
+
+            const filtrados = mantenimientosList.filter(m => {
+                const fecha = m.fechaMantenimiento ? new Date(m.fechaMantenimiento + "T00:00:00") : null;
+                const mes = fecha ? fecha.getMonth() + 1 : null;
+                const anio = fecha ? fecha.getFullYear() : null;
+                return (!filtroInmueble || m.inmuebleId === filtroInmueble) &&
+                       (!filtroCategoria || m.categoria === filtroCategoria) &&
+                       (!filtroEstado || m.estado === filtroEstado) &&
+                       (!filtroMes || mes === filtroMes) &&
+                       (!filtroAnio || anio === filtroAnio);
+            });
+
+            const totalCosto = filtrados.reduce((sum, m) => sum + (Number(m.costo) || 0), 0);
+
+            const nombreMes = filtroMes ? meses[filtroMes - 1] : "Todos los meses";
+            const anioReporte = filtroAnio || "Todos los años";
+            const tituloReporte = `Reporte de Mantenimientos - ${nombreMes} ${anioReporte}`;
+
+            let tablaHtml = '';
+            if (filtrados.length === 0) {
+                tablaHtml = `<p style="text-align: center; color: #6b7280; padding: 20px;">No hay mantenimientos que coincidan con los filtros para generar el reporte.</p>`;
+            } else {
+                filtrados.sort((a, b) => new Date(b.fechaMantenimiento) - new Date(a.fechaMantenimiento));
+                tablaHtml = `
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6;">
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Inmueble</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Inquilino</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Descripción</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Costo</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Categoría</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Prioridad</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Estado</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Fecha</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Pagado por</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filtrados.map(m => `
+                                    <tr style="background-color: #ffffff;">
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.nombreInmueble}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.nombreInquilino}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.descripcion || 'Sin descripción'}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${(Number(m.costo) || 0).toFixed(2)}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.categoria || 'N/A'}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.prioridad || 'N/A'}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.estado || 'N/A'}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.fechaMantenimiento || 'N/A'}</td>
+                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.pagadoPor}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            const pdfContent = `
+                <div style="font-family: 'Arial', sans-serif; padding: 20px; background-color: #f8f9fa;">
+                    <h1 style="text-align: center; color: #2c3e50; margin-bottom: 25px; font-size: 28px; font-weight: bold; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">${tituloReporte}</h1>
+                    <div style="background-color: #d4edda; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <p style="font-size: 18px; color: #155724; margin: 0; font-weight: 600;">Costo Total de Mantenimientos (Filtrado):</p>
+                        <p style="font-size: 32px; font-weight: bold; color: #28a745; margin: 10px 0 0;">${totalCosto.toFixed(2)} MXN</p>
+                    </div>
+                    <div style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #007bff; color: #ffffff;">
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Inmueble</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Inquilino</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Descripción</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Costo</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Categoría</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Prioridad</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Estado</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Fecha</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Pagado por</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filtrados.map((m, index) => `
+                                    <tr style="background-color: ${index % 2 === 0 ? '#f2f2f2' : '#ffffff'};">
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.nombreInmueble}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.nombreInquilino}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.descripcion || 'Sin descripción'}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${(Number(m.costo) || 0).toFixed(2)}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.categoria || 'N/A'}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.prioridad || 'N/A'}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.estado || 'N/A'}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.fechaMantenimiento || 'N/A'}</td>
+                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.pagadoPor}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin:       0.5,
+                filename:     `Reporte_Mantenimientos_${nombreMes}_${anioReporte}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'] }
+            };
+
+            html2pdf().from(pdfContent).set(opt).toPdf().get('pdf').then(function (pdf) {
+                var totalPages = pdf.internal.getNumberOfPages();
+                for (var i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(150);
+                    const text = `Página ${i} de ${totalPages}`;
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    pdf.text(text, pageWidth - 0.75, pageHeight - 0.5);
+                }
+            }).save();
+        }
 
         function renderTablaMantenimientos() {
             const filtroInmueble = document.getElementById('filtroInmueble').value;
