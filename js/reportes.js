@@ -488,8 +488,8 @@ async function generarReporteMensual(mes, anio) {
                         </div>
                         <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Detalle de Movimientos</span>
                     </div>
-                    <div class="flex items-center">
-                        <button id="btnIngresoPropietario" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 mr-2">Ingreso Propietario</button>
+                    <div class="flex flex-wrap items-center justify-end">
+                        <button id="btnIngresoPropietario" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 mr-2 mb-2 sm:mb-0">Ingreso Propietario</button>
                         <button id="btnDescargarPDF" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Descargar PDF</button>
                     </div>
                 </h4>
