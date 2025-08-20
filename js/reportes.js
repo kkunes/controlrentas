@@ -83,7 +83,7 @@ export async function mostrarReportes() {
                         </div>
                     </div>
                     <div class="flex items-end">
-                        <button id="generarReporteBtn" class="w-full bg-gradient-to-r from-blue-500/30 to-indigo-600/30 hover:from-blue-500/50 hover:to-indigo-600/50 text-white px-3 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center text-sm font-medium border border-blue-500/30 hover:border-blue-500/50">
+                        <button id="generarReporteBtn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center text-sm font-medium border border-blue-600 hover:border-blue-700">
                             <svg class="w-4 h-4 mr-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                             </svg>
@@ -598,8 +598,7 @@ function generarPDF(mes, anio) {
             scrollY: -mainContent.scrollTop, // Usar el scroll del elemento <main>
             windowWidth: document.documentElement.offsetWidth
         },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
     html2pdf().from(elemento).set(opt).toPdf().get('pdf').then(function (pdf) {
