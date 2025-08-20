@@ -137,6 +137,7 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
                 <div id="tablaModalContainer"></div>
             </div>
             <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button id="generarPdfModalBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 mr-2">Generar PDF</button>
                 <button id="closeModalFooterBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
             </div>
         </div>
@@ -159,7 +160,7 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
 
         document.getElementById('resumenFiltradoModal').innerHTML = `
             <div class="bg-gradient-to-r from-blue-100 to-indigo-200 p-3 rounded-lg text-center">
-                <p class="text-sm font-medium text-blue-800">Total Filtrado</p>
+                <p class="text-sm font-medium text-blue-800">Total</p>
                 <p class="text-xl font-bold text-blue-900">${totalFiltrado.toFixed(2)}</p>
             </div>
         `;
@@ -201,6 +202,106 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
     document.getElementById('filtroPropietarioModal').addEventListener('change', renderTabla);
 
     renderTabla();
+
+    document.getElementById('generarPdfModalBtn').addEventListener('click', () => {
+        const propietarioId = document.getElementById('filtroPropietarioModal').value;
+        const movimientosFiltrados = propietarioId ? movimientos.filter(mov => mov.propietarioId === propietarioId) : movimientos;
+        generarPdfMovimientosPropietario(movimientosFiltrados, propietariosMap, propietarioId);
+    });
+}
+
+/**
+ * Genera un PDF con los movimientos filtrados por propietario.
+ * @param {Array} movimientos - Array de movimientos (ingresos/gastos).
+ * @param {Map} propietariosMap - Mapa de IDs de propietario a nombres.
+ * @param {string} propietarioId - ID del propietario seleccionado (o vacío si es "Todos").
+ */
+function generarPdfMovimientosPropietario(movimientos, propietariosMap, propietarioId) {
+    const nombrePropietario = propietarioId ? propietariosMap.get(propietarioId) : "Todos los Propietarios";
+    const nombreArchivo = `Reporte_Movimientos_${nombrePropietario.replace(/ /g, '_')}.pdf`;
+
+    let totalFiltrado = 0;
+    movimientos.forEach(mov => {
+        totalFiltrado += mov.monto;
+    });
+
+    let tablaHtml = '<p style="text-align: center; color: #6b7280; padding: 1.5rem;">No hay movimientos que coincidan con los filtros.</p>';
+    if (movimientos.length > 0) {
+        tablaHtml = `
+            <div style="overflow-x: auto;">
+                <table style="min-width: 100%; border-collapse: collapse; border-spacing: 0; margin-top: 1rem;">
+                    <thead style="background-color: #f3f4f6;">
+                        <tr>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Fecha</th>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Tipo</th>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Descripción</th>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Propietario</th>
+                            <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: #ffffff; divide-y divide-gray-200;">
+                        ${movimientos.map(mov => `
+                            <tr style="${mov.tipo.startsWith('Ingreso') ? 'background-color: #ecfdf5;' : 'background-color: #fef2f2;'}">
+                                <td style="padding: 0.75rem; white-space: nowrap; font-size: 0.875rem; color: #374151;">${mov.fecha}</td>
+                                <td style="padding: 0.75rem; white-space: nowrap; font-size: 0.875rem; color: ${mov.tipo.startsWith('Ingreso') ? '#065f46;' : '#991b1b;'};">${mov.tipo}</td>
+                                <td style="padding: 0.75rem; font-size: 0.875rem; color: #374151;">${mov.descripcion}</td>
+                                <td style="padding: 0.75rem; font-size: 0.875rem; color: #374151;">${mov.propietario || 'N/A'}</td>
+                                <td style="padding: 0.75rem; text-align: right; font-weight: 700; font-size: 0.875rem; color: ${mov.tipo.startsWith('Ingreso') ? '#047857;' : '#b91c1c;'};">${parseFloat(mov.monto).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    const headerHtml = `
+        <h2 style="text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: #1f2937;">Reporte de Movimientos por Propietario</h2>
+        <h3 style="text-align: center; font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; color: #3b82f6;">Propietario: ${nombrePropietario}</h3>
+    `;
+
+    const contentHtml = `
+        <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .income-row { background-color: #e6ffe6; } /* Light green for income */
+            .expense-row { background-color: #ffe6e6; } /* Light red for expense */
+            .income-text { color: #006400; } /* Dark green for income text */
+            .expense-text { color: #8b0000; } /* Dark red for expense text */
+            .header { text-align: center; margin-bottom: 20px; }
+            .page-number { position: fixed; bottom: 20px; right: 20px; font-size: 10px; }
+        </style>
+        ${headerHtml}
+        <div style="text-align: center; margin-bottom: 1.5rem; padding: 1rem; background-color: #e0f7fa; border-radius: 0.5rem; border: 1px solid #b2ebf2;">
+            <p style="font-size: 1.1rem; font-weight: 600; color: #006064; margin-bottom: 0.5rem;">Total Ingreso Propietario:</p>
+            <p style="font-size: 2rem; font-weight: 800; color: #004d40;">${totalFiltrado.toFixed(2)}</p>
+        </div>
+        ${tablaHtml}
+    `;
+
+    const opt = {
+        margin:       0.5,
+        filename:     nombreArchivo,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().from(contentHtml).set(opt).toPdf().get('pdf').then(function (pdf) {
+        var totalPages = pdf.internal.getNumberOfPages();
+        for (var i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(10);
+            pdf.setTextColor(150);
+            const text = `Página ${i} de ${totalPages}`;
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            pdf.text(text, pageWidth - 0.75, pageHeight - 0.5, { align: 'right' });
+        }
+    }).save();
 }
 
 /**
