@@ -434,10 +434,35 @@ async function generarReporteMensual(mes, anio) {
             </style>
             <h2 style="text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Detalle de Movimientos - ${nombreMes}</h2>
         `;
-        listaDetalladaMovimientosHtml = headerHtml + listaDetalladaMovimientosHtml;
+
+        const balance = totalIngresosMes - totalGastos;
+        const summaryHtml = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div style="background: linear-gradient(to bottom right, #eff6ff, #dbeafe); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #bfdbfe;">
+                    <p style="font-size: 0.875rem; font-weight: 500; color: #1d4ed8;">Pagos de Renta</p>
+                    <p style="font-size: 1.25rem; font-weight: 700; color: #1e3a8a;">${totalPagosRentaMes.toFixed(2)}</p>
+                </div>
+                <div style="background: linear-gradient(to bottom right, #ecfdf5, #d1fae5); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #a7f3d0;">
+                    <p style="font-size: 0.875rem; font-weight: 500; color: #047857;">Depósitos</p>
+                    <p style="font-size: 1.25rem; font-weight: 700; color: #065f46;">${totalDepositosMes.toFixed(2)}</p>
+                </div>
+                <div style="background: linear-gradient(to bottom right, #eff6ff, #dbeafe); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #bfdbfe;">
+                    <p style="font-size: 0.875rem; font-weight: 500; color: #1d4ed8;">Ingresos Totales</p>
+                    <p style="font-size: 1.25rem; font-weight: 700; color: #1e3a8a;">${totalIngresosMes.toFixed(2)}</p>
+                </div>
+                <div style="background: linear-gradient(to bottom right, #fef2f2, #fee2e2); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #fecaca;">
+                    <p style="font-size: 0.875rem; font-weight: 500; color: #b91c1c;">Gastos Totales</p>
+                    <p style="font-size: 1.25rem; font-weight: 700; color: #991b1b;">${totalGastos.toFixed(2)}</p>
+                </div>
+                <div style="background: linear-gradient(to bottom right, ${balance >= 0 ? '#d1fae5' : '#fef2f2'}, ${balance >= 0 ? '#a7f3d0' : '#fee2e2'}); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid ${balance >= 0 ? '#6ee7b7' : '#fca5a5'}; grid-column: 1 / -1;">
+                    <p style="font-size: 1rem; font-weight: 600; color: ${balance >= 0 ? '#065f46' : '#b91c1c'};">Balance del Mes</p>
+                    <p style="font-size: 1.5rem; font-weight: 800; color: ${balance >= 0 ? '#065f46' : '#991b1b'};">${balance.toFixed(2)}</p>
+                </div>
+            </div>
+        `
+        listaDetalladaMovimientosHtml = headerHtml + summaryHtml + listaDetalladaMovimientosHtml;
 
         // 3. Mostrar el reporte en HTML
-        const balance = totalIngresosMes - totalGastos;
         const balanceClass = balance >= 0 ? 'text-green-600' : 'text-red-600';
         const balanceIcon = balance >= 0
             ? `<svg class="w-10 h-10 mx-auto mb-2 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`
@@ -457,7 +482,7 @@ async function generarReporteMensual(mes, anio) {
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl shadow-md text-center border border-blue-200/50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                         <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0-2.08-.402-2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                         <p class="text-sm font-medium text-blue-700">Pagos de Renta</p>
@@ -555,7 +580,7 @@ async function generarReporteMensual(mes, anio) {
         });
 
         document.getElementById('btnDescargarPDF').addEventListener('click', () => {
-            generarPDF(mes, anio);
+            generarPDF(mes, anio, totalPagosRentaMes, totalDepositosMes, totalIngresosMes, totalGastos, balance, listaDetalladaMovimientosHtml);
         });
 
     } catch (error) {
@@ -578,13 +603,22 @@ async function generarReporteMensual(mes, anio) {
  * @param {number} mes - El mes del reporte.
  * @param {number} anio - El año del reporte.
  */
-function generarPDF(mes, anio) {
+function generarPDF(mes, anio, totalPagosRentaMes, totalDepositosMes, totalIngresosMes, totalGastos, balance, listaDetalladaMovimientosHtml) {
     const meses = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
     const nombreMes = meses[mes - 1];
     const nombreArchivo = `Reporte_Ingresos_${nombreMes}_${anio}.pdf`;
+
+    const headerHtml = `
+        <style>
+            thead { display: table-header-group; }
+            tfoot { display: table-row-group; }
+            tr { page-break-inside: avoid; }
+        </style>
+        <h2 style="text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Detalle de Movimientos - ${nombreMes}</h2>
+    `;
 
     const elemento = document.getElementById('reporte-pdf-content');
     const mainContent = document.querySelector('main'); // Apuntar al contenedor principal
