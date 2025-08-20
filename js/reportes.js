@@ -437,29 +437,30 @@ async function generarReporteMensual(mes, anio) {
 
         const balance = totalIngresosMes - totalGastos;
         const summaryHtml = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                <div style="background: linear-gradient(to bottom right, #eff6ff, #dbeafe); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #bfdbfe;">
-                    <p style="font-size: 0.875rem; font-weight: 500; color: #1d4ed8;">Pagos de Renta</p>
-                    <p style="font-size: 1.25rem; font-weight: 700; color: #1e3a8a;">${totalPagosRentaMes.toFixed(2)}</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2); padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); text-align: center; border: 1px solid #80deea;">
+                    <p style="font-size: 1rem; font-weight: 600; color: #006064;">Pagos de Renta</p>
+                    <p style="font-size: 1.8rem; font-weight: 800; color: #004d40; margin-top: 0.5rem;">${totalPagosRentaMes.toFixed(2)}</p>
                 </div>
-                <div style="background: linear-gradient(to bottom right, #ecfdf5, #d1fae5); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #a7f3d0;">
-                    <p style="font-size: 0.875rem; font-weight: 500; color: #047857;">Depósitos</p>
-                    <p style="font-size: 1.25rem; font-weight: 700; color: #065f46;">${totalDepositosMes.toFixed(2)}</p>
+                <div style="background: linear-gradient(to bottom right, #e8f5e9, #c8e6c9); padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); text-align: center; border: 1px solid #a5d6a7;">
+                    <p style="font-size: 1rem; font-weight: 600; color: #2e7d32;">Depósitos</p>
+                    <p style="font-size: 1.8rem; font-weight: 800; color: #1b5e20; margin-top: 0.5rem;">${totalDepositosMes.toFixed(2)}</p>
                 </div>
-                <div style="background: linear-gradient(to bottom right, #eff6ff, #dbeafe); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #bfdbfe;">
-                    <p style="font-size: 0.875rem; font-weight: 500; color: #1d4ed8;">Ingresos Totales</p>
-                    <p style="font-size: 1.25rem; font-weight: 700; color: #1e3a8a;">${totalIngresosMes.toFixed(2)}</p>
+                <div style="background: linear-gradient(to bottom right, #e3f2fd, #bbdefb); padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); text-align: center; border: 1px solid #90caf9;">
+                    <p style="font-size: 1rem; font-weight: 600; color: #1565c0;">Ingresos Totales</p>
+                    <p style="font-size: 1.8rem; font-weight: 800; color: #0d47a1; margin-top: 0.5rem;">${totalIngresosMes.toFixed(2)}</p>
                 </div>
-                <div style="background: linear-gradient(to bottom right, #fef2f2, #fee2e2); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid #fecaca;">
-                    <p style="font-size: 0.875rem; font-weight: 500; color: #b91c1c;">Gastos Totales</p>
-                    <p style="font-size: 1.25rem; font-weight: 700; color: #991b1b;">${totalGastos.toFixed(2)}</p>
+                <div style="background: linear-gradient(to bottom right, #ffebee, #ffcdd2); padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); text-align: center; border: 1px solid #ef9a9a;">
+                    <p style="font-size: 1rem; font-weight: 600; color: #c62828;">Gastos Totales</p>
+                    <p style="font-size: 1.8rem; font-weight: 800; color: #b71c1c; margin-top: 0.5rem;">${totalGastos.toFixed(2)}</p>
                 </div>
-                <div style="background: linear-gradient(to bottom right, ${balance >= 0 ? '#d1fae5' : '#fef2f2'}, ${balance >= 0 ? '#a7f3d0' : '#fee2e2'}); padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid ${balance >= 0 ? '#6ee7b7' : '#fca5a5'}; grid-column: 1 / -1;">
-                    <p style="font-size: 1rem; font-weight: 600; color: ${balance >= 0 ? '#065f46' : '#b91c1c'};">Balance del Mes</p>
-                    <p style="font-size: 1.5rem; font-weight: 800; color: ${balance >= 0 ? '#065f46' : '#991b1b'};">${balance.toFixed(2)}</p>
+                <div style="background: linear-gradient(to bottom right, ${balance >= 0 ? '#e8f5e9' : '#ffebee'}, ${balance >= 0 ? '#c8e6c9' : '#ffcdd2'}); padding: 2rem; border-radius: 0.75rem; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); text-align: center; border: 1px solid ${balance >= 0 ? '#a5d6a7' : '#ef9a9a'}; grid-column: 1 / -1;">
+                    <p style="font-size: 1.2rem; font-weight: 700; color: ${balance >= 0 ? '#2e7d32' : '#c62828'};">Balance del Mes</p>
+                    <p style="font-size: 2.5rem; font-weight: 900; color: ${balance >= 0 ? '#1b5e20' : '#b71c1c'}; margin-top: 0.75rem;">${balance.toFixed(2)}</p>
+                    <p style="font-size: 0.9rem; font-weight: 500; color: ${balance >= 0 ? '#2e7d32' : '#c62828'}; margin-top: 0.5rem;">${balance >= 0 ? '¡Felicidades! Tu gestión financiera es excelente. Sigue así.' : 'Atención: Es crucial revisar tus gastos. ¡Hay oportunidades para mejorar!'}</p>
                 </div>
             </div>
-        `
+        `;
         listaDetalladaMovimientosHtml = headerHtml + summaryHtml + listaDetalladaMovimientosHtml;
 
         // 3. Mostrar el reporte en HTML
@@ -478,83 +479,6 @@ async function generarReporteMensual(mes, anio) {
                     </div>
                     <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Resumen Financiero Mensual</span>
                 </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl shadow-md text-center border border-blue-200/50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0-2.08-.402-2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <p class="text-sm font-medium text-blue-700">Pagos de Renta</p>
-                        <p class="text-base sm:text-xl font-bold text-blue-900">${totalPagosRentaMes.toFixed(2)}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-xl shadow-md text-center border border-green-200/50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <p class="text-sm font-medium text-green-700">Depósitos</p>
-                        <p class="text-base sm:text-xl font-bold text-green-900">${totalDepositosMes.toFixed(2)}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl shadow-md text-center border border-blue-200/50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                        </div>
-                        <p class="text-sm font-medium text-blue-700">Ingresos Totales</p>
-                        <p class="text-base sm:text-xl font-bold text-blue-900">${totalIngresosMes.toFixed(2)}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-xl shadow-md text-center border border-red-200/50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <p class="text-sm font-medium text-red-700">Gastos Totales</p>
-                        <p class="text-base sm:text-xl font-bold text-red-900">${totalGastos.toFixed(2)}</p>
-                    </div>
-                </div>
-                <div class="relative flex justify-center mb-4">
-                    <div class="w-full">
-                        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg border border-white/20 p-4 text-center">
-                            ${balanceIcon}
-                            <p class="text-sm sm:text-base font-semibold text-white tracking-wide">Balance del Mes</p>
-                            <p class="text-lg sm:text-2xl font-extrabold ${balance >= 0 ? 'text-white' : 'text-orange-200'} drop-shadow-lg">${balance.toFixed(2)}</p>
-                            <p class="text-sm text-white/80">${balance >= 0 ? '¡Felicidades! El balance es positivo.' : 'Atención: El balance es negativo.'}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-3 rounded-xl shadow-md text-center border border-indigo-200/50 hover:shadow-lg transition-all duration-300">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
-                            </svg>
-                        </div>
-                        <p class="text-sm font-medium text-indigo-700">Total Internet</p>
-                        <p class="text-base sm:text-xl font-bold text-indigo-900">${totalInternet.toFixed(2)}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 rounded-xl shadow-md text-center border border-cyan-200/50 hover:shadow-lg transition-all duration-300">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                            </svg>
-                        </div>
-                        <p class="text-sm font-medium text-cyan-700">Total Agua</p>
-                        <p class="text-base sm:text-xl font-bold text-cyan-900">${totalAgua.toFixed(2)}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-xl shadow-md text-center border border-yellow-200/50 hover:shadow-lg transition-all duration-300">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
-                        <p class="text-sm font-medium text-yellow-700">Total Luz</p>
-                        <p class="text-base sm:text-xl font-bold text-yellow-900">${totalLuz.toFixed(2)}</p>
-                    </div>
-                </div>
                 <h4 class="text-sm sm:text-base font-semibold mb-3 border-b border-blue-500/20 pb-2 flex items-center justify-between">
                     <div class="flex items-center">
                         <div class="w-6 h-6 bg-[#2c3e50]/20 rounded-lg flex items-center justify-center mr-2 shadow-sm">
