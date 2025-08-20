@@ -54,7 +54,7 @@ export async function mostrarReportes() {
                             Mes
                         </label>
                         <div class="relative">
-                            <select id="selectMes" class="block w-full px-3 py-2 bg-white border border-blue-500/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700">
+                            <select id="selectMes" class="appearance-none block w-full px-3 py-2 bg-white border border-blue-500/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700">
                                 ${mesesOptions}
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
@@ -72,7 +72,7 @@ export async function mostrarReportes() {
                             Año
                         </label>
                         <div class="relative">
-                            <select id="selectAnio" class="block w-full px-3 py-2 bg-white border border-blue-500/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700">
+                            <select id="selectAnio" class="appearance-none block w-full px-3 py-2 bg-white border border-blue-500/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700">
                                 ${aniosOptions}
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
@@ -598,7 +598,8 @@ function generarPDF(mes, anio) {
             scrollY: -mainContent.scrollTop, // Usar el scroll del elemento <main>
             windowWidth: document.documentElement.offsetWidth
         },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
     };
 
     html2pdf().from(elemento).set(opt).toPdf().get('pdf').then(function (pdf) {
