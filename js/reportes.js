@@ -221,6 +221,12 @@ async function generarReporteMensual(mes, anio) {
     `;
 
     try {
+        const meses = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+        const nombreMes = meses[mes - 1];
+
         let totalIngresos = 0;
         let totalGastos = 0;
         let listaDetalladaMovimientosHtml = '';
@@ -420,6 +426,16 @@ async function generarReporteMensual(mes, anio) {
             `;
         }
 
+        const headerHtml = `
+            <style>
+                thead { display: table-header-group; }
+                tfoot { display: table-row-group; }
+                tr { page-break-inside: avoid; }
+            </style>
+            <h2 style="text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Detalle de Movimientos - ${nombreMes}</h2>
+        `;
+        listaDetalladaMovimientosHtml = headerHtml + listaDetalladaMovimientosHtml;
+
         // 3. Mostrar el reporte en HTML
         const balance = totalIngresosMes - totalGastos;
         const balanceClass = balance >= 0 ? 'text-green-600' : 'text-red-600';
@@ -523,14 +539,23 @@ async function generarReporteMensual(mes, anio) {
                         </div>
                         <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Detalle de Movimientos</span>
                     </div>
-                    <button id="btnIngresoPropietario" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Ingreso Propietario</button>
+                    <div class="flex items-center">
+                        <button id="btnIngresoPropietario" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 mr-2">Ingreso Propietario</button>
+                        <button id="btnDescargarPDF" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Descargar PDF</button>
+                    </div>
                 </h4>
-                ${listaDetalladaMovimientosHtml}
+                <div id="reporte-pdf-content">
+                    ${listaDetalladaMovimientosHtml}
+                </div>
             </div>
         `;
 
         document.getElementById('btnIngresoPropietario').addEventListener('click', () => {
             abrirModalPropietarios(todosLosMovimientos, propietariosMap);
+        });
+
+        document.getElementById('btnDescargarPDF').addEventListener('click', () => {
+            generarPDF(mes, anio);
         });
 
     } catch (error) {
@@ -546,4 +571,47 @@ async function generarReporteMensual(mes, anio) {
             </div>
         `;
     }
+}
+
+/**
+ * Genera un PDF a partir del contenido del reporte.
+ * @param {number} mes - El mes del reporte.
+ * @param {number} anio - El año del reporte.
+ */
+function generarPDF(mes, anio) {
+    const meses = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    const nombreMes = meses[mes - 1];
+    const nombreArchivo = `Reporte_Ingresos_${nombreMes}_${anio}.pdf`;
+
+    const elemento = document.getElementById('reporte-pdf-content');
+    const mainContent = document.querySelector('main'); // Apuntar al contenedor principal
+
+    const opt = {
+        margin:       1,
+        filename:     nombreArchivo,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+            scale: 2,
+            scrollY: -mainContent.scrollTop, // Usar el scroll del elemento <main>
+            windowWidth: document.documentElement.offsetWidth
+        },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().from(elemento).set(opt).toPdf().get('pdf').then(function (pdf) {
+        var totalPages = pdf.internal.getNumberOfPages();
+        for (var i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(10);
+            pdf.setTextColor(150);
+            const text = `Página ${i} de ${totalPages}`;
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            pdf.text(text, pageWidth - 1.5, pageHeight - 0.5);
+        }
+    }).save();
 }
