@@ -1,0 +1,196 @@
+/* Estilos Nostalgia para Control Renta v21 */
+
+:root {
+  --nostalgia-bg: #f8f0e3; /* Faded cream */
+  --nostalgia-text: #5c4033; /* Dark brown */
+  --nostalgia-primary: #a0522d; /* Sienna */
+  --nostalgia-secondary: #8b4513; /* Saddle Brown */
+  --nostalgia-border: #d2b48c; /* Tan */
+  --nostalgia-shadow: rgba(0, 0, 0, 0.1);
+  --nostalgia-radius: 8px;
+}
+
+body {
+  background-color: var(--nostalgia-bg);
+  font-family: 'Lora', 'Georgia', serif; /* Classic serif font */
+  color: var(--nostalgia-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle paper texture */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Hn3AAAAAXNSR0IArs4c6QAAABNJREFUGFdjYGBgYGBgYGBgYAAAB4AKB8Q/y+gAAAAASUVORK5CYII='); /* Very subtle noise */
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* === Contenedores y Tarjetas === */
+#contenido, .card, .tarjeta-base, #modalContenido {
+  background: #fffaf0; /* Floral White */
+  border-radius: var(--nostalgia-radius);
+  box-shadow: 0 4px 8px var(--nostalgia-shadow);
+  border: 1px solid var(--nostalgia-border);
+  padding: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.card:hover, .tarjeta-base:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+
+
+/* === Botones === */
+button, .btn-fluent-base {
+  border: 1px solid var(--nostalgia-border);
+  border-radius: var(--nostalgia-radius);
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px var(--nostalgia-shadow);
+  background: var(--nostalgia-primary);
+  color: white;
+}
+
+button:hover, .btn-fluent-base:hover {
+  background-color: var(--nostalgia-secondary);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+button:active, .btn-fluent-base:active {
+  background-color: var(--nostalgia-secondary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+}
+
+.btn-primario {
+  background-color: var(--nostalgia-primary);
+  color: white;
+}
+
+.btn-primario:hover {
+  background-color: var(--nostalgia-secondary);
+}
+
+.btn-peligro {
+    background-color: #b22222; /* Firebrick */
+    color: white;
+}
+.btn-peligro:hover {
+    background-color: #8b0000; /* Dark Red */
+}
+
+/* === Formularios === */
+input, select, textarea, .form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--nostalgia-border);
+  border-radius: var(--nostalgia-radius);
+  background-color: #fffaf0;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  color: var(--nostalgia-text);
+}
+
+input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--nostalgia-primary);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(160, 82, 45, 0.3);
+}
+
+/* === Modal y Notificaciones === */
+#miModal {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: none;
+}
+
+#modalContenido {
+  background: #fffaf0;
+  border-radius: var(--nostalgia-radius);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--nostalgia-border);
+}
+
+.toast-notification {
+    background: #5c4033; /* Dark brown */
+    border-radius: var(--nostalgia-radius);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    color: white;
+    padding: 12px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toast-success { background-color: #6b8e23; } /* Olive Drab */
+.toast-error { background-color: #8b0000; } /* Dark Red */
+.toast-warning { background-color: #daa520; } /* Goldenrod */
+.toast-info { background-color: #4682b4; } /* Steel Blue */
+
+/* === Tablas === */
+.tabla-container {
+    background: #fffaf0;
+    border-radius: var(--nostalgia-radius);
+    box-shadow: 0 2px 5px var(--nostalgia-shadow);
+    padding: 0;
+    border: 1px solid var(--nostalgia-border);
+}
+
+.tabla-base {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tabla-header-celda {
+    color: var(--nostalgia-text);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--nostalgia-border);
+}
+
+.tabla-fila {
+    background: transparent;
+    box-shadow: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+}
+.tabla-fila:hover {
+    background-color: rgba(160, 82, 45, 0.05);
+    transform: none;
+    box-shadow: none;
+}
+
+.tabla-celda {
+    border: none;
+    background: transparent;
+    padding: 12px;
+    color: var(--nostalgia-text);
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nostalgia-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d2b48c;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0522d;
+}

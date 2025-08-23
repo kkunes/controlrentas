@@ -1,0 +1,179 @@
+/* Estilos Tailwind Default para Control Renta v21 */
+
+/* Importa las bases de Tailwind CSS si no están ya en el HTML */
+/* @tailwind base; */
+/* @tailwind components; */
+/* @tailwind utilities; */
+
+:root {
+  --tailwind-primary: #4f46e5; /* Indigo 600 */
+  --tailwind-secondary: #10b981; /* Emerald 500 */
+  --tailwind-background: #f9fafb; /* Gray 50 */
+  --tailwind-surface: #ffffff;
+  --tailwind-text: #1f2937; /* Gray 800 */
+  --tailwind-danger: #ef4444; /* Red 500 */
+  --tailwind-border-radius: 0.375rem; /* Tailwind's rounded-md */
+}
+
+body {
+  background-color: var(--tailwind-background);
+  font-family: 'Poppins', sans-serif; /* Keeping Poppins as it's already used */
+  color: var(--tailwind-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset some elements to rely on Tailwind defaults or minimal custom styles */
+#contenido, .card, .tarjeta-base, #modalContenido {
+  background: var(--tailwind-surface);
+  border-radius: var(--tailwind-border-radius);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md */
+  padding: 1.5rem;
+  transition: all 0.2s ease-in-out;
+  border: none;
+}
+
+.card:hover, .tarjeta-base:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+}
+
+
+
+button, .btn-fluent-base {
+  border: none;
+  border-radius: var(--tailwind-border-radius);
+  padding: 0.5rem 1rem; /* Tailwind's px-4 py-2 */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  background: var(--tailwind-primary);
+  color: white;
+}
+
+button:hover, .btn-fluent-base:hover {
+  background-color: #6366f1; /* Indigo 500 */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+button:active, .btn-fluent-base:active {
+  background-color: #4338ca; /* Indigo 700 */
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.btn-primario {
+  background-color: var(--tailwind-primary);
+  color: white;
+}
+
+.btn-primario:hover {
+  background-color: #6366f1;
+}
+
+.btn-peligro {
+    background-color: var(--tailwind-danger);
+    color: white;
+}
+.btn-peligro:hover {
+    background-color: #dc2626; /* Red 600 */
+}
+
+input, select, textarea, .form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 0.75rem; /* Tailwind's p-3 */
+  border: 1px solid #d1d5db; /* Gray 300 */
+  border-radius: var(--tailwind-border-radius);
+  background-color: var(--tailwind-surface);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  transition: all 0.2s ease;
+  color: var(--tailwind-text);
+}
+
+input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--tailwind-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* focus:ring-indigo-200 */
+}
+
+#miModal {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: none;
+}
+
+#modalContenido {
+  background: var(--tailwind-surface);
+  border-radius: var(--tailwind-border-radius);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
+}
+
+.toast-notification {
+    background: #333;
+    border-radius: var(--tailwind-border-radius);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    color: white;
+    padding: 1rem 1.5rem;
+}
+
+.toast-success { background-color: #10b981; } /* Emerald 500 */
+.toast-error { background-color: #ef4444; } /* Red 500 */
+.toast-warning { background-color: #f59e0b; } /* Amber 500 */
+.toast-info { background-color: #3b82f6; } /* Blue 500 */
+
+.tabla-container {
+    background: var(--tailwind-surface);
+    border-radius: var(--tailwind-border-radius);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    padding: 0;
+    border: none;
+}
+
+.tabla-base {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tabla-header-celda {
+    color: var(--tailwind-text);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb; /* Gray 200 */
+}
+
+.tabla-fila {
+    background: var(--tailwind-surface);
+    box-shadow: none;
+    border-bottom: 1px solid #f3f4f6; /* Gray 100 */
+    transition: background-color 0.2s;
+}
+.tabla-fila:hover {
+    background-color: #f9fafb; /* Gray 50 */
+    transform: none;
+    box-shadow: none;
+}
+
+.tabla-celda {
+    border: none;
+    background: transparent;
+    padding: 0.75rem 1rem;
+    color: var(--tailwind-text);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* Gray 300 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* Gray 400 */
+}

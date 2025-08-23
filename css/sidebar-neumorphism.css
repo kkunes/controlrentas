@@ -1,0 +1,51 @@
+#sidebar {
+  background: var(--background-color);
+  box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-btn {
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+  margin: 10px 0;
+  transition: all 0.3s ease;
+  box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+}
+
+.sidebar-btn:hover {
+  box-shadow: inset 5px 5px 10px var(--dark-shadow), inset -5px -5px 10px var(--light-shadow);
+  color: var(--primary-color);
+}
+
+.sidebar-btn:active {
+  box-shadow: inset 7px 7px 15px var(--dark-shadow), inset -7px -7px 15px var(--light-shadow);
+}
+
+.sidebar-header-text {
+  color: var(--text-color);
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 2rem; /* mb-8 */
+  text-align: center; /* text-center */
+  display: flex; /* flex */
+  align-items: center; /* items-center */
+  justify-content: center; /* justify-content */
+}
+
+.sidebar-logo-container {
+  background: var(--background-color);
+  padding: 0.5rem; /* p-2 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow); /* shadow-lg */
+  margin-right: 0.75rem; /* mr-3 */
+  animation: pulse 1.5s ease-in-out infinite; /* animate-pulse */
+}
+
+.sidebar-app-name {
+  /* bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-indigo-200 drop-shadow-lg */
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #93c5fd, #c7d2fe); /* from-blue-300 to-indigo-200 */
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); /* drop-shadow-lg */
+}

@@ -1,0 +1,209 @@
+/* Estilos Retro para Control Renta v21 */
+
+:root {
+  --retro-bg: #222222; /* Dark background */
+  --retro-text: #00ff00; /* Neon green */
+  --retro-primary: #00ffff; /* Cyan */
+  --retro-secondary: #ff00ff; /* Magenta */
+  --retro-border: #008000; /* Darker green */
+  --retro-shadow: rgba(0, 255, 0, 0.4); /* Green glow */
+  --retro-radius: 0px; /* Sharp corners */
+}
+
+body {
+  background-color: var(--retro-bg);
+  font-family: 'Press Start 2P', 'Courier New', monospace; /* Pixel font or monospace fallback */
+  color: var(--retro-text);
+  -webkit-font-smoothing: none; /* Pixelated look */
+  -moz-osx-font-smoothing: none;
+  text-shadow: 0 0 5px var(--retro-shadow); /* Subtle glow */
+}
+
+/* Scanline effect for body */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 1px,
+    rgba(0, 0, 0, 0.2) 1px,
+    rgba(0, 0, 0, 0.2) 2px
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* === Contenedores y Tarjetas === */
+#contenido, .card, .tarjeta-base, #modalContenido {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: var(--retro-radius);
+  box-shadow: 0 0 10px var(--retro-shadow);
+  border: 2px solid var(--retro-border);
+  padding: 1.5rem;
+  transition: all 0.1s linear;
+}
+
+.card:hover, .tarjeta-base:hover {
+  transform: scale(1.01);
+  box-shadow: 0 0 15px var(--retro-primary); /* Different glow on hover */
+}
+
+
+
+/* === Botones === */
+button, .btn-fluent-base {
+  border: 2px solid var(--retro-border);
+  border-radius: var(--retro-radius);
+  padding: 10px 20px;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.1s linear;
+  box-shadow: 0 0 5px var(--retro-shadow);
+  background: var(--retro-bg);
+  color: var(--retro-text);
+  text-transform: uppercase;
+}
+
+button:hover, .btn-fluent-base:hover {
+  background-color: var(--retro-primary);
+  color: var(--retro-bg);
+  box-shadow: 0 0 10px var(--retro-primary);
+  transform: translateY(-1px);
+}
+
+button:active, .btn-fluent-base:active {
+  background-color: var(--retro-secondary);
+  color: var(--retro-bg);
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.btn-primario {
+  background-color: var(--retro-primary);
+  color: var(--retro-bg);
+  box-shadow: 0 0 5px var(--retro-primary);
+}
+
+.btn-primario:hover {
+  background-color: var(--retro-secondary);
+  box-shadow: 0 0 10px var(--retro-secondary);
+}
+
+.btn-peligro {
+    background-color: #ff0000; /* Bright Red */
+    color: var(--retro-bg);
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.6);
+}
+.btn-peligro:hover {
+    background-color: #cc0000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+}
+
+/* === Formularios === */
+input, select, textarea, .form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid var(--retro-border);
+  border-radius: var(--retro-radius);
+  background-color: rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0 0 5px var(--retro-shadow);
+  transition: all 0.1s linear;
+  color: var(--retro-text);
+}
+
+input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--retro-primary);
+  box-shadow: inset 0 0 8px var(--retro-primary), 0 0 0 2px var(--retro-primary);
+}
+
+/* === Modal y Notificaciones === */
+#miModal {
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: none;
+}
+
+#modalContenido {
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: var(--retro-radius);
+  box-shadow: 0 0 20px var(--retro-shadow);
+  border: 2px solid var(--retro-border);
+}
+
+.toast-notification {
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: var(--retro-radius);
+    box-shadow: 0 0 10px var(--retro-shadow);
+    color: var(--retro-text);
+    padding: 12px 20px;
+    border: 1px solid var(--retro-border);
+}
+
+.toast-success { background-color: rgba(0, 128, 0, 0.9); } /* Dark Green */
+.toast-error { background-color: rgba(128, 0, 0, 0.9); } /* Dark Red */
+.toast-warning { background-color: rgba(128, 128, 0, 0.9); } /* Dark Yellow */
+.toast-info { background-color: rgba(0, 0, 128, 0.9); } /* Dark Blue */
+
+/* === Tablas === */
+.tabla-container {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: var(--retro-radius);
+    box-shadow: 0 0 10px var(--retro-shadow);
+    padding: 0;
+    border: 2px solid var(--retro-border);
+}
+
+.tabla-base {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tabla-header-celda {
+    color: var(--retro-text);
+    font-weight: normal;
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--retro-border);
+}
+
+.tabla-fila {
+    background: transparent;
+    box-shadow: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+    transition: background-color 0.1s;
+}
+.tabla-fila:hover {
+    background-color: rgba(0, 255, 255, 0.1); /* Cyan highlight */
+    transform: none;
+    box-shadow: none;
+}
+
+.tabla-celda {
+    border: none;
+    background: transparent;
+    padding: 12px;
+    color: var(--retro-text);
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--retro-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--retro-border);
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--retro-text);
+}

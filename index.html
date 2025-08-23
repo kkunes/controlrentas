@@ -4,7 +4,186 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Control de Rentas - Dashboard</title>
-  <link rel="stylesheet" href="./css/styles.css?v=1.8">
+    <link id="theme-style" rel="stylesheet" href="./css/styles.css?v=1.8">
+  <link id="sidebar-style" rel="stylesheet" href="./css/sidebar.css?v=1.8">
+ 
+<style>
+    /* Estilos personalizados para una apariencia más limpia y moderna */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f0f2f5; /* Un gris más suave para el fondo */
+      -webkit-tap-highlight-color: transparent; /* Elimina el resaltado táctil en dispositivos móviles */
+      -webkit-touch-callout: none; /* Previene el menú contextual en elementos táctiles */
+    }
+
+    /* Ocultar elementos */
+    .hidden {
+      display: none !important; /* Importante para asegurar que Tailwind no lo sobrescriba */
+    }
+
+    /* Estilos para el contenido principal */
+    main {
+      background-color: #f0f2f5; /* Fondo del área principal */
+      padding-top: 4.5rem; /* Ajusta según la altura de tu header */
+    }
+
+    @media (max-width: 1023px) {
+      main {
+        padding-top: 5.5rem;
+      }
+    }
+
+    /* Estilos del modal */
+    #miModal {
+        background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente */
+        backdrop-filter: blur(3px); /* Efecto de desenfoque */
+        -webkit-backdrop-filter: blur(3px); /* Compatibilidad Safari */
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    #modalContenido {
+        max-width: 95%; /* Ancho máximo del contenido del modal */
+        max-height: 90vh; /* Altura máxima para que sea scrollable */
+        overflow-y: auto; /* Habilitar scroll si el contenido es muy largo */
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        width: 100%; /* Asegura que use todo el ancho disponible */
+    }
+    
+    @media (min-width: 640px) {
+        #modalContenido {
+            max-width: 90%;
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        #modalContenido {
+            max-width: 85%;
+        }
+    }
+
+    /* Animación de entrada del modal */
+    #miModal:not(.hidden) #modalContenido {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    #miModal.hidden #modalContenido {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    /* Estilos para notificaciones */
+    .toast {
+        transition: all 0.3s ease-in-out;
+        transform: translateY(-20px);
+        opacity: 0;
+        max-width: 90%;
+        width: 100%;
+        margin: 0 auto;
+    }
+    .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    
+    @media (min-width: 640px) {
+        .toast {
+            max-width: 400px;
+        }
+    }
+
+    /* Agrega esto a tu CSS */
+    .header-fijo {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: white;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .card, .bg-white, .rounded-lg, .shadow-md {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.card:hover, .bg-white:hover, .rounded-lg:hover, .shadow-md:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+button, .btn-primary {
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+button:active, .btn-primary:active {
+  transform: scale(0.97);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f133;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+/* Botones de tarjetas más grandes y cuadrados */
+.card button,
+.bg-white button,
+.rounded-lg button,
+.shadow-md button,
+button.rounded-md,
+button.text-sm {
+  font-size: 1rem !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.5rem !important; /* Más cuadrado, menos pill */
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation; /* Mejora la respuesta táctil */
+}
+
+@media (max-width: 1023px) {
+  button, .btn-primary, .rounded-md {
+    font-size: 1rem;
+    padding: 0.75rem 1.25rem;
+  }
+  .rounded-lg, .shadow-md {
+    border-radius: 1rem;
+  }
+  .btn-detalle-pago,
+  .btn-abonar-pago,
+  .btn-editar-pago,
+  .btn-eliminar-pago,
+  .btn-recibo-pdf {
+    font-size: 0.72rem !important;
+    padding: 0.25rem 0.5rem !important;
+    min-width: 44px !important; /* Aumentado para mejor interacción táctil */
+    min-height: 44px !important; /* Aumentado para mejor interacción táctil */
+  }
+  .flex.sm\:flex-row {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 0.5rem; /* Aumentado para mejor espaciado en móvil */
+  }
+  
+  /* Mejoras para formularios en móvil */
+  input, select, textarea {
+    font-size: 16px !important; /* Evita zoom automático en iOS */
+    padding: 0.75rem !important;
+  }
+  
+  /* Mejora para botones en tarjetas */
+  .card button,
+  .bg-white button,
+  .rounded-lg button {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+
+/* Animación de pulso para los indicadores */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+.animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
+</style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +211,7 @@
     #sidebar {
       background-color: #2c3e50; /* Un azul oscuro profundo */
       box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%233a506b' fill-opacity='0.15'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%233a506b' fill-opacity='0.15'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
     #sidebar a {
@@ -275,7 +454,7 @@ button.text-sm {
 .animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
 </style>
 </head>
-<body class="flex h-screen bg-gray-100">
+<body class="flex h-screen">
 
   <!-- Agrega esto al inicio del body -->
 <div id="loader" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
@@ -291,10 +470,10 @@ button.text-sm {
   </svg>
 </button>
 
-  <aside id="sidebar" class="fixed lg:static z-40 bg-gradient-to-b from-[#1a2234] via-[#2c3e50] to-[#3a506b] left-0 top-0 h-full lg:h-auto w-72 lg:w-72 p-4 shadow-xl flex flex-col transition-all duration-300 -translate-x-full lg:translate-x-0 border-r border-blue-500/20">
+  <aside id="sidebar" class="fixed lg:static z-40 left-0 top-0 h-full lg:h-auto w-72 lg:w-72 p-4 flex flex-col transition-all duration-300 -translate-x-full lg:translate-x-0">
       <div class="text-white text-2xl font-bold mb-8 text-center flex items-center justify-center">
           <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-2 rounded-xl shadow-lg mr-3 animate-pulse">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg data-icon="rentasApp" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
               </svg>
           </div>
@@ -303,90 +482,72 @@ button.text-sm {
       <nav class="flex-grow">
         <ul class="space-y-3">
           <li>
-            <button id="btn-dashboard" onclick="mostrarDashboard()" data-section="dashboard" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-blue-500/30 to-blue-600/30 hover:from-blue-500/50 hover:to-blue-600/50
-              focus:outline-none focus:ring-2 focus:ring-blue-400/70 border border-blue-500/30 hover:border-blue-500/50 shadow-md hover:shadow-blue-500/20">
-              <svg class="w-5 h-5 mr-3 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-dashboard" onclick="mostrarDashboard()" data-section="dashboard" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="dashboard" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
               </svg>
               <span class="flex items-center">Dashboard<span class="indicator ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-inmuebles" onclick="mostrarInmuebles()" data-section="inmuebles" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-indigo-500/30 to-indigo-600/30 hover:from-indigo-500/50 hover:to-indigo-600/50
-              focus:outline-none focus:ring-2 focus:ring-indigo-400/70 border border-indigo-500/30 hover:border-indigo-500/50 shadow-md hover:shadow-indigo-500/20">
-              <svg class="w-5 h-5 mr-3 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-inmuebles" onclick="mostrarInmuebles()" data-section="inmuebles" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="inmuebles" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
               </svg>
               <span class="flex items-center">Inmuebles<span class="indicator ml-1.5 inline-block w-3 h-3 bg-indigo-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-inquilinos" onclick="mostrarInquilinos()" data-section="inquilinos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-purple-500/30 to-purple-600/30 hover:from-purple-500/50 hover:to-purple-600/50
-              focus:outline-none focus:ring-2 focus:ring-purple-400/70 border border-purple-500/30 hover:border-purple-500/50 shadow-md hover:shadow-purple-500/20">
-              <svg class="w-5 h-5 mr-3 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-inquilinos" onclick="mostrarInquilinos()" data-section="inquilinos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="inquilinos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
               </svg>
               <span class="flex items-center">Inquilinos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-purple-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-pagos" onclick="mostrarPagos()" data-section="pagos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-green-500/30 to-green-600/30 hover:from-green-500/50 hover:to-green-600/50
-              focus:outline-none focus:ring-2 focus:ring-green-400/70 border border-green-500/30 hover:border-green-500/50 shadow-md hover:shadow-green-500/20">
-              <svg class="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-pagos" onclick="mostrarPagos()" data-section="pagos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="pagos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
               <span class="flex items-center">Pagos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-green-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-mobiliario" onclick="mostrarInventarioMobiliario()" data-section="mobiliario" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-teal-500/30 to-teal-600/30 hover:from-teal-500/50 hover:to-teal-600/50
-              focus:outline-none focus:ring-2 focus:ring-teal-400/70 border border-teal-500/30 hover:border-teal-500/50 shadow-md hover:shadow-teal-500/20">
-              <svg class="w-5 h-5 mr-3 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-mobiliario" onclick="mostrarInventarioMobiliario()" data-section="mobiliario" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="mobiliario" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
               </svg>
               <span class="flex items-center">Mobiliario<span class="indicator ml-1.5 inline-block w-3 h-3 bg-teal-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-mantenimientos" onclick="mostrarMantenimientos()" data-section="mantenimientos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-yellow-500/30 to-amber-600/30 hover:from-yellow-500/50 hover:to-amber-600/50
-              focus:outline-none focus:ring-2 focus:ring-yellow-400/70 border border-yellow-500/30 hover:border-yellow-500/50 shadow-md hover:shadow-yellow-500/20">
-              <svg class="w-5 h-5 mr-3 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-mantenimientos" onclick="mostrarMantenimientos()" data-section="mantenimientos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="mantenimientos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
               </svg>
               <span class="flex items-center">Mantenimientos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-yellow-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-reportes" onclick="mostrarReportes()" data-section="reportes" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-pink-500/30 to-rose-600/30 hover:from-pink-500/50 hover:to-rose-600/50
-              focus:outline-none focus:ring-2 focus:ring-pink-400/70 border border-pink-500/30 hover:border-pink-500/50 shadow-md hover:shadow-pink-500/20">
-              <svg class="w-5 h-5 mr-3 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-reportes" onclick="mostrarReportes()" data-section="reportes" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="reportes" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
               <span class="flex items-center">Reportes<span class="indicator ml-1.5 inline-block w-3 h-3 bg-pink-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-abonos" onclick="mostrarAbonos()" data-section="abonos" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-cyan-500/30 to-sky-600/30 hover:from-cyan-500/50 hover:to-sky-600/50
-              focus:outline-none focus:ring-2 focus:ring-cyan-400/70 border border-cyan-500/30 hover:border-cyan-500/50 shadow-md hover:shadow-cyan-500/20">
-              <svg class="w-5 h-5 mr-3 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-abonos" onclick="mostrarAbonos()" data-section="abonos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="abonos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <span class="flex items-center">Saldos a Favor<span class="indicator ml-1.5 inline-block w-3 h-3 bg-cyan-400 rounded-full hidden"></span></span>
             </button>
           </li>
           <li>
-            <button id="btn-comisiones" onclick="mostrarComisiones()" data-section="comisiones" class="sidebar-btn flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 font-medium text-base
-              text-white bg-gradient-to-r from-fuchsia-500/30 to-indigo-600/30 hover:from-fuchsia-500/50 hover:to-indigo-600/50
-              focus:outline-none focus:ring-2 focus:ring-fuchsia-400/70 border border-fuchsia-500/30 hover:border-fuchsia-500/50 shadow-md hover:shadow-fuchsia-500/20">
-              <svg class="w-5 h-5 mr-3 text-fuchsia-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="btn-comisiones" onclick="mostrarComisiones()" data-section="comisiones" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+              <svg data-icon="comisiones" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <span class="flex items-center">Comisiones<span class="indicator ml-1.5 inline-block w-3 h-3 bg-fuchsia-400 rounded-full hidden"></span></span>
@@ -395,17 +556,34 @@ button.text-sm {
         </ul>
       </nav>
       
+      <!-- Theme Switcher -->
+      <div class="mt-auto pt-4 border-t border-blue-500/20">
+        <div class="flex flex-col space-y-3">
+          <label for="theme-switcher" class="text-white text-sm">Tema:</label>
+          <select id="theme-switcher" class="bg-gray-700 text-white rounded-md p-2">
+            <option value="default">Default</option>
+            <option value="flat-design">Flat Design</option>
+            <option value="glassmorphism">Glassmorphism</option>
+            <option value="material-design">Material Design</option>
+            <option value="neumorphism">Neumorphism</option>
+            <option value="nostalgia">Nostalgia</option>
+            <option value="retro">Retro</option>
+            <option value="tailwind-default">Tailwind Default</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Botones de inicio y cierre de sesión -->
       <div class="mt-auto pt-4 border-t border-blue-500/20">
         <div class="flex flex-col space-y-3">
-          <button id="btnLogin" class="w-full bg-gradient-to-r from-blue-500/40 to-indigo-600/40 hover:from-blue-500/60 hover:to-indigo-600/60 text-white px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center border border-blue-500/30 hover:border-blue-500/50 shadow-md hover:shadow-blue-500/30">
-            <svg class="w-5 h-5 mr-2 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button id="btnLogin" class="w-full flex items-center justify-center px-4 py-3 transition-all duration-200">
+            <svg data-icon="login" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
             </svg>
             <span class="flex items-center">Iniciar sesión con Google<span class="ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full animate-pulse"></span></span>
           </button>
-          <button id="btnLogout" class="w-full bg-gradient-to-r from-gray-500/40 to-slate-600/40 hover:from-gray-500/60 hover:to-slate-600/60 text-white px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center border border-gray-500/30 hover:border-gray-500/50 shadow-md hover:shadow-gray-500/30 hidden">
-            <svg class="w-5 h-5 mr-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button id="btnLogout" class="w-full flex items-center justify-center px-4 py-3 transition-all duration-200 hidden">
+            <svg data-icon="logout" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
             </svg>
             Cerrar sesión
@@ -434,6 +612,38 @@ button.text-sm {
   <script type="module" src="./js/main.js?v=1.8"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script type="module">
+    import { THEME_ICONS } from './js/theme-icons.js';
+
+    const themeSwitcher = document.getElementById('theme-switcher');
+    const themeStyle = document.getElementById('theme-style');
+    const sidebarStyle = document.getElementById('sidebar-style');
+
+    function updateIcons(theme) {
+      const icons = THEME_ICONS[theme] || THEME_ICONS.default;
+      for (const [key, value] of Object.entries(icons)) {
+        const element = document.querySelector(`[data-icon=${key}]`);
+        if (element) {
+          element.innerHTML = value;
+        }
+      }
+    }
+
+    themeSwitcher.addEventListener('change', (e) => {
+      const theme = e.target.value;
+      if (theme === 'default') {
+        themeStyle.href = './css/styles.css?v=1.8';
+        sidebarStyle.href = './css/sidebar.css?v=1.8';
+      } else {
+        themeStyle.href = `./css/${theme}.css?v=1.8`;
+        sidebarStyle.href = `./css/sidebar-${theme}.css?v=1.8`;
+      }
+      updateIcons(theme);
+    });
+
+    // Set initial icons
+    updateIcons('default');
+  </script>
   <script>
 const btnMenu = document.getElementById('btnMenu');
 const sidebar = document.getElementById('sidebar');
@@ -468,7 +678,10 @@ sidebar.querySelectorAll('button').forEach(btn => {
 window.addEventListener('resize', () => {
   if (window.innerWidth >= 1024) {
     sidebar.classList.remove('abierto');
-  } else {
+  }
+  
+  // Asegurarse de que el sidebar esté oculto al cargar en móvil
+  if (window.innerWidth < 1024) {
     sidebar.classList.remove('abierto');
   }
 });

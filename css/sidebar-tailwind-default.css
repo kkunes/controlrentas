@@ -1,0 +1,47 @@
+#sidebar {
+  background: var(--tailwind-surface);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+  border-right: none;
+}
+
+.sidebar-btn {
+  color: var(--tailwind-text);
+  border-radius: var(--tailwind-border-radius);
+  margin: 8px 0;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  background: transparent;
+}
+
+.sidebar-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--tailwind-primary);
+}
+
+.sidebar-btn:active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header-text {
+  color: var(--tailwind-text);
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 2rem; /* mb-8 */
+  text-align: center; /* text-center */
+  display: flex; /* flex */
+  align-items: center; /* items-center */
+  justify-content: center; /* justify-content */
+}
+
+.sidebar-logo-container {
+  background: var(--tailwind-surface);
+  padding: 0.5rem; /* p-2 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+  margin-right: 0.75rem; /* mr-3 */
+  animation: none; /* animate-pulse */
+}
+
+.sidebar-app-name {
+  color: var(--tailwind-text);
+}

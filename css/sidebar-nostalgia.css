@@ -1,0 +1,48 @@
+#sidebar {
+  background: #f5deb3; /* Wheat */
+  box-shadow: 5px 0 10px var(--nostalgia-shadow);
+  border-right: 1px solid var(--nostalgia-border);
+}
+
+.sidebar-btn {
+  color: var(--nostalgia-text);
+  border-radius: var(--nostalgia-radius);
+  margin: 8px 0;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  background: transparent;
+  border: none;
+}
+
+.sidebar-btn:hover {
+  background-color: rgba(160, 82, 45, 0.1); /* Sienna transparent */
+  color: var(--nostalgia-primary);
+}
+
+.sidebar-btn:active {
+  background-color: rgba(160, 82, 45, 0.2);
+}
+
+.sidebar-header-text {
+  color: var(--nostalgia-text);
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 2rem; /* mb-8 */
+  text-align: center; /* text-center */
+  display: flex; /* flex */
+  align-items: center; /* items-center */
+  justify-content: center; /* justify-content */
+}
+
+.sidebar-logo-container {
+  background: var(--nostalgia-bg);
+  padding: 0.5rem; /* p-2 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 4px 8px var(--nostalgia-shadow); /* shadow-lg */
+  margin-right: 0.75rem; /* mr-3 */
+  animation: none; /* animate-pulse */
+}
+
+.sidebar-app-name {
+  color: var(--nostalgia-text);
+}

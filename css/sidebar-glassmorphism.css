@@ -1,0 +1,49 @@
+#sidebar {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-right: 1px solid var(--glass-border-color);
+  box-shadow: 5px 0 15px var(--glass-shadow-color);
+}
+
+.sidebar-btn {
+  color: var(--glass-text-color);
+  border-radius: var(--glass-radius);
+  margin: 8px 0;
+  transition: all 0.3s ease;
+  background: transparent;
+  border: none;
+}
+
+.sidebar-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--glass-primary);
+}
+
+.sidebar-btn:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-header-text {
+  color: var(--glass-text-color);
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 2rem; /* mb-8 */
+  text-align: center; /* text-center */
+  display: flex; /* flex */
+  align-items: center; /* items-center */
+  justify-content: center; /* justify-content */
+}
+
+.sidebar-logo-container {
+  background: var(--glass-bg-color);
+  padding: 0.5rem; /* p-2 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 8px 32px 0 var(--glass-shadow-color); /* shadow-lg */
+  margin-right: 0.75rem; /* mr-3 */
+  animation: pulse 1.5s ease-in-out infinite; /* animate-pulse */
+}
+
+.sidebar-app-name {
+  color: var(--glass-text-color);
+}

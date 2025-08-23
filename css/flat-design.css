@@ -1,0 +1,180 @@
+/* Estilos Flat Design para Control Renta v21 */
+
+:root {
+  --flat-primary: #3498db; /* Peter River */
+  --flat-secondary: #2ecc71; /* Emerald */
+  --flat-background: #ecf0f1; /* Clouds */
+  --flat-surface: #ffffff;
+  --flat-text: #2c3e50; /* Midnight Blue */
+  --flat-danger: #e74c3c; /* Alizarin */
+  --flat-border-radius: 3px;
+}
+
+body {
+  background-color: var(--flat-background);
+  font-family: 'Poppins', sans-serif;
+  color: var(--flat-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Contenedores y Tarjetas === */
+#contenido, .card, .tarjeta-base, #modalContenido {
+  background: var(--flat-surface);
+  border-radius: var(--flat-border-radius);
+  box-shadow: none; /* No shadows for flat design */
+  padding: 1.5rem;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card:hover, .tarjeta-base:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow on hover */
+}
+
+
+
+/* === Botones === */
+button, .btn-fluent-base {
+  border: none;
+  border-radius: var(--flat-border-radius);
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: none;
+  background: var(--flat-primary);
+  color: white;
+}
+
+button:hover, .btn-fluent-base:hover {
+  background-color: #2980b9; /* Darker shade on hover */
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:active, .btn-fluent-base:active {
+  background-color: #2980b9;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn-primario {
+  background-color: var(--flat-primary);
+  color: white;
+}
+
+.btn-primario:hover {
+  background-color: #2980b9;
+}
+
+.btn-peligro {
+    background-color: var(--flat-danger);
+    color: white;
+}
+.btn-peligro:hover {
+    background-color: #c0392b;
+}
+
+/* === Formularios === */
+input, select, textarea, .form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: var(--flat-border-radius);
+  background-color: var(--flat-surface);
+  box-shadow: none;
+  transition: all 0.2s ease;
+  color: var(--flat-text);
+}
+
+input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--flat-primary);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+/* === Modal y Notificaciones === */
+#miModal {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: none;
+}
+
+#modalContenido {
+  background: var(--flat-surface);
+  border-radius: var(--flat-border-radius);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.toast-notification {
+    background: #333;
+    border-radius: var(--flat-border-radius);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: white;
+    padding: 12px 20px;
+}
+
+.toast-success { background-color: var(--flat-secondary); }
+.toast-error { background-color: var(--flat-danger); }
+.toast-warning { background-color: #f39c12; } /* Orange */
+.toast-info { background-color: var(--flat-primary); }
+
+/* === Tablas === */
+.tabla-container {
+    background: var(--flat-surface);
+    border-radius: var(--flat-border-radius);
+    box-shadow: none;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tabla-base {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tabla-header-celda {
+    color: var(--flat-text);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tabla-fila {
+    background: var(--flat-surface);
+    box-shadow: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+}
+.tabla-fila:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    transform: none;
+    box-shadow: none;
+}
+
+.tabla-celda {
+    border: none;
+    background: transparent;
+    padding: 12px;
+    color: var(--flat-text);
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--flat-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bdc3c7; /* Silver */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #95a5a6; /* Asbestos */
+}

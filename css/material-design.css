@@ -1,0 +1,254 @@
+/* Estilos Material Design para Control Renta v21 */
+
+:root {
+  /* Paleta de Colores Material */
+  --md-primary: #6200ee;
+  --md-primary-variant: #3700b3;
+  --md-secondary: #03dac6;
+  --md-background: #f5f5f5;
+  --md-surface: #ffffff;
+  --md-error: #b00020;
+  --md-on-primary: #ffffff;
+  --md-on-secondary: #000000;
+  --md-on-background: #000000;
+  --md-on-surface: #000000;
+  --md-text-primary: rgba(0, 0, 0, 0.87);
+  --md-text-secondary: rgba(0, 0, 0, 0.6);
+  --md-divider: rgba(0, 0, 0, 0.12);
+
+  /* Elevación (Sombras) */
+  --md-elevation-1: 0 2px 1px -1px rgba(0,0,0,0.2), 0 1px 1px 0 rgba(0,0,0,0.14), 0 1px 3px 0 rgba(0,0,0,0.12);
+  --md-elevation-2: 0 3px 1px -2px rgba(0,0,0,0.2), 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12);
+  --md-elevation-4: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12);
+  --md-elevation-8: 0 5px 5px -3px rgba(0,0,0,0.2), 0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12);
+  --md-elevation-16: 0 8px 10px -5px rgba(0,0,0,0.2), 0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12);
+
+  /* Otros */
+  --md-border-radius: 4px;
+}
+
+body {
+  background-color: var(--md-background);
+  font-family: 'Roboto', 'Poppins', sans-serif; /* Roboto es el estándar de Material */
+  color: var(--md-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Contenedores y Tarjetas (Surfaces) === */
+#contenido, .card, .tarjeta-base, #modalContenido {
+  background: var(--md-surface);
+  border-radius: var(--md-border-radius);
+  box-shadow: var(--md-elevation-1);
+  padding: 1.5rem; /* 24px */
+  transition: box-shadow 0.3s cubic-bezier(.25,.8,.25,1);
+  border: 1px solid var(--md-divider);
+}
+
+.card:hover, .tarjeta-base:hover {
+  box-shadow: var(--md-elevation-4);
+  transform: translateY(0); /* No hay transform en Material, solo cambio de elevación */
+}
+
+
+
+/* === Botones === */
+button, .btn-fluent-base {
+  border: none;
+  border-radius: var(--md-border-radius);
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: box-shadow 0.28s cubic-bezier(.4,0,.2,1), background-color 0.28s;
+  text-transform: uppercase;
+  letter-spacing: 1.25px;
+  box-shadow: var(--md-elevation-2);
+  background: var(--md-surface);
+  color: var(--md-primary);
+  position: relative;
+  overflow: hidden; /* Para el efecto ripple */
+}
+
+button:hover, .btn-fluent-base:hover {
+  box-shadow: var(--md-elevation-4);
+}
+
+button:active, .btn-fluent-base:active {
+  box-shadow: var(--md-elevation-8);
+  transform: translateY(0);
+}
+
+.btn-primario {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.btn-primario:hover {
+  background-color: var(--md-primary-variant);
+}
+
+.btn-peligro {
+    background-color: var(--md-error);
+    color: var(--md-on-primary);
+}
+.btn-peligro:hover {
+    background-color: #c62828; /* Un rojo más oscuro */
+}
+
+/* Efecto Ripple */
+button::after, .btn-fluent-base::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 50%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+button:focus:not(:active)::after, .btn-fluent-base:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+
+/* === Formularios (Filled Text Fields) === */
+.form-field-container { /* Se necesitaría un div contenedor para cada input */
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.06);
+  border-top-left-radius: var(--md-border-radius);
+  border-top-right-radius: var(--md-border-radius);
+  padding-top: 20px;
+  transition: background-color 0.3s;
+}
+.form-field-container:hover {
+  background-color: rgba(0, 0, 0, 0.09);
+}
+.form-field-container::after { /* Línea inferior del input */
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--md-primary);
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+input:focus + .form-field-container::after,
+textarea:focus + .form-field-container::after,
+select:focus + .form-field-container::after {
+  transform: scaleX(1);
+}
+
+input, select, textarea, .form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  background-color: transparent;
+  box-shadow: none;
+  transition: border-color 0.3s;
+  color: var(--md-text-primary);
+}
+
+input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-bottom-color: var(--md-primary);
+  box-shadow: none;
+}
+
+/* === Modal y Notificaciones (Dialogs & Snackbars) === */
+#miModal {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: none;
+}
+
+#modalContenido {
+  box-shadow: var(--md-elevation-16);
+}
+
+.toast-notification {
+    background: #323232;
+    border-radius: var(--md-border-radius);
+    box-shadow: var(--md-elevation-4);
+    color: var(--md-on-primary);
+    padding: 14px 24px;
+}
+
+/* === Tablas === */
+.tabla-container {
+    background: var(--md-surface);
+    border-radius: var(--md-border-radius);
+    box-shadow: var(--md-elevation-1);
+    padding: 0;
+    border: 1px solid var(--md-divider);
+}
+
+.tabla-base {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tabla-header-celda {
+    color: var(--md-text-secondary);
+    font-weight: 500;
+    text-align: left;
+    padding: 16px;
+    border-bottom: 1px solid var(--md-divider);
+}
+
+.tabla-fila {
+    background: transparent;
+    box-shadow: none;
+    border-bottom: 1px solid var(--md-divider);
+    transition: background-color 0.3s;
+}
+.tabla-fila:last-child {
+    border-bottom: none;
+}
+.tabla-fila:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    transform: none;
+    box-shadow: none;
+}
+
+.tabla-celda {
+    border: none;
+    background: transparent;
+    padding: 16px;
+    color: var(--md-text-primary);
+}
+
+/* === Animaciones === */
+@keyframes ripple {
+  from {
+    transform: scale(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(20);
+    opacity: 0;
+  }
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

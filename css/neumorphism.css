@@ -1,0 +1,199 @@
+/* Estilos Neumorfistas para Control Renta v21 */
+
+:root {
+  --background-color: #e0e5ec;
+  --text-color: #555;
+  --primary-color: #007bff;
+  --light-shadow: #ffffff;
+  --dark-shadow: #a3b1c6;
+  --border-radius: 15px;
+}
+
+body {
+  background-color: var(--background-color);
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+
+main {
+  background-color: transparent;
+}
+
+#contenido {
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow);
+  padding: 2rem;
+}
+
+.card, .tarjeta-base {
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow);
+  transition: all 0.3s ease;
+}
+
+.card:hover, .tarjeta-base:hover {
+  transform: translateY(-5px);
+  box-shadow: 10px 10px 20px var(--dark-shadow), -10px -10px 20px var(--light-shadow);
+}
+
+button, .btn-fluent-base {
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+button:hover, .btn-fluent-base:hover {
+  color: var(--primary-color);
+}
+
+button:active, .btn-fluent-base:active {
+  box-shadow: inset 5px 5px 10px var(--dark-shadow), inset -5px -5px 10px var(--light-shadow);
+}
+
+.btn-primario {
+  color: white;
+  background-color: var(--primary-color);
+  box-shadow: 5px 5px 10px #0056b3, -5px -5px 10px #009eff;
+}
+
+.btn-primario:hover {
+  background-color: #0069d9;
+}
+
+.btn-primario:active {
+  box-shadow: inset 5px 5px 10px #0056b3, inset -5px -5px 10px #009eff;
+}
+
+.btn-peligro {
+    color: white;
+    background-color: #dc3545;
+    box-shadow: 5px 5px 10px #b02a37, -5px -5px 10px #ff4053;
+}
+
+.btn-peligro:hover {
+    background-color: #c82333;
+}
+
+.btn-peligro:active {
+    box-shadow: inset 5px 5px 10px #b02a37, inset -5px -5px 10px #ff4053;
+}
+
+input, select, textarea, .form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: var(--background-color);
+  box-shadow: inset 5px 5px 10px var(--dark-shadow), inset -5px -5px 10px var(--light-shadow);
+  transition: all 0.3s ease;
+  color: var(--text-color);
+}
+
+input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  box-shadow: inset 7px 7px 15px var(--dark-shadow), inset -7px -7px 15px var(--light-shadow), 0 0 0 2px var(--primary-color);
+}
+
+#miModal {
+  background-color: rgba(224, 229, 236, 0.6);
+  backdrop-filter: blur(5px);
+}
+
+#modalContenido {
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: 10px 10px 20px var(--dark-shadow), -10px -10px 20px var(--light-shadow);
+}
+
+.toast-notification {
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow);
+    color: var(--text-color);
+}
+
+.toast-success {
+    box-shadow: 7px 7px 15px #1e7e34, -7px -7px 15px #2aff4b;
+    background-color: #28a745;
+    color: white;
+}
+
+.toast-error {
+    box-shadow: 7px 7px 15px #b02a37, -7px -7px 15px #ff4053;
+    background-color: #dc3545;
+    color: white;
+}
+
+.toast-warning {
+    box-shadow: 7px 7px 15px #c67c00, -7px -7px 15px #ffe08a;
+    background-color: #ffc107;
+    color: #333;
+}
+
+.toast-info {
+    box-shadow: 7px 7px 15px #138496, -7px -7px 15px #1ffffc;
+    background-color: #17a2b8;
+    color: white;
+}
+
+.tabla-container {
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    box-shadow: inset 5px 5px 10px var(--dark-shadow), inset -5px -5px 10px var(--light-shadow);
+    padding: 1rem;
+}
+
+.tabla-base {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.tabla-header-celda {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.tabla-fila {
+    background: var(--background-color);
+    box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+    border-radius: var(--border-radius);
+}
+
+.tabla-fila:hover {
+  transform: translateY(-5px);
+  box-shadow: 10px 10px 20px var(--dark-shadow), -10px -10px 20px var(--light-shadow);
+}
+
+.tabla-celda {
+    border: none;
+    background: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1cde0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3b1c6;
+}
