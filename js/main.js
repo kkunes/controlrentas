@@ -7,7 +7,7 @@ import { verificarContratosProximosARenovar, mostrarDetallesRenovacion } from '.
 import { mostrarInmuebles, mostrarFormularioNuevoInmueble, editarInmueble, eliminarDocumento as eliminarInmuebleDoc, mostrarHistorialInquilinos } from './inmuebles.js';
 import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, confirmarDesocupacionInquilino, confirmarReactivacionInquilino, eliminarDocumento as eliminarInquilinoDoc, mostrarHistorialAbonosInquilino, mostrarSaldoFavorInquilino } from './inquilinos.js';
 import { mostrarPagos, mostrarFormularioNuevoPago, editarPago, mostrarFormularioRegistrarAbono, revisarPagosVencidos, mostrarHistorialPagosInmueble, eliminarDocumento as eliminarPagoDoc, mostrarHistorialPagosInquilino } from './pagos.js'; // Added mostrarHistorialPagosInquilino import
-import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc } from './mantenimientos.js';
+import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc, cambiarEstadoCosto } from './mantenimientos.js';
 import { mostrarInventarioMobiliario, mostrarFormularioNuevoMueble, eliminarMueble } from './mobiliario.js';
 import { mostrarReportes } from './reportes.js';
 import { mostrarAbonos, mostrarFormularioNuevoAbono, editarAbono, eliminarAbono, aplicarSaldoFavorManual } from './abonos.js';
@@ -56,6 +56,7 @@ window.mostrarHistorialPagosInmueble = mostrarHistorialPagosInmueble;
 window.mostrarFormularioNuevoMantenimiento = mostrarFormularioNuevoMantenimiento;
 window.editarMantenimiento = editarMantenimiento;
 window.mostrarHistorialMantenimientoInmueble = mostrarHistorialMantenimientoInmueble;
+window.cambiarEstadoCosto = cambiarEstadoCosto;
 
 // Funciones específicas de Mobiliario
 window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;

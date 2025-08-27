@@ -147,8 +147,8 @@ export async function mostrarMantenimientos() {
                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Categoría</th>
                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Fecha</th>
-                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Pagado por</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Paga</th>
                                 <th scope="col" class="relative px-3 py-2 text-right">Acciones</th>
                             </tr>
                         </thead>
@@ -202,7 +202,7 @@ export async function mostrarMantenimientos() {
                                     <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Prioridad</th>
                                     <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Estado</th>
                                     <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Fecha</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Pagado por</th>
+                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Paga</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -313,7 +313,7 @@ export async function mostrarMantenimientos() {
                 const totalCosto = filtrados.reduce((sum, m) => sum + (Number(m.costo) || 0), 0);
                 totalContainer.innerHTML = `
                     <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-xl shadow-lg text-center transition-all duration-300 transform hover:scale-105">
-                        <p class="text-sm sm:text-base font-medium uppercase tracking-wider">Costo Total (Filtro Actual)</p>
+                        <p class="text-sm sm:text-base font-medium uppercase tracking-wider">Costo Total</p>
                         <p class="text-2xl sm:text-3xl font-bold mt-1">${totalCosto.toFixed(2)} MXN</p>
                     </div>`;
             }
@@ -335,12 +335,21 @@ export async function mostrarMantenimientos() {
                             <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.categoria || 'N/A'}</td>
                             <td class="px-3 py-2 text-sm"><span class="${prioridadClass}">${m.prioridad || 'N/A'}</span></td>
                             <td class="px-3 py-2 text-sm"><span class="${estadoClass}">${m.estado || 'N/A'}</span></td>
-                            <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.fechaMantenimiento || 'N/A'}</td>
-                            <td class="px-3 py-2 text-sm text-gray-800 hidden lg:table-cell">${m.pagadoPor}</td>
+                            <td class="px-3 py-2 text-sm text-gray-700">${m.fechaMantenimiento || 'N/A'}</td>
+                            <td class="px-3 py-2 text-sm text-gray-800">${m.pagadoPor}</td>
                             <td class="px-3 py-2 text-sm text-right">
                                 <div class="flex flex-wrap justify-end gap-1">
                                     <button onclick="editarMantenimiento('${m.id}')" class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Editar</button>
                                     <button onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Eliminar</button>
+                                    ${m.estado !== 'Completado' ? `
+                                    <button onclick="cambiarEstadoCosto('${m.id}')" class="btn-cambiar-estado bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        Seguimiento
+                                    </button>
+                                    ` : ''}
                                 </div>
                             </td>
                         </tr>`;
@@ -655,6 +664,148 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
         } catch (err) {
             console.error("Error al guardar el mantenimiento:", err);
             mostrarNotificacion("Error al guardar el mantenimiento.", 'error');
+        }
+    });
+}
+
+/**
+ * Abre un modal para cambiar el estado y el costo de un mantenimiento.
+ * @param {string} id - ID del mantenimiento a modificar.
+ */
+export async function cambiarEstadoCosto(id) {
+    try {
+        const docSnap = await getDoc(doc(db, "mantenimientos", id));
+        if (docSnap.exists()) {
+            const mantenimiento = { id: docSnap.id, ...docSnap.data() };
+            mostrarModalCambiarEstadoCosto(mantenimiento);
+        } else {
+            mostrarNotificacion("Mantenimiento no encontrado.", 'error');
+        }
+    } catch (error) {
+        console.error("Error al obtener el mantenimiento:", error);
+        mostrarNotificacion("Error al obtener datos del mantenimiento.", 'error');
+    }
+}
+
+/**
+ * Muestra el modal con el formulario para cambiar estado y costo.
+ * @param {object} mantenimiento - El objeto de mantenimiento.
+ */
+function mostrarModalCambiarEstadoCosto(mantenimiento) {
+    const estados = ["Pendiente", "En Progreso", "Completado", "Cancelado"];
+    const estadoOptions = estados.map(est => `
+        <option value="${est}" ${mantenimiento.estado === est ? 'selected' : ''}>
+            ${est}
+        </option>
+    `).join('');
+
+    const modalContent = `
+        <div class="relative">
+            <button type="button" onclick="ocultarModal()"
+                class="absolute top-2 right-2 z-20 bg-white/80 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition-all focus:outline-none focus:ring-2 focus:ring-red-400"
+                aria-label="Cerrar">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6">
+                <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Seguimiento de Mantenimiento
+                </h3>
+            </div>
+            <form id="formCambiarEstadoCosto" class="space-y-4 sm:space-y-6 px-4">
+                <input type="hidden" id="mantenimientoId" value="${mantenimiento.id}">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        <div>
+                            <label for="estado" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Estado
+                            </label>
+                            <select id="estado" name="estado"
+                                class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200"
+                                required>
+                                ${estadoOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="costo" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Costo
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-gray-500">$</span>
+                                <input type="number" id="costo" name="costo" step="0.01"
+                                    class="block w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200"
+                                    value="${mantenimiento.costo ?? ''}" placeholder="0.00" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label for="pagadoPor" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            ¿Quién pagó el mantenimiento?
+                        </label>
+                        <select id="pagadoPor" name="pagadoPor" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">
+                            <option value="">Selecciona</option>
+                            <option value="inquilino" ${mantenimiento?.pagadoPor === "inquilino" ? "selected" : ""}>Inquilino</option>
+                            <option value="propietario" ${mantenimiento?.pagadoPor === "propietario" ? "selected" : ""}>Propietario</option>
+                            <option value="ambos" ${mantenimiento?.pagadoPor === "ambos" ? "selected" : ""}>Ambos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                    <button type="button" onclick="ocultarModal()"
+                        class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
+                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Actualizar
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    mostrarModal(modalContent);
+
+    document.getElementById('formCambiarEstadoCosto').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('mantenimientoId').value;
+        const estado = document.getElementById('estado').value;
+        const costo = parseFloat(document.getElementById('costo').value);
+        const pagadoPor = document.getElementById('pagadoPor').value;
+
+        if (isNaN(costo)) {
+            mostrarNotificacion("El costo debe ser un número.", 'error');
+            return;
+        }
+
+        try {
+            await updateDoc(doc(db, "mantenimientos", id), { estado, costo, pagadoPor });
+            mostrarNotificacion("Mantenimiento actualizado con éxito.", 'success');
+            ocultarModal();
+            mostrarMantenimientos();
+        } catch (err) {
+            console.error("Error al actualizar el mantenimiento:", err);
+            mostrarNotificacion("Error al actualizar el mantenimiento.", 'error');
         }
     });
 }

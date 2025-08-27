@@ -1,0 +1,21 @@
+/* Fluent Design Sidebar */
+.sidebar {
+    background: rgba(242, 242, 242, 0.8);
+    backdrop-filter: blur(15px);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.nav-link {
+    color: var(--color-text-primary);
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s;
+}
+
+.nav-link.active, .nav-link:hover {
+    background-color: rgba(0, 120, 212, 0.1);
+    color: var(--color-primary);
+}
