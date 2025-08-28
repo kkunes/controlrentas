@@ -1,49 +1,54 @@
+/* Refined Glassmorphism Sidebar */
 #sidebar {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-right: 1px solid var(--glass-border-color);
-  box-shadow: 5px 0 15px var(--glass-shadow-color);
+  background: rgba(255, 255, 255, 0.3); /* Increased opacity */
+  backdrop-filter: blur(8px); /* Reduced blur */
+  -webkit-backdrop-filter: blur(8px);
+  border-right: 1px solid rgba(255, 255, 255, 0.4); /* Increased opacity */
+  box-shadow: 3px 0 12px rgba(0, 0, 0, 0.1); /* Softer shadow */
 }
 
 .sidebar-btn {
   color: var(--glass-text-color);
   border-radius: var(--glass-radius);
-  margin: 8px 0;
-  transition: all 0.3s ease;
+  margin: 4px 0; /* Reduced margin */
+  transition: all 0.2s ease-in-out;
   background: transparent;
-  border: none;
+  border: 1px solid transparent; /* Add border for consistency */
 }
 
 .sidebar-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
   color: var(--glass-primary);
 }
 
-.sidebar-btn:active {
-  background-color: rgba(255, 255, 255, 0.2);
+.sidebar-btn.active {
+  background-color: rgba(109, 40, 217, 0.1); /* Use primary color with low opacity */
+  border-color: rgba(109, 40, 217, 0.2);
+  color: var(--glass-primary);
 }
 
 .sidebar-header-text {
   color: var(--glass-text-color);
-  font-size: 1.5rem; /* text-2xl */
-  font-weight: 700; /* font-bold */
-  margin-bottom: 2rem; /* mb-8 */
-  text-align: center; /* text-center */
-  display: flex; /* flex */
-  align-items: center; /* items-center */
-  justify-content: center; /* justify-content */
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-logo-container {
-  background: var(--glass-bg-color);
-  padding: 0.5rem; /* p-2 */
-  border-radius: 0.75rem; /* rounded-xl */
-  box-shadow: 0 8px 32px 0 var(--glass-shadow-color); /* shadow-lg */
-  margin-right: 0.75rem; /* mr-3 */
-  animation: pulse 1.5s ease-in-out infinite; /* animate-pulse */
+  background: rgba(255, 255, 255, 0.3);
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+  margin-right: 0.75rem;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .sidebar-app-name {
   color: var(--glass-text-color);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }

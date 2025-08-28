@@ -1,21 +1,48 @@
-/* Fluent Design Sidebar */
-.sidebar {
-    background: rgba(242, 242, 242, 0.8);
-    backdrop-filter: blur(15px);
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+/* Refined Fluent Design Sidebar */
+#sidebar {
+  background: rgba(248, 248, 248, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-right: 1px solid var(--color-stroke);
 }
 
-.sidebar-header {
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+.sidebar-btn {
+  color: var(--color-text-secondary);
+  border-radius: var(--border-radius);
+  margin: 2px 0;
+  padding: 10px 20px;
+  transition: all 0.2s var(--fluent-transition);
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid transparent;
 }
 
-.nav-link {
-    color: var(--color-text-primary);
-    border-radius: var(--border-radius);
-    transition: background-color 0.2s;
+.sidebar-btn:hover {
+  background-color: rgba(0, 120, 212, 0.05);
+  color: var(--color-primary);
 }
 
-.nav-link.active, .nav-link:hover {
-    background-color: rgba(0, 120, 212, 0.1);
-    color: var(--color-primary);
+.sidebar-btn.active {
+  background-color: rgba(0, 120, 212, 0.1);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.sidebar-header-text {
+  color: var(--color-text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-logo-container {
+  background: var(--color-primary);
+  padding: 0.6rem;
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  margin-right: 0.75rem;
+}
+
+.sidebar-app-name {
+  color: var(--color-text-primary);
 }

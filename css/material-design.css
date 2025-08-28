@@ -1,4 +1,4 @@
-/* Estilos Material Design para Control Renta v21 */
+/* Estilos Material Design para Control Renta v21 - Refined */
 
 :root {
   /* Paleta de Colores Material */
@@ -24,7 +24,7 @@
   --md-elevation-16: 0 8px 10px -5px rgba(0,0,0,0.2), 0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12);
 
   /* Otros */
-  --md-border-radius: 4px;
+  --md-border-radius: 8px; /* Increased border radius */
 }
 
 body {
@@ -39,32 +39,30 @@ body {
 #contenido, .card, .tarjeta-base, #modalContenido {
   background: var(--md-surface);
   border-radius: var(--md-border-radius);
-  box-shadow: var(--md-elevation-1);
+  box-shadow: var(--md-elevation-2); /* Increased default elevation */
   padding: 1.5rem; /* 24px */
   transition: box-shadow 0.3s cubic-bezier(.25,.8,.25,1);
   border: 1px solid var(--md-divider);
 }
 
 .card:hover, .tarjeta-base:hover {
-  box-shadow: var(--md-elevation-4);
+  box-shadow: var(--md-elevation-8); /* Increased hover elevation */
   transform: translateY(0); /* No hay transform en Material, solo cambio de elevación */
 }
-
-
 
 /* === Botones === */
 button, .btn-fluent-base {
   border: none;
   border-radius: var(--md-border-radius);
-  padding: 8px 16px;
+  padding: 10px 24px; /* Increased padding */
   font-weight: 500;
   cursor: pointer;
   transition: box-shadow 0.28s cubic-bezier(.4,0,.2,1), background-color 0.28s;
   text-transform: uppercase;
   letter-spacing: 1.25px;
   box-shadow: var(--md-elevation-2);
-  background: var(--md-surface);
-  color: var(--md-primary);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
   position: relative;
   overflow: hidden; /* Para el efecto ripple */
 }
@@ -115,50 +113,26 @@ button:focus:not(:active)::after, .btn-fluent-base:focus:not(:active)::after {
 }
 
 
-/* === Formularios (Filled Text Fields) === */
-.form-field-container { /* Se necesitaría un div contenedor para cada input */
+/* === Formularios (Outlined Text Fields) === */
+.form-field-container {
   position: relative;
-  background-color: rgba(0, 0, 0, 0.06);
-  border-top-left-radius: var(--md-border-radius);
-  border-top-right-radius: var(--md-border-radius);
-  padding-top: 20px;
-  transition: background-color 0.3s;
-}
-.form-field-container:hover {
-  background-color: rgba(0, 0, 0, 0.09);
-}
-.form-field-container::after { /* Línea inferior del input */
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: var(--md-primary);
-  transform: scaleX(0);
-  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
-}
-input:focus + .form-field-container::after,
-textarea:focus + .form-field-container::after,
-select:focus + .form-field-container::after {
-  transform: scaleX(1);
 }
 
 input, select, textarea, .form-input, .form-select, .form-textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
-  background-color: transparent;
+  padding: 16px;
+  border: 1px solid var(--md-divider);
+  border-radius: var(--md-border-radius);
+  background-color: var(--md-surface);
   box-shadow: none;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
   color: var(--md-text-primary);
 }
 
 input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
-  border-bottom-color: var(--md-primary);
-  box-shadow: none;
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 1px var(--md-primary);
 }
 
 /* === Modal y Notificaciones (Dialogs & Snackbars) === */

@@ -1,3 +1,4 @@
+/* Refined Material Design Sidebar */
 #sidebar {
   background: var(--md-surface);
   box-shadow: var(--md-elevation-8);
@@ -6,10 +7,10 @@
 
 .sidebar-btn {
   color: var(--md-text-secondary);
-  border-radius: 0 50px 50px 0; /* Forma estándar de item de nav drawer */
+  border-radius: 0 24px 24px 0; /* Updated border radius */
   margin: 4px 0;
   padding: 12px 24px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease-in-out;
   font-weight: 500;
   box-shadow: none;
   background: transparent;
@@ -21,7 +22,7 @@
 }
 
 .sidebar-btn.active { /* Asumiendo que se añade una clase 'active' */
-  background-color: rgba(98, 0, 238, 0.1);
+  background-color: rgba(98, 0, 238, 0.08); /* Slightly more subtle active state */
   color: var(--md-primary);
   font-weight: 700;
 }
@@ -40,7 +41,7 @@
 .sidebar-logo-container {
   background: var(--md-surface);
   padding: 0.5rem; /* p-2 */
-  border-radius: 0.75rem; /* rounded-xl */
+  border-radius: 50%; /* Circular logo container */
   box-shadow: var(--md-elevation-2); /* shadow-lg */
   margin-right: 0.75rem; /* mr-3 */
   animation: none; /* animate-pulse */

@@ -1,17 +1,18 @@
-/* Estilos Glassmorphism para Control Renta v21 */
+/* Estilos Glassmorphism para Control Renta v21 - Refined */
 
 :root {
-  --glass-bg-color: rgba(255, 255, 255, 0.15);
-  --glass-border-color: rgba(255, 255, 255, 0.2);
+  --glass-bg-color: rgba(255, 255, 255, 0.3); /* Increased opacity */
+  --glass-border-color: rgba(255, 255, 255, 0.4); /* Increased opacity */
   --glass-shadow-color: rgba(0, 0, 0, 0.1);
-  --glass-text-color: #ffffff;
-  --glass-primary: #8a2be2; /* Blue Violet */
-  --glass-primary-light: #9370db; /* Medium Purple */
-  --glass-radius: 15px;
+  --glass-text-color: #1f2937; /* Darker text for better contrast */
+  --glass-text-secondary-color: #4b5563; /* Darker secondary text */
+  --glass-primary: #6d28d9; /* Indigo */
+  --glass-primary-light: #8b5cf6; /* Lighter Indigo */
+  --glass-radius: 12px; /* Slightly smaller radius */
 }
 
 body {
-  background: linear-gradient(to right top, #654ea3, #eaafc8); /* Vibrant background */
+  background: linear-gradient(to right top, #d1d5db, #f3f4f6); /* Lighter, more subtle background */
   font-family: 'Poppins', sans-serif;
   color: var(--glass-text-color);
   -webkit-font-smoothing: antialiased;
@@ -22,52 +23,50 @@ body {
 #contenido, .card, .tarjeta-base, #modalContenido {
   background: var(--glass-bg-color);
   border-radius: var(--glass-radius);
-  box-shadow: 0 8px 32px 0 var(--glass-shadow-color);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px 0 var(--glass-shadow-color); /* Softer shadow */
+  backdrop-filter: blur(8px); /* Reduced blur */
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border-color);
   padding: 1.5rem;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
 .card:hover, .tarjeta-base:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 10px 40px 0 var(--glass-shadow-color);
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.4); /* Slightly more opaque on hover */
+  box-shadow: 0 6px 20px 0 var(--glass-shadow-color);
 }
-
-
 
 /* === Botones === */
 button, .btn-fluent-base {
-  background: var(--glass-bg-color);
+  background: rgba(255, 255, 255, 0.4);
   border: 1px solid var(--glass-border-color);
   border-radius: var(--glass-radius);
   padding: 10px 20px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 4px 10px var(--glass-shadow-color);
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 8px var(--glass-shadow-color);
   color: var(--glass-text-color);
 }
 
 button:hover, .btn-fluent-base:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px var(--glass-shadow-color);
+  background-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--glass-shadow-color);
 }
 
 button:active, .btn-fluent-base:active {
-  background-color: rgba(255, 255, 255, 0.35);
+  background-color: rgba(255, 255, 255, 0.6);
   transform: translateY(0);
-  box-shadow: 0 2px 5px var(--glass-shadow-color);
+  box-shadow: 0 1px 4px var(--glass-shadow-color);
 }
 
 .btn-primario {
   background-color: var(--glass-primary);
   border-color: var(--glass-primary);
   color: white;
-  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.4);
+  box-shadow: 0 4px 10px rgba(109, 40, 217, 0.3);
 }
 
 .btn-primario:hover {
@@ -76,14 +75,14 @@ button:active, .btn-fluent-base:active {
 }
 
 .btn-peligro {
-    background-color: #ff6347; /* Tomato */
-    border-color: #ff6347;
+    background-color: #ef4444; /* Red-500 */
+    border-color: #ef4444;
     color: white;
-    box-shadow: 0 4px 10px rgba(255, 99, 71, 0.4);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
 }
 .btn-peligro:hover {
-    background-color: #ff4500; /* OrangeRed */
-    border-color: #ff4500;
+    background-color: #f87171; /* Red-400 */
+    border-color: #f87171;
 }
 
 /* === Formularios === */
@@ -92,53 +91,53 @@ input, select, textarea, .form-input, .form-select, .form-textarea {
   padding: 10px;
   border: 1px solid var(--glass-border-color);
   border-radius: var(--glass-radius);
-  background-color: rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 2px 5px var(--glass-shadow-color);
-  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 3px var(--glass-shadow-color);
+  transition: all 0.2s ease;
   color: var(--glass-text-color);
 }
 
 input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.3);
   border-color: var(--glass-primary);
-  box-shadow: inset 0 2px 8px var(--glass-shadow-color), 0 0 0 2px var(--glass-primary);
+  box-shadow: inset 0 1px 4px var(--glass-shadow-color), 0 0 0 2px var(--glass-primary);
 }
 
 /* === Modal y Notificaciones === */
 #miModal {
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 #modalContenido {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 10px 50px 0 rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 8px 40px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .toast-notification {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(55, 65, 81, 0.8); /* Gray-700 with opacity */
     border-radius: var(--glass-radius);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     color: white;
     padding: 12px 20px;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.toast-success { background-color: rgba(46, 204, 113, 0.8); } /* Emerald */
-.toast-error { background-color: rgba(231, 76, 60, 0.8); } /* Alizarin */
-.toast-warning { background-color: rgba(241, 196, 15, 0.8); } /* Sunflower */
-.toast-info { background-color: rgba(52, 152, 219, 0.8); } /* Peter River */
+.toast-success { background-color: rgba(16, 185, 129, 0.8); } /* Green-500 */
+.toast-error { background-color: rgba(239, 68, 68, 0.8); } /* Red-500 */
+.toast-warning { background-color: rgba(245, 158, 11, 0.8); } /* Amber-500 */
+.toast-info { background-color: rgba(59, 130, 246, 0.8); } /* Blue-500 */
 
 /* === Tablas === */
 .tabla-container {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: var(--glass-radius);
     box-shadow: 0 4px 15px var(--glass-shadow-color);
     backdrop-filter: blur(8px);
@@ -157,17 +156,17 @@ input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus
     font-weight: 600;
     text-align: left;
     padding: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .tabla-fila {
     background: transparent;
     box-shadow: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    transition: background-color 0.3s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    transition: background-color 0.2s;
 }
 .tabla-fila:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.1);
     transform: none;
     box-shadow: none;
 }
@@ -185,15 +184,15 @@ input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.6);
 }
