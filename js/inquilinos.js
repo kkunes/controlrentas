@@ -34,6 +34,23 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             }
         });
 
+        // Obtener todo el mobiliario de una vez
+        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+        const mobiliarioPorInquilino = new Map();
+        mobiliarioSnap.forEach(doc => {
+            const mob = doc.data();
+            if (Array.isArray(mob.asignaciones)) {
+                mob.asignaciones.forEach(a => {
+                    if (a.inquilinoId && a.activa === true && a.cantidad > 0) {
+                        if (!mobiliarioPorInquilino.has(a.inquilinoId)) {
+                            mobiliarioPorInquilino.set(a.inquilinoId, []);
+                        }
+                        mobiliarioPorInquilino.get(a.inquilinoId).push({ id: doc.id, ...mob });
+                    }
+                });
+            }
+        });
+
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const inmueblesSnap = await getDocs(collection(db, "inmuebles")); // Para mapear nombres de inmuebles
         
@@ -120,7 +137,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span class="text-sm font-medium">Depósito: $${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
+                                        <span class="text-sm font-medium">Depósito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
                                     </div>
                                 ` : ''}
 
@@ -425,6 +442,36 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
             const adeudosFinales = todosLosAdeudos; // Renaming for clarity
 
+            // 3. Verificar adeudo de mobiliario
+            const adeudosMobiliario = [];
+            const tieneMobiliarioAsignado = mobiliarioPorInquilino.has(inquilino.id);
+
+            if (tieneMobiliarioAsignado) {
+                let fechaIteracionMobiliario = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1);
+                while (fechaIteracionMobiliario <= fechaFinCalculo) {
+                    const mes = fechaIteracionMobiliario.toLocaleString('es-MX', { month: 'long' });
+                    const anio = fechaIteracionMobiliario.getFullYear();
+                    const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
+                    const clavePago = `${mesCapitalizado}-${anio}`;
+                    const pagoRegistrado = pagosMap.get(clavePago);
+
+                    const isBeforeOccupationMonth = fechaIteracionMobiliario.getFullYear() < fechaInicioOcupacion.getFullYear() ||
+                                                  (fechaIteracionMobiliario.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                                                   fechaIteracionMobiliario.getMonth() < fechaInicioOcupacion.getMonth());
+
+                    if (!isBeforeOccupationMonth) {
+                        if (!pagoRegistrado || !pagoRegistrado.mobiliarioPagado || pagoRegistrado.mobiliarioPagado.length === 0) {
+                            adeudosMobiliario.push({
+                                mes: mesCapitalizado,
+                                anio: anio,
+                            });
+                        }
+                    }
+
+                    fechaIteracionMobiliario.setMonth(fechaIteracionMobiliario.getMonth() + 1);
+                }
+            }
+
             const badge = document.getElementById(`badge-adeudos-${inquilino.id}`);
             if (badge) {
                 const newBadge = badge.cloneNode(true);
@@ -432,14 +479,18 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                 const totalAdeudosRenta = adeudosFinales.filter(a => a.rentaPendiente).length;
                 const totalAdeudosServicios = adeudosFinales.filter(a => a.serviciosPendientes && !a.rentaPendiente).length;
+                const totalAdeudosMobiliario = adeudosMobiliario.length;
 
-                if (totalAdeudosRenta > 0 || totalAdeudosServicios > 0) {
+                if (totalAdeudosRenta > 0 || totalAdeudosServicios > 0 || totalAdeudosMobiliario > 0) {
                     let textoBadge = [];
                     if (totalAdeudosRenta > 0) {
                         textoBadge.push(`${totalAdeudosRenta} adeudo${totalAdeudosRenta > 1 ? 's' : ''}`);
                     }
                     if (totalAdeudosServicios > 0) {
                         textoBadge.push(`${totalAdeudosServicios} serv.`);
+                    }
+                    if (totalAdeudosMobiliario > 0) {
+                        textoBadge.push(`${totalAdeudosMobiliario} mob.`);
                     }
                     newBadge.textContent = textoBadge.join(' + ');
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
@@ -451,8 +502,9 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
                             </div>
                             <div class="space-y-4">
+                                ${adeudosFinales.length > 0 ? `
                                 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Adeudos</h4>
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Adeudos (Renta/Servicios)</h4>
                                     <div class="space-y-3">
                                         ${adeudosFinales.map(m => `
                                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
@@ -475,6 +527,28 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         `).join('')}
                                     </div>
                                 </div>
+                                ` : ''}
+
+                                ${adeudosMobiliario.length > 0 ? `
+                                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Adeudos de Mobiliario</h4>
+                                    <div class="space-y-3">
+                                        ${adeudosMobiliario.map(m => `
+                                            <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors duration-200">
+                                                <div class="flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                                    </svg>
+                                                    <span class="font-medium text-gray-800">${m.mes} ${m.anio}</span>
+                                                </div>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    Mobiliario pendiente
+                                                </span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
                             </div>
                             <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
                                 <button onclick="ocultarModal()"
