@@ -83,21 +83,21 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                         <div class="p-4 sm:p-5 md:p-6">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
-                                        ${tieneDesperfectos ? `
-                                            <span onclick="window.mostrarTotalDesperfectosInquilino('${inquilino.id}')" class="cursor-pointer" title="Este inquilino tiene desperfectos registrados">
-                                                <svg class="w-6 h-6 text-red-500 hover:text-red-700 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                            </span>
-                                        ` : ''}
-                                    </div>
+                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
                                 </div>
-                                <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${inquilino.activo ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}" />
-                                    </svg>
-                                    ${inquilino.activo ? 'Activo' : 'Inactivo'}
-                                </span>
+                                <div class="flex flex-col items-end">
+                                    <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${inquilino.activo ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}" />
+                                        </svg>
+                                        ${inquilino.activo ? 'Activo' : 'Inactivo'}
+                                    </span>
+                                    ${tieneDesperfectos ? `
+                                        <span onclick="window.mostrarTotalDesperfectosInquilino('${inquilino.id}')" class="cursor-pointer mt-2 breathing-icon" title="Este inquilino tiene desperfectos registrados">
+                                            <svg class="w-7 h-7 text-red-500 hover:text-red-600 transition-all duration-200 transform hover:scale-110" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+                                        </span>
+                                    ` : ''}
+                                </div>
                             </div>
 
                             <div class="space-y-3 mb-6">
