@@ -4,6 +4,11 @@ import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // Alias para evitar conflicto
 import { obtenerMesesAdeudadosHistorico } from './pagos.js';
+import { mostrarTotalDesperfectosInquilino } from './desperfectos.js';
+
+// Hacer la función accesible globalmente para los handlers `onclick`
+window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
+
 /**
  * Muestra la lista de inquilinos en forma de tarjetas.
  */
@@ -16,6 +21,19 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
     }
 
     try {
+        // Obtener todos los desperfectos de una vez para optimizar
+        const desperfectosSnap = await getDocs(collection(db, "desperfectos"));
+        const desperfectosPorInquilino = new Map();
+        desperfectosSnap.forEach(doc => {
+            const desperfecto = doc.data();
+            if (desperfecto.inquilinoId) {
+                if (!desperfectosPorInquilino.has(desperfecto.inquilinoId)) {
+                    desperfectosPorInquilino.set(desperfecto.inquilinoId, []);
+                }
+                desperfectosPorInquilino.get(desperfecto.inquilinoId).push({ id: doc.id, ...desperfecto });
+            }
+        });
+
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const inmueblesSnap = await getDocs(collection(db, "inmuebles")); // Para mapear nombres de inmuebles
         
@@ -58,13 +76,21 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             tarjetasInquilinosHtml = inquilinosList.map(inquilino => {
                 // Busca el depósito de este inquilino
                 const deposito = pagosDepositoMap.get(inquilino.id);
+                const tieneDesperfectos = desperfectosPorInquilino.has(inquilino.id);
 
                 return `
                     <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${inquilino.activo ? 'border-green-500' : 'border-red-500'} overflow-hidden transform hover:-translate-y-1" data-id="${inquilino.id}">
                         <div class="p-4 sm:p-5 md:p-6">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
+                                        ${tieneDesperfectos ? `
+                                            <span onclick="window.mostrarTotalDesperfectosInquilino('${inquilino.id}')" class="cursor-pointer" title="Este inquilino tiene desperfectos registrados">
+                                                <svg class="w-6 h-6 text-red-500 hover:text-red-700 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                            </span>
+                                        ` : ''}
+                                    </div>
                                 </div>
                                 <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
