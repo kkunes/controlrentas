@@ -11,6 +11,7 @@ import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMante
 import { mostrarInventarioMobiliario, mostrarFormularioNuevoMueble, eliminarMueble } from './mobiliario.js';
 import { mostrarReportes } from './reportes.js';
 import { mostrarAbonos, mostrarFormularioNuevoAbono, editarAbono, eliminarAbono, aplicarSaldoFavorManual } from './abonos.js';
+import { mostrarDesperfectos, mostrarFormularioNuevoDesperfecto, mostrarTotalDesperfectosInquilino } from './desperfectos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { renderComisiones } from './comision.js';
@@ -30,6 +31,12 @@ window.mostrarMantenimientos = mostrarMantenimientos;
 window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;
 window.mostrarReportes = mostrarReportes;
 window.mostrarAbonos = mostrarAbonos;
+window.mostrarDesperfectos = mostrarDesperfectos;
+
+// Funciones específicas de Desperfectos
+window.mostrarFormularioNuevoDesperfecto = mostrarFormularioNuevoDesperfecto;
+window.editarDesperfecto = editarDesperfecto;
+window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
 
 // Funciones específicas de Inmuebles
 window.mostrarFormularioNuevoInmueble = mostrarFormularioNuevoInmueble;
@@ -96,6 +103,9 @@ window.eliminarDocumento = async (coleccion, id, callbackRefresh) => {
             break;
         case 'mantenimientos':
             eliminarMantenimientoDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'desperfectos':
+            window.eliminarDocumento(coleccion, id, callbackRefresh);
             break;
         default:
             mostrarNotificacion('Colección no reconocida para eliminar.', 'error');
@@ -176,6 +186,9 @@ const loadContent = () => {
             break;
         case 'abonos':
             mostrarAbonos();
+            break;
+        case 'desperfectos':
+            mostrarDesperfectos();
             break;
         case 'dashboard':
         default:

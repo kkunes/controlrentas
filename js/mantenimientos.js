@@ -147,7 +147,7 @@ export async function mostrarMantenimientos() {
                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Categoría</th>
                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Fecha</th>
                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Paga</th>
                                 <th scope="col" class="relative px-3 py-2 text-right">Acciones</th>
                             </tr>
@@ -335,7 +335,7 @@ export async function mostrarMantenimientos() {
                             <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.categoria || 'N/A'}</td>
                             <td class="px-3 py-2 text-sm"><span class="${prioridadClass}">${m.prioridad || 'N/A'}</span></td>
                             <td class="px-3 py-2 text-sm"><span class="${estadoClass}">${m.estado || 'N/A'}</span></td>
-                            <td class="px-3 py-2 text-sm text-gray-700">${m.fechaMantenimiento || 'N/A'}</td>
+                            <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.fechaMantenimiento || 'N/A'}</td>
                             <td class="px-3 py-2 text-sm text-gray-800">${m.pagadoPor}</td>
                             <td class="px-3 py-2 text-sm text-right">
                                 <div class="flex flex-wrap justify-end gap-1">
