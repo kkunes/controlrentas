@@ -56,13 +56,13 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         
         const inmueblesMap = new Map();
         inmueblesSnap.forEach(doc => {
-            inmueblesMap.set(doc.id, doc.data().nombre);
+            inmueblesMap.set(doc.id, doc.data());
         });
 
         let inquilinosList = [];
         inquilinosSnap.forEach(doc => {
             const data = doc.data();
-            const nombreInmueble = data.inmuebleAsociadoId ? inmueblesMap.get(data.inmuebleAsociadoId) || 'Inmueble Desconocido' : 'No Asignado';
+            const nombreInmueble = data.inmuebleAsociadoId ? (inmueblesMap.get(data.inmuebleAsociadoId)?.nombre || 'Inmueble Desconocido') : 'No Asignado';
             inquilinosList.push({ id: doc.id, ...data, nombreInmueble });
         });
 
@@ -366,24 +366,28 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 pagosMap.set(clave, pago);
             });
 
+            const inmuebleAsociado = inmueblesMap.get(inquilino.inmuebleAsociadoId);
+            const rentaMensual = inmuebleAsociado ? parseFloat(inmuebleAsociado.rentaMensual) : 0;
+
+            let totalAdeudoRenta = 0;
+            let totalAdeudoServicios = 0;
+            let totalAdeudoMobiliario = 0;
+
             const todosLosAdeudos = [];
-            const parts = inquilino.fechaOcupacion.split('-'); // ["YYYY", "MM", "DD"]
+            const parts = inquilino.fechaOcupacion.split('-');
             const yearOcupacion = parseInt(parts[0], 10);
-            const monthOcupacion = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+            const monthOcupacion = parseInt(parts[1], 10) - 1;
             const dayOcupacion = parseInt(parts[2], 10);
 
-            const fechaInicioOcupacion = new Date(yearOcupacion, monthOcupacion, dayOcupacion); // Construct in local timezone
+            const fechaInicioOcupacion = new Date(yearOcupacion, monthOcupacion, dayOcupacion);
             const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0); // Normalize 'hoy' to start of day for accurate comparison
+            hoy.setHours(0, 0, 0, 0);
 
-            // FIX: Determine the end date for debt calculation
             const fechaFinCalculo = inquilino.fechaDesocupacion ? new Date(inquilino.fechaDesocupacion) : hoy;
             fechaFinCalculo.setHours(0, 0, 0, 0);
 
-
-            let fechaIteracion = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1); // Start from the 1st of the occupation month
-
-            const diaDePago = fechaInicioOcupacion.getDate(); // Get the day from fechaOcupacion
+            let fechaIteracion = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1);
+            const diaDePago = fechaInicioOcupacion.getDate();
 
             while (fechaIteracion <= fechaFinCalculo) {
                 const mes = fechaIteracion.toLocaleString('es-MX', { month: 'long' });
@@ -395,34 +399,27 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 let adeudoRenta = false;
                 let adeudoServicios = false;
 
-                // Check if this is the current month being processed
                 const esMesActualIteracion = fechaIteracion.getMonth() === hoy.getMonth() && fechaIteracion.getFullYear() === hoy.getFullYear();
-
-                // Only check for debts from occupation month onwards
                 const isBeforeOccupationMonth = fechaIteracion.getFullYear() < fechaInicioOcupacion.getFullYear() ||
                                                 (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
                                                  fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
 
                 if (!isBeforeOccupationMonth) {
-                    // 1. Verificar adeudo de renta
-                    // Only consider rent debt if:
-                    // a) It's not the current month, OR
-                    // b) It is the current month AND today's day is >= diaDePago
                     const shouldCheckRent = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
-
                     if (shouldCheckRent && (!pagoRegistrado || pagoRegistrado.estado !== 'pagado')) {
                         adeudoRenta = true;
+                        if (rentaMensual > 0) {
+                            totalAdeudoRenta += rentaMensual;
+                        }
                     }
 
-                    // 2. Verificar adeudo de servicios
                     const shouldCheckServices = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
-
                     if (shouldCheckServices && inquilino.pagaServicios && inquilino.servicios && inquilino.servicios.length > 0) {
                         for (const servicio of inquilino.servicios) {
                             const servicioKey = servicio.tipo.toLowerCase();
                             if (!pagoRegistrado || !pagoRegistrado.serviciosPagados || !pagoRegistrado.serviciosPagados[servicioKey]) {
                                 adeudoServicios = true;
-                                break;
+                                totalAdeudoServicios += parseFloat(servicio.monto || 0);
                             }
                         }
                     }
@@ -440,13 +437,11 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 fechaIteracion.setMonth(fechaIteracion.getMonth() + 1);
             }
 
-            const adeudosFinales = todosLosAdeudos; // Renaming for clarity
+            const adeudosFinales = todosLosAdeudos;
 
-            // 3. Verificar adeudo de mobiliario
             const adeudosMobiliario = [];
-            const tieneMobiliarioAsignado = mobiliarioPorInquilino.has(inquilino.id);
-
-            if (tieneMobiliarioAsignado) {
+            const mobiliarioAsignado = mobiliarioPorInquilino.get(inquilino.id) || [];
+            if (mobiliarioAsignado.length > 0) {
                 let fechaIteracionMobiliario = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1);
                 while (fechaIteracionMobiliario <= fechaFinCalculo) {
                     const mes = fechaIteracionMobiliario.toLocaleString('es-MX', { month: 'long' });
@@ -461,13 +456,12 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                     if (!isBeforeOccupationMonth) {
                         if (!pagoRegistrado || !pagoRegistrado.mobiliarioPagado || pagoRegistrado.mobiliarioPagado.length === 0) {
-                            adeudosMobiliario.push({
-                                mes: mesCapitalizado,
-                                anio: anio,
+                            adeudosMobiliario.push({ mes: mesCapitalizado, anio: anio });
+                            mobiliarioAsignado.forEach(mob => {
+                                totalAdeudoMobiliario += parseFloat(mob.costoRenta || 0);
                             });
                         }
                     }
-
                     fechaIteracionMobiliario.setMonth(fechaIteracionMobiliario.getMonth() + 1);
                 }
             }
@@ -477,21 +471,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 const newBadge = badge.cloneNode(true);
                 badge.parentNode.replaceChild(newBadge, badge);
 
-                const totalAdeudosRenta = adeudosFinales.filter(a => a.rentaPendiente).length;
-                const totalAdeudosServicios = adeudosFinales.filter(a => a.serviciosPendientes && !a.rentaPendiente).length;
-                const totalAdeudosMobiliario = adeudosMobiliario.length;
+                const totalAdeudosRentaCount = adeudosFinales.filter(a => a.rentaPendiente).length;
+                const totalAdeudosServiciosCount = adeudosFinales.filter(a => a.serviciosPendientes).length;
+                const totalAdeudosMobiliarioCount = adeudosMobiliario.length;
 
-                if (totalAdeudosRenta > 0 || totalAdeudosServicios > 0 || totalAdeudosMobiliario > 0) {
+                if (totalAdeudosRentaCount > 0 || totalAdeudosServiciosCount > 0 || totalAdeudosMobiliarioCount > 0) {
                     let textoBadge = [];
-                    if (totalAdeudosRenta > 0) {
-                        textoBadge.push(`${totalAdeudosRenta} adeudo${totalAdeudosRenta > 1 ? 's' : ''}`);
-                    }
-                    if (totalAdeudosServicios > 0) {
-                        textoBadge.push(`${totalAdeudosServicios} serv.`);
-                    }
-                    if (totalAdeudosMobiliario > 0) {
-                        textoBadge.push(`${totalAdeudosMobiliario} mob.`);
-                    }
+                    if (totalAdeudosRentaCount > 0) textoBadge.push(`${totalAdeudosRentaCount} Renta`);
+                    if (totalAdeudosServiciosCount > 0) textoBadge.push(`${totalAdeudosServiciosCount} Serv`);
+                    if (totalAdeudosMobiliarioCount > 0) textoBadge.push(`${totalAdeudosMobiliarioCount} Mob`);
+                    
                     newBadge.textContent = textoBadge.join(' + ');
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
                     newBadge.title = "Haz clic para ver los detalles de adeudos";
@@ -501,10 +490,38 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             <div class="px-4 py-3 bg-red-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
                                 <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
                             </div>
+                            
+                            ${(totalAdeudoRenta > 0 || totalAdeudoServicios > 0 || totalAdeudoMobiliario > 0) ? `
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100 mb-6">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-4">Totales Adeudados</h4>
+                                <div class="space-y-2">
+                                    ${totalAdeudoRenta > 0 ? `
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium text-gray-600">Total Adeudo Renta:</span>
+                                        <span class="font-bold text-red-600">${totalAdeudoRenta.toFixed(2)}</span>
+                                    </div>` : ''}
+                                    ${totalAdeudoServicios > 0 ? `
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium text-gray-600">Total Adeudo Servicios:</span>
+                                        <span class="font-bold text-red-600">${totalAdeudoServicios.toFixed(2)}</span>
+                                    </div>` : ''}
+                                    ${totalAdeudoMobiliario > 0 ? `
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium text-gray-600">Total Adeudo Mobiliario:</span>
+                                        <span class="font-bold text-red-600">${totalAdeudoMobiliario.toFixed(2)}</span>
+                                    </div>` : ''}
+                                    <div class="flex justify-between items-center pt-2 border-t mt-2">
+                                        <span class="font-bold text-gray-800 text-lg">GRAN TOTAL ADEUDADO:</span>
+                                        <span class="font-extrabold text-xl text-red-700">${(totalAdeudoRenta + totalAdeudoServicios + totalAdeudoMobiliario).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+
                             <div class="space-y-4">
                                 ${adeudosFinales.length > 0 ? `
                                 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Adeudos (Renta/Servicios)</h4>
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Desglose de Adeudos (Renta/Servicios)</h4>
                                     <div class="space-y-3">
                                         ${adeudosFinales.map(m => `
                                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
@@ -531,7 +548,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                                 ${adeudosMobiliario.length > 0 ? `
                                 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Adeudos de Mobiliario</h4>
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Desglose de Adeudos de Mobiliario</h4>
                                     <div class="space-y-3">
                                         ${adeudosMobiliario.map(m => `
                                             <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors duration-200">
