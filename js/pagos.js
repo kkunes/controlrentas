@@ -958,6 +958,13 @@ export async function mostrarFormularioNuevoPago(id = null) {
         <h3 class="text-2xl font-bold text-center">${titulo}</h3>
     </div>
     <form id="formPago" class="space-y-5 px-2">
+        <!-- Buscador -->
+        <div class="relative">
+            <label for="buscadorInmuebleInquilino" class="block text-sm font-semibold text-gray-700 mb-1">Buscar por Inmueble o Inquilino</label>
+            <input type="text" id="buscadorInmuebleInquilino" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
+            <div id="resultadosBusqueda" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg" style="display: none;"></div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="inmuebleId" class="block text-sm font-semibold text-gray-700 mb-1">Inmueble</label>
@@ -1048,8 +1055,82 @@ export async function mostrarFormularioNuevoPago(id = null) {
 
     mostrarModal(formHtml);
 
-    // --- Script de autollenado robusto ---
+    // --- Buscador ---
+    const buscadorInput = document.getElementById('buscadorInmuebleInquilino');
+    const resultadosBusqueda = document.getElementById('resultadosBusqueda');
     const inmuebleSelect = document.getElementById('inmuebleId');
+
+    buscadorInput.addEventListener('keyup', () => {
+        const searchTerm = buscadorInput.value.toLowerCase();
+        if (searchTerm.length < 2) {
+            resultadosBusqueda.innerHTML = '';
+            resultadosBusqueda.style.display = 'none';
+            return;
+        }
+
+        const resultados = [];
+
+        // Buscar en inmuebles
+        inmuebles.forEach(inmueble => {
+            if (inmueble.nombre.toLowerCase().includes(searchTerm)) {
+                resultados.push({
+                    tipo: 'Inmueble',
+                    nombre: inmueble.nombre,
+                    id: inmueble.id
+                });
+            }
+        });
+
+        // Buscar en inquilinos
+        inquilinos.forEach(inquilino => {
+            if (inquilino.nombre.toLowerCase().includes(searchTerm)) {
+                // Encontrar el inmueble asociado al inquilino
+                const inmuebleAsociado = inmuebles.find(inm => inm.inquilinoActualId === inquilino.id);
+                if (inmuebleAsociado) {
+                    resultados.push({
+                        tipo: 'Inquilino',
+                        nombre: `${inquilino.nombre} (en ${inmuebleAsociado.nombre})`,
+                        id: inmuebleAsociado.id // El id que nos importa es el del inmueble
+                    });
+                }
+            }
+        });
+
+        if (resultados.length > 0) {
+            resultadosBusqueda.innerHTML = resultados.map(r => 
+                `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre} <span class="text-xs text-gray-500">(${r.tipo})</span></div>`
+            ).join('');
+            resultadosBusqueda.style.display = 'block';
+        } else {
+            resultadosBusqueda.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
+            resultadosBusqueda.style.display = 'block';
+        }
+    });
+
+    resultadosBusqueda.addEventListener('click', (e) => {
+        if (e.target.closest('[data-id]')) {
+            const inmuebleId = e.target.closest('[data-id]').dataset.id;
+            inmuebleSelect.value = inmuebleId;
+            
+            // Disparar el evento change para que se actualice el inquilino
+            const event = new Event('change', { bubbles: true });
+            inmuebleSelect.dispatchEvent(event);
+
+            buscadorInput.value = '';
+            resultadosBusqueda.innerHTML = '';
+            resultadosBusqueda.style.display = 'none';
+        }
+    });
+
+    // Ocultar resultados si se hace clic fuera
+    document.addEventListener('click', function(event) {
+        if (!buscadorInput.contains(event.target) && !resultadosBusqueda.contains(event.target)) {
+            resultadosBusqueda.style.display = 'none';
+        }
+    });
+
+
+    // --- Script de autollenado robusto ---
     const inquilinoSelect = document.getElementById('inquilinoId');
     const montoTotalInput = document.getElementById('montoTotal');
     const montoPagoInput = document.getElementById('montoPago');
@@ -1370,6 +1451,12 @@ export async function mostrarFormularioPagoServicio() {
                 <h3 class="text-2xl font-bold text-center">Registrar Pago de Servicios</h3>
             </div>
             <form id="formPagoServicio" class="space-y-5 px-2">
+                <!-- Buscador -->
+                <div class="relative">
+                    <label for="buscadorInquilinoServicios" class="block text-sm font-semibold text-gray-700 mb-1">Buscar Inquilino</label>
+                    <input type="text" id="buscadorInquilinoServicios" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
+                    <div id="resultadosBusquedaInquilinoServicios" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg" style="display: none;"></div>
+                </div>
                 <div>
                     <label for="inquilinoId" class="block text-sm font-semibold text-gray-700 mb-1">Inquilino</label>
                     <select id="inquilinoId" name="inquilinoId" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
@@ -1461,6 +1548,65 @@ export async function mostrarFormularioPagoServicio() {
         `;
 
         mostrarModal(formHtml);
+
+        // --- Buscador ---
+        const buscadorInquilinoInput = document.getElementById('buscadorInquilinoServicios');
+        const resultadosBusquedaInquilino = document.getElementById('resultadosBusquedaInquilinoServicios');
+        const inquilinoSelect = document.getElementById('inquilinoId');
+
+        buscadorInquilinoInput.addEventListener('keyup', () => {
+            const searchTerm = buscadorInquilinoInput.value.toLowerCase();
+            if (searchTerm.length < 2) {
+                resultadosBusquedaInquilino.innerHTML = '';
+                resultadosBusquedaInquilino.style.display = 'none';
+                return;
+            }
+
+            const resultados = [];
+
+            // Buscar en inquilinos
+            inquilinos.forEach(inquilino => {
+                if (inquilino.nombre.toLowerCase().includes(searchTerm)) {
+                    const inmuebleNombre = inmueblesMap.get(inquilino.inmuebleAsociadoId) || 'Sin inmueble';
+                    resultados.push({
+                        nombre: `${inquilino.nombre} - ${inmuebleNombre}`,
+                        id: inquilino.id
+                    });
+                }
+            });
+
+            if (resultados.length > 0) {
+                resultadosBusquedaInquilino.innerHTML = resultados.map(r => 
+                    `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre}</div>`
+                ).join('');
+                resultadosBusquedaInquilino.style.display = 'block';
+            } else {
+                resultadosBusquedaInquilino.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
+                resultadosBusquedaInquilino.style.display = 'block';
+            }
+        });
+
+        resultadosBusquedaInquilino.addEventListener('click', (e) => {
+            if (e.target.closest('[data-id]')) {
+                const inquilinoId = e.target.closest('[data-id]').dataset.id;
+                inquilinoSelect.value = inquilinoId;
+                
+                const event = new Event('change', { bubbles: true });
+                inquilinoSelect.dispatchEvent(event);
+
+                buscadorInquilinoInput.value = '';
+                resultadosBusquedaInquilino.innerHTML = '';
+                resultadosBusquedaInquilino.style.display = 'none';
+            }
+        });
+
+        // Ocultar resultados si se hace clic fuera
+        document.addEventListener('click', function(event) {
+            if (buscadorInquilinoInput && !buscadorInquilinoInput.contains(event.target) && !resultadosBusquedaInquilino.contains(event.target)) {
+                resultadosBusquedaInquilino.style.display = 'none';
+            }
+        });
+
 
         // Establecer mes y año actuales
         const fechaActual = new Date();
@@ -1703,6 +1849,12 @@ export async function mostrarFormularioPagoMobiliario() {
                 <h3 class="text-2xl font-bold text-center">Registrar Pago de Mobiliario</h3>
             </div>
             <form id="formPagoMobiliario" class="space-y-5 px-2">
+                 <!-- Buscador -->
+                <div class="relative">
+                    <label for="buscadorInquilinoMobiliario" class="block text-sm font-semibold text-gray-700 mb-1">Buscar Inquilino</label>
+                    <input type="text" id="buscadorInquilinoMobiliario" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
+                    <div id="resultadosBusquedaInquilinoMobiliario" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg" style="display: none;"></div>
+                </div>
                 <div>
                     <label for="inquilinoId" class="block text-sm font-semibold text-gray-700 mb-1">Inquilino</label>
                     <select id="inquilinoId" name="inquilinoId" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
@@ -1759,6 +1911,65 @@ export async function mostrarFormularioPagoMobiliario() {
         `;
 
         mostrarModal(formHtml);
+
+        // --- Buscador ---
+        const buscadorInquilinoInput = document.getElementById('buscadorInquilinoMobiliario');
+        const resultadosBusquedaInquilino = document.getElementById('resultadosBusquedaInquilinoMobiliario');
+        const inquilinoSelect = document.getElementById('inquilinoId');
+
+        buscadorInquilinoInput.addEventListener('keyup', () => {
+            const searchTerm = buscadorInquilinoInput.value.toLowerCase();
+            if (searchTerm.length < 2) {
+                resultadosBusquedaInquilino.innerHTML = '';
+                resultadosBusquedaInquilino.style.display = 'none';
+                return;
+            }
+
+            const resultados = [];
+
+            // Buscar en inquilinos
+            inquilinos.forEach(inquilino => {
+                if (inquilino.nombre.toLowerCase().includes(searchTerm)) {
+                    const inmuebleNombre = inmueblesMap.get(inquilino.inmuebleAsociadoId) || 'Sin inmueble';
+                    resultados.push({
+                        nombre: `${inquilino.nombre} - ${inmuebleNombre}`,
+                        id: inquilino.id
+                    });
+                }
+            });
+
+            if (resultados.length > 0) {
+                resultadosBusquedaInquilino.innerHTML = resultados.map(r => 
+                    `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre}</div>`
+                ).join('');
+                resultadosBusquedaInquilino.style.display = 'block';
+            } else {
+                resultadosBusquedaInquilino.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
+                resultadosBusquedaInquilino.style.display = 'block';
+            }
+        });
+
+        resultadosBusquedaInquilino.addEventListener('click', (e) => {
+            if (e.target.closest('[data-id]')) {
+                const inquilinoId = e.target.closest('[data-id]').dataset.id;
+                inquilinoSelect.value = inquilinoId;
+                
+                const event = new Event('change', { bubbles: true });
+                inquilinoSelect.dispatchEvent(event);
+
+                buscadorInquilinoInput.value = '';
+                resultadosBusquedaInquilino.innerHTML = '';
+                resultadosBusquedaInquilino.style.display = 'none';
+            }
+        });
+
+        // Ocultar resultados si se hace clic fuera
+        document.addEventListener('click', function(event) {
+            if (buscadorInquilinoInput && !buscadorInquilinoInput.contains(event.target) && !resultadosBusquedaInquilino.contains(event.target)) {
+                resultadosBusquedaInquilino.style.display = 'none';
+            }
+        });
+
 
         // Establecer mes y año actuales
         const fechaActual = new Date();
