@@ -491,7 +491,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
                             </div>
                             
-                            ${(totalAdeudoRenta > 0 || totalAdeudoServicios > 0 || totalAdeudoMobiliario > 0) ? `
+                            ${(totalAdeudosRentaCount > 0 || totalAdeudosServiciosCount > 0 || totalAdeudosMobiliarioCount > 0) ? `
                             <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100 mb-6">
                                 <h4 class="text-lg font-semibold text-gray-800 mb-4">Totales Adeudados</h4>
                                 <div class="space-y-2">
@@ -505,11 +505,10 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <span class="font-medium text-gray-600">Total Adeudo Servicios:</span>
                                         <span class="font-bold text-red-600">${totalAdeudoServicios.toFixed(2)}</span>
                                     </div>` : ''}
-                                    ${totalAdeudoMobiliario > 0 ? `
                                     <div class="flex justify-between items-center">
                                         <span class="font-medium text-gray-600">Total Adeudo Mobiliario:</span>
-                                        <span class="font-bold text-red-600">${totalAdeudoMobiliario.toFixed(2)}</span>
-                                    </div>` : ''}
+                                        <span class="font-bold ${totalAdeudoMobiliario > 0 ? 'text-red-600' : 'text-gray-700'}">${totalAdeudoMobiliario.toFixed(2)}</span>
+                                    </div>
                                     <div class="flex justify-between items-center pt-2 border-t mt-2">
                                         <span class="font-bold text-gray-800 text-lg">GRAN TOTAL ADEUDADO:</span>
                                         <span class="font-extrabold text-xl text-red-700">${(totalAdeudoRenta + totalAdeudoServicios + totalAdeudoMobiliario).toFixed(2)}</span>
