@@ -1517,7 +1517,7 @@ export async function mostrarFormularioPagoServicio() {
                     </select>
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
-                    <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
+                    <button type="button" id="btnCancelarPagoServicio" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">
                         Registrar Pago
                     </button>
@@ -1526,6 +1526,11 @@ export async function mostrarFormularioPagoServicio() {
         `;
 
         mostrarModal(formHtml);
+
+        document.getElementById('btnCancelarPagoServicio').addEventListener('click', () => {
+            ocultarModal();
+            mostrarPagos();
+        });
 
         const buscadorInmuebleInput = document.getElementById('buscadorInmuebleServicios');
         const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleServicios');
@@ -1744,7 +1749,7 @@ export async function mostrarFormularioPagoServicio() {
                 }
                 
                 ocultarModal();
-                mostrarPagos(true);
+                mostrarPagos();
                 
             } catch (error) {
                 console.error("Error al registrar pago de servicios:", error);
@@ -1862,7 +1867,7 @@ export async function mostrarFormularioPagoMobiliario() {
                     </select>
                 </div>
                 <div class="flex justify-end space-x-3 mt-8">
-                    <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
+                    <button type="button" id="btnCancelarPagoMobiliario" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">
                         Registrar Pago
                     </button>
@@ -1871,6 +1876,11 @@ export async function mostrarFormularioPagoMobiliario() {
         `;
 
         mostrarModal(formHtml);
+
+        document.getElementById('btnCancelarPagoMobiliario').addEventListener('click', () => {
+            ocultarModal();
+            mostrarPagos();
+        });
 
         const buscadorInmuebleInput = document.getElementById('buscadorInmuebleMobiliario');
         const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleMobiliario');
@@ -1945,19 +1955,15 @@ export async function mostrarFormularioPagoMobiliario() {
             mobiliarioInquilino.forEach(mob => {
                 const asignacion = mob.asignacionesActivas.find(a => a.inquilinoId === inquilinoId);
                 if (asignacion) {
-                    const fechaAsignacion = new Date(asignacion.fechaAsignacion);
-                    const mesCobro = meses[fechaAsignacion.getMonth()];
-                    const anioCobro = fechaAsignacion.getFullYear();
                     const costoTotal = (mob.costoRenta || 0) * asignacion.cantidad;
                     
                     html += `
                         <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
                             <div class="flex items-start">
-                                <input type="checkbox" name="mobiliario" value="${mob.id}" data-costo="${costoTotal.toFixed(2)}" data-mes="${mesCobro}" data-anio="${anioCobro}" data-asignacion-id="${asignacion.id || ''}" class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <input type="checkbox" name="mobiliario" value="${mob.id}" data-costo="${costoTotal.toFixed(2)}" data-asignacion-id="${asignacion.id || ''}" class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                                 <div class="ml-3">
                                     <p class="font-medium">${mob.nombre} (${asignacion.cantidad} unidades)</p>
-                                    <p class="text-sm text-gray-600">Costo: ${costoTotal.toFixed(2)}</p>
-                                    <p class="text-sm text-green-600">Cobrar en mes actual: ${mesCobro} ${anioCobro}</p>
+                                    <p class="text-sm text-gray-600">Costo Mensual: ${costoTotal.toFixed(2)}</p>
                                     <p class="text-xs text-gray-500">Asignado: ${new Date(asignacion.fechaAsignacion).toLocaleDateString()}</p>
                                 </div>
                             </div>
@@ -1967,15 +1973,6 @@ export async function mostrarFormularioPagoMobiliario() {
             });
 
             document.getElementById('listaMobiliarioAsignado').innerHTML = html;
-            
-            document.querySelectorAll('input[name="mobiliario"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        document.getElementById('mesCorrespondiente').value = this.dataset.mes;
-                        document.getElementById('anioCorrespondiente').value = this.dataset.anio;
-                    }
-                });
-            });
         });
 
         document.getElementById('formPagoMobiliario').addEventListener('submit', async (e) => {
@@ -2051,7 +2048,7 @@ export async function mostrarFormularioPagoMobiliario() {
                 }
                 
                 ocultarModal();
-                mostrarPagos(true);
+                mostrarPagos();
                 
             } catch (error) {
                 console.error("Error al registrar pago de mobiliario:", error);
