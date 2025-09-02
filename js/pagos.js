@@ -1410,7 +1410,6 @@ export async function editarPago(id) {
  */
 export async function mostrarFormularioPagoServicio() {
     try {
-        // Obtener inquilinos activos
         const inquilinosSnap = await getDocs(query(collection(db, "inquilinos"), where("activo", "==", true)));
         const inquilinos = [];
         inquilinosSnap.forEach(doc => {
@@ -1421,41 +1420,34 @@ export async function mostrarFormularioPagoServicio() {
             mostrarNotificacion("No hay inquilinos activos para registrar pagos.", "error");
             return;
         }
-        
-        // Obtener inmuebles para mostrar junto a los inquilinos
+
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        const inmueblesMap = new Map();
+        const inmuebles = [];
         inmueblesSnap.forEach(doc => {
-            inmueblesMap.set(doc.id, doc.data().nombre);
+            inmuebles.push({ id: doc.id, ...doc.data() });
         });
 
-        // Opciones de inquilinos con inmueble asociado
         const inquilinosOptions = inquilinos.map(inq => {
-            const inmuebleNombre = inmueblesMap.get(inq.inmuebleAsociadoId) || 'Sin inmueble';
+            const inmuebleAsociado = inmuebles.find(inm => inm.id === inq.inmuebleAsociadoId);
+            const inmuebleNombre = inmuebleAsociado ? inmuebleAsociado.nombre : 'Sin inmueble';
             return `<option value="${inq.id}">${inq.nombre} - ${inmuebleNombre}</option>`;
         }).join('');
 
-        // Meses y años para el formulario
-        const meses = [
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        ];
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         const anioActual = new Date().getFullYear();
         const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
         const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
         const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
-        // Formulario HTML
         const formHtml = `
             <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
                 <h3 class="text-2xl font-bold text-center">Registrar Pago de Servicios</h3>
             </div>
             <form id="formPagoServicio" class="space-y-5 px-2">
-                <!-- Buscador -->
                 <div class="relative">
-                    <label for="buscadorInquilinoServicios" class="block text-sm font-semibold text-gray-700 mb-1">Buscar Inquilino</label>
-                    <input type="text" id="buscadorInquilinoServicios" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
-                    <div id="resultadosBusquedaInquilinoServicios" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg" style="display: none;"></div>
+                    <label for="buscadorInmuebleServicios" class="block text-sm font-semibold text-gray-700 mb-1">Buscar por Inmueble</label>
+                    <input type="text" id="buscadorInmuebleServicios" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
+                    <div id="resultadosBusquedaInmuebleServicios" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg" style="display: none;"></div>
                 </div>
                 <div>
                     <label for="inquilinoId" class="block text-sm font-semibold text-gray-700 mb-1">Inquilino</label>
@@ -1464,49 +1456,38 @@ export async function mostrarFormularioPagoServicio() {
                         ${inquilinosOptions}
                     </select>
                 </div>
-                
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h4 class="font-medium text-gray-700 mb-3">Servicios a pagar</h4>
-                    
                     <div class="space-y-4">
-                        <!-- Internet -->
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
                                 <input id="servicioInternet" name="servicioInternet" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                             </div>
                             <div class="ml-3 flex flex-col sm:flex-row sm:items-center gap-2">
                                 <label for="servicioInternet" class="text-sm font-medium text-gray-700">Internet</label>
-                                <input type="number" id="montoInternet" name="montoInternet" placeholder="Monto" min="0" step="0.01" 
-                                    class="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <input type="number" id="montoInternet" name="montoInternet" placeholder="Monto" min="0" step="0.01" class="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
                             </div>
                         </div>
-                        
-                        <!-- Agua -->
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
                                 <input id="servicioAgua" name="servicioAgua" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                             </div>
                             <div class="ml-3 flex flex-col sm:flex-row sm:items-center gap-2">
                                 <label for="servicioAgua" class="text-sm font-medium text-gray-700">Agua</label>
-                                <input type="number" id="montoAgua" name="montoAgua" placeholder="Monto" min="0" step="0.01" 
-                                    class="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <input type="number" id="montoAgua" name="montoAgua" placeholder="Monto" min="0" step="0.01" class="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
                             </div>
                         </div>
-                        
-                        <!-- Luz -->
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
                                 <input id="servicioLuz" name="servicioLuz" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                             </div>
                             <div class="ml-3 flex flex-col sm:flex-row sm:items-center gap-2">
                                 <label for="servicioLuz" class="text-sm font-medium text-gray-700">Luz</label>
-                                <input type="number" id="montoLuz" name="montoLuz" placeholder="Monto" min="0" step="0.01" 
-                                    class="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <input type="number" id="montoLuz" name="montoLuz" placeholder="Monto" min="0" step="0.01" class="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
                             </div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label for="mesCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">Mes Correspondiente</label>
@@ -1522,11 +1503,9 @@ export async function mostrarFormularioPagoServicio() {
                     </div>
                     <div>
                         <label for="fechaRegistro" class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Registro</label>
-                        <input type="date" id="fechaRegistro" name="fechaRegistro" value="${new Date().toISOString().split('T')[0]}" required
-                            class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <input type="date" id="fechaRegistro" name="fechaRegistro" value="${new Date().toISOString().split('T')[0]}" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
-
                 <div>
                     <label for="formaPago" class="block text-sm font-semibold text-gray-700 mb-1">Forma de Pago</label>
                     <select id="formaPago" name="formaPago" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white">
@@ -1537,7 +1516,6 @@ export async function mostrarFormularioPagoServicio() {
                         <option value="Otro">Otro</option>
                     </select>
                 </div>
-
                 <div class="flex justify-end space-x-3 mt-8">
                     <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">
@@ -1549,71 +1527,59 @@ export async function mostrarFormularioPagoServicio() {
 
         mostrarModal(formHtml);
 
-        // --- Buscador ---
-        const buscadorInquilinoInput = document.getElementById('buscadorInquilinoServicios');
-        const resultadosBusquedaInquilino = document.getElementById('resultadosBusquedaInquilinoServicios');
+        const buscadorInmuebleInput = document.getElementById('buscadorInmuebleServicios');
+        const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleServicios');
         const inquilinoSelect = document.getElementById('inquilinoId');
 
-        buscadorInquilinoInput.addEventListener('keyup', () => {
-            const searchTerm = buscadorInquilinoInput.value.toLowerCase();
+        buscadorInmuebleInput.addEventListener('keyup', () => {
+            const searchTerm = buscadorInmuebleInput.value.toLowerCase();
             if (searchTerm.length < 2) {
-                resultadosBusquedaInquilino.innerHTML = '';
-                resultadosBusquedaInquilino.style.display = 'none';
+                resultadosBusquedaInmueble.innerHTML = '';
+                resultadosBusquedaInmueble.style.display = 'none';
                 return;
             }
 
-            const resultados = [];
-
-            // Buscar en inquilinos
-            inquilinos.forEach(inquilino => {
-                if (inquilino.nombre.toLowerCase().includes(searchTerm)) {
-                    const inmuebleNombre = inmueblesMap.get(inquilino.inmuebleAsociadoId) || 'Sin inmueble';
-                    resultados.push({
-                        nombre: `${inquilino.nombre} - ${inmuebleNombre}`,
-                        id: inquilino.id
-                    });
-                }
-            });
+            const resultados = inmuebles.filter(inmueble => 
+                inmueble.nombre.toLowerCase().includes(searchTerm) && inmueble.estado === 'Ocupado'
+            );
 
             if (resultados.length > 0) {
-                resultadosBusquedaInquilino.innerHTML = resultados.map(r => 
+                resultadosBusquedaInmueble.innerHTML = resultados.map(r => 
                     `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre}</div>`
                 ).join('');
-                resultadosBusquedaInquilino.style.display = 'block';
+                resultadosBusquedaInmueble.style.display = 'block';
             } else {
-                resultadosBusquedaInquilino.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
-                resultadosBusquedaInquilino.style.display = 'block';
+                resultadosBusquedaInmueble.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
+                resultadosBusquedaInmueble.style.display = 'block';
             }
         });
 
-        resultadosBusquedaInquilino.addEventListener('click', (e) => {
+        resultadosBusquedaInmueble.addEventListener('click', (e) => {
             if (e.target.closest('[data-id]')) {
-                const inquilinoId = e.target.closest('[data-id]').dataset.id;
-                inquilinoSelect.value = inquilinoId;
-                
-                const event = new Event('change', { bubbles: true });
-                inquilinoSelect.dispatchEvent(event);
+                const inmuebleId = e.target.closest('[data-id]').dataset.id;
+                const inmuebleSeleccionado = inmuebles.find(inm => inm.id === inmuebleId);
+                if (inmuebleSeleccionado && inmuebleSeleccionado.inquilinoActualId) {
+                    inquilinoSelect.value = inmuebleSeleccionado.inquilinoActualId;
+                    const event = new Event('change', { bubbles: true });
+                    inquilinoSelect.dispatchEvent(event);
+                }
 
-                buscadorInquilinoInput.value = '';
-                resultadosBusquedaInquilino.innerHTML = '';
-                resultadosBusquedaInquilino.style.display = 'none';
+                buscadorInmuebleInput.value = '';
+                resultadosBusquedaInmueble.innerHTML = '';
+                resultadosBusquedaInmueble.style.display = 'none';
             }
         });
 
-        // Ocultar resultados si se hace clic fuera
         document.addEventListener('click', function(event) {
-            if (buscadorInquilinoInput && !buscadorInquilinoInput.contains(event.target) && !resultadosBusquedaInquilino.contains(event.target)) {
-                resultadosBusquedaInquilino.style.display = 'none';
+            if (buscadorInmuebleInput && !buscadorInmuebleInput.contains(event.target) && !resultadosBusquedaInmueble.contains(event.target)) {
+                resultadosBusquedaInmueble.style.display = 'none';
             }
         });
 
-
-        // Establecer mes y año actuales
         const fechaActual = new Date();
         document.getElementById('mesCorrespondiente').value = meses[fechaActual.getMonth()];
         document.getElementById('anioCorrespondiente').value = fechaActual.getFullYear();
 
-        // Manejar cambio en checkboxes de servicios
         document.getElementById('servicioInternet').addEventListener('change', function() {
             document.getElementById('montoInternet').disabled = !this.checked;
             if (!this.checked) document.getElementById('montoInternet').value = '';
@@ -1629,12 +1595,10 @@ export async function mostrarFormularioPagoServicio() {
             if (!this.checked) document.getElementById('montoLuz').value = '';
         });
 
-        // Deshabilitar campos de monto inicialmente
         document.getElementById('montoInternet').disabled = true;
         document.getElementById('montoAgua').disabled = true;
         document.getElementById('montoLuz').disabled = true;
 
-        // Manejar envío del formulario
         document.getElementById('formPagoServicio').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -1644,7 +1608,6 @@ export async function mostrarFormularioPagoServicio() {
             const fechaRegistro = document.getElementById('fechaRegistro').value;
             const formaPago = document.getElementById('formaPago').value;
             
-            // Verificar servicios seleccionados
             const servicioInternet = document.getElementById('servicioInternet').checked;
             const servicioAgua = document.getElementById('servicioAgua').checked;
             const servicioLuz = document.getElementById('servicioLuz').checked;
@@ -1654,31 +1617,24 @@ export async function mostrarFormularioPagoServicio() {
                 return;
             }
             
-            // Obtener montos
             const montoInternet = servicioInternet ? parseFloat(document.getElementById('montoInternet').value) || 0 : 0;
             const montoAgua = servicioAgua ? parseFloat(document.getElementById('montoAgua').value) || 0 : 0;
             const montoLuz = servicioLuz ? parseFloat(document.getElementById('montoLuz').value) || 0 : 0;
             
-            // Validar que los servicios seleccionados tengan monto
-            if ((servicioInternet && montoInternet <= 0) || 
-                (servicioAgua && montoAgua <= 0) || 
-                (servicioLuz && montoLuz <= 0)) {
+            if ((servicioInternet && montoInternet <= 0) || (servicioAgua && montoAgua <= 0) || (servicioLuz && montoLuz <= 0)) {
                 mostrarNotificacion("Debes ingresar un monto válido para cada servicio seleccionado.", "error");
                 return;
             }
             
             try {
-                // Buscar el inmueble asociado al inquilino
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                 const inmuebleId = inquilinoDoc.data().inmuebleAsociadoId;
                 
-                // Crear objeto de servicios pagados con fecha y forma de pago específicas
                 const serviciosPagados = {
                     fechaRegistroServicio: fechaRegistro,
                     formaPagoServicio: formaPago
                 };
                 
-                console.log("Creando servicios pagados con fecha:", fechaRegistro, "y forma de pago:", formaPago);
                 if (servicioInternet) {
                     serviciosPagados.internet = true;
                     serviciosPagados.internetMonto = montoInternet;
@@ -1692,26 +1648,15 @@ export async function mostrarFormularioPagoServicio() {
                     serviciosPagados.luzMonto = montoLuz;
                 }
                 
-                // Buscar si ya existe un pago para ese mes/año
                 const pagosRef = collection(db, "pagos");
-                const q = query(
-                    pagosRef,
-                    where("inmuebleId", "==", inmuebleId),
-                    where("inquilinoId", "==", inquilinoId),
-                    where("mesCorrespondiente", "==", mesCorrespondiente),
-                    where("anioCorrespondiente", "==", anioCorrespondiente)
-                );
+                const q = query(pagosRef, where("inmuebleId", "==", inmuebleId), where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
                 const querySnapshot = await getDocs(q);
                 
                 if (!querySnapshot.empty) {
-                    // Ya existe un pago para este mes, actualizar servicios
                     const pagoDoc = querySnapshot.docs[0];
                     const pagoExistente = pagoDoc.data();
-                    
-                    // Combinar servicios existentes con nuevos
                     const serviciosActualizados = pagoExistente.serviciosPagados || {};
                     
-                    // Agregar fecha y forma de pago específicas para servicios
                     serviciosActualizados.fechaRegistroServicio = fechaRegistro;
                     serviciosActualizados.formaPagoServicio = formaPago;
                     
@@ -1728,44 +1673,32 @@ export async function mostrarFormularioPagoServicio() {
                         serviciosActualizados.luzMonto = montoLuz;
                     }
                     
-                    // Actualizar documento existente con fecha y forma de pago específicas
                     await updateDoc(doc(db, "pagos", pagoDoc.id), {
-                        serviciosPagados: {
-                            ...serviciosActualizados,
-                            fechaRegistroServicio: fechaRegistro,
-                            formaPagoServicio: formaPago
-                        }
+                        serviciosPagados: { ...serviciosActualizados }
                     });
                     
                     mostrarNotificacion("Servicios agregados al pago existente.", "success");
                 } else {
-                    // No existe pago para este mes, crear uno nuevo solo con servicios
-                    const montoTotal = montoInternet + montoAgua + montoLuz;
-                    
                     await addDoc(collection(db, "pagos"), {
                         inmuebleId,
                         inquilinoId,
                         mesCorrespondiente,
                         anioCorrespondiente,
-                        montoTotal: 0, // El pago principal es 0, solo son servicios
+                        montoTotal: 0,
                         montoPagado: 0,
                         saldoPendiente: 0,
                         estado: "pagado",
                         fechaRegistro,
                         formaPago,
                         tipoPago: "servicios",
-                        serviciosPagados: {
-                            ...serviciosPagados,
-                            fechaRegistroServicio: fechaRegistro,
-                            formaPagoServicio: formaPago
-                        }
+                        serviciosPagados
                     });
                     
                     mostrarNotificacion("Pago de servicios registrado con éxito.", "success");
                 }
                 
                 ocultarModal();
-                mostrarPagos();
+                mostrarPagos(true);
                 
             } catch (error) {
                 console.error("Error al registrar pago de servicios:", error);
@@ -1785,7 +1718,6 @@ export async function mostrarFormularioPagoServicio() {
  */
 export async function mostrarFormularioPagoMobiliario() {
     try {
-        // Obtener inquilinos activos con mobiliario asignado
         const inquilinosSnap = await getDocs(query(collection(db, "inquilinos"), where("activo", "==", true)));
         const inquilinos = [];
         inquilinosSnap.forEach(doc => {
@@ -1797,27 +1729,20 @@ export async function mostrarFormularioPagoMobiliario() {
             return;
         }
 
-        // Obtener inmuebles para mostrar junto a los inquilinos
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        const inmueblesMap = new Map();
+        const inmuebles = [];
         inmueblesSnap.forEach(doc => {
-            inmueblesMap.set(doc.id, doc.data().nombre);
+            inmuebles.push({ id: doc.id, ...doc.data() });
         });
 
-        // Obtener mobiliario asignado
         const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
         const mobiliarioAsignado = [];
-        
         mobiliarioSnap.forEach(doc => {
             const mob = doc.data();
             if (Array.isArray(mob.asignaciones)) {
                 const asignacionesActivas = mob.asignaciones.filter(a => a.activa !== false);
                 if (asignacionesActivas.length > 0) {
-                    mobiliarioAsignado.push({
-                        id: doc.id,
-                        ...mob,
-                        asignacionesActivas
-                    });
+                    mobiliarioAsignado.push({ id: doc.id, ...mob, asignacionesActivas });
                 }
             }
         });
@@ -1827,33 +1752,27 @@ export async function mostrarFormularioPagoMobiliario() {
             return;
         }
 
-        // Opciones de inquilinos con inmueble asociado
         const inquilinosOptions = inquilinos.map(inq => {
-            const inmuebleNombre = inmueblesMap.get(inq.inmuebleAsociadoId) || 'Sin inmueble';
+            const inmuebleAsociado = inmuebles.find(inm => inm.id === inq.inmuebleAsociadoId);
+            const inmuebleNombre = inmuebleAsociado ? inmuebleAsociado.nombre : 'Sin inmueble';
             return `<option value="${inq.id}">${inq.nombre} - ${inmuebleNombre}</option>`;
         }).join('');
 
-        // Meses y años para el formulario
-        const meses = [
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        ];
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         const anioActual = new Date().getFullYear();
         const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
         const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
         const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
-        // Formulario HTML
         const formHtml = `
             <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
                 <h3 class="text-2xl font-bold text-center">Registrar Pago de Mobiliario</h3>
             </div>
             <form id="formPagoMobiliario" class="space-y-5 px-2">
-                 <!-- Buscador -->
                 <div class="relative">
-                    <label for="buscadorInquilinoMobiliario" class="block text-sm font-semibold text-gray-700 mb-1">Buscar Inquilino</label>
-                    <input type="text" id="buscadorInquilinoMobiliario" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
-                    <div id="resultadosBusquedaInquilinoMobiliario" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg" style="display: none;"></div>
+                    <label for="buscadorInmuebleMobiliario" class="block text-sm font-semibold text-gray-700 mb-1">Buscar por Inmueble</label>
+                    <input type="text" id="buscadorInmuebleMobiliario" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
+                    <div id="resultadosBusquedaInmuebleMobiliario" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg" style="display: none;"></div>
                 </div>
                 <div>
                     <label for="inquilinoId" class="block text-sm font-semibold text-gray-700 mb-1">Inquilino</label>
@@ -1862,14 +1781,12 @@ export async function mostrarFormularioPagoMobiliario() {
                         ${inquilinosOptions}
                     </select>
                 </div>
-                
                 <div id="mobiliarioContainer" class="space-y-4">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Mobiliario Asignado</label>
                     <div id="listaMobiliarioAsignado" class="border border-gray-200 rounded-lg p-4 max-h-60 overflow-y-auto">
                         <p class="text-gray-500 text-center">Selecciona un inquilino para ver su mobiliario asignado</p>
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label for="mesCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">Mes Correspondiente</label>
@@ -1885,11 +1802,9 @@ export async function mostrarFormularioPagoMobiliario() {
                     </div>
                     <div>
                         <label for="fechaRegistro" class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Registro</label>
-                        <input type="date" id="fechaRegistro" name="fechaRegistro" value="${new Date().toISOString().split('T')[0]}" required
-                            class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <input type="date" id="fechaRegistro" name="fechaRegistro" value="${new Date().toISOString().split('T')[0]}" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
-
                 <div>
                     <label for="formaPago" class="block text-sm font-semibold text-gray-700 mb-1">Forma de Pago</label>
                     <select id="formaPago" name="formaPago" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white">
@@ -1900,7 +1815,6 @@ export async function mostrarFormularioPagoMobiliario() {
                         <option value="Otro">Otro</option>
                     </select>
                 </div>
-
                 <div class="flex justify-end space-x-3 mt-8">
                     <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">
@@ -1912,127 +1826,93 @@ export async function mostrarFormularioPagoMobiliario() {
 
         mostrarModal(formHtml);
 
-        // --- Buscador ---
-        const buscadorInquilinoInput = document.getElementById('buscadorInquilinoMobiliario');
-        const resultadosBusquedaInquilino = document.getElementById('resultadosBusquedaInquilinoMobiliario');
+        const buscadorInmuebleInput = document.getElementById('buscadorInmuebleMobiliario');
+        const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleMobiliario');
         const inquilinoSelect = document.getElementById('inquilinoId');
 
-        buscadorInquilinoInput.addEventListener('keyup', () => {
-            const searchTerm = buscadorInquilinoInput.value.toLowerCase();
+        buscadorInmuebleInput.addEventListener('keyup', () => {
+            const searchTerm = buscadorInmuebleInput.value.toLowerCase();
             if (searchTerm.length < 2) {
-                resultadosBusquedaInquilino.innerHTML = '';
-                resultadosBusquedaInquilino.style.display = 'none';
+                resultadosBusquedaInmueble.innerHTML = '';
+                resultadosBusquedaInmueble.style.display = 'none';
                 return;
             }
 
-            const resultados = [];
-
-            // Buscar en inquilinos
-            inquilinos.forEach(inquilino => {
-                if (inquilino.nombre.toLowerCase().includes(searchTerm)) {
-                    const inmuebleNombre = inmueblesMap.get(inquilino.inmuebleAsociadoId) || 'Sin inmueble';
-                    resultados.push({
-                        nombre: `${inquilino.nombre} - ${inmuebleNombre}`,
-                        id: inquilino.id
-                    });
-                }
-            });
+            const resultados = inmuebles.filter(inmueble => 
+                inmueble.nombre.toLowerCase().includes(searchTerm) && inmueble.estado === 'Ocupado'
+            );
 
             if (resultados.length > 0) {
-                resultadosBusquedaInquilino.innerHTML = resultados.map(r => 
+                resultadosBusquedaInmueble.innerHTML = resultados.map(r => 
                     `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre}</div>`
                 ).join('');
-                resultadosBusquedaInquilino.style.display = 'block';
+                resultadosBusquedaInmueble.style.display = 'block';
             } else {
-                resultadosBusquedaInquilino.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
-                resultadosBusquedaInquilino.style.display = 'block';
+                resultadosBusquedaInmueble.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
+                resultadosBusquedaInmueble.style.display = 'block';
             }
         });
 
-        resultadosBusquedaInquilino.addEventListener('click', (e) => {
+        resultadosBusquedaInmueble.addEventListener('click', (e) => {
             if (e.target.closest('[data-id]')) {
-                const inquilinoId = e.target.closest('[data-id]').dataset.id;
-                inquilinoSelect.value = inquilinoId;
-                
-                const event = new Event('change', { bubbles: true });
-                inquilinoSelect.dispatchEvent(event);
+                const inmuebleId = e.target.closest('[data-id]').dataset.id;
+                const inmuebleSeleccionado = inmuebles.find(inm => inm.id === inmuebleId);
+                if (inmuebleSeleccionado && inmuebleSeleccionado.inquilinoActualId) {
+                    inquilinoSelect.value = inmuebleSeleccionado.inquilinoActualId;
+                    const event = new Event('change', { bubbles: true });
+                    inquilinoSelect.dispatchEvent(event);
+                }
 
-                buscadorInquilinoInput.value = '';
-                resultadosBusquedaInquilino.innerHTML = '';
-                resultadosBusquedaInquilino.style.display = 'none';
+                buscadorInmuebleInput.value = '';
+                resultadosBusquedaInmueble.innerHTML = '';
+                resultadosBusquedaInmueble.style.display = 'none';
             }
         });
 
-        // Ocultar resultados si se hace clic fuera
         document.addEventListener('click', function(event) {
-            if (buscadorInquilinoInput && !buscadorInquilinoInput.contains(event.target) && !resultadosBusquedaInquilino.contains(event.target)) {
-                resultadosBusquedaInquilino.style.display = 'none';
+            if (buscadorInmuebleInput && !buscadorInmuebleInput.contains(event.target) && !resultadosBusquedaInmueble.contains(event.target)) {
+                resultadosBusquedaInmueble.style.display = 'none';
             }
         });
 
-
-        // Establecer mes y año actuales
         const fechaActual = new Date();
         document.getElementById('mesCorrespondiente').value = meses[fechaActual.getMonth()];
         document.getElementById('anioCorrespondiente').value = fechaActual.getFullYear();
 
-        // Manejar cambio de inquilino
         document.getElementById('inquilinoId').addEventListener('change', function() {
             const inquilinoId = this.value;
             if (!inquilinoId) {
-                document.getElementById('listaMobiliarioAsignado').innerHTML = 
-                    '<p class="text-gray-500 text-center">Selecciona un inquilino para ver su mobiliario asignado</p>';
+                document.getElementById('listaMobiliarioAsignado').innerHTML = '<p class="text-gray-500 text-center">Selecciona un inquilino para ver su mobiliario asignado</p>';
                 return;
             }
 
-            // Filtrar mobiliario asignado al inquilino seleccionado
             const mobiliarioInquilino = mobiliarioAsignado.filter(mob => 
                 mob.asignacionesActivas.some(a => a.inquilinoId === inquilinoId)
             );
 
             if (mobiliarioInquilino.length === 0) {
-                document.getElementById('listaMobiliarioAsignado').innerHTML = 
-                    '<p class="text-gray-500 text-center">Este inquilino no tiene mobiliario asignado</p>';
+                document.getElementById('listaMobiliarioAsignado').innerHTML = '<p class="text-gray-500 text-center">Este inquilino no tiene mobiliario asignado</p>';
                 return;
             }
 
-            // Generar lista de mobiliario con checkboxes
             let html = '';
             mobiliarioInquilino.forEach(mob => {
                 const asignacion = mob.asignacionesActivas.find(a => a.inquilinoId === inquilinoId);
                 if (asignacion) {
-                    // Determinar el mes de cobro según la fecha de asignación
-                    // Si la fecha de asignación es el día 15 o posterior, se cobra en el mes actual
                     const fechaAsignacion = new Date(asignacion.fechaAsignacion);
-                    const diaAsignacion = fechaAsignacion.getDate();
-                    
-                    // Siempre se cobra en el mes actual, independientemente del día
                     const mesCobro = meses[fechaAsignacion.getMonth()];
                     const anioCobro = fechaAsignacion.getFullYear();
-                    
-                    // Indicador para mostrar en la interfaz
-                    const cobroEnMesActual = true; // Siempre es true con la nueva regla
-                    
                     const costoTotal = (mob.costoRenta || 0) * asignacion.cantidad;
                     
                     html += `
                         <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
                             <div class="flex items-start">
-                                <input type="checkbox" name="mobiliario" value="${mob.id}" 
-                                    data-costo="${costoTotal.toFixed(2)}" 
-                                    data-mes="${mesCobro}" 
-                                    data-anio="${anioCobro}"
-                                    data-asignacion-id="${asignacion.id || ''}"
-                                    class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <input type="checkbox" name="mobiliario" value="${mob.id}" data-costo="${costoTotal.toFixed(2)}" data-mes="${mesCobro}" data-anio="${anioCobro}" data-asignacion-id="${asignacion.id || ''}" class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                                 <div class="ml-3">
                                     <p class="font-medium">${mob.nombre} (${asignacion.cantidad} unidades)</p>
                                     <p class="text-sm text-gray-600">Costo: ${costoTotal.toFixed(2)}</p>
-                                    <p class="text-sm text-green-600">
-                                        Cobrar en mes actual: ${mesCobro} ${anioCobro}
-                                    </p>
-                                    <p class="text-xs text-gray-500">
-                                        Asignado: ${new Date(asignacion.fechaAsignacion).toLocaleDateString()}
-                                    </p>
+                                    <p class="text-sm text-green-600">Cobrar en mes actual: ${mesCobro} ${anioCobro}</p>
+                                    <p class="text-xs text-gray-500">Asignado: ${new Date(asignacion.fechaAsignacion).toLocaleDateString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -2042,7 +1922,6 @@ export async function mostrarFormularioPagoMobiliario() {
 
             document.getElementById('listaMobiliarioAsignado').innerHTML = html;
             
-            // Manejar cambio en checkboxes para actualizar mes/año
             document.querySelectorAll('input[name="mobiliario"]').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     if (this.checked) {
@@ -2053,7 +1932,6 @@ export async function mostrarFormularioPagoMobiliario() {
             });
         });
 
-        // Manejar envío del formulario
         document.getElementById('formPagoMobiliario').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -2063,7 +1941,6 @@ export async function mostrarFormularioPagoMobiliario() {
             const fechaRegistro = document.getElementById('fechaRegistro').value;
             const formaPago = document.getElementById('formaPago').value;
             
-            // Verificar mobiliario seleccionado
             const mobiliarioSeleccionado = Array.from(document.querySelectorAll('input[name="mobiliario"]:checked'));
             
             if (mobiliarioSeleccionado.length === 0) {
@@ -2071,30 +1948,19 @@ export async function mostrarFormularioPagoMobiliario() {
                 return;
             }
             
-            // Calcular monto total
             let montoTotal = 0;
             mobiliarioSeleccionado.forEach(checkbox => {
                 montoTotal += parseFloat(checkbox.dataset.costo);
             });
             
-            // Crear o actualizar registro de pago
             try {
-                // Buscar el inmueble asociado al inquilino
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                 const inmuebleId = inquilinoDoc.data().inmuebleAsociadoId;
                 
-                // Verificar si ya existe un pago para este mes/año
                 const pagosRef = collection(db, "pagos");
-                const q = query(
-                    pagosRef,
-                    where("inmuebleId", "==", inmuebleId),
-                    where("inquilinoId", "==", inquilinoId),
-                    where("mesCorrespondiente", "==", mesCorrespondiente),
-                    where("anioCorrespondiente", "==", anioCorrespondiente)
-                );
+                const q = query(pagosRef, where("inmuebleId", "==", inmuebleId), where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
                 const querySnapshot = await getDocs(q);
                 
-                // Preparar datos del mobiliario con fecha y forma de pago específicas
                 const nuevoMobiliario = mobiliarioSeleccionado.map(checkbox => ({
                     mobiliarioId: checkbox.value,
                     costo: parseFloat(checkbox.dataset.costo),
@@ -2104,20 +1970,12 @@ export async function mostrarFormularioPagoMobiliario() {
                 }));
                 
                 if (!querySnapshot.empty) {
-                    // Ya existe un pago para este mes, actualizar agregando el mobiliario
                     const pagoDoc = querySnapshot.docs[0];
                     const pagoExistente = pagoDoc.data();
-                    
-                    // Combinar mobiliario existente con nuevo
-                    const mobiliarioActualizado = Array.isArray(pagoExistente.mobiliarioPagado) 
-                        ? [...pagoExistente.mobiliarioPagado, ...nuevoMobiliario]
-                        : nuevoMobiliario;
-                    
-                    // Recalcular montos
+                    const mobiliarioActualizado = Array.isArray(pagoExistente.mobiliarioPagado) ? [...pagoExistente.mobiliarioPagado, ...nuevoMobiliario] : nuevoMobiliario;
                     const nuevoMontoTotal = pagoExistente.montoTotal + montoTotal;
                     const nuevoMontoPagado = pagoExistente.montoPagado + montoTotal;
                     
-                    // Actualizar documento existente
                     await updateDoc(doc(db, "pagos", pagoDoc.id), {
                         mobiliarioPagado: mobiliarioActualizado,
                         montoTotal: nuevoMontoTotal,
@@ -2126,7 +1984,6 @@ export async function mostrarFormularioPagoMobiliario() {
                     
                     mostrarNotificacion("Mobiliario agregado al pago existente.", "success");
                 } else {
-                    // No existe pago para este mes, crear uno nuevo
                     const pagoData = {
                         inmuebleId,
                         inquilinoId,
@@ -2137,17 +1994,10 @@ export async function mostrarFormularioPagoMobiliario() {
                         saldoPendiente: 0,
                         estado: "pagado",
                         fechaRegistro,
-                        abonos: [{
-                            montoAbonado: montoTotal,
-                            fechaAbono: fechaRegistro
-                        }],
+                        abonos: [{ montoAbonado: montoTotal, fechaAbono: fechaRegistro }],
                         formaPago,
                         tipoPago: "mobiliario",
-                        mobiliarioPagado: nuevoMobiliario.map(item => ({
-                            ...item,
-                            fechaRegistroMobiliario: fechaRegistro,
-                            formaPagoMobiliario: formaPago
-                        }))
+                        mobiliarioPagado: nuevoMobiliario
                     };
                     
                     await addDoc(collection(db, "pagos"), pagoData);
@@ -2155,7 +2005,7 @@ export async function mostrarFormularioPagoMobiliario() {
                 }
                 
                 ocultarModal();
-                mostrarPagos();
+                mostrarPagos(true);
                 
             } catch (error) {
                 console.error("Error al registrar pago de mobiliario:", error);
