@@ -1576,6 +1576,52 @@ export async function mostrarFormularioPagoServicio() {
             }
         });
 
+        // Autocompletar montos de servicios al seleccionar un inquilino
+        inquilinoSelect.addEventListener('change', (e) => {
+            const selectedInquilinoId = e.target.value;
+            const selectedInquilino = inquilinos.find(i => i.id === selectedInquilinoId);
+
+            // Reset all service fields first
+            document.getElementById('servicioInternet').checked = false;
+            document.getElementById('montoInternet').value = '';
+            document.getElementById('montoInternet').disabled = true;
+            document.getElementById('servicioAgua').checked = false;
+            document.getElementById('montoAgua').value = '';
+            document.getElementById('montoAgua').disabled = true;
+            document.getElementById('servicioLuz').checked = false;
+            document.getElementById('montoLuz').value = '';
+            document.getElementById('montoLuz').disabled = true;
+
+            if (selectedInquilino && selectedInquilino.pagaServicios) {
+                if (selectedInquilino.servicios && Array.isArray(selectedInquilino.servicios)) {
+                    selectedInquilino.servicios.forEach(servicio => {
+                        const tipo = servicio.tipo.toLowerCase();
+                        if (tipo === 'internet') {
+                            document.getElementById('servicioInternet').checked = true;
+                            document.getElementById('montoInternet').value = servicio.monto || '';
+                            document.getElementById('montoInternet').disabled = false;
+                        } else if (tipo === 'agua') {
+                            document.getElementById('servicioAgua').checked = true;
+                            document.getElementById('montoAgua').value = servicio.monto || '';
+                            document.getElementById('montoAgua').disabled = false;
+                        } else if (tipo === 'luz') {
+                            document.getElementById('servicioLuz').checked = true;
+                            document.getElementById('montoLuz').value = servicio.monto || '';
+                            document.getElementById('montoLuz').disabled = false;
+                        }
+                    });
+                } else if (selectedInquilino.tipoServicio && selectedInquilino.montoServicio) {
+                    // Handle legacy single service
+                    const tipoServicio = selectedInquilino.tipoServicio.toLowerCase();
+                    if (tipoServicio === 'internet') {
+                        document.getElementById('servicioInternet').checked = true;
+                        document.getElementById('montoInternet').value = selectedInquilino.montoServicio || '';
+                        document.getElementById('montoInternet').disabled = false;
+                    }
+                }
+            }
+        });
+
         const fechaActual = new Date();
         document.getElementById('mesCorrespondiente').value = meses[fechaActual.getMonth()];
         document.getElementById('anioCorrespondiente').value = fechaActual.getFullYear();
