@@ -2,6 +2,9 @@ import { collection, getDocs, query, where } from "https://www.gstatic.com/fireb
 import { db } from './firebaseConfig.js';
 import { mostrarNotificacion, mostrarModal, ocultarModal } from './ui.js';
 
+let annualChartInstance = null;
+let isReportesListenerAttached = false;
+
 /**
  * Muestra la sección principal de reportes y configura los selectores de mes/año.
  */
@@ -102,15 +105,23 @@ export async function mostrarReportes() {
             </div>
 
             <!-- Sección de Gráfica Anual -->
-            <div class="bg-gradient-to-br from-[#1a2234]/5 to-[#3a506b]/10 rounded-xl shadow-md p-4 sm:p-5 mt-6 border border-blue-500/20">
-                <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                    <div class="w-7 h-7 bg-[#2c3e50]/20 rounded-lg flex items-center justify-center mr-2 shadow-sm">
-                        <svg class="w-4 h-4 text-[#3a506b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
+            <div id="reporteAnualParaPdf" class="bg-gradient-to-br from-[#1a2234]/5 to-[#3a506b]/10 rounded-xl shadow-md p-4 sm:p-5 mt-6 border border-blue-500/20">
+                <div class="flex flex-wrap justify-between items-center mb-3">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <div class="w-7 h-7 bg-[#2c3e50]/20 rounded-lg flex items-center justify-center mr-2 shadow-sm">
+                            <svg class="w-4 h-4 text-[#3a506b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
+                            </svg>
+                        </div>
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Resumen Gráfico Anual</span>
+                    </h3>
+                    <button id="imprimirGraficaBtn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center text-sm font-medium border border-green-600 hover:border-green-700 mt-2 sm:mt-0">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
-                    </div>
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Resumen Gráfico Anual</span>
-                </h3>
+                        Descargar PDF
+                    </button>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                     <div class="relative">
                         <label for="selectAnioGrafica" class="block text-xs font-medium text-[#2c3e50] mb-1 flex items-center">
@@ -137,24 +148,96 @@ export async function mostrarReportes() {
         </div>
     `;
 
+    // Attach listeners only once using event delegation
+    if (!isReportesListenerAttached) {
+        contenedor.addEventListener('click', async (event) => {
+            if (event.target.closest('#generarReporteBtn')) {
+                const mesSeleccionado = document.getElementById('selectMes').value;
+                const anioSeleccionado = document.getElementById('selectAnio').value;
+                await generarReporteMensual(parseInt(mesSeleccionado), parseInt(anioSeleccionado));
+            }
+            if (event.target.closest('#imprimirGraficaBtn')) {
+                imprimirReporteAnual();
+            }
+        });
+
+        contenedor.addEventListener('change', async (event) => {
+            if (event.target && event.target.id === 'selectAnioGrafica') {
+                const anioSeleccionado = event.target.value;
+                await generarGraficoAnual(parseInt(anioSeleccionado));
+            }
+        });
+       
+        isReportesListenerAttached = true;
+    }
+
+    // Set initial values and generate reports
     document.getElementById('selectMes').value = new Date().getMonth() + 1;
     document.getElementById('selectAnio').value = new Date().getFullYear();
-
-    document.getElementById('generarReporteBtn').addEventListener('click', async () => {
-        const mesSeleccionado = document.getElementById('selectMes').value;
-        const anioSeleccionado = document.getElementById('selectAnio').value;
-        await generarReporteMensual(parseInt(mesSeleccionado), parseInt(anioSeleccionado));
-    });
-
-    const anioGraficaSelector = document.getElementById('selectAnioGrafica');
-    anioGraficaSelector.value = new Date().getFullYear();
-    anioGraficaSelector.addEventListener('change', async () => {
-        const anioSeleccionado = anioGraficaSelector.value;
-        await generarGraficoAnual(parseInt(anioSeleccionado));
-    });
+    document.getElementById('selectAnioGrafica').value = new Date().getFullYear();
 
     await generarReporteMensual(new Date().getMonth() + 1, new Date().getFullYear());
     await generarGraficoAnual(new Date().getFullYear());
+}
+
+/**
+* Imprime el reporte anual abriendo una nueva ventana con el contenido para imprimir.
+*/
+async function imprimirReporteAnual() {
+    if (!annualChartInstance) {
+        mostrarNotificacion("La gráfica no se ha generado aún.", "error");
+        return;
+    }
+
+    const anio = document.getElementById('selectAnioGrafica').value;
+    const resumenHtml = document.getElementById('resumenAnual').innerHTML;
+
+    try {
+        const { imgURI } = await annualChartInstance.dataURI();
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Reporte Anual ${anio}</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 20px; }
+                        h1 { text-align: center; }
+                        img { max-width: 100%; height: auto; display: block; margin: 20px auto; }
+                        .resumen-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+                        .resumen-card { border: 1px solid #ccc; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                        .resumen-card h4 { margin: 0 0 10px 0; font-size: 1rem; color: #555; }
+                        .resumen-card p { margin: 0; font-size: 1.5rem; font-weight: bold; color: #333; }
+                        @media print {
+                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Reporte Gráfico Anual - ${anio}</h1>
+                    <div id="chart-container">
+                        <img src="${imgURI}" />
+                    </div>
+                    <div class="resumen-container">
+                        ${resumenHtml}
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            window.onafterprint = function() {
+                                window.close();
+                            }
+                        }
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+
+    } catch (error) {
+        console.error("Error al preparar la impresión:", error);
+        mostrarNotificacion("No se pudo preparar el reporte para imprimir.", "error");
+    }
 }
 
 /**
@@ -228,15 +311,15 @@ async function generarGraficoAnual(anio) {
         const balanceAnual = totalIngresosAnual - totalGastosAnual;
 
         resumenAnualDiv.innerHTML = `
-            <div class="bg-gradient-to-r from-green-100 to-green-200 p-4 rounded-lg shadow-md text-center border border-green-300">
+            <div class="resumen-card bg-gradient-to-r from-green-100 to-green-200 p-4 rounded-lg shadow-md text-center border border-green-300">
                 <h4 class="text-sm font-semibold text-green-800">Ingresos Totales (Año)</h4>
                 <p class="text-2xl font-bold text-green-900 mt-1">${totalIngresosAnual.toFixed(2)}</p>
             </div>
-            <div class="bg-gradient-to-r from-red-100 to-red-200 p-4 rounded-lg shadow-md text-center border border-red-300">
+            <div class="resumen-card bg-gradient-to-r from-red-100 to-red-200 p-4 rounded-lg shadow-md text-center border border-red-300">
                 <h4 class="text-sm font-semibold text-red-800">Egresos Totales (Año)</h4>
                 <p class="text-2xl font-bold text-red-900 mt-1">${totalGastosAnual.toFixed(2)}</p>
             </div>
-            <div class="bg-gradient-to-r from-blue-100 to-blue-200 p-4 rounded-lg shadow-md text-center border border-blue-300">
+            <div class="resumen-card bg-gradient-to-r from-blue-100 to-blue-200 p-4 rounded-lg shadow-md text-center border border-blue-300">
                 <h4 class="text-sm font-semibold text-blue-800">Balance Anual</h4>
                 <p class="text-2xl font-bold text-blue-900 mt-1">${balanceAnual.toFixed(2)}</p>
             </div>
@@ -255,6 +338,14 @@ async function generarGraficoAnual(anio) {
                 height: 400,
                 toolbar: {
                     show: true
+                },
+                events: {
+                    mounted: function(chartContext, config) {
+                        annualChartInstance = chartContext;
+                    },
+                    updated: function(chartContext, config) {
+                        annualChartInstance = chartContext;
+                    }
                 }
             },
             plotOptions: {
