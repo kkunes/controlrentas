@@ -100,6 +100,40 @@ export async function mostrarReportes() {
                     </div>
                 </div>
             </div>
+
+            <!-- Sección de Gráfica Anual -->
+            <div class="bg-gradient-to-br from-[#1a2234]/5 to-[#3a506b]/10 rounded-xl shadow-md p-4 sm:p-5 mt-6 border border-blue-500/20">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                    <div class="w-7 h-7 bg-[#2c3e50]/20 rounded-lg flex items-center justify-center mr-2 shadow-sm">
+                        <svg class="w-4 h-4 text-[#3a506b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
+                        </svg>
+                    </div>
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Resumen Gráfico Anual</span>
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                    <div class="relative">
+                        <label for="selectAnioGrafica" class="block text-xs font-medium text-[#2c3e50] mb-1 flex items-center">
+                             <svg class="w-3 h-3 mr-1 text-[#3a506b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Año
+                        </label>
+                        <div class="relative">
+                            <select id="selectAnioGrafica" class="appearance-none block w-full px-3 py-2 bg-white border border-blue-500/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700">
+                                ${aniosOptions}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="graficaAnualContenedor" class="mt-4"></div>
+                 <div id="resumenAnual" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            </div>
         </div>
     `;
 
@@ -112,7 +146,173 @@ export async function mostrarReportes() {
         await generarReporteMensual(parseInt(mesSeleccionado), parseInt(anioSeleccionado));
     });
 
+    const anioGraficaSelector = document.getElementById('selectAnioGrafica');
+    anioGraficaSelector.value = new Date().getFullYear();
+    anioGraficaSelector.addEventListener('change', async () => {
+        const anioSeleccionado = anioGraficaSelector.value;
+        await generarGraficoAnual(parseInt(anioSeleccionado));
+    });
+
     await generarReporteMensual(new Date().getMonth() + 1, new Date().getFullYear());
+    await generarGraficoAnual(new Date().getFullYear());
+}
+
+/**
+ * Genera y muestra la gráfica anual de ingresos y egresos.
+ * @param {number} anio - El año para el cual generar la gráfica.
+ */
+async function generarGraficoAnual(anio) {
+    const graficaContenedor = document.getElementById('graficaAnualContenedor');
+    const resumenAnualDiv = document.getElementById('resumenAnual');
+    graficaContenedor.innerHTML = `
+        <div class="flex items-center justify-center p-4">
+            <svg class="animate-spin h-8 w-8 text-blue-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-sm font-medium text-[#2c3e50]">Cargando datos del año ${anio}...</p>
+        </div>`;
+
+    try {
+        const meses = [
+            "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+            "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+        ];
+        let ingresosPorMes = Array(12).fill(0);
+        let gastosPorMes = Array(12).fill(0);
+
+        // 1. Obtener Ingresos (Pagos y Depósitos)
+        const pagosQuery = query(collection(db, "pagos"));
+        const pagosSnap = await getDocs(pagosQuery);
+        pagosSnap.forEach(doc => {
+            const data = doc.data();
+            const fechaPagoStr = data.fechaUltimoAbono || data.fechaRegistro;
+            if (fechaPagoStr) {
+                const fechaPago = new Date(fechaPagoStr.substring(0, 10) + 'T00:00:00');
+                if (fechaPago.getFullYear() === anio) {
+                    const mesIndex = fechaPago.getMonth();
+                    ingresosPorMes[mesIndex] += parseFloat(data.montoPagado) || 0;
+                }
+            }
+        });
+
+        const inquilinosQuery = query(collection(db, "inquilinos"));
+        const inquilinosSnap = await getDocs(inquilinosQuery);
+        inquilinosSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.depositoRecibido && data.montoDeposito && data.fechaDeposito) {
+                 const fechaDeposito = new Date(data.fechaDeposito + 'T00:00:00');
+                if (fechaDeposito.getFullYear() === anio) {
+                    const mesIndex = fechaDeposito.getMonth();
+                    ingresosPorMes[mesIndex] += parseFloat(data.montoDeposito) || 0;
+                }
+            }
+        });
+
+        // 2. Obtener Gastos (Mantenimientos)
+        const mantenimientosQuery = query(collection(db, "mantenimientos"));
+        const mantenimientosSnap = await getDocs(mantenimientosQuery);
+        mantenimientosSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.fechaMantenimiento) {
+                 const fechaMantenimiento = new Date(data.fechaMantenimiento + 'T00:00:00');
+                if (fechaMantenimiento.getFullYear() === anio) {
+                    const mesIndex = fechaMantenimiento.getMonth();
+                    gastosPorMes[mesIndex] += parseFloat(data.costo) || 0;
+                }
+            }
+        });
+
+        const totalIngresosAnual = ingresosPorMes.reduce((a, b) => a + b, 0);
+        const totalGastosAnual = gastosPorMes.reduce((a, b) => a + b, 0);
+        const balanceAnual = totalIngresosAnual - totalGastosAnual;
+
+        resumenAnualDiv.innerHTML = `
+            <div class="bg-gradient-to-r from-green-100 to-green-200 p-4 rounded-lg shadow-md text-center border border-green-300">
+                <h4 class="text-sm font-semibold text-green-800">Ingresos Totales (Año)</h4>
+                <p class="text-2xl font-bold text-green-900 mt-1">${totalIngresosAnual.toFixed(2)}</p>
+            </div>
+            <div class="bg-gradient-to-r from-red-100 to-red-200 p-4 rounded-lg shadow-md text-center border border-red-300">
+                <h4 class="text-sm font-semibold text-red-800">Egresos Totales (Año)</h4>
+                <p class="text-2xl font-bold text-red-900 mt-1">${totalGastosAnual.toFixed(2)}</p>
+            </div>
+            <div class="bg-gradient-to-r from-blue-100 to-blue-200 p-4 rounded-lg shadow-md text-center border border-blue-300">
+                <h4 class="text-sm font-semibold text-blue-800">Balance Anual</h4>
+                <p class="text-2xl font-bold text-blue-900 mt-1">${balanceAnual.toFixed(2)}</p>
+            </div>
+        `;
+
+        const options = {
+            series: [{
+                name: 'Ingresos',
+                data: ingresosPorMes.map(v => v.toFixed(2))
+            }, {
+                name: 'Egresos',
+                data: gastosPorMes.map(v => v.toFixed(2))
+            }],
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: true
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '60%',
+                    endingShape: 'rounded',
+                    borderRadius: 5,
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: meses,
+            },
+            yaxis: {
+                title: {
+                    text: 'Monto (MXN)'
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return "$ " + val
+                    }
+                }
+            },
+            colors: ['#10B981', '#EF4444'], // Verde para ingresos, Rojo para egresos
+            grid: {
+                borderColor: '#e7e7e7',
+                row: {
+                    colors: ['#f3f3f3', 'transparent'],
+                    opacity: 0.5
+                },
+            },
+        };
+
+        graficaContenedor.innerHTML = ''; // Limpiar el mensaje de carga
+        const chart = new ApexCharts(graficaContenedor, options);
+        chart.render();
+
+    } catch (error) {
+        console.error("Error al generar la gráfica anual:", error);
+        mostrarNotificacion("Error al generar la gráfica anual.", 'error');
+        graficaContenedor.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+                 <p class="text-red-600 font-medium">Hubo un error al generar la gráfica.</p>
+            </div>`;
+    }
 }
 
 function abrirModalPropietarios(movimientos, propietariosMap) {
@@ -503,7 +703,7 @@ async function generarReporteMensual(mes, anio) {
                         </thead>
                         <tbody class="divide-y divide-blue-50">
                             ${todosLosMovimientos.map(mov => `
-                                <tr class="hover:bg-[#2c3e50]/5 transition-colors duration-150">
+                                <tr>
                                     <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-700">${mov.fecha}</td>
                                     <td class="px-3 py-2 whitespace-nowrap text-xs">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${mov.tipo.startsWith('Ingreso') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
@@ -567,8 +767,8 @@ async function generarReporteMensual(mes, anio) {
         // 3. Mostrar el reporte en HTML
         const balanceClass = balance >= 0 ? 'text-green-600' : 'text-red-600';
         const balanceIcon = balance >= 0
-            ? `<svg class="w-10 h-10 mx-auto mb-2 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`
-            : `<svg class="w-10 h-10 mx-auto mb-2 text-orange-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
+            ? `<svg class="w-10 h-10 mx-auto mb-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`
+            : `<svg class="w-10 h-10 mx-auto mb-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
 
         resultadoDiv.innerHTML = `
             <div class="w-full max-w-full overflow-x-hidden">
