@@ -252,7 +252,7 @@ async function generarGraficoAnual(anio) {
             }],
             chart: {
                 type: 'bar',
-                height: 350,
+                height: 400,
                 toolbar: {
                     show: true
                 }
@@ -263,10 +263,23 @@ async function generarGraficoAnual(anio) {
                     columnWidth: '60%',
                     endingShape: 'rounded',
                     borderRadius: 5,
+                    dataLabels: {
+                        position: 'top',
+                    },
                 },
             },
             dataLabels: {
-                enabled: false
+                enabled: true,
+                formatter: function (val) {
+                    if (val == 0) return "";
+                    if (val < 1000) return "$" + parseFloat(val).toFixed(0);
+                    return "$" + (val / 1000).toFixed(1) + 'k';
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '12px',
+                    colors: ["#304758"]
+                }
             },
             stroke: {
                 show: true,
@@ -299,6 +312,57 @@ async function generarGraficoAnual(anio) {
                     opacity: 0.5
                 },
             },
+            responsive: [{
+                breakpoint: 768, // Breakpoint para móviles
+                options: {
+                    chart: {
+                        height: 500 // Más altura para barras horizontales
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            borderRadius: 5,
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val) {
+                            if (val == 0) return "";
+                            return "$" + parseFloat(val).toFixed(0);
+                        },
+                        offsetX: 15, // Ajustar posición para barras horizontales
+                        style: {
+                            fontSize: '10px',
+                            colors: ['#333']
+                        },
+                        background: {
+                            enabled: true,
+                            foreColor: '#fff',
+                            padding: 5,
+                            borderRadius: 3,
+                            borderWidth: 1,
+                            borderColor: '#ddd',
+                            opacity: 0.9
+                        }
+                    },
+                    xaxis: {
+                        labels: {
+                            formatter: function(val) {
+                                if (val == 0) return "0";
+                                if (Math.abs(val) >= 1000) {
+                                    return "$" + (val / 1000).toFixed(0) + 'k';
+                                }
+                                return "$" + val;
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: '' // Ocultar título del eje Y en móvil
+                        }
+                    }
+                }
+            }]
         };
 
         graficaContenedor.innerHTML = ''; // Limpiar el mensaje de carga
