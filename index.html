@@ -137,6 +137,7 @@
             <option value="retro">Retro</option>
             <option value="fluent-design">Fluent Design</option>
             <option value="tailwind-default">Tailwind Default</option>
+            <option value="one-ui-8">One UI 8</option>
           </select>
         </div>
       </div>
@@ -187,6 +188,7 @@
     const themeSwitcher = document.getElementById('theme-switcher');
     const themeStyle = document.getElementById('theme-style');
     const sidebarStyle = document.getElementById('sidebar-style');
+    const body = document.body;
 
     function updateIcons(theme) {
       const icons = THEME_ICONS[theme] || THEME_ICONS.default;
@@ -198,20 +200,36 @@
       }
     }
 
-    themeSwitcher.addEventListener('change', (e) => {
-      const theme = e.target.value;
+    function applyTheme(theme) {
+      // Remove any existing theme classes from body
+      body.className = body.className.replace(/\S+-theme/g, '').trim();
+
       if (theme === 'default') {
         themeStyle.href = './css/styles.css?v=1.8';
         sidebarStyle.href = './css/sidebar.css?v=1.8';
       } else {
         themeStyle.href = `./css/${theme}.css?v=1.8`;
         sidebarStyle.href = `./css/sidebar-${theme}.css?v=1.8`;
+        body.classList.add(`${theme}-theme`); // Add specific theme class
       }
       updateIcons(theme);
+    }
+
+    themeSwitcher.addEventListener('change', (e) => {
+      applyTheme(e.target.value);
     });
 
-    // Set initial icons
-    updateIcons('default');
+    // Set initial theme and icons
+    // Check localStorage for a saved theme
+    const savedTheme = localStorage.getItem('theme') || 'default';
+    themeSwitcher.value = savedTheme;
+    applyTheme(savedTheme);
+
+    // Save theme to localStorage on change
+    themeSwitcher.addEventListener('change', (e) => {
+        localStorage.setItem('theme', e.target.value);
+        applyTheme(e.target.value);
+    });
   </script>
   <script>
 const btnMenu = document.getElementById('btnMenu');

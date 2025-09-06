@@ -1,0 +1,73 @@
+/* --- Samsung One UI 8 Sidebar Theme --- */
+
+:root {
+    --oneui-primary-color: #007bff;
+    --oneui-sidebar-bg-color: #ffffff;
+    --oneui-sidebar-text-color: #333333;
+    --oneui-sidebar-icon-color: #555555;
+    --oneui-sidebar-active-bg-color: #e9f2ff;
+    --oneui-sidebar-active-text-color: var(--oneui-primary-color);
+    --oneui-font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --oneui-medium-border-radius: 16px;
+}
+
+.one-ui-8-theme #sidebar {
+    background-color: var(--oneui-sidebar-bg-color);
+    font-family: var(--oneui-font-family);
+    border-right: 1px solid #f0f0f0;
+    padding: 16px;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+}
+
+.one-ui-8-theme #sidebar .sidebar-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 14px;
+    margin: 4px 0;
+    border-radius: var(--oneui-medium-border-radius);
+    text-decoration: none;
+    color: var(--oneui-sidebar-text-color);
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.one-ui-8-theme #sidebar .sidebar-btn .icon {
+    margin-right: 12px;
+    color: var(--oneui-sidebar-icon-color);
+    transition: color 0.3s ease;
+}
+
+.one-ui-8-theme #sidebar .sidebar-btn:hover {
+    background-color: #f1f3f5; /* Subtle hover effect */
+    transform: translateX(4px);
+}
+
+.one-ui-8-theme #sidebar .sidebar-btn.active {
+    background-color: var(--oneui-sidebar-active-bg-color);
+    color: var(--oneui-sidebar-active-text-color);
+    font-weight: 600;
+    transform: translateX(4px);
+}
+
+.one-ui-8-theme #sidebar .sidebar-btn.active .icon {
+    color: var(--oneui-sidebar-active-text-color);
+}
+
+/* Theme Switcher & other footer elements */
+.one-ui-8-theme #sidebar #theme-switcher {
+    background-color: #f1f3f5;
+    border: 1px solid transparent;
+    border-radius: var(--oneui-medium-border-radius);
+    color: var(--oneui-sidebar-text-color);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.one-ui-8-theme #sidebar #theme-switcher:focus {
+    border-color: var(--oneui-primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+.one-ui-8-theme #sidebar .border-t {
+    border-color: rgba(0, 0, 0, 0.05);
+}

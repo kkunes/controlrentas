@@ -1,0 +1,158 @@
+/* --- Samsung One UI 8 Theme --- */
+
+/* 1. Core Variables & Root Styles */
+:root {
+    --oneui-primary-color: #007bff;
+    --oneui-bg-color: #f7f9fc;
+    --oneui-card-bg-color: #ffffff;
+    --oneui-text-color: #333333;
+    --oneui-text-secondary-color: #555555;
+    --oneui-border-color: #e9e9e9;
+    --oneui-shadow-color: rgba(0, 0, 0, 0.06);
+    --oneui-font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --oneui-large-border-radius: 24px;
+    --oneui-medium-border-radius: 16px;
+    --oneui-small-border-radius: 12px;
+}
+
+body.one-ui-8-theme {
+    background-color: var(--oneui-bg-color);
+    color: var(--oneui-text-color);
+    font-family: var(--oneui-font-family);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 2. Main Content & Layout */
+.one-ui-8-theme main {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.one-ui-8-theme #contenido {
+    background-color: var(--oneui-card-bg-color);
+    border-radius: var(--oneui-large-border-radius);
+    border: 1px solid var(--oneui-border-color);
+    box-shadow: 0 4px 16px var(--oneui-shadow-color);
+    padding: 24px;
+    transition: all 0.3s ease;
+}
+
+/* 3. Typography */
+.one-ui-8-theme h1, .one-ui-8-theme h2, .one-ui-8-theme h3 {
+    font-weight: 600;
+    color: var(--oneui-text-color);
+}
+
+.one-ui-8-theme p {
+    color: var(--oneui-text-secondary-color);
+    line-height: 1.6;
+}
+
+/* 4. Floating Cards */
+.one-ui-8-theme .card {
+    background-color: var(--oneui-card-bg-color);
+    border-radius: var(--oneui-large-border-radius);
+    border: 1px solid var(--oneui-border-color);
+    box-shadow: 0 4px 12px var(--oneui-shadow-color);
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.one-ui-8-theme .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px var(--oneui-shadow-color);
+}
+
+/* 5. Buttons */
+.one-ui-8-theme .btn {
+    font-family: var(--oneui-font-family);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: var(--oneui-medium-border-radius);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    text-transform: none;
+}
+
+.one-ui-8-theme .btn-primary {
+    background-color: var(--oneui-primary-color);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.one-ui-8-theme .btn-primary:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+/* 6. Modal (Glassmorphism) */
+.one-ui-8-theme #miModal {
+    background-color: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease;
+}
+
+.one-ui-8-theme #modalContenido {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--oneui-large-border-radius);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    padding: 32px;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+}
+
+.one-ui-8-theme #miModal.flex #modalContenido {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* 7. Form Inputs */
+.one-ui-8-theme .form-control {
+    background-color: #f1f3f5;
+    border: 1px solid transparent;
+    border-radius: var(--oneui-medium-border-radius);
+    padding: 12px 16px;
+    font-size: 16px;
+    color: var(--oneui-text-color);
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.one-ui-8-theme .form-control:focus {
+    background-color: #fff;
+    border-color: var(--oneui-primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+    outline: none;
+}
+
+/* 8. Notification Effect */
+.one-ui-8-theme #notificacionContainer .notification {
+    position: relative;
+    border-radius: var(--oneui-medium-border-radius);
+    overflow: hidden;
+    border: 1px solid var(--oneui-border-color);
+    box-shadow: 0 4px 12px var(--oneui-shadow-color);
+    animation: notification-fade-in 0.5s ease;
+}
+
+.one-ui-8-theme #notificacionContainer .notification-light {
+    box-shadow: 0 0 0 2px var(--oneui-primary-color);
+    animation: notification-glow 1.5s infinite ease-in-out, notification-fade-in 0.5s ease;
+}
+
+@keyframes notification-fade-in {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes notification-glow {
+    0% { box-shadow: 0 0 4px 2px rgba(0, 123, 255, 0.3); }
+    50% { box-shadow: 0 0 16px 4px rgba(0, 123, 255, 0.5); }
+    100% { box-shadow: 0 0 4px 2px rgba(0, 123, 255, 0.3); }
+}
