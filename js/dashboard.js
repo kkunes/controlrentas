@@ -4,6 +4,7 @@ import { obtenerMesesAdeudadosHistorico } from './pagos.js';
 import { db } from './firebaseConfig.js';
 import { mostrarNotificacion } from './ui.js';
 import { mostrarInmuebles } from './inmuebles.js';
+import { cambiarEstadoCosto } from './mantenimientos.js';
 
 // Variable para evitar mostrar notificación al recargar
 const notificacionesIgnoradas = ["Asignaciones Actualizadas Correctamente"];
@@ -27,6 +28,152 @@ window.listaPagosProximos = [];
 window.listaPagosVencidos = [];
 
 import { mostrarRecordatoriosRenovacion } from './recordatorios.js';
+
+async function mostrarMantenimientosPendientes() {
+    const container = document.getElementById('mantenimientos-pendientes-container');
+    if (!container) {
+        console.error("Elemento 'mantenimientos-pendientes-container' no encontrado.");
+        return;
+    }
+
+    try {
+        const q = query(collection(db, "mantenimientos"), where("estado", "!=", "Completado"));
+        const querySnapshot = await getDocs(q);
+        const mantenimientos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const numPendientes = mantenimientos.length;
+
+        // Crear la ficha con el número de mantenimientos pendientes
+        const cardHtml = `
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" id="card-mantenimientos-pendientes">
+                <div class="flex flex-col items-center">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-md">
+                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M11.493 3.177a.75.75 0 011.06 0l3.18 3.18a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-3.18-3.18a.75.75 0 010-1.06l4.5-4.5zM12 15a1 1 0 100 2 1 1 0 000-2zm0 4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <p class="text-base sm:text-lg font-semibold text-yellow-700 text-center">Mantenimientos Pendientes</p>
+                    <p class="text-3xl sm:text-4xl font-bold text-yellow-800 mt-1 sm:mt-2">${numPendientes}</p>
+                </div>
+            </div>
+            <div id="mantenimientos-pendientes-lista" class="hidden"></div>
+        `;
+
+        container.innerHTML = cardHtml;
+
+        if (numPendientes > 0) {
+            document.getElementById('card-mantenimientos-pendientes').addEventListener('click', () => {
+                mostrarModalMantenimientos(mantenimientos);
+            });
+        }
+
+    } catch (error) {
+        console.error("Error al mostrar mantenimientos pendientes:", error);
+        container.innerHTML = '<p class="text-red-500">Error al cargar los mantenimientos.</p>';
+    }
+}
+
+async function mostrarModalMantenimientos(mantenimientos) {
+    const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+    const inmueblesMap = new Map();
+    inmueblesSnap.forEach(doc => {
+        inmueblesMap.set(doc.id, doc.data().nombre);
+    });
+
+    const getStatusInfo = (estado) => {
+        switch (estado) {
+            case 'Pendiente':
+                return { 
+                    gradient: 'from-amber-400 to-yellow-500', 
+                    text: 'text-white', 
+                    icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                };
+            case 'En Progreso':
+                return { 
+                    gradient: 'from-blue-400 to-indigo-500', 
+                    text: 'text-white', 
+                    icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 20h5v-5M20 4h-5v5"></path></svg>'
+                };
+            case 'Cancelado':
+                return { 
+                    gradient: 'from-red-500 to-rose-500', 
+                    text: 'text-white', 
+                    icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
+                };
+            default:
+                return { 
+                    gradient: 'from-gray-400 to-gray-500', 
+                    text: 'text-white', 
+                    icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4c0-1.193.52-2.267 1.343-3.072M12 6V3m0 18v-3"></path></svg>'
+                };
+        }
+    };
+
+    let modalContent = `
+        <div class="bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6 p-4 shadow-lg">
+            <div class="flex items-center justify-between">
+                <h3 class="text-2xl font-bold flex items-center">
+                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.493 3.177a.75.75 0 011.06 0l3.18 3.18a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-3.18-3.18a.75.75 0 010-1.06l4.5-4.5zM12 15a1 1 0 100 2 1 1 0 000-2zm0 4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+                    </svg>
+                    Mantenimientos Pendientes
+                </h3>
+                <button onclick="ocultarModal()" class="text-gray-300 hover:text-white transition-colors duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 maintenance-cards-container">
+    `;
+
+    if (mantenimientos.length === 0) {
+        modalContent += `
+            <div class="col-span-full flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg">
+                <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-xl text-gray-600 font-medium">No hay mantenimientos pendientes.</p>
+            </div>
+        `;
+    } else {
+        mantenimientos.forEach((mantenimiento, index) => {
+            const nombreInmueble = inmueblesMap.get(mantenimiento.inmuebleId) || 'Inmueble no especificado';
+            const statusInfo = getStatusInfo(mantenimiento.estado);
+            modalContent += `
+                <div class="maintenance-card bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300" style="animation-delay: ${index * 100}ms">
+                    <div class="p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-xl font-bold text-gray-800 flex items-center">
+                                <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                                ${nombreInmueble}
+                            </h4>
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-gradient-to-r ${statusInfo.gradient} ${statusInfo.text} shadow-md animate-pulse">
+                                ${mantenimiento.estado}
+                            </span>
+                        </div>
+                        <p class="text-gray-600 mb-4">${mantenimiento.descripcion}</p>
+                        <div class="border-t border-gray-200 pt-4 space-y-3 text-sm">
+                            <p class="flex items-center"><svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="font-semibold mr-2">Costo:</span> ${mantenimiento.costo || 0}</p>
+                            <p class="flex items-center"><svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg><span class="font-semibold mr-2">Pagado por:</span> ${mantenimiento.pagadoPor || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-5 py-3 flex justify-end">
+                        <button class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 transform hover:translate-y-px shadow-md" onclick="cambiarEstadoCosto('${mantenimiento.id}')">
+                            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg>
+                            Editar
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    modalContent += '</div>';
+    mostrarModal(modalContent, true);
+}
+
 
 export async function mostrarDashboard() {
     // Sobrescribir temporalmente la función mostrarNotificacion para evitar la notificación específica
@@ -615,6 +762,14 @@ proximoPago.setHours(0, 0, 0, 0);
                             </div>
                         </div>
                     </div>
+
+                    <!-- Mantenimientos Pendientes -->
+                    <div id="mantenimientos-pendientes-container" class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 mb-8">
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center sm:text-left">Mantenimientos Pendientes</h3>
+                        <div id="mantenimientos-pendientes-lista" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Las tarjetas de mantenimientos se insertarán aquí -->
+                        </div>
+                    </div>
                     
                     <!-- Recordatorios de Renovación de Contratos -->
                     <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-yellow-100">
@@ -647,6 +802,7 @@ proximoPago.setHours(0, 0, 0, 0);
                 </div>
             </div>
         `;
+        mostrarMantenimientosPendientes();
     } catch (error) {
         console.error("Error al cargar el dashboard:", error);
         mostrarNotificacion("Error al cargar el dashboard.", 'error');
@@ -677,6 +833,7 @@ export async function mostrarInmueblesFiltrados(estado) {
 
 window.mostrarInmueblesFiltrados = mostrarInmueblesFiltrados;
 
+window.cambiarEstadoCosto = cambiarEstadoCosto;
 window.mostrarListaPagosDashboard = function(tipo) {
     console.log(`Mostrando lista de pagos tipo: ${tipo}`);
     
@@ -1019,22 +1176,49 @@ window.mostrarListaPagosDashboard = function(tipo) {
 };
 
 // Asegurarse de que la función mostrarModal esté definida
-window.mostrarModal = function(contenido) {
-    // Crear el contenedor del modal si no existe
+window.mostrarModal = function(contenido, animated = false) {
     let modalContainer = document.getElementById('modal-container');
     if (!modalContainer) {
         modalContainer = document.createElement('div');
         modalContainer.id = 'modal-container';
-        modalContainer.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
         document.body.appendChild(modalContainer);
     }
 
-    // Crear el contenido del modal
+    modalContainer.className = `fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4`;
+    
+    const animationClasses = animated ? 'animate-fade-in-up' : '';
+
     modalContainer.innerHTML = `
-        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-lg bg-white">
-            ${contenido}
+        <div id="modal-content" class="relative mx-auto shadow-2xl rounded-xl bg-gray-50 w-11/12 md:w-4/5 lg:w-3/4 max-w-4xl ${animationClasses}">
+            <div class="p-6">
+                ${contenido}
+            </div>
         </div>
     `;
+
+    // Add CSS for animations if not already present
+    if (!document.getElementById('modal-animations')) {
+        const style = document.createElement('style');
+        style.id = 'modal-animations';
+        style.innerHTML = `
+            @keyframes fade-in-up {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in-up {
+                animation: fade-in-up 0.5s ease-out forwards;
+            }
+            .maintenance-card {
+                opacity: 0;
+                transform: translateY(20px);
+                animation: fade-in-up 0.5s ease-out forwards;
+            }
+            .maintenance-cards-container {
+                perspective: 1000px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 };
 
 // Asegurarse de que la función ocultarModal esté definida
@@ -1044,3 +1228,4 @@ window.ocultarModal = function() {
         modalContainer.remove();
     }
 };
+window.cambiarEstadoCosto = cambiarEstadoCosto;

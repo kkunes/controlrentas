@@ -289,13 +289,13 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                         <label for="busquedaInquilino" class="text-xs text-gray-600 mb-1">Buscar inquilino:</label>
                         <div class="relative">
                             <input type="text" id="busquedaInquilino" placeholder="Buscar por nombre o teléfono..." 
-                                class="border-gray-300 rounded-lg pl-8 pr-2 py-2 w-72 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                class="form-control pl-8 pr-2 py-2 w-72">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
                     </div>
-                    <select id="filtroActivo" class="border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                    <select id="filtroActivo" class="form-control">
                         <option value="Todos" ${filtroActivo === "Todos" ? "selected" : ""}>Todos los inquilinos</option>
                         <option value="Activos" ${filtroActivo === "Activos" ? "selected" : ""}>Inquilinos activos</option>
                         <option value="Inactivos" ${filtroActivo === "Inactivos" ? "selected" : ""}>Inquilinos inactivos</option>
@@ -660,11 +660,11 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="nombre" class="block text-base font-medium text-gray-700 mb-2">Nombre Completo</label>
-                        <input type="text" id="nombre" name="nombre" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${inquilino ? inquilino.nombre : ''}" placeholder="Ej: Juan Pérez" required>
+                        <input type="text" id="nombre" name="nombre" class="form-control" value="${inquilino ? inquilino.nombre : ''}" placeholder="Ej: Juan Pérez" required>
                     </div>
                     <div>
                         <label for="telefono" class="block text-base font-medium text-gray-700 mb-2">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${inquilino ? inquilino.telefono : ''}" placeholder="Ej: +52 123 456 7890" required>
+                        <input type="tel" id="telefono" name="telefono" class="form-control" value="${inquilino ? inquilino.telefono : ''}" placeholder="Ej: +52 123 456 7890" required>
                     </div>
                 </div>
             </div>
@@ -680,12 +680,12 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="fechaLlegada" class="block text-base font-medium text-gray-700 mb-2">Fecha de Llegada</label>
-                        <input type="date" id="fechaLlegada" name="fechaLlegada" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4"
+                        <input type="date" id="fechaLlegada" name="fechaLlegada" class="form-control"
                             value="${inquilino && inquilino.fechaLlegada ? inquilino.fechaLlegada : ''}" required>
                     </div>
                     <div>
                         <label for="fechaOcupacion" class="block text-base font-medium text-gray-700 mb-2">Fecha de Ocupación</label>
-                        <input type="date" id="fechaOcupacion" name="fechaOcupacion" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4"
+                        <input type="date" id="fechaOcupacion" name="fechaOcupacion" class="form-control"
                             value="${inquilino && inquilino.fechaOcupacion ? inquilino.fechaOcupacion : ''}" required>
                     </div>
                 </div>
@@ -701,7 +701,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 </h4>
                 <div>
                     <label for="urlIdentificacion" class="block text-base font-medium text-gray-700 mb-2">URL de Identificación</label>
-                    <input type="url" id="urlIdentificacion" name="urlIdentificacion" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${inquilino && inquilino.urlIdentificacion ? inquilino.urlIdentificacion : ''}" placeholder="Ej: https://docs.google.com/d/abc123xyz">
+                    <input type="url" id="urlIdentificacion" name="urlIdentificacion" class="form-control" value="${inquilino && inquilino.urlIdentificacion ? inquilino.urlIdentificacion : ''}" placeholder="Ej: https://docs.google.com/d/abc123xyz">
                     <p class="mt-2 text-sm text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
                 </div>
             </div>
@@ -716,7 +716,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 </h4>
                 <div>
                     <label for="inmuebleAsociadoId" class="block text-base font-medium text-gray-700 mb-2">Inmueble Asociado</label>
-                    <select id="inmuebleAsociadoId" name="inmuebleAsociadoId" class="mt-1 block w-full pl-4 pr-10 py-3 sm:py-3.5 text-base border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <select id="inmuebleAsociadoId" name="inmuebleAsociadoId" class="form-control">
                         <option value="">Ninguno</option>
                         ${inmueblesOptions}
                     </select>
@@ -754,7 +754,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio</label>
-                                                <select name="servicios[${index}][tipo]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                                <select name="servicios[${index}][tipo]" class="form-control">
                                                     <option value="Internet" ${servicio.tipo === 'Internet' ? 'selected' : ''}>Internet</option>
                                                     <option value="Cable" ${servicio.tipo === 'Cable' ? 'selected' : ''}>Cable</option>
                                                     <option value="Agua" ${servicio.tipo === 'Agua' ? 'selected' : ''}>Agua</option>
@@ -770,7 +770,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                                                         <span class="text-gray-500 sm:text-sm">$</span>
                                                     </div>
                                                     <input type="number" name="servicios[${index}][monto]" step="0.01" min="0" 
-                                                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md py-2" 
+                                                        class="form-control pl-7 pr-12" 
                                                         placeholder="0.00" 
                                                         value="${servicio.monto || ''}">
                                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -782,7 +782,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                                         <div class="mt-3">
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
                                             <textarea name="servicios[${index}][notas]" rows="2" 
-                                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                class="form-control"
                                                 placeholder="Detalles adicionales sobre el servicio">${servicio.notas || ''}</textarea>
                                         </div>
                                     </div>
@@ -826,11 +826,11 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                     <div id="campoDeposito" style="display:${campoDepositoDisplay};" class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
                         <div>
                             <label for="montoDeposito" class="block text-base font-medium text-gray-700 mb-2">Monto del depósito</label>
-                            <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${montoDepositoValue}">
+                            <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="form-control" value="${montoDepositoValue}">
                         </div>
                         <div>
                             <label for="fechaDeposito" class="block text-base font-medium text-gray-700 mb-2">Fecha del depósito</label>
-                            <input type="date" id="fechaDeposito" name="fechaDeposito" class="mt-1 block w-full shadow-sm text-base border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-3 sm:py-3.5 px-4" value="${fechaDepositoValue}">
+                            <input type="date" id="fechaDeposito" name="fechaDeposito" class="form-control" value="${fechaDepositoValue}">
                         </div>
                     </div>
                 </div>
@@ -1527,7 +1527,7 @@ function agregarServicioAlFormulario() {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio</label>
-                <select name="servicios[${nuevoIndice}][tipo]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <select name="servicios[${nuevoIndice}][tipo]" class="form-control">
                     <option value="Internet">Internet</option>
                     <option value="Cable">Cable</option>
                     <option value="Agua">Agua</option>
@@ -1543,7 +1543,7 @@ function agregarServicioAlFormulario() {
                         <span class="text-gray-500 sm:text-sm">$</span>
                     </div>
                     <input type="number" name="servicios[${nuevoIndice}][monto]" step="0.01" min="0" 
-                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md py-2" 
+                        class="form-control pl-7 pr-12" 
                         placeholder="0.00">
                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <span class="text-gray-500 sm:text-sm">MXN</span>
@@ -1554,7 +1554,7 @@ function agregarServicioAlFormulario() {
         <div class="mt-3">
             <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
             <textarea name="servicios[${nuevoIndice}][notas]" rows="2" 
-                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md"
+                class="form-control"
                 placeholder="Detalles adicionales sobre el servicio"></textarea>
         </div>
     `;

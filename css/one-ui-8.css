@@ -15,7 +15,7 @@
     --oneui-small-border-radius: 12px;
 }
 
-body.one-ui-8-theme {
+body {
     background-color: var(--oneui-bg-color);
     color: var(--oneui-text-color);
     font-family: var(--oneui-font-family);
@@ -23,11 +23,11 @@ body.one-ui-8-theme {
 }
 
 /* 2. Main Content & Layout */
-.one-ui-8-theme main {
+main {
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.one-ui-8-theme #contenido {
+#contenido {
     background-color: var(--oneui-card-bg-color);
     border-radius: var(--oneui-large-border-radius);
     border: 1px solid var(--oneui-border-color);
@@ -37,18 +37,18 @@ body.one-ui-8-theme {
 }
 
 /* 3. Typography */
-.one-ui-8-theme h1, .one-ui-8-theme h2, .one-ui-8-theme h3 {
+h1, h2, h3 {
     font-weight: 600;
     color: var(--oneui-text-color);
 }
 
-.one-ui-8-theme p {
+p {
     color: var(--oneui-text-secondary-color);
     line-height: 1.6;
 }
 
 /* 4. Floating Cards */
-.one-ui-8-theme .card {
+.card {
     background-color: var(--oneui-card-bg-color);
     border-radius: var(--oneui-large-border-radius);
     border: 1px solid var(--oneui-border-color);
@@ -58,13 +58,13 @@ body.one-ui-8-theme {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.one-ui-8-theme .card:hover {
+.card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px var(--oneui-shadow-color);
 }
 
 /* 5. Buttons */
-.one-ui-8-theme .btn {
+.btn {
     font-family: var(--oneui-font-family);
     font-size: 16px;
     font-weight: 600;
@@ -76,26 +76,26 @@ body.one-ui-8-theme {
     text-transform: none;
 }
 
-.one-ui-8-theme .btn-primary {
+.btn-primary {
     background-color: var(--oneui-primary-color);
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
-.one-ui-8-theme .btn-primary:hover {
+.btn-primary:hover {
     background-color: #0056b3;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
 }
 
 /* 6. Modal (Glassmorphism) */
-.one-ui-8-theme #miModal {
+#miModal {
     background-color: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(5px);
     transition: opacity 0.3s ease;
 }
 
-.one-ui-8-theme #modalContenido {
+#modalContenido {
     background-color: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -107,13 +107,13 @@ body.one-ui-8-theme {
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
 }
 
-.one-ui-8-theme #miModal.flex #modalContenido {
+#miModal.flex #modalContenido {
     transform: scale(1);
     opacity: 1;
 }
 
 /* 7. Form Inputs */
-.one-ui-8-theme .form-control {
+.form-control {
     background-color: #f1f3f5;
     border: 1px solid transparent;
     border-radius: var(--oneui-medium-border-radius);
@@ -124,7 +124,7 @@ body.one-ui-8-theme {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.one-ui-8-theme .form-control:focus {
+.form-control:focus {
     background-color: #fff;
     border-color: var(--oneui-primary-color);
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
@@ -132,7 +132,7 @@ body.one-ui-8-theme {
 }
 
 /* 8. Notification Effect */
-.one-ui-8-theme #notificacionContainer .notification {
+#notificacionContainer .notification {
     position: relative;
     border-radius: var(--oneui-medium-border-radius);
     overflow: hidden;
@@ -141,7 +141,7 @@ body.one-ui-8-theme {
     animation: notification-fade-in 0.5s ease;
 }
 
-.one-ui-8-theme #notificacionContainer .notification-light {
+#notificacionContainer .notification-light {
     box-shadow: 0 0 0 2px var(--oneui-primary-color);
     animation: notification-glow 1.5s infinite ease-in-out, notification-fade-in 0.5s ease;
 }

@@ -274,7 +274,7 @@ inmueblesList.forEach(inmueble => {
                         <label for="busquedaInmueble" class="text-xs text-gray-600 mb-1">Buscar inmueble:</label>
                         <div class="relative">
                             <input type="text" id="busquedaInmueble" placeholder="Buscar por nombre o dirección..." 
-                                class="border-gray-300 rounded pl-8 pr-2 py-1 w-72">
+                                class="form-control pl-8 pr-2 py-1 w-72">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
@@ -282,13 +282,13 @@ inmueblesList.forEach(inmueble => {
                     </div>
                     <div class="flex flex-col">
                         <label for="filtroTipo" class="text-xs text-gray-600 mb-1">Filtrar por tipo:</label>
-                        <select id="filtroTipo" class="border-gray-300 rounded px-2 py-1">
+                        <select id="filtroTipo" class="form-control">
                             ${tipos.map(tipo => `<option value="${tipo}" ${tipo === (tipoFiltro || "Todos") ? "selected" : ""}>${tipo}</option>`).join('')}
                         </select>
                     </div>
                     <div class="flex flex-col">
                         <label for="filtroEstado" class="text-xs text-gray-600 mb-1">Filtrar por estado:</label>
-                        <select id="filtroEstado" class="border-gray-300 rounded px-2 py-1">
+                        <select id="filtroEstado" class="form-control">
                             ${estados.map(estado => `<option value="${estado}" ${estado === (estadoFiltro || "Todos") ? "selected" : ""}>${estado}</option>`).join('')}
                         </select>
                     </div>

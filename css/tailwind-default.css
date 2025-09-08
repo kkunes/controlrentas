@@ -80,22 +80,7 @@ button:active, .btn-fluent-base:active {
     background-color: #dc2626; /* Red 600 */
 }
 
-input, select, textarea, .form-input, .form-select, .form-textarea {
-  width: 100%;
-  padding: 0.75rem; /* Tailwind's p-3 */
-  border: 1px solid #d1d5db; /* Gray 300 */
-  border-radius: var(--tailwind-border-radius);
-  background-color: var(--tailwind-surface);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-  transition: all 0.2s ease;
-  color: var(--tailwind-text);
-}
 
-input:focus, select:focus, textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
-  outline: none;
-  border-color: var(--tailwind-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* focus:ring-indigo-200 */
-}
 
 #miModal {
   background-color: rgba(0, 0, 0, 0.5);

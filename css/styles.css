@@ -28,6 +28,11 @@
   
   /* Transiciones */
   --fluent-transition: cubic-bezier(0.1, 0.9, 0.2, 1);
+
+  /* One UI variables */
+  --oneui-primary-color: #007bff;
+  --oneui-text-color: #333333;
+  --oneui-medium-border-radius: 16px;
 }
 
 /* Animaciones Fluent */
@@ -627,31 +632,7 @@
   margin-bottom: 8px;
 }
 
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--fluent-stroke);
-  border-radius: var(--fluent-radius-sm);
-  font-size: 14px;
-  background: var(--fluent-surface);
-  color: var(--fluent-text);
-  transition: all 0.2s var(--fluent-transition);
-}
 
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--fluent-accent);
-  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
 
 /* Tablas estilo Fluent */
 .tabla-container {
@@ -1129,4 +1110,22 @@ button.text-sm {
 
 #sidebar.abierto {
   animation: slideIn 0.3s ease-out forwards;
+}
+
+.form-control {
+    background-color: #f1f3f5;
+    border: 1px solid transparent;
+    border-radius: var(--oneui-medium-border-radius);
+    padding: 12px 16px;
+    font-size: 16px;
+    color: var(--oneui-text-color);
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    background-color: #fff;
+    border-color: var(--oneui-primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+    outline: none;
 }

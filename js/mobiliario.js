@@ -200,12 +200,12 @@ export async function mostrarInventarioMobiliario() {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
                         <input type="text" id="filtroBusqueda" placeholder="Buscar por nombre..." 
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            class="form-control">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
                         <select id="filtroEstado" 
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            class="form-control">
                             <option value="">Todos</option>
                             <option value="disponible">Disponible</option>
                             <option value="parcialmente_asignado">Parcialmente Asignado</option>
@@ -215,7 +215,7 @@ export async function mostrarInventarioMobiliario() {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Condición</label>
                         <select id="filtroCondicion" 
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            class="form-control">
                             <option value="">Todas</option>
                             <option value="excelente">Excelente</option>
                             <option value="buena">Buena</option>
@@ -434,7 +434,7 @@ export function mostrarFormularioNuevoMueble() {
                         Nombre *
                     </label>
                     <input type="text" id="nombreMueble" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        class="form-control">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -444,7 +444,7 @@ export function mostrarFormularioNuevoMueble() {
                         Costo de Renta *
                     </label>
                     <input type="number" id="costoRentaMueble" min="0" step="0.01" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        class="form-control">
                 </div>
             </div>
             <div class="space-y-2">
@@ -455,7 +455,7 @@ export function mostrarFormularioNuevoMueble() {
                     Descripción
                 </label>
                 <textarea id="descripcionMueble" rows="3" 
-                    class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700" 
+                    class="form-control" 
                     placeholder="Descripción detallada del mobiliario..."></textarea>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -467,7 +467,7 @@ export function mostrarFormularioNuevoMueble() {
                         Cantidad *
                     </label>
                     <input type="number" id="cantidadMueble" min="1" required 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        class="form-control">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -477,7 +477,7 @@ export function mostrarFormularioNuevoMueble() {
                         Condición
                     </label>
                     <select id="condicionMueble" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        class="form-control">
                         <option value="excelente">Excelente</option>
                         <option value="buena" selected>Buena</option>
                         <option value="regular">Regular</option>
@@ -579,7 +579,7 @@ window.editarMueble = async function(id) {
                             Nombre *
                         </label>
                         <input type="text" id="nombreMuebleEdit" value="${mueble.nombre}" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                            class="form-control">
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -589,7 +589,7 @@ window.editarMueble = async function(id) {
                             Costo de Renta *
                         </label>
                         <input type="number" id="costoRentaMuebleEdit" value="${mueble.costoRenta}" min="0" step="0.01" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                            class="form-control">
                     </div>
                 </div>
                 <div class="space-y-2">
@@ -600,7 +600,7 @@ window.editarMueble = async function(id) {
                         Descripción
                     </label>
                     <textarea id="descripcionMuebleEdit" rows="3" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">${mueble.descripcion || ''}</textarea>
+                        class="form-control">${mueble.descripcion || ''}</textarea>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
@@ -611,7 +611,7 @@ window.editarMueble = async function(id) {
                             Cantidad Total *
                         </label>
                         <input type="number" id="cantidadMuebleEdit" value="${mueble.cantidad || 1}" min="${mueble.cantidadAsignada || 0}" required 
-                            class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                            class="form-control">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700 flex items-center">
@@ -621,7 +621,7 @@ window.editarMueble = async function(id) {
                         Condición
                     </label>
                     <select id="condicionMuebleEdit" 
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        class="form-control">
                         <option value="excelente" ${mueble.condicion === 'excelente' ? 'selected' : ''}>Excelente</option>
                         <option value="buena" ${mueble.condicion === 'buena' ? 'selected' : ''}>Buena</option>
                         <option value="regular" ${mueble.condicion === 'regular' ? 'selected' : ''}>Regular</option>
@@ -802,7 +802,7 @@ window.asignarMueble = async function(id) {
                         Inquilino *
                     </label>
                     <select id="inquilinoAsignar" required
-                        class="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700">
+                        class="form-control">
                         <option value="">Selecciona un inquilino</option>
                         ${inquilinos.map(inquilino => `
                             <option value="${inquilino.id}">
