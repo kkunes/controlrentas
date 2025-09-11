@@ -456,6 +456,16 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
         </div>
     `).join('') || '';
 
+    let costoManoObraParaFormulario = '';
+    if (mantenimiento) {
+        if (mantenimiento.costo_mano_obra !== undefined) {
+            costoManoObraParaFormulario = mantenimiento.costo_mano_obra;
+        } else {
+            const costoMateriales = (mantenimiento.materiales || []).reduce((acc, mat) => acc + (mat.costo || 0), 0);
+            costoManoObraParaFormulario = (mantenimiento.costo || 0) - costoMateriales;
+        }
+    }
+
     const modalContent = `
         <div class="relative">
             <!-- Botón X para cerrar -->
@@ -515,7 +525,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                                 Descripción
                             </label>
                             <textarea id="descripcion" name="descripcion" rows="3" 
-                                class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" 
+                                class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200"
                                 placeholder="Breve descripción del mantenimiento realizado." required>${mantenimiento?.descripcion ?? ''}</textarea>
                         </div>
                     </div>
@@ -534,7 +544,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                                 <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-gray-500">$</span>
                                 <input type="number" id="costo" name="costo" step="0.01" 
                                     class="block w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" 
-                                    value="${mantenimiento?.costo ?? ''}" placeholder="0.00" required>
+                                    value="${costoManoObraParaFormulario}" placeholder="0.00" required>
                             </div>
                         </div>
                         <div>
@@ -700,8 +710,8 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
 
         data.materiales = materiales;
         
-        // Asegurarse de que el costo es un número
         const costoManoObra = parseFloat(data.costo);
+        data.costo_mano_obra = costoManoObra;
         data.costo = costoManoObra + costoMateriales;
 
 
@@ -964,7 +974,7 @@ export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmueble
 
         let tablaHistorialMantenimientoHtml = ""; // Cambiado a tablaHistorialMantenimientoHtml
         if (mantenimientosList.length === 0) {
-            tablaHistorialMantenimientoHtml = `<tr><td colspan=\"5\" class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center\">No hay mantenimientos registrados para este inmueble.</td></tr>`;
+            tablaHistorialMantenimientoHtml = `<tr><td colspan=\"5\" class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No hay mantenimientos registrados para este inmueble.</td></tr>`;
         } else {
             tablaHistorialMantenimientoHtml = mantenimientosList.map(mantenimiento => {
                 // Clases para estilo de 'chip' para Prioridad
@@ -1100,4 +1110,3 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh, callback
         }
     }
 }
-
