@@ -326,6 +326,12 @@ export async function mostrarMantenimientos() {
                 tbody.innerHTML = filtrados.map(m => {
                     let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Urgente:"bg-red-100 text-red-800",Alta:"bg-orange-100 text-orange-800",Media:"bg-yellow-100 text-yellow-800",Baja:"bg-green-100 text-green-800"}[m.prioridad] || "bg-gray-100 text-gray-800");
                     let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Pendiente:"bg-red-100 text-red-800","En Progreso":"bg-yellow-100 text-yellow-800",Completado:"bg-green-100 text-green-800",Cancelado:"bg-gray-100 text-gray-800"}[m.estado] || "bg-gray-100 text-gray-800");
+                    const materialesBtn = m.materiales && m.materiales.length > 0 ? `
+                        <button onclick="mostrarMaterialesMantenimiento('${m.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded-md text-xs flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            Ver Materiales
+                        </button>
+                    ` : '';
                     return `
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
                             <td class="px-3 py-2 text-sm text-gray-800">${m.nombreInmueble}</td>
@@ -339,6 +345,7 @@ export async function mostrarMantenimientos() {
                             <td class="px-3 py-2 text-sm text-gray-800">${m.pagadoPor}</td>
                             <td class="px-3 py-2 text-sm text-right">
                                 <div class="flex flex-wrap justify-end gap-1">
+                                    ${materialesBtn}
                                     <button onclick="editarMantenimiento('${m.id}')" class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Editar</button>
                                     <button onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Eliminar</button>
                                     ${m.estado !== 'Completado' ? `
@@ -376,6 +383,10 @@ export async function mostrarMantenimientos() {
             document.getElementById('filtroAnio').value = anioActual;
         }
         renderTablaMantenimientos();
+        window.mostrarMaterialesMantenimiento = mostrarMaterialesMantenimiento;
+        window.editarMantenimiento = editarMantenimiento;
+        window.eliminarDocumento = eliminarDocumento;
+        window.cambiarEstadoCosto = cambiarEstadoCosto;
     } catch (error) {
         console.error("Error al obtener mantenimientos:", error);
         mostrarNotificacion("Error al cargar los mantenimientos.", 'error');
@@ -436,6 +447,14 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
             ${est}
         </option>
     `).join('');
+    
+    const materialesHtml = mantenimiento?.materiales?.map((material, index) => `
+        <div class="flex items-center gap-2 material-entry">
+            <input type="text" name="material_nombre_${index}" placeholder="Nombre del material" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${material.nombre}" required>
+            <input type="number" name="material_costo_${index}" placeholder="Costo" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${material.costo}" step="0.01" required>
+            <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">Eliminar</button>
+        </div>
+    `).join('') || '';
 
     const modalContent = `
         <div class="relative">
@@ -509,7 +528,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                                 <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                Costo
+                                Costo de Mano de Obra
                             </label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-gray-500">$</span>
@@ -533,6 +552,12 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                         </select>
                     </div>
                 </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <h4 class="text-lg font-medium text-gray-800 mb-2">Materiales</h4>
+                <div id="materiales-container" class="space-y-2">${materialesHtml}</div>
+                <button type="button" id="btn-agregar-material" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm">Agregar Material</button>
             </div>
 
             <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
@@ -609,6 +634,19 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
 
     mostrarModal(modalContent);
 
+    document.getElementById('btn-agregar-material').addEventListener('click', () => {
+        const container = document.getElementById('materiales-container');
+        const index = container.children.length;
+        const newMaterialEntry = document.createElement('div');
+        newMaterialEntry.className = 'flex items-center gap-2 material-entry';
+        newMaterialEntry.innerHTML = `
+            <input type="text" name="material_nombre_${index}" placeholder="Nombre del material" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" required>
+            <input type="number" name="material_costo_${index}" placeholder="Costo" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" step="0.01" required>
+            <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">Eliminar</button>
+        `;
+        container.appendChild(newMaterialEntry);
+    });
+
     // Responsividad extra para el modal
     const modalStyle = document.createElement('style');
     modalStyle.innerHTML = `
@@ -647,9 +685,25 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
 
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
+        
+        const materiales = [];
+        const materialEntries = document.querySelectorAll('.material-entry');
+        let costoMateriales = 0;
+        materialEntries.forEach((entry, index) => {
+            const nombre = formData.get(`material_nombre_${index}`);
+            const costo = parseFloat(formData.get(`material_costo_${index}`));
+            if (nombre && !isNaN(costo)) {
+                materiales.push({ nombre, costo });
+                costoMateriales += costo;
+            }
+        });
 
+        data.materiales = materiales;
+        
         // Asegurarse de que el costo es un número
-        data.costo = parseFloat(data.costo);
+        const costoManoObra = parseFloat(data.costo);
+        data.costo = costoManoObra + costoMateriales;
+
 
         try {
             if (id) {
@@ -666,6 +720,66 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
             mostrarNotificacion("Error al guardar el mantenimiento.", 'error');
         }
     });
+}
+
+/**
+ * Muestra los materiales de un mantenimiento en un modal.
+ * @param {string} id - ID del mantenimiento.
+ */
+export async function mostrarMaterialesMantenimiento(id) {
+    try {
+        const docSnap = await getDoc(doc(db, "mantenimientos", id));
+        if (docSnap.exists()) {
+            const mantenimiento = docSnap.data();
+            const materiales = mantenimiento.materiales || [];
+            let totalCostoMateriales = 0;
+
+            const materialesHtml = materiales.map(material => {
+                totalCostoMateriales += material.costo;
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2 text-sm text-gray-700">${material.nombre}</td>
+                        <td class="px-4 py-2 text-sm text-gray-800 font-medium">${material.costo.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const modalContent = `
+                <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                    <h3 class="text-2xl font-bold text-center">Materiales Utilizados</h3>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 mb-4">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${materialesHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 text-center">
+                     <p class="text-lg font-semibold text-gray-700">Costo Total de Materiales:</p>
+                     <p class="text-2xl font-bold text-gray-900 mt-1">${totalCostoMateriales.toFixed(2)}</p>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button type="button" onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm">Cerrar</button>
+                </div>
+            `;
+
+            mostrarModal(modalContent);
+        } else {
+            mostrarNotificacion("Mantenimiento no encontrado.", 'error');
+        }
+    } catch (error) {
+        console.error("Error al mostrar los materiales:", error);
+        mostrarNotificacion("Error al cargar los materiales.", 'error');
+    }
 }
 
 /**

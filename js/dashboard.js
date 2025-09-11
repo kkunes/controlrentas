@@ -30,9 +30,9 @@ window.listaPagosVencidos = [];
 import { mostrarRecordatoriosRenovacion } from './recordatorios.js';
 
 async function mostrarMantenimientosPendientes() {
-    const container = document.getElementById('mantenimientos-pendientes-container');
+    const container = document.getElementById('mantenimientos-pendientes-lista');
     if (!container) {
-        console.error("Elemento 'mantenimientos-pendientes-container' no encontrado.");
+        console.error("Elemento 'mantenimientos-pendientes-lista' no encontrado.");
         return;
     }
 
@@ -56,15 +56,17 @@ async function mostrarMantenimientosPendientes() {
                     <p class="text-3xl sm:text-4xl font-bold text-yellow-800 mt-1 sm:mt-2">${numPendientes}</p>
                 </div>
             </div>
-            <div id="mantenimientos-pendientes-lista" class="hidden"></div>
         `;
 
         container.innerHTML = cardHtml;
 
         if (numPendientes > 0) {
-            document.getElementById('card-mantenimientos-pendientes').addEventListener('click', () => {
-                mostrarModalMantenimientos(mantenimientos);
-            });
+            const cardElement = document.getElementById('card-mantenimientos-pendientes');
+            if (cardElement) {
+                cardElement.addEventListener('click', () => {
+                    mostrarModalMantenimientos(mantenimientos);
+                });
+            }
         }
 
     } catch (error) {
