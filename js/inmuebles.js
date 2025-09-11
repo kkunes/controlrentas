@@ -375,8 +375,9 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
     const tituloModal = id ? "Editar Inmueble" : "Registrar Nuevo Inmueble";
     const coloresPinturaHtml = inmueble?.coloresPintura?.map((color, index) => `
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-2 color-entry mb-2 items-center">
+        <div class="grid grid-cols-1 md:grid-cols-7 gap-2 color-entry mb-2 items-center">
             <input type="text" name="color_area_${index}" placeholder="Área" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.area || ''}" required>
+            <input type="text" name="color_zona_${index}" placeholder="Zona" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.zona || ''}">
             <input type="text" name="color_marca_${index}" placeholder="Marca" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.marca || ''}">
             <input type="text" name="color_linea_${index}" placeholder="Línea" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.linea || ''}">
             <input type="text" name="color_nombre_${index}" placeholder="Nombre del color" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.color}" required>
@@ -660,9 +661,10 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
         const container = document.getElementById('colores-pintura-container');
         const index = container.children.length;
         const newColorEntry = document.createElement('div');
-        newColorEntry.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 color-entry mb-2 items-center';
+        newColorEntry.className = 'grid grid-cols-1 md:grid-cols-7 gap-2 color-entry mb-2 items-center';
         newColorEntry.innerHTML = `
             <input type="text" name="color_area_${index}" placeholder="Área" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" required>
+            <input type="text" name="color_zona_${index}" placeholder="Zona" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">
             <input type="text" name="color_marca_${index}" placeholder="Marca" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">
             <input type="text" name="color_linea_${index}" placeholder="Línea" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">
             <input type="text" name="color_nombre_${index}" placeholder="Nombre del color" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" required>
@@ -716,12 +718,13 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
         const colorEntries = document.querySelectorAll('.color-entry');
         colorEntries.forEach((entry, index) => {
             const area = formData.get(`color_area_${index}`);
+            const zona = formData.get(`color_zona_${index}`);
             const marca = formData.get(`color_marca_${index}`);
             const linea = formData.get(`color_linea_${index}`);
             const color = formData.get(`color_nombre_${index}`);
             const codigo = formData.get(`color_codigo_${index}`);
             if (area && color) {
-                coloresPintura.push({ area, marca, linea, color, codigo });
+                coloresPintura.push({ area, zona, marca, linea, color, codigo });
             }
         });
         data.coloresPintura = coloresPintura;
@@ -762,6 +765,7 @@ export async function mostrarColoresPintura(id) {
             const coloresHtml = colores.map(c => `
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-2 text-base font-bold text-gray-700">${c.area}</td>
+                    <td class="px-4 py-2 text-base font-bold text-gray-700">${c.zona || ''}</td>
                     <td class="px-4 py-2 text-base font-bold text-gray-800">${c.marca || '-'}</td>
                     <td class="px-4 py-2 text-base font-bold text-gray-800">${c.linea || '-'}</td>
                     <td class="px-4 py-2 text-base font-bold text-gray-800">${c.color}</td>
@@ -779,6 +783,7 @@ export async function mostrarColoresPintura(id) {
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zona</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Línea</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
@@ -786,7 +791,7 @@ export async function mostrarColoresPintura(id) {
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                ${coloresHtml.length > 0 ? coloresHtml : '<tr><td colspan="5" class="text-center py-4">No hay colores registrados.</td></tr>'}
+                                ${coloresHtml.length > 0 ? coloresHtml : '<tr><td colspan="6" class="text-center py-4">No hay colores registrados.</td></tr>'}
                             </tbody>
                         </table>
                     </div>
