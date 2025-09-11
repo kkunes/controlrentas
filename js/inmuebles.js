@@ -239,6 +239,14 @@ inmueblesList.forEach(inmueble => {
                                     </svg>
                                     <span>Inquilinos</span>
                                 </button>
+                                ${inmueble.coloresPintura && inmueble.coloresPintura.length > 0 ? `
+                                    <button onclick="mostrarColoresPintura('${inmueble.id}')" 
+                                        title="Ver colores de pintura"
+                                        class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                                        <span>Colores</span>
+                                    </button>
+                                ` : ''}
                             </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-between">
@@ -366,6 +374,15 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
     }
 
     const tituloModal = id ? "Editar Inmueble" : "Registrar Nuevo Inmueble";
+    const coloresPinturaHtml = inmueble?.coloresPintura?.map((color, index) => `
+        <div class="flex items-center gap-2 color-entry">
+            <input type="text" name="color_area_${index}" placeholder="Área" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.area}" required>
+            <input type="text" name="color_nombre_${index}" placeholder="Nombre del color" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.color}" required>
+            <input type="text" name="color_codigo_${index}" placeholder="Código" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${color.codigo}">
+            <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">Eliminar</button>
+        </div>
+    `).join('') || '';
+
     const modalContent = `
         <div class="bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
             <div class="px-6 py-4">
@@ -570,6 +587,23 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
                 </div>
             </div>
 
+            <!-- Colores de Pintura -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                    </svg>
+                    Colores de Pintura
+                </h4>
+                <div id="colores-pintura-container" class="space-y-4">
+                    ${coloresPinturaHtml}
+                </div>
+                <button type="button" id="btn-agregar-color" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    Agregar Color
+                </button>
+            </div>
+
             <!-- Documentación -->
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -620,6 +654,20 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
     mostrarModal(modalContent);
 
+    document.getElementById('btn-agregar-color').addEventListener('click', () => {
+        const container = document.getElementById('colores-pintura-container');
+        const index = container.children.length;
+        const newColorEntry = document.createElement('div');
+        newColorEntry.className = 'flex items-center gap-2 color-entry';
+        newColorEntry.innerHTML = `
+            <input type="text" name="color_area_${index}" placeholder="Área" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" required>
+            <input type="text" name="color_nombre_${index}" placeholder="Nombre del color" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" required>
+            <input type="text" name="color_codigo_${index}" placeholder="Código" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">Eliminar</button>
+        `;
+        container.appendChild(newColorEntry);
+    });
+
     // Añadir evento para obtener la ubicación actual
     document.getElementById('btnObtenerUbicacion').addEventListener('click', async () => {
         // Mostrar notificación de espera
@@ -660,6 +708,18 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
         if (data.latitud) data.latitud = parseFloat(data.latitud);
         if (data.longitud) data.longitud = parseFloat(data.longitud);
 
+        const coloresPintura = [];
+        const colorEntries = document.querySelectorAll('.color-entry');
+        colorEntries.forEach((entry, index) => {
+            const area = formData.get(`color_area_${index}`);
+            const color = formData.get(`color_nombre_${index}`);
+            const codigo = formData.get(`color_codigo_${index}`);
+            if (area && color) {
+                coloresPintura.push({ area, color, codigo });
+            }
+        });
+        data.coloresPintura = coloresPintura;
+
         try {
             if (id) {
                 await updateDoc(doc(db, "inmuebles", id), data);
@@ -684,6 +744,56 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
  */
 export async function editarInmueble(id) {
     mostrarFormularioNuevoInmueble(id);
+}
+
+export async function mostrarColoresPintura(id) {
+    try {
+        const docSnap = await getDoc(doc(db, "inmuebles", id));
+        if (docSnap.exists()) {
+            const inmueble = docSnap.data();
+            const colores = inmueble.coloresPintura || [];
+
+            const coloresHtml = colores.map(c => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 text-sm text-gray-700">${c.area}</td>
+                    <td class="px-4 py-2 text-sm text-gray-800 font-medium">${c.color}</td>
+                    <td class="px-4 py-2 text-sm text-gray-800 font-mono">${c.codigo || '-'}</td>
+                </tr>
+            `).join('');
+
+            const modalContent = `
+                <div class="px-6 py-4 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                    <h3 class="text-2xl font-bold text-center">Colores de Pintura - ${inmueble.nombre}</h3>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 mb-4">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${coloresHtml.length > 0 ? coloresHtml : '<tr><td colspan="3" class="text-center py-4">No hay colores registrados.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button type="button" onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm">Cerrar</button>
+                </div>
+            `;
+
+            mostrarModal(modalContent);
+        } else {
+            mostrarNotificacion("Inmueble no encontrado.", 'error');
+        }
+    } catch (error) {
+        console.error("Error al mostrar los colores:", error);
+        mostrarNotificacion("Error al cargar los colores.", 'error');
+    }
 }
 
 /**
@@ -1099,6 +1209,7 @@ window.mostrarMapaInmueble = mostrarMapaInmueble;
 window.mostrarFormularioUbicacion = mostrarFormularioUbicacion;
 window.mostrarFormularioUbicacionManual = mostrarFormularioUbicacionManual;
 window.mostrarFormularioUbicacionManualParaForm = mostrarFormularioUbicacionManualParaForm;
+window.mostrarColoresPintura = mostrarColoresPintura;
 
 /**
  * Muestra el historial de inquilinos de un inmueble en un modal.
@@ -1352,7 +1463,7 @@ export async function mostrarHistorialInquilinosInmueble(inmuebleId, inmuebleNom
 
     } catch (error) {
         console.error("Error al obtener historial de inquilinos:", error);
-        mostrarNotificacion("Error al cargar el historial de inquilinos.", 'error');
+        mostrarNotificacion("Error al cargar el historial de inquilinos.", "error");
     }
 }
 
@@ -1999,4 +2110,3 @@ export async function mostrarHistorialInquilinos(inmuebleId, nombreInmueble) {
         ocultarLoader();
     }
 }
-
