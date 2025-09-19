@@ -3,6 +3,8 @@ import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, 
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 
+let pagosMap = new Map();
+
 /**
  * Muestra la sección principal de abonos/saldos a favor.
  */
@@ -17,7 +19,7 @@ export async function mostrarAbonos() {
         const abonosSnap = await getDocs(query(collection(db, "abonosSaldoFavor"), orderBy("fechaAbono", "desc")));
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const pagosSnap = await getDocs(collection(db, "pagos"));
-        const pagosMap = new Map();
+        pagosMap.clear();
 
         pagosSnap.forEach(doc => {
             const data = doc.data();
@@ -194,42 +196,8 @@ export async function mostrarAbonos() {
                 const estadoClass = abono.saldoRestante > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
                 const estadoText = abono.saldoRestante > 0 ? 'Activo' : 'Consumido';
 
-                // Historial de aplicaciones
-                let historialAplicacionesHtml = '';
-                if (abono.aplicaciones && abono.aplicaciones.length > 0) {
-                    abono.aplicaciones.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
-                    historialAplicacionesHtml = `
-                        <div class="mt-4 border-t border-gray-200 pt-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="font-semibold text-sm text-gray-700 flex items-center">
-                                    <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                    </svg>
-                                    Historial de aplicaciones
-                                </h4>
-                                <span class="text-xs text-gray-500">${abono.aplicaciones.length} aplicación(es)</span>
-                            </div>
-                            <div class="space-y-2 max-h-40 sm:max-h-48 overflow-y-auto pr-2">
-                                ${abono.aplicaciones.map(app => {
-                                    const pagoInfo = pagosMap.get(app.pagoId);
-                                    const pagoLabel = pagoInfo ? `${pagoInfo.mes || ''} ${pagoInfo.anio || ''}` : 'Pago desconocido';
-                                    return `
-                                        <div class="bg-gray-50 rounded-lg p-2.5 text-xs border border-gray-100">
-                                            <div class="flex justify-between items-center">
-                                                <span class="font-medium text-gray-700">${pagoLabel}</span>
-                                                <span class="text-green-600 font-semibold">$${parseFloat(app.montoAplicado).toFixed(2)}</span>
-                                            </div>
-                                            <div class="text-gray-500 text-xs mt-1">${app.fecha}</div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-100">
+                return (
+                    `<div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-100">
                         <div class="p-4 sm:p-5 md:p-6">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
@@ -251,9 +219,7 @@ export async function mostrarAbonos() {
                             <div class="mt-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-gray-600">Saldo Restante</span>
-                                    <span class="text-xl font-bold ${
-    abono.saldoRestante > 0 ? 'text-green-600' : abono.saldoRestante < 0 ? 'text-red-600' : 'text-gray-500'
-}">
+                                    <span class="text-xl font-bold ${abono.saldoRestante > 0 ? 'text-green-600' : abono.saldoRestante < 0 ? 'text-red-600' : 'text-gray-500'}">
     $${parseFloat(abono.saldoRestante).toFixed(2)}
 </span>
                                 </div>
@@ -269,7 +235,7 @@ export async function mostrarAbonos() {
                                     </svg>
                                     Actualizar
                                 </button>
-                                <button onclick="mostrarHistorialDescripciones('${abono.descripcion?.replace(/'/g, "\\'").replace(/"/g, '&quot;') || ''}', '${abono.nombreInquilino}', '${abono.inmuebleNombre}')"
+                                <button onclick='mostrarHistorialDeAplicaciones(${JSON.stringify(abono.aplicaciones)}, "${abono.nombreInquilino}", "${abono.inmuebleNombre}")'
                                         class="flex-1 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700
                                         text-white text-sm font-medium px-3 py-2.5 sm:py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
                                         flex items-center justify-center gap-1.5 border border-yellow-400/30">
@@ -299,11 +265,9 @@ export async function mostrarAbonos() {
                                     Eliminar
                                 </button>
                             </div>
-
-                            ${historialAplicacionesHtml}
                         </div>
-                    </div>
-                `;
+                    </div>`
+                );
             }).join('');
         }
 
@@ -314,7 +278,7 @@ export async function mostrarAbonos() {
                         <svg class="w-8 h-8 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        Gestión de Saldos a Favor
+                        Gestión de Saldos y Descuentos
                     </h2>
                     <button onclick="mostrarFormularioNuevoAbono()"
                             class="mt-4 sm:mt-0 bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700
@@ -323,7 +287,7 @@ export async function mostrarAbonos() {
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
-                        Registrar Nuevo Abono
+                        Registrar Movimiento
                     </button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -397,7 +361,8 @@ export async function aplicarSaldoFavorManual(abonoId, inquilinoId) {
                 aplicaciones.push({
                     pagoId: pagoDoc.id,
                     montoAplicado: aplicar,
-                    fecha: new Date().toISOString().split('T')[0]
+                    fecha: new Date().toISOString().split('T')[0],
+                    origen: 'abono'
                 });
                 await updateDoc(doc(db, "abonosSaldoFavor", abonoId), {
                     saldoRestante: nuevoSaldoRestante,
@@ -423,7 +388,7 @@ export async function aplicarSaldoFavorManual(abonoId, inquilinoId) {
  * @param {string} [id=null] - ID del abono a editar. Si es null, es un nuevo abono.
  */
 export async function mostrarFormularioNuevoAbono(id = null) {
-    let titulo = "Registrar Nuevo Saldo a Favor";
+    let titulo = "Registrar Movimiento";
     let abono = { inquilinoId: '', montoOriginal: '', saldoRestante: '', fechaAbono: '', descripcion: '' };
     let inquilinosList = [];
 
@@ -522,6 +487,19 @@ export async function mostrarFormularioNuevoAbono(id = null) {
             <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
                 <div class="space-y-4">
                     <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Tipo de Movimiento:</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="tipoMovimiento" value="abono" class="form-radio" checked>
+                                <span class="ml-2">Saldo a Favor</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="tipoMovimiento" value="descuento" class="form-radio">
+                                <span class="ml-2">Descuento</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
                         <label for="inquilinoId" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
                             <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -540,7 +518,7 @@ export async function mostrarFormularioNuevoAbono(id = null) {
                             <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Monto del Abono:
+                            Monto:
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500">$</span>
@@ -568,14 +546,14 @@ export async function mostrarFormularioNuevoAbono(id = null) {
                         <textarea id="descripcionAbono"
                                   class="w-full px-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                   rows="2"
-                                  placeholder="Ingrese una descripción del abono...">${abono.descripcion || ''}</textarea>
+                                  placeholder="Ingrese una descripción del movimiento...">${abono.descripcion || ''}</textarea>
                     </div>
                     <div>
                         <label for="fechaAbono" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
                             <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            Fecha del Abono:
+                            Fecha del Movimiento:
                         </label>
                         <input type="date"
                                id="fechaAbono"
@@ -614,66 +592,84 @@ export async function mostrarFormularioNuevoAbono(id = null) {
         formAbonoSaldoFavor.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const tipoMovimiento = document.querySelector('input[name="tipoMovimiento"]:checked').value;
             const inquilinoId = document.getElementById('inquilinoId').value;
-            const montoNuevo = parseFloat(document.getElementById('montoOriginal').value);
+            const monto = parseFloat(document.getElementById('montoOriginal').value);
             const descripcion = document.getElementById('descripcionAbono').value;
-            const fechaAbono = document.getElementById('fechaAbono').value;
-            const fechaRegistro = id ? abono.fechaRegistro : new Date().toISOString().split('T')[0];
+            const fecha = document.getElementById('fechaAbono').value;
 
-            if (id) {
-                // Editar abono existente (sin cambios)
-                try {
-                    if (montoNuevo !== abono.montoOriginal) {
-                        abono.saldoRestante = montoNuevo;
-                        abono.montoOriginal = montoNuevo;
-                        mostrarNotificacion("El saldo restante se ha restablecido al monto original.", 'info');
-                    }
-                    abono.descripcion = descripcion;
-                    abono.fechaAbono = fechaAbono;
-                    await updateDoc(doc(db, "abonosSaldoFavor", id), abono);
-                    mostrarNotificacion("Saldo a favor actualizado con éxito.", 'success');
-                } catch (err) {
-                    mostrarNotificacion("Error al actualizar el saldo a favor.", 'error');
-                }
+            if (tipoMovimiento === 'descuento') {
+                await registrarDescuento(inquilinoId, monto, descripcion, fecha);
             } else {
-                // Registrar nuevo abono: buscar si ya existe uno activo para el inquilino
-                try {
-                    const abonosSnap = await getDocs(query(
-                        collection(db, "abonosSaldoFavor"),
-                        where("inquilinoId", "==", inquilinoId)
-                    ));
-                    const abonosActivos = abonosSnap.docs.filter(doc => (doc.data().saldoRestante || 0) > 0);
-                    if (abonosActivos.length > 0) {
-                        // Ya existe un saldo a favor activo, sumamos
-                        const abonoExistenteDoc = abonosActivos[0];
-                        const abonoExistente = abonoExistenteDoc.data();
-                        const nuevoMontoOriginal = (abonoExistente.montoOriginal || 0) + montoNuevo;
-                        const nuevoSaldoRestante = (abonoExistente.saldoRestante || 0) + montoNuevo;
-                        const nuevaDescripcion = abonoExistente.descripcion
-                            ? abonoExistente.descripcion + ` | +${montoNuevo} el ${fechaAbono}${descripcion ? ' (' + descripcion + ')' : ''}`
-                            : `+${montoNuevo} el ${fechaAbono}${descripcion ? ' (' + descripcion + ')' : ''}`;
-                        await updateDoc(doc(db, "abonosSaldoFavor", abonoExistenteDoc.id), {
-                            montoOriginal: nuevoMontoOriginal,
-                            saldoRestante: nuevoSaldoRestante,
-                            descripcion: nuevaDescripcion,
-                            fechaAbono: fechaAbono // opcional: puedes guardar la última fecha
-                        });
-                        mostrarNotificacion("Saldo a favor sumado al existente.", 'success');
-                    } else {
-                        // No existe, creamos uno nuevo
-                        await addDoc(collection(db, "abonosSaldoFavor"), {
-                            inquilinoId,
-                            montoOriginal: montoNuevo,
-                            saldoRestante: montoNuevo,
-                            descripcion,
-                            fechaAbono,
-                            fechaRegistro,
-                            aplicaciones: []
-                        });
-                        mostrarNotificacion("Saldo a favor registrado con éxito.", 'success');
+                // Lógica para Saldo a Favor
+                const fechaRegistro = id ? abono.fechaRegistro : new Date().toISOString().split('T')[0];
+
+                if (id) {
+                    // Editar abono existente
+                    try {
+                        if (monto !== abono.montoOriginal) {
+                            abono.saldoRestante = monto;
+                            abono.montoOriginal = monto;
+                            mostrarNotificacion("El saldo restante se ha restablecido al monto original.", 'info');
+                        }
+                        abono.descripcion = descripcion;
+                        abono.fechaAbono = fecha;
+                        await updateDoc(doc(db, "abonosSaldoFavor", id), abono);
+                        mostrarNotificacion("Saldo a favor actualizado con éxito.", 'success');
+                    } catch (err) {
+                        mostrarNotificacion("Error al actualizar el saldo a favor.", 'error');
                     }
-                } catch (err) {
-                    mostrarNotificacion("Error al registrar el saldo a favor.", 'error');
+                } else {
+                    // Registrar nuevo abono
+                    try {
+                        const abonosSnap = await getDocs(query(
+                            collection(db, "abonosSaldoFavor"),
+                            where("inquilinoId", "==", inquilinoId)
+                        ));
+                        const abonosActivos = abonosSnap.docs;
+
+                        if (abonosActivos.length > 0) {
+                            // Sumar al existente
+                            const abonoExistenteDoc = abonosActivos[0];
+                            const abonoExistente = abonoExistenteDoc.data();
+                            const nuevoMontoOriginal = (abonoExistente.montoOriginal || 0) + monto;
+                            const nuevoSaldoRestante = (abonoExistente.saldoRestante || 0) + monto;
+                            const aplicaciones = abonoExistente.aplicaciones || [];
+                            aplicaciones.push({
+                                montoAplicado: monto,
+                                fecha: fecha,
+                                origen: 'ingreso',
+                                descripcion: descripcion
+                            });
+
+                            await updateDoc(doc(db, "abonosSaldoFavor", abonoExistenteDoc.id), {
+                                montoOriginal: nuevoMontoOriginal,
+                                saldoRestante: nuevoSaldoRestante,
+                                aplicaciones: aplicaciones,
+                                fechaAbono: fecha
+                            });
+                            mostrarNotificacion("Saldo a favor sumado al existente.", 'success');
+                        } else {
+                            // Crear nuevo
+                            await addDoc(collection(db, "abonosSaldoFavor"), {
+                                inquilinoId,
+                                montoOriginal: monto,
+                                saldoRestante: monto,
+                                descripcion,
+                                fechaAbono: fecha,
+                                fechaRegistro,
+                                aplicaciones: [{
+                                    montoAplicado: monto,
+                                    fecha: fecha,
+                                    origen: 'ingreso',
+                                    descripcion: descripcion
+                                }]
+                            });
+                            mostrarNotificacion("Saldo a favor registrado con éxito.", 'success');
+                        }
+                    } catch (err) {
+                        mostrarNotificacion("Error al registrar el saldo a favor.", 'error');
+                    }
                 }
             }
             ocultarModal();
@@ -681,6 +677,65 @@ export async function mostrarFormularioNuevoAbono(id = null) {
         });
     }
 }
+
+async function registrarDescuento(inquilinoId, monto, descripcion, fecha) {
+    try {
+        // Buscar si ya existe un saldo a favor para el inquilino
+        const abonosQuery = query(collection(db, "abonosSaldoFavor"), where("inquilinoId", "==", inquilinoId));
+        const abonosSnap = await getDocs(abonosQuery);
+
+        if (!abonosSnap.empty) {
+            // Ya existe un saldo, se actualiza
+            const abonoExistenteDoc = abonosSnap.docs[0];
+            const abonoExistente = abonoExistenteDoc.data();
+            const nuevoSaldoRestante = (abonoExistente.saldoRestante || 0) - monto;
+            const aplicaciones = abonoExistente.aplicaciones || [];
+            aplicaciones.push({
+                montoAplicado: monto,
+                fecha: fecha,
+                origen: 'descuento',
+                descripcion: descripcion
+            });
+
+            await updateDoc(doc(db, "abonosSaldoFavor", abonoExistenteDoc.id), {
+                saldoRestante: nuevoSaldoRestante,
+                aplicaciones: aplicaciones,
+                descripcion: abonoExistente.descripcion + ` | Descuento: ${monto} el ${fecha}${descripcion ? ' (' + descripcion + ')' : ''}`
+            });
+        } else {
+            // No existe saldo, se crea uno nuevo con el descuento en negativo
+            await addDoc(collection(db, "abonosSaldoFavor"), {
+                inquilinoId,
+                montoOriginal: 0, // Inicia en 0 porque es un descuento
+                saldoRestante: -monto,
+                descripcion: `Descuento: ${monto} el ${fecha}${descripcion ? ' (' + descripcion + ')' : ''}`,
+                fechaAbono: fecha,
+                fechaRegistro: new Date().toISOString().split('T')[0],
+                aplicaciones: [{
+                    montoAplicado: monto,
+                    fecha: fecha,
+                    origen: 'descuento',
+                    descripcion: descripcion
+                }]
+            });
+        }
+
+        // Registrar en la colección de descuentos para auditoría
+        await addDoc(collection(db, "descuentos"), {
+            inquilinoId,
+            monto,
+            descripcion,
+            fecha,
+            fechaRegistro: new Date().toISOString().split('T')[0]
+        });
+
+        mostrarNotificacion("Descuento registrado y aplicado con éxito.", 'success');
+    } catch (error) {
+        console.error("Error al registrar el descuento:", error);
+        mostrarNotificacion("Error al registrar el descuento.", 'error');
+    }
+}
+
 
 /**
  * Función para editar un abono a favor, mostrando el formulario.
@@ -747,24 +802,60 @@ export async function eliminarAbono(id, inquilinoId = null) {
     }
 }
 
-// Agrega esta función para mostrar el historial de descripciones en un modal elegante
-function mostrarHistorialDescripciones(descripciones, nombreInquilino, inmuebleNombre) {
-    // Separar las descripciones por el separador " | "
-    const historial = descripciones.split(' | ').filter(d => d.trim() !== '');
-    const historialHtml = historial.length > 0
-        ? historial.map((desc, idx) => `
-            <div class="bg-white rounded-lg shadow p-3 mb-2 border border-gray-100 flex items-start gap-2">
-                <span class="text-indigo-500 font-bold">${idx + 1}.</span>
-                <span class="text-gray-700">${desc}</span>
-            </div>
-        `).join('')
-        : `<div class="text-gray-500 text-center py-4">No hay historial de descripciones.</div>`;
+function mostrarHistorialDeAplicaciones(aplicaciones, nombreInquilino, inmuebleNombre) {
+    aplicaciones.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+    const historialHtml = aplicaciones.length > 0
+        ? aplicaciones.map(app => {
+            let pagoLabel = '';
+            let tipoAplicacion = '';
+            let colorMonto = '';
+
+            switch(app.origen) {
+                case 'ingreso':
+                    pagoLabel = app.descripcion || 'Ingreso de saldo';
+                    tipoAplicacion = 'Ingreso';
+                    colorMonto = 'text-green-600';
+                    break;
+                case 'descuento':
+                    pagoLabel = app.descripcion || 'Descuento aplicado';
+                    tipoAplicacion = 'Egreso (Descuento)';
+                    colorMonto = 'text-yellow-600';
+                    break;
+                case 'abono':
+                    const pagoInfo = pagosMap.get(app.pagoId);
+                    pagoLabel = pagoInfo ? `Abono a ${pagoInfo.mes || ''} ${pagoInfo.anio || ''}` : 'Abono a pago desconocido';
+                    tipoAplicacion = 'Egreso (Abono)';
+                    colorMonto = 'text-blue-600';
+                    break;
+                default:
+                    pagoLabel = 'Movimiento desconocido';
+                    tipoAplicacion = 'Desconocido';
+                    colorMonto = 'text-gray-500';
+            }
+
+            return (
+                `<div class="bg-gray-50 rounded-lg p-3 mb-2 border border-gray-100">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-800 text-sm">${pagoLabel}</p>
+                            <p class="text-xs text-gray-500">${tipoAplicacion}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="${colorMonto} font-semibold text-sm">$${parseFloat(app.montoAplicado).toFixed(2)}</p>
+                            <p class="text-xs text-gray-500 mt-1">${app.fecha}</p>
+                        </div>
+                    </div>
+                </div>`
+            );
+        }).join('')
+        : `<div class="text-gray-500 text-center py-4">No hay historial de movimientos.</div>`;
 
     const modalHtml = `
         <div class="max-w-lg w-full mx-auto">
-            <div class="bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-t-xl px-6 py-4 flex items-center justify-between">
+            <div class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-t-xl px-6 py-4 flex items-center justify-between">
                 <div>
-                    <div class="font-bold text-lg">Historial de Descripciones</div>
+                    <div class="font-bold text-lg">Historial de Movimientos</div>
                     <div class="text-sm opacity-80">${nombreInquilino} <span class="text-xs">|</span> <span class="italic">${inmuebleNombre}</span></div>
                 </div>
                 <button onclick="ocultarModal()" class="text-white hover:bg-red-100 hover:text-red-600 rounded-full p-2 transition-all" aria-label="Cerrar">
@@ -781,8 +872,9 @@ function mostrarHistorialDescripciones(descripciones, nombreInquilino, inmuebleN
     mostrarModal(modalHtml);
 }
 
+
 // Hacer la función global para que se pueda llamar desde los botones
-window.mostrarHistorialDescripciones = mostrarHistorialDescripciones;
+window.mostrarHistorialDeAplicaciones = mostrarHistorialDeAplicaciones;
 
 // Hacer funciones globales para los botones en HTML
 window.mostrarAbonos = mostrarAbonos;
