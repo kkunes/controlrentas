@@ -3,8 +3,13 @@ import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, 
 import { db } from './firebaseConfig.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // Alias para evitar conflicto
-import { obtenerMesesAdeudadosHistorico } from './pagos.js';
+import { obtenerMesesAdeudadosHistorico, mostrarFormularioNuevoPago, mostrarFormularioPagoServicio, mostrarFormularioPagoMobiliario } from './pagos.js';
 import { mostrarTotalDesperfectosInquilino } from './desperfectos.js';
+
+// Variables globales para el manejo de modales anidados
+window.vieneDeAdeudos = false;
+window.adeudosModalContent = '';
+
 
 // Hacer la función accesible globalmente para los handlers `onclick`
 window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
@@ -356,7 +361,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         for (const inquilino of inquilinosList) {
             if (!inquilino.fechaOcupacion || !inquilino.inmuebleAsociadoId) continue;
 
-            // Se obtienen todos los pagos de una vez
+            // Se obtienen todos los pagos una sola vez
             const pagosQuery = query(collection(db, "pagos"), where("inquilinoId", "==", inquilino.id));
             const pagosInquilinoSnap = await getDocs(pagosQuery);
             const pagosMap = new Map();
@@ -531,12 +536,13 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                                     <span class="font-medium text-gray-800">${m.mes} ${m.anio}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
-                                                    ${m.rentaPendiente ? `<span class="text-sm text-red-600 font-medium">Renta pendiente</span>` : ''}
+                                                    ${m.rentaPendiente ? `<span class="text-sm text-red-600 font-medium">Renta pendiente</span><button onclick="abrirFormularioPagoRenta('${inquilino.id}', '${m.mes}', ${m.anio})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar Renta</button>` : ''}
                                                     ${m.serviciosPendientes && m.rentaPendiente ? '<span class="text-gray-300">|</span>' : ''}
                                                     ${m.serviciosPendientes ? `
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                                             Servicios pendientes
                                                         </span>
+                                                        <button onclick="abrirFormularioPagoServicio('${inquilino.id}', '${m.mes}', ${m.anio})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar Servicios</button>
                                                     ` : ''}
                                                 </div>
                                             </div>
@@ -560,6 +566,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                                                     Mobiliario pendiente
                                                 </span>
+                                                <button onclick="abrirFormularioPagoMobiliario('${inquilino.id}', '${m.mes}', ${m.anio})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar Mobiliario</button>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -573,6 +580,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                             </div>
                         `;
+                        window.adeudosModalContent = modalContentHtml;
                         mostrarModal(modalContentHtml);
                     });
 
@@ -590,438 +598,164 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 }
 
 /**
- * Muestra el formulario para registrar un nuevo inquilino o editar uno existente.
- * @param {string} [id] - ID del inquilino a editar (opcional).
- */
-export async function mostrarFormularioNuevoInquilino(id = null) {
-    let inquilino = null;
-    let inmueblesDisponibles = [];
-    let inmuebleAnteriorId = null; // Para guardar el ID del inmueble antes de la edición
-
-    try {
-        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        const todosInmuebles = [];
-        inmueblesSnap.forEach(doc => {
-            todosInmuebles.push({ id: doc.id, ...doc.data() });
-        });
-
-        if (id) {
-            const docSnap = await getDoc(doc(db, "inquilinos", id));
-            if (docSnap.exists()) {
-                inquilino = { id: docSnap.id, ...docSnap.data() };
-                inmuebleAnteriorId = inquilino.inmuebleAsociadoId; // Guardar el ID actual del inmueble del inquilino
-            }
-        }
-
-        // Filtrar inmuebles: solo los disponibles o el que ya está asignado a este inquilino (si existe)
-        inmueblesDisponibles = todosInmuebles.filter(inmueble => 
-            inmueble.estado === 'Disponible' || (inquilino && inmueble.id === inquilino.inmuebleAsociadoId)
-        );
-
-    } catch (error) {
-        console.error("Error al cargar datos para el formulario de inquilino:", error);
-        mostrarNotificacion("Error al cargar datos para el formulario de inquilino.", 'error');
-        return;
-    }
-
-    const tituloModal = id ? "Editar Inquilino" : "Registrar Nuevo Inquilino";
-
-    const inmueblesOptions = inmueblesDisponibles.map(inmueble => {
-        // Si el inmueble está ocupado por otro inquilino (no el actual en edición), deshabilitarlo
-        const isDisabled = inmueble.estado === 'Ocupado' && (!inquilino || inmueble.id !== inquilino.inmuebleAsociadoId);
-        const rentaFormateada = inmueble.rentaMensual ? `$${parseFloat(inmueble.rentaMensual).toFixed(2)}` : '';
-        return `
-            <option value="${inmueble.id}" 
-                    ${inquilino && inquilino.inmuebleAsociadoId === inmueble.id ? 'selected' : ''}
-                    ${isDisabled ? 'disabled' : ''}>
-                ${inmueble.nombre} ${rentaFormateada ? `(${rentaFormateada}/mes)` : ''} ${isDisabled ? '(Ocupado)' : ''}
-            </option>
-        `;
-    }).join('');
-
-    const recibioDepositoChecked = inquilino && inquilino.depositoRecibido ? 'checked' : '';
-    const campoDepositoDisplay = inquilino && inquilino.depositoRecibido ? 'block' : 'none';
-    const montoDepositoValue = inquilino && inquilino.montoDeposito ? inquilino.montoDeposito : '';
-    const fechaDepositoValue = inquilino && inquilino.fechaDeposito ? inquilino.fechaDeposito : '';
-
-    const modalContent = `
-        <div class="px-4 py-3 bg-green-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-            <h3 class="text-xl sm:text-2xl font-bold text-center">${tituloModal}</h3>
-        </div>
-        <form id="formInquilino" class="space-y-6 max-h-[80vh] overflow-y-auto px-2">
-            <!-- Sección de Información Personal -->
-            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Información Personal
-                </h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label for="nombre" class="block text-base font-medium text-gray-700 mb-2">Nombre Completo</label>
-                        <input type="text" id="nombre" name="nombre" class="form-control" value="${inquilino ? inquilino.nombre : ''}" placeholder="Ej: Juan Pérez" required>
-                    </div>
-                    <div>
-                        <label for="telefono" class="block text-base font-medium text-gray-700 mb-2">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono" class="form-control" value="${inquilino ? inquilino.telefono : ''}" placeholder="Ej: +52 123 456 7890" required>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección de Fechas -->
-            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Fechas Importantes
-                </h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label for="fechaLlegada" class="block text-base font-medium text-gray-700 mb-2">Fecha de Llegada</label>
-                        <input type="date" id="fechaLlegada" name="fechaLlegada" class="form-control"
-                            value="${inquilino && inquilino.fechaLlegada ? inquilino.fechaLlegada : ''}" required>
-                    </div>
-                    <div>
-                        <label for="fechaOcupacion" class="block text-base font-medium text-gray-700 mb-2">Fecha de Ocupación</label>
-                        <input type="date" id="fechaOcupacion" name="fechaOcupacion" class="form-control"
-                            value="${inquilino && inquilino.fechaOcupacion ? inquilino.fechaOcupacion : ''}" required>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección de Documentación -->
-            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Documentación
-                </h4>
-                <div>
-                    <label for="urlIdentificacion" class="block text-base font-medium text-gray-700 mb-2">URL de Identificación</label>
-                    <input type="url" id="urlIdentificacion" name="urlIdentificacion" class="form-control" value="${inquilino && inquilino.urlIdentificacion ? inquilino.urlIdentificacion : ''}" placeholder="Ej: https://docs.google.com/d/abc123xyz">
-                    <p class="mt-2 text-sm text-gray-500">Enlace a Google Drive, Dropbox, u otro servicio de almacenamiento.</p>
-                </div>
-            </div>
-
-            <!-- Sección de Asignación de Inmueble -->
-            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    Asignación de Inmueble
-                </h4>
-                <div>
-                    <label for="inmuebleAsociadoId" class="block text-base font-medium text-gray-700 mb-2">Inmueble Asociado</label>
-                    <select id="inmuebleAsociadoId" name="inmuebleAsociadoId" class="form-control">
-                        <option value="">Ninguno</option>
-                        ${inmueblesOptions}
-                    </select>
-                    <p class="mt-2 text-sm text-gray-500">Solo se muestran inmuebles disponibles o el actualmente asignado.</p>
-                </div>
-            </div>
-
-            <!-- Sección de Servicios -->
-            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Servicios
-                </h4>
-                <div class="space-y-4">
-                    <div class="flex items-center">
-                        <input type="checkbox" id="pagaServicios" name="pagaServicios" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" ${inquilino && inquilino.pagaServicios ? 'checked' : ''}>
-                        <label for="pagaServicios" class="ml-3 block text-base text-gray-900">Inquilino paga servicios adicionales</label>
-                    </div>
-                    
-                    <div id="serviciosContainer" class="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200" style="display: ${inquilino && inquilino.pagaServicios ? 'block' : 'none'}">
-                        <div id="listaServicios">
-                            ${inquilino && inquilino.servicios && Array.isArray(inquilino.servicios) && inquilino.servicios.length > 0 ? 
-                                inquilino.servicios.map((servicio, index) => `
-                                    <div class="servicio-item border border-gray-200 rounded-lg p-3 mb-3 bg-white">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <h5 class="font-medium text-gray-700">Servicio #${index + 1}</h5>
-                                            <button type="button" class="btn-eliminar-servicio text-red-500 hover:text-red-700" data-index="${index}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio</label>
-                                                <select name="servicios[${index}][tipo]" class="form-control">
-                                                    <option value="Internet" ${servicio.tipo === 'Internet' ? 'selected' : ''}>Internet</option>
-                                                    <option value="Cable" ${servicio.tipo === 'Cable' ? 'selected' : ''}>Cable</option>
-                                                    <option value="Agua" ${servicio.tipo === 'Agua' ? 'selected' : ''}>Agua</option>
-                                                    <option value="Luz" ${servicio.tipo === 'Luz' ? 'selected' : ''}>Luz</option>
-                                                    <option value="Gas" ${servicio.tipo === 'Gas' ? 'selected' : ''}>Gas</option>
-                                                    <option value="Otro" ${servicio.tipo === 'Otro' ? 'selected' : ''}>Otro</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Monto Mensual</label>
-                                                <div class="mt-1 relative rounded-md shadow-sm">
-                                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <span class="text-gray-500 sm:text-sm">$</span>
-                                                    </div>
-                                                    <input type="number" name="servicios[${index}][monto]" step="0.01" min="0" 
-                                                        class="form-control pl-7 pr-12" 
-                                                        placeholder="0.00" 
-                                                        value="${servicio.monto || ''}">
-                                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                        <span class="text-gray-500 sm:text-sm">MXN</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
-                                            <textarea name="servicios[${index}][notas]" rows="2" 
-                                                class="form-control"
-                                                placeholder="Detalles adicionales sobre el servicio">${servicio.notas || ''}</textarea>
-                                        </div>
-                                    </div>
-                                `).join('') : 
-                                `<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>`
-                            }
-                        </div>
-                        
-                        <div class="flex justify-center mt-4">
-                            <button type="button" id="btnAgregarServicio" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-sm transition-colors duration-200 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Agregar Servicio
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección de Estado y Depósito -->
-            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Estado y Depósito
-                </h4>
-                <div class="space-y-6">
-                    <div class="flex items-center space-x-6">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="activo" name="activo" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" ${inquilino === null || inquilino.activo ? 'checked' : ''}>
-                            <label for="activo" class="ml-3 block text-base text-gray-900">Inquilino Activo</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="recibioDeposito" name="recibioDeposito" class="h-5 w-5 text-indigo-600 border-gray-300 rounded" ${recibioDepositoChecked}>
-                            <label for="recibioDeposito" class="ml-3 text-base text-gray-900">Recibió depósito</label>
-                        </div>
-                    </div>
-
-                    <div id="campoDeposito" style="display:${campoDepositoDisplay};" class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
-                        <div>
-                            <label for="montoDeposito" class="block text-base font-medium text-gray-700 mb-2">Monto del depósito</label>
-                            <input type="number" id="montoDeposito" name="montoDeposito" min="0" step="0.01" class="form-control" value="${montoDepositoValue}">
-                        </div>
-                        <div>
-                            <label for="fechaDeposito" class="block text-base font-medium text-gray-700 mb-2">Fecha del depósito</label>
-                            <input type="date" id="fechaDeposito" name="fechaDeposito" class="form-control" value="${fechaDepositoValue}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3.5 rounded-lg shadow-sm transition-colors duration-200 text-base">Cancelar</button>
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3.5 rounded-lg shadow-sm transition-colors duration-200 text-base">${id ? "Actualizar" : "Registrar"} Inquilino</button>
-            </div>
-        </form>
-    `;
-
-    mostrarModal(modalContent);
-    
-    // Configurar el botón para agregar servicios
-    const btnAgregarServicio = document.getElementById('btnAgregarServicio');
-    if (btnAgregarServicio) {
-        btnAgregarServicio.addEventListener('click', agregarServicioAlFormulario);
-    }
-    
-    // Configurar los botones para eliminar servicios existentes
-    const botonesEliminar = document.querySelectorAll('.btn-eliminar-servicio');
-    botonesEliminar.forEach(btn => {
-        btn.addEventListener('click', function() {
-            eliminarServicio(this);
-        });
-    });
-
-    document.getElementById('formInquilino').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-
-        // Convertir los checkboxes a booleanos
-        data.activo = data.activo === 'on';
-        data.depositoRecibido = data.recibioDeposito === 'on';
-        data.pagaServicios = data.pagaServicios === 'on';
-        
-        if (!data.depositoRecibido) {
-            data.montoDeposito = null;
-            data.fechaDeposito = null;
-        }
-        
-        // Manejar datos de servicios
-        if (!data.pagaServicios) {
-            data.tipoServicio = null;
-            data.montoServicio = null;
-            data.notasServicio = null;
-            data.servicios = [];
-        } else {
-            // Procesar servicios múltiples
-            const servicios = [];
-            const formEntries = Array.from(formData.entries());
-            
-            // Extraer los datos de servicios del formulario
-            // Agrupar por índice
-            const serviciosPorIndice = {};
-            
-            formEntries.forEach(entry => {
-                const match = entry[0].match(/servicios\[(\d+)\]\[(\w+)\]/);
-                if (match) {
-                    const index = match[1];
-                    const campo = match[2];
-                    
-                    if (!serviciosPorIndice[index]) {
-                        serviciosPorIndice[index] = {};
-                    }
-                    
-                    serviciosPorIndice[index][campo] = entry[1];
-                }
-            });
-            
-            // Convertir a array de servicios
-            Object.values(serviciosPorIndice).forEach(servicio => {
-                if (servicio.tipo && servicio.monto) {
-                    servicios.push({
-                        tipo: servicio.tipo,
-                        monto: parseFloat(servicio.monto),
-                        notas: servicio.notas || ""
-                    });
-                }
-            });
-            
-            // Eliminar los campos con corchetes del objeto data
-            formEntries.forEach(entry => {
-                if (entry[0].includes('[')) {
-                    delete data[entry[0]];
-                }
-            });
-            
-            // Asignar el array de servicios
-            data.servicios = servicios;
-            
-            // Mantener compatibilidad con el formato anterior
-            if (servicios.length > 0) {
-                data.tipoServicio = servicios[0].tipo;
-                data.montoServicio = servicios[0].monto;
-                data.notasServicio = servicios[0].notas || "";
-            }
-        }
-
-        // Si no se seleccionó inmueble, el valor será una cadena vacía, lo convertimos a null
-        if (data.inmuebleAsociadoId === "") {
-            data.inmuebleAsociadoId = null;
-        }
-
-        try {
-            let inquilinoId = id; // El ID del inquilino que estamos creando/editando
-            let docRef;
-
-            if (id) {
-                // Actualizar inquilino existente
-                docRef = doc(db, "inquilinos", id);
-                await updateDoc(docRef, data);
-                mostrarNotificacion("Inquilino actualizado con éxito.", 'success');
-            } else {
-                // Agregar nuevo inquilino
-                docRef = await addDoc(collection(db, "inquilinos"), data);
-                inquilinoId = docRef.id; // Obtener el ID del nuevo documento
-                mostrarNotificacion("Inquilino registrado con éxito.", 'success');
-            }
-
-            // --- Lógica para actualizar el estado del inmueble asociado ---
-            const nuevoInmuebleId = data.inmuebleAsociadoId;
-            const inquilinoNombre = data.nombre;
-
-            if (inmuebleAnteriorId && inmuebleAnteriorId !== nuevoInmuebleId) {
-                // El inquilino se ha movido o desocupado su inmueble anterior
-                await updateDocInmueble(doc(db, "inmuebles", inmuebleAnteriorId), {
-                    estado: 'Disponible',
-                    inquilinoActualId: null,
-                    inquilinoActualNombre: null
-                });
-                mostrarNotificacion(`Inmueble ${inmueblesDisponibles.find(i => i.id === inmuebleAnteriorId)?.nombre || 'anterior'} marcado como Disponible.`, 'info');
-            }
-
-            if (nuevoInmuebleId) {
-                // Asignar el inmueble al inquilino (o actualizar si cambió)
-                await updateDocInmueble(doc(db, "inmuebles", nuevoInmuebleId), {
-                    estado: 'Ocupado',
-                    inquilinoActualId: inquilinoId,
-                    inquilinoActualNombre: inquilinoNombre
-                });
-                // También actualizar el inquilino con el nombre del inmueble si es relevante para el dashboard
-                await updateDoc(doc(db, "inquilinos", inquilinoId), {
-                    inmuebleAsociadoNombre: inmueblesDisponibles.find(i => i.id === nuevoInmuebleId)?.nombre || 'Desconocido'
-                });
-                mostrarNotificacion(`Inmueble ${inmueblesDisponibles.find(i => i.id === nuevoInmuebleId)?.nombre || 'seleccionado'} marcado como Ocupado.`, 'info');
-            } else if (!nuevoInmuebleId && id) {
-                // Si se eliminó la asociación de inmueble de un inquilino existente
-                if (inmuebleAnteriorId) {
-                    await updateDocInmueble(doc(db, "inmuebles", inmuebleAnteriorId), {
-                        estado: 'Disponible',
-                        inquilinoActualId: null,
-                        inquilinoActualNombre: null
-                    });
-                    mostrarNotificacion(`Inmueble ${inmueblesDisponibles.find(i => i.id === inmuebleAnteriorId)?.nombre || 'anterior'} marcado como Disponible.`, 'info');
-                }
-                // Actualizar el inquilino sin nombre de inmueble
-                await updateDoc(doc(db, "inquilinos", inquilinoId), {
-                    inmuebleAsociadoNombre: 'No Asignado'
-                });
-            }
-
-            ocultarModal();
-            mostrarInquilinos(); // Recargar la lista de inquilinos
-
-            // Si es un nuevo inquilino y recibió depósito, registrar el depósito
-            if (data.recibioDeposito === 'on' && data.montoDeposito && data.fechaDeposito) {
-                await addDoc(collection(db, "pagos"), {
-                    tipo: "deposito",
-                    montoTotal: parseFloat(data.montoDeposito),
-                    fechaRegistro: data.fechaDeposito,
-                    inquilinoId: inquilinoId,
-                    inmuebleId: data.inmuebleAsociadoId || null,
-                    observaciones: "Depósito inicial"
-                });
-            }
-           
-        } catch (err) {
-            console.error("Error al guardar el inquilino:", err);
-            mostrarNotificacion("Error al guardar el inquilino.", 'error');
-        }
-    });
-}
-
-/**
  * Función para editar un inquilino, mostrando el formulario.
  * @param {string} id - ID del inquilino a editar.
  */
+export async function mostrarFormularioNuevoInquilino(id = null) {
+    const esEdicion = id !== null;
+    let inquilinoExistente = {};
+
+    if (esEdicion) {
+        try {
+            const docRef = doc(db, "inquilinos", id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                inquilinoExistente = docSnap.data();
+            } else {
+                mostrarNotificacion("Inquilino no encontrado.", "error");
+                return;
+            }
+        } catch (error) {
+            mostrarNotificacion("Error al cargar datos del inquilino.", "error");
+            return;
+        }
+    }
+
+    const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+    const inmueblesDisponibles = [];
+    inmueblesSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.estado === 'Disponible' || (esEdicion && doc.id === inquilinoExistente.inmuebleAsociadoId)) {
+            inmueblesDisponibles.push({ id: doc.id, ...data });
+        }
+    });
+
+    const modalTitle = esEdicion ? 'Editar Inquilino' : 'Registrar Nuevo Inquilino';
+    const modalHtml = `
+        <div class="px-4 py-3 bg-blue-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+            <h3 class="text-xl font-bold text-center">${modalTitle}</h3>
+        </div>
+        <form id="formularioInquilino" class="space-y-4">
+            <input type="hidden" id="inquilinoId" value="${id || ''}">
+            
+            <div>
+                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                <input type="text" id="nombre" value="${inquilinoExistente.nombre || ''}" class="form-control" required>
+            </div>
+
+            <div>
+                <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                <input type="tel" id="telefono" value="${inquilinoExistente.telefono || ''}" class="form-control">
+            </div>
+
+            <div>
+                <label for="inmuebleAsociadoId" class="block text-sm font-medium text-gray-700">Inmueble a Ocupar</label>
+                <select id="inmuebleAsociadoId" class="form-control">
+                    <option value="">-- Seleccione un Inmueble --</option>
+                    ${inmueblesDisponibles.map(inmueble => `<option value="${inmueble.id}" ${inquilinoExistente.inmuebleAsociadoId === inmueble.id ? 'selected' : ''}>${inmueble.nombre}</option>`).join('')}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="fechaLlegada" class="block text-sm font-medium text-gray-700">Fecha de Firma de Contrato</label>
+                    <input type="date" id="fechaLlegada" value="${inquilinoExistente.fechaLlegada || ''}" class="form-control">
+                </div>
+                <div>
+                    <label for="fechaOcupacion" class="block text-sm font-medium text-gray-700">Fecha de Inicio de Pagos</label>
+                    <input type="date" id="fechaOcupacion" value="${inquilinoExistente.fechaOcupacion || ''}" class="form-control">
+                </div>
+            </div>
+
+            <div>
+                <label for="urlIdentificacion" class="block text-sm font-medium text-gray-700">URL de Identificación (Drive)</label>
+                <input type="url" id="urlIdentificacion" value="${inquilinoExistente.urlIdentificacion || ''}" class="form-control" placeholder="https://docs.google.com/...">
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" id="depositoRecibido" class="form-checkbox h-5 w-5 text-blue-600" ${inquilinoExistente.depositoRecibido ? 'checked' : ''}>
+                <label for="depositoRecibido" class="ml-2 block text-sm text-gray-900">¿Se recibió depósito en garantía?</label>
+            </div>
+
+            <div id="camposDeposito" class="${inquilinoExistente.depositoRecibido ? '' : 'hidden'} space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="montoDeposito" class="block text-sm font-medium text-gray-700">Monto del Depósito</label>
+                        <input type="number" id="montoDeposito" value="${inquilinoExistente.montoDeposito || ''}" class="form-control" step="0.01">
+                    </div>
+                    <div>
+                        <label for="fechaDeposito" class="block text-sm font-medium text-gray-700">Fecha de Recepción del Depósito</label>
+                        <input type="date" id="fechaDeposito" value="${inquilinoExistente.fechaDeposito || ''}" class="form-control">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="activo" class="form-checkbox h-5 w-5 text-blue-600" ${inquilinoExistente.activo === false ? '' : 'checked'}>
+                <label for="activo" class="ml-2 block text-sm text-gray-900">Inquilino Activo</label>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200 mr-2">Cancelar</button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">${esEdicion ? 'Actualizar' : 'Guardar'}</button>
+            </div>
+        </form>
+    `;
+    mostrarModal(modalHtml);
+
+    // Logic to handle form submission
+    const form = document.getElementById('formularioInquilino');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const inquilinoId = document.getElementById('inquilinoId').value;
+        const nombre = document.getElementById('nombre').value;
+        const telefono = document.getElementById('telefono').value;
+        const inmuebleAsociadoId = document.getElementById('inmuebleAsociadoId').value;
+        const fechaLlegada = document.getElementById('fechaLlegada').value;
+        const fechaOcupacion = document.getElementById('fechaOcupacion').value;
+        const urlIdentificacion = document.getElementById('urlIdentificacion').value;
+        const depositoRecibido = document.getElementById('depositoRecibido').checked;
+        const montoDeposito = document.getElementById('montoDeposito').value;
+        const fechaDeposito = document.getElementById('fechaDeposito').value;
+        const activo = document.getElementById('activo').checked;
+
+        const inquilinoData = {
+            nombre,
+            telefono,
+            inmuebleAsociadoId,
+            fechaLlegada,
+            fechaOcupacion,
+            urlIdentificacion,
+            depositoRecibido,
+            montoDeposito: depositoRecibido ? parseFloat(montoDeposito) : 0,
+            fechaDeposito: depositoRecibido ? fechaDeposito : '',
+            activo
+        };
+
+        try {
+            if (inquilinoId) {
+                // Update existing inquilino
+                const docRef = doc(db, "inquilinos", inquilinoId);
+                await updateDoc(docRef, inquilinoData);
+                mostrarNotificacion("Inquilino actualizado con éxito.", "success");
+            } else {
+                // Add new inquilino
+                await addDoc(collection(db, "inquilinos"), inquilinoData);
+                mostrarNotificacion("Inquilino registrado con éxito.", "success");
+            }
+            ocultarModal();
+            mostrarInquilinos();
+        } catch (error) {
+            mostrarNotificacion("Error al guardar el inquilino.", "error");
+        }
+    });
+    
+    // Show/hide deposit fields based on checkbox
+    document.getElementById('depositoRecibido').addEventListener('change', (e) => {
+        document.getElementById('camposDeposito').classList.toggle('hidden', !e.target.checked);
+    });
+}
+
 export async function editarInquilino(id) {
     mostrarFormularioNuevoInquilino(id);
 }
@@ -1143,7 +877,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         // Using the main inquilino data instead.
         if (inquilino.inmuebleAsociadoId && inquilino.fechaOcupacion) {
             const mesesAdeudados = await obtenerMesesAdeudadosHistorico(inquilinoId, inquilino.inmuebleAsociadoId, new Date(inquilino.fechaOcupacion));
-                                                                                         let adeudosHtml = '';
+                                                                         let adeudosHtml = '';
             if (mesesAdeudados.length > 0) {
                 adeudosHtml = `
                     <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
@@ -1342,7 +1076,7 @@ export async function mostrarHistorialAbonosInquilino(inquilinoId) {
                 origenClass += a.origen === "saldo a favor" ? "bg-cyan-100 text-cyan-800" : "bg-green-100 text-green-800";
                 html += `
                     <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 text-sm text-gray-800">$${parseFloat(a.monto).toFixed(2)}</td>
+                        <td class="px-4 py-2 text-sm text-gray-800">${parseFloat(a.monto).toFixed(2)}</td>
                         <td class="px-4 py-2 text-sm text-gray-700">${a.fecha}</td>
                         <td class="px-4 py-2 text-sm"><span class="${origenClass}">${a.origen}</span></td>
                         <td class="px-4 py-2 text-sm text-gray-700">${a.mes || ''} / ${a.anio || ''}</td>
@@ -1391,7 +1125,7 @@ export async function mostrarSaldoFavorInquilino(inquilinoId) {
                     ${abonos.map(a => `
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-2">
                             <div class="flex-1">
-                                <div class="font-semibold text-cyan-800">$${parseFloat(a.monto).toFixed(2)}</div>
+                                <div class="font-semibold text-cyan-800">${parseFloat(a.monto).toFixed(2)}</div>
                                 ${a.descripcion ? `<div class="text-xs text-gray-400">${a.descripcion}</div>` : ''}
                             </div>
                             <div class="flex flex-row sm:flex-col gap-2 mt-2 sm:mt-0 text-sm text-right">
@@ -1401,7 +1135,7 @@ export async function mostrarSaldoFavorInquilino(inquilinoId) {
                     `).join('')}
                     <div class="flex justify-between items-center px-3 py-3 bg-cyan-50 rounded-b-lg">
                         <span class="font-bold text-cyan-800">Total disponible</span>
-                        <span class="font-bold text-lg text-cyan-700">$${saldoTotal.toFixed(2)}</span>
+                        <span class="font-bold text-lg text-cyan-700">${saldoTotal.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -1687,15 +1421,15 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
                             </div>
                             <div class="flex flex-row sm:flex-col gap-2 mt-2 sm:mt-0 text-sm text-right">
                                 <span class="inline-block bg-teal-50 text-teal-700 px-2 py-0.5 rounded">x${mob.cantidad}</span>
-                                <span class="inline-block text-gray-600">$${mob.costoRenta.toFixed(2)} c/u</span>
-                                <span class="inline-block font-bold text-teal-700">$${subtotal.toFixed(2)}</span>
+                                <span class="inline-block text-gray-600">${mob.costoRenta.toFixed(2)} c/u</span>
+                                <span class="inline-block font-bold text-teal-700">${subtotal.toFixed(2)}</span>
                             </div>
                         </div>
                     `;
                 }).join('')}
                 <div class="flex justify-between items-center px-3 py-3 bg-teal-50 rounded-b-lg">
                     <span class="font-bold text-teal-800">Total mobiliario</span>
-                    <span class="font-bold text-lg text-teal-700">$${total.toFixed(2)}</span>
+                    <span class="font-bold text-lg text-teal-700">${total.toFixed(2)}</span>
                 </div>
             </div>
         </div>
@@ -1711,3 +1445,93 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
         </div>
     `);
 };
+
+// Helper functions to open payment forms and pre-fill data
+async function abrirFormularioPagoRenta(inquilinoId, mes, anio) {
+    window.vieneDeAdeudos = true;
+    await mostrarFormularioNuevoPago(); // Open the rent payment form
+
+    // Fetch inquilino data to get inmuebleAsociadoId
+    const inquilinoSnap = await getDoc(doc(db, "inquilinos", inquilinoId));
+    let inmuebleAsociadoId = null;
+    if (inquilinoSnap.exists()) {
+        inmuebleAsociadoId = inquilinoSnap.data().inmuebleAsociadoId;
+    }
+
+    // Give the modal a moment to render
+    setTimeout(async () => {
+        const inquilinoSelect = document.getElementById('inquilinoId');
+        const inmuebleSelect = document.getElementById('inmuebleId'); // Get the inmueble select
+        const mesSelect = document.getElementById('mesCorrespondiente');
+        const anioSelect = document.getElementById('anioCorrespondiente');
+
+        if (inquilinoSelect) {
+            inquilinoSelect.value = inquilinoId;
+            // Trigger change event on inquilinoSelect to update associated inmueble and rent amount
+            const event = new Event('change', { bubbles: true });
+            inquilinoSelect.dispatchEvent(event);
+        }
+
+        // Set inmuebleId and trigger change event
+        if (inmuebleSelect && inmuebleAsociadoId) {
+            inmuebleSelect.value = inmuebleAsociadoId;
+            const event = new Event('change', { bubbles: true });
+            inmuebleSelect.dispatchEvent(event);
+        }
+
+        if (mesSelect) {
+            mesSelect.value = mes;
+        }
+        if (anioSelect) {
+            anioSelect.value = anio;
+        }
+    }, 100); // Small delay
+}
+
+async function abrirFormularioPagoServicio(inquilinoId, mes, anio) {
+    window.vieneDeAdeudos = true;
+    await mostrarFormularioPagoServicio(); // Open the service payment form
+    setTimeout(async () => {
+        const inquilinoSelect = document.getElementById('inquilinoId');
+        const mesSelect = document.getElementById('mesCorrespondiente');
+        const anioSelect = document.getElementById('anioCorrespondiente');
+
+        if (inquilinoSelect) {
+            inquilinoSelect.value = inquilinoId;
+            const event = new Event('change', { bubbles: true });
+            inquilinoSelect.dispatchEvent(event);
+        }
+        if (mesSelect) {
+            mesSelect.value = mes;
+        }
+        if (anioSelect) {
+            anioSelect.value = anio;
+        }
+    }, 100);
+}
+
+async function abrirFormularioPagoMobiliario(inquilinoId, mes, anio) {
+    window.vieneDeAdeudos = true;
+    await mostrarFormularioPagoMobiliario(); // Open the mobiliario payment form
+    setTimeout(async () => {
+        const inquilinoSelect = document.getElementById('inquilinoId');
+        const mesSelect = document.getElementById('mesCorrespondiente');
+        const anioSelect = document.getElementById('anioCorrespondiente');
+
+        if (inquilinoSelect) {
+            inquilinoSelect.value = inquilinoId;
+            const event = new Event('change', { bubbles: true });
+            inquilinoSelect.dispatchEvent(event);
+        }
+        if (mesSelect) {
+            mesSelect.value = mes;
+        }
+        if (anioSelect) {
+            anioSelect.value = anio;
+        }
+    }, 100);
+}
+
+window.abrirFormularioPagoRenta = abrirFormularioPagoRenta;
+window.abrirFormularioPagoServicio = abrirFormularioPagoServicio;
+window.abrirFormularioPagoMobiliario = abrirFormularioPagoMobiliario;

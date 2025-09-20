@@ -860,7 +860,7 @@ function actualizarMesCorrespondiente(fechaRegistroInput) {
  * Muestra el formulario para registrar o editar un pago.
  * @param {string} id - El ID del pago a editar (opcional).
  */
-export async function mostrarFormularioNuevoPago(id = null) {
+export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     let pago = {};
     let inmuebles = [];
     let inquilinos = [];
@@ -1045,7 +1045,7 @@ export async function mostrarFormularioNuevoPago(id = null) {
         </div>
 
         <div class="flex justify-end space-x-3 mt-8">
-            <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
+            <button type="button" onclick="cerrarModalDePago()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">
                 ${id ? "Actualizar Pago" : "Registrar Pago"}
             </button>
@@ -1527,10 +1527,7 @@ export async function mostrarFormularioPagoServicio() {
 
         mostrarModal(formHtml);
 
-        document.getElementById('btnCancelarPagoServicio').addEventListener('click', () => {
-            ocultarModal();
-            mostrarPagos();
-        });
+        document.getElementById('btnCancelarPagoServicio').addEventListener('click', () => cerrarModalDePago(mostrarPagos));
 
         const buscadorInmuebleInput = document.getElementById('buscadorInmuebleServicios');
         const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleServicios');
@@ -1877,10 +1874,7 @@ export async function mostrarFormularioPagoMobiliario() {
 
         mostrarModal(formHtml);
 
-        document.getElementById('btnCancelarPagoMobiliario').addEventListener('click', () => {
-            ocultarModal();
-            mostrarPagos();
-        });
+        document.getElementById('btnCancelarPagoMobiliario').addEventListener('click', () => cerrarModalDePago(mostrarPagos));
 
         const buscadorInmuebleInput = document.getElementById('buscadorInmuebleMobiliario');
         const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleMobiliario');
@@ -3476,3 +3470,16 @@ export async function gestionarMobiliarioPago(pagoId) {
         mostrarNotificacion("Error al cargar el formulario de mobiliario", "error");
     }
 }
+
+function cerrarModalDePago(callback = null) {
+    if (window.vieneDeAdeudos) {
+        mostrarModal(window.adeudosModalContent);
+        window.vieneDeAdeudos = false; // Reset flag
+    } else {
+        ocultarModal();
+        if (callback) {
+            callback();
+        }
+    }
+}
+window.cerrarModalDePago = cerrarModalDePago;
