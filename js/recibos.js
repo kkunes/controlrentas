@@ -263,12 +263,14 @@ export async function generarReciboPDF(pagoId, firma = '') {
                 pdf.text(`Monto total:`, xDer, yDer);
                 pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
                 yDer += 6;
-                pdf.text(`Monto pagado:`, xDer, yDer);
-                pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
-                yDer += 6;
-                pdf.text(`Saldo pendiente:`, xDer, yDer);
-                pdf.text(`$${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
-                yDer += 6;
+                if (pago.estado === 'parcial') {
+                    pdf.text(`Monto pagado:`, xDer, yDer);
+                    pdf.text(`${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
+                    yDer += 6;
+                    pdf.text(`Saldo pendiente:`, xDer, yDer);
+                    pdf.text(`${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
+                    yDer += 6;
+                }
                 pdf.text(`Fecha de pago:`, xDer, yDer);
                 pdf.text(`${pago.fechaPago || pago.fechaRegistro || ''}`, xDer + 35, yDer);
                 yDer += 6;
@@ -327,12 +329,14 @@ export async function generarReciboPDF(pagoId, firma = '') {
         pdf.text(`Monto total:`, xDer, yDer);
         pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
         yDer += 6;
-        pdf.text(`Monto pagado:`, xDer, yDer);
-        pdf.text(`$${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
-        yDer += 6;
-        pdf.text(`Saldo pendiente:`, xDer, yDer);
-        pdf.text(`$${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
-        yDer += 6;
+        if (pago.estado === 'parcial') {
+            pdf.text(`Monto pagado:`, xDer, yDer);
+            pdf.text(`${(pago.montoPagado || 0).toFixed(2)}`, xDer + 35, yDer);
+            yDer += 6;
+            pdf.text(`Saldo pendiente:`, xDer, yDer);
+            pdf.text(`${(pago.saldoPendiente || 0).toFixed(2)}`, xDer + 35, yDer);
+            yDer += 6;
+        }
         pdf.text(`Fecha de pago:`, xDer, yDer);
         pdf.text(`${pago.fechaPago || pago.fechaRegistro || ''}`, xDer + 35, yDer);
         yDer += 6;
