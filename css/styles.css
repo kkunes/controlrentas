@@ -1129,17 +1129,3 @@ button.text-sm {
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
     outline: none;
 }
-
-/* === Modal Ficha Inquilino === */
-.ficha-inquilino-content {
-  background-color: #fff; /* White background for the modal content */
-  border-radius: var(--fluent-radius-xl); /* Use fluent radius */
-  box-shadow: var(--fluent-shadow-16);
-  padding-top: 0;
-  overflow: hidden; /* Ensure the header corners are clipped */
-}
-
-.ficha-inquilino-header {
-  height: 64px; /* Height of the header stripe */
-  background-color: var(--fluent-accent); /* Use fluent accent color */
-}
