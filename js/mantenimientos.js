@@ -1167,22 +1167,22 @@ export async function gestionarPagosManoDeObra(mantenimientoId) {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
                     <p class="text-sm font-medium text-blue-700">Costo Total Mano de Obra</p>
-                    <p class="text-2xl font-bold text-blue-900 mt-1">$${costoManoObra.toFixed(2)}</p>
+                    <p class="text-2xl font-bold text-blue-900 mt-1">${costoManoObra.toFixed(2)}</p>
                 </div>
                 <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
                     <p class="text-sm font-medium text-green-700">Total Pagado</p>
-                    <p class="text-2xl font-bold text-green-900 mt-1">$${totalPagado.toFixed(2)}</p>
+                    <p class="text-2xl font-bold text-green-900 mt-1">${totalPagado.toFixed(2)}</p>
                 </div>
                 <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center">
                     <p class="text-sm font-medium text-red-700">Saldo Pendiente</p>
-                    <p class="text-2xl font-bold text-red-900 mt-1">$${saldoPendiente.toFixed(2)}</p>
+                    <p class="text-2xl font-bold text-red-900 mt-1">${saldoPendiente.toFixed(2)}</p>
                 </div>
             </div>
 
             <!-- Formulario para Nuevo Pago -->
             <form id="formNuevoPagoManoDeObra" class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-4">
                 <h4 class="text-lg font-semibold text-gray-800">Registrar Nuevo Pago</h4>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                     <div>
                         <label for="montoPagoObrero" class="block text-sm font-medium text-gray-700">Monto</label>
                         <input type="number" id="montoPagoObrero" step="0.01" class="form-control mt-1" required>
@@ -1196,6 +1196,13 @@ export async function gestionarPagosManoDeObra(mantenimientoId) {
                         <select id="propietarioPagoObrero" class="form-control mt-1" required>
                             <option value="">Seleccionar</option>
                             ${propietariosOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="metodoPagoObrero" class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                        <select id="metodoPagoObrero" class="form-control mt-1" required>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
                         </select>
                     </div>
                     <button type="submit" class="btn-primario w-full">Agregar Pago</button>
@@ -1234,14 +1241,15 @@ export async function gestionarPagosManoDeObra(mantenimientoId) {
             const monto = parseFloat(document.getElementById('montoPagoObrero').value);
             const fecha = document.getElementById('fechaPagoObrero').value;
             const propietarioId = document.getElementById('propietarioPagoObrero').value;
+            const metodoPago = document.getElementById('metodoPagoObrero').value;
 
-            if (isNaN(monto) || monto <= 0 || !fecha || !propietarioId) {
+            if (isNaN(monto) || monto <= 0 || !fecha || !propietarioId || !metodoPago) {
                 mostrarNotificacion("Por favor, completa todos los campos del pago.", 'error');
                 return;
             }
 
             if (monto > saldoPendiente) {
-                if (!confirm(`El monto a pagar ($${monto.toFixed(2)}) es mayor que el saldo pendiente ($${saldoPendiente.toFixed(2)}). ¿Deseas continuar?`)) {
+                if (!confirm(`El monto a pagar (${monto.toFixed(2)}) es mayor que el saldo pendiente (${saldoPendiente.toFixed(2)}). ¿Deseas continuar?`)) {
                     return;
                 }
             }
@@ -1250,7 +1258,7 @@ export async function gestionarPagosManoDeObra(mantenimientoId) {
                 monto,
                 fecha,
                 propietarioId,
-                metodoPago: 'Efectivo' // O puedes agregar un campo para esto
+                metodoPago
             };
 
             const nuevosPagos = [...pagosRealizados, nuevoPago];
