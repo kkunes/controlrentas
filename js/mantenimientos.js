@@ -332,11 +332,20 @@ export async function mostrarMantenimientos() {
                             Ver Materiales
                         </button>
                     ` : '';
+                    const pagosObreroBtn = m.costo_mano_obra > 0 ? `
+                        <button onclick="gestionarPagosManoDeObra('${m.id}')" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 rounded-md text-xs flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            Pagos Obrero
+                        </button>
+                    ` : '';
                     return `
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
                             <td class="px-3 py-2 text-sm text-gray-800">${m.nombreInmueble}</td>
                             <td class="px-3 py-2 text-sm text-gray-800">${m.nombreInquilino}</td>
-                            <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal max-w-xs">${m.descripcion || 'Sin descripción'}</td>
+                            <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal max-w-xs">
+                                ${m.descripcion || 'Sin descripción'}
+                                ${m.nombreObrero ? `<span class="block mt-1 text-xs text-indigo-600 font-medium">Obrero: ${m.nombreObrero}</span>` : ''}
+                            </td>
                             <td class="px-3 py-2 text-sm text-gray-800 font-medium">${(Number(m.costo) || 0).toFixed(2)}</td>
                             <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.categoria || 'N/A'}</td>
                             <td class="px-3 py-2 text-sm"><span class="${prioridadClass}">${m.prioridad || 'N/A'}</span></td>
@@ -346,6 +355,7 @@ export async function mostrarMantenimientos() {
                             <td class="px-3 py-2 text-sm text-right">
                                 <div class="flex flex-wrap justify-end gap-1">
                                     ${materialesBtn}
+                                    ${pagosObreroBtn}
                                     <button onclick="editarMantenimiento('${m.id}')" class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Editar</button>
                                     <button onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Eliminar</button>
                                     ${m.estado !== 'Completado' ? `
@@ -387,6 +397,7 @@ export async function mostrarMantenimientos() {
         window.editarMantenimiento = editarMantenimiento;
         window.eliminarDocumento = eliminarDocumento;
         window.cambiarEstadoCosto = cambiarEstadoCosto;
+        window.gestionarPagosManoDeObra = gestionarPagosManoDeObra;
     } catch (error) {
         console.error("Error al obtener mantenimientos:", error);
         mostrarNotificacion("Error al cargar los mantenimientos.", 'error');
@@ -560,6 +571,20 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                             <option value="">Selecciona una categoría</option>
                             ${categoriaOptions}
                         </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        <div>
+                            <label for="nombreObrero" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                Nombre del Obrero
+                            </label>
+                            <input type="text" id="nombreObrero" name="nombreObrero" 
+                                class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" 
+                                value="${mantenimiento?.nombreObrero ?? ''}" placeholder="Ej: Juan Pérez">
                     </div>
                 </div>
             </div>
@@ -1093,6 +1118,159 @@ export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmueble
     } catch (error) {
         console.error("Error al mostrar historial de mantenimientos:", error);
         mostrarNotificacion("Error al cargar el historial de mantenimientos.", 'error');
+    }
+}
+
+/**
+ * Muestra un modal para gestionar los pagos de mano de obra de un mantenimiento.
+ * @param {string} mantenimientoId - ID del mantenimiento.
+ */
+export async function gestionarPagosManoDeObra(mantenimientoId) {
+    try {
+        const mantenimientoSnap = await getDoc(doc(db, "mantenimientos", mantenimientoId));
+        if (!mantenimientoSnap.exists()) {
+            mostrarNotificacion("Mantenimiento no encontrado.", 'error');
+            return;
+        }
+        const mantenimiento = mantenimientoSnap.data();
+
+        const propietariosSnap = await getDocs(collection(db, "propietarios"));
+        const propietariosMap = new Map();
+        propietariosSnap.forEach(doc => {
+            propietariosMap.set(doc.id, doc.data().nombre);
+        });
+
+        const costoManoObra = mantenimiento.costo_mano_obra || 0;
+        const pagosRealizados = mantenimiento.pagosManoDeObra || [];
+        const totalPagado = pagosRealizados.reduce((sum, pago) => sum + (pago.monto || 0), 0);
+        const saldoPendiente = costoManoObra - totalPagado;
+
+        const propietariosOptions = [...propietariosMap.entries()].map(([id, nombre]) =>
+            `<option value="${id}">${nombre}</option>`
+        ).join('');
+
+        const historialPagosHtml = pagosRealizados.length > 0 ? pagosRealizados.map(pago => `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2 text-sm text-gray-700">${pago.fecha}</td>
+                <td class="px-4 py-2 text-sm text-gray-800 font-medium">${(pago.monto || 0).toFixed(2)}</td>
+                <td class="px-4 py-2 text-sm text-gray-700">${propietariosMap.get(pago.propietarioId) || 'Propietario Desconocido'}</td>
+                <td class="px-4 py-2 text-sm text-gray-700">${pago.metodoPago || 'N/A'}</td>
+            </tr>
+        `).join('') : `<tr><td colspan="4" class="text-center py-4 text-gray-500">No se han registrado pagos.</td></tr>`;
+
+        const modalContent = `
+            <div class="px-6 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
+                <h3 class="text-2xl font-bold text-center">Pagos de Mano de Obra</h3>
+            </div>
+
+            <!-- Resumen Financiero -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
+                    <p class="text-sm font-medium text-blue-700">Costo Total Mano de Obra</p>
+                    <p class="text-2xl font-bold text-blue-900 mt-1">$${costoManoObra.toFixed(2)}</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
+                    <p class="text-sm font-medium text-green-700">Total Pagado</p>
+                    <p class="text-2xl font-bold text-green-900 mt-1">$${totalPagado.toFixed(2)}</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center">
+                    <p class="text-sm font-medium text-red-700">Saldo Pendiente</p>
+                    <p class="text-2xl font-bold text-red-900 mt-1">$${saldoPendiente.toFixed(2)}</p>
+                </div>
+            </div>
+
+            <!-- Formulario para Nuevo Pago -->
+            <form id="formNuevoPagoManoDeObra" class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-4">
+                <h4 class="text-lg font-semibold text-gray-800">Registrar Nuevo Pago</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label for="montoPagoObrero" class="block text-sm font-medium text-gray-700">Monto</label>
+                        <input type="number" id="montoPagoObrero" step="0.01" class="form-control mt-1" required>
+                    </div>
+                    <div>
+                        <label for="fechaPagoObrero" class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="fechaPagoObrero" value="${new Date().toISOString().split('T')[0]}" class="form-control mt-1" required>
+                    </div>
+                    <div>
+                        <label for="propietarioPagoObrero" class="block text-sm font-medium text-gray-700">Pagado por</label>
+                        <select id="propietarioPagoObrero" class="form-control mt-1" required>
+                            <option value="">Seleccionar</option>
+                            ${propietariosOptions}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primario w-full">Agregar Pago</button>
+                </div>
+            </form>
+
+            <!-- Historial de Pagos -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                <h4 class="text-lg font-semibold text-gray-800 p-4 border-b">Historial de Pagos</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pagado por</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Método</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${historialPagosHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button type="button" onclick="ocultarModal()" class="btn-secundario">Cerrar</button>
+            </div>
+        `;
+
+        mostrarModal(modalContent);
+
+        document.getElementById('formNuevoPagoManoDeObra').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const monto = parseFloat(document.getElementById('montoPagoObrero').value);
+            const fecha = document.getElementById('fechaPagoObrero').value;
+            const propietarioId = document.getElementById('propietarioPagoObrero').value;
+
+            if (isNaN(monto) || monto <= 0 || !fecha || !propietarioId) {
+                mostrarNotificacion("Por favor, completa todos los campos del pago.", 'error');
+                return;
+            }
+
+            if (monto > saldoPendiente) {
+                if (!confirm(`El monto a pagar ($${monto.toFixed(2)}) es mayor que el saldo pendiente ($${saldoPendiente.toFixed(2)}). ¿Deseas continuar?`)) {
+                    return;
+                }
+            }
+
+            const nuevoPago = {
+                monto,
+                fecha,
+                propietarioId,
+                metodoPago: 'Efectivo' // O puedes agregar un campo para esto
+            };
+
+            const nuevosPagos = [...pagosRealizados, nuevoPago];
+
+            try {
+                await updateDoc(doc(db, "mantenimientos", mantenimientoId), {
+                    pagosManoDeObra: nuevosPagos
+                });
+                mostrarNotificacion("Pago de mano de obra registrado con éxito.", 'success');
+                ocultarModal();
+                gestionarPagosManoDeObra(mantenimientoId); // Recargar el modal
+            } catch (err) {
+                console.error("Error al registrar el pago de mano de obra:", err);
+                mostrarNotificacion("Error al registrar el pago.", 'error');
+            }
+        });
+
+    } catch (error) {
+        console.error("Error al gestionar los pagos de mano de obra:", error);
+        mostrarNotificacion("Error al cargar los datos de pago.", 'error');
     }
 }
 
