@@ -23,13 +23,14 @@
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Transición con "rebote" */
     overflow: hidden;
     border-radius: 9999px; /* pill shape */
-    background-color: rgba(31, 41, 55, 0.8); /* bg-gray-800 con más transparencia */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(55, 55, 56, 0.568); /* Un blanco casi opaco con transparencia */
+    backdrop-filter: blur(16px); /* Aumentamos el desenfoque para mayor contraste */
+    -webkit-backdrop-filter: blur(16px);
     padding: 0;
     width: 0; /* Inicia con ancho 0 */
     height: 40px; /* Misma altura que el botón */
     opacity: 0;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Borde blanco sutil */
 }
 
 .pill-menu-container.active .pill-menu-actions {
