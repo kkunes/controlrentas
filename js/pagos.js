@@ -274,37 +274,35 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
                         <td class="px-2 py-2 text-xs text-gray-800">${serviciosHtml}</td>
                         <td class="px-2 py-2 text-xs text-gray-800">${mobiliarioHtml}</td>
                         <td class="px-2 py-2 text-xs text-right">
-                            <div class="relative inline-block text-left dropdown-container">
-                                <button type="button" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150" aria-haspopup="true" aria-expanded="true">
+                            <div class="pill-menu-container">
+                                <div class="pill-menu-actions">
+                                    <a href="#" title="Detalles" class="btn-detalle-pago text-gray-300 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    </a>
+                                    <a href="#" title="Abonar" class="btn-abonar-pago text-green-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </a>
+                                    <a href="#" title="Editar" class="btn-editar-pago text-orange-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </a>
+                                    <a href="#" title="Servicios" class="btn-gestionar-servicios text-purple-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    </a>
+                                    ${mobiliarioTotal > 0 ? `<a href="#" title="Mobiliario" class="btn-gestionar-mobiliario text-teal-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                    </a>` : ''}
+                                    <a href="#" title="Recibo PDF" class="btn-recibo-pdf text-indigo-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    </a>
+                                    <a href="#" title="Eliminar" class="btn-eliminar-pago text-red-400 hover:text-white hover:bg-red-500/50" role="menuitem" data-pago-id="${pago.id}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </a>
+                                </div>
+                                <button type="button" class="pill-menu-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150">
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                                     </svg>
                                 </button>
-                                <div class="dropdown-menu absolute right-0 bottom-full mb-2 w-auto rounded-xl shadow-2xl bg-gray-900 bg-opacity-80 backdrop-blur-md ring-1 ring-white ring-opacity-10 focus:outline-none hidden z-20 transition-all duration-300 ease-in-out transform origin-bottom-right" role="menu" aria-orientation="horizontal">
-                                    <div class="flex items-center p-2 space-x-2" role="none">
-                                        <a href="#" title="Detalles" class="btn-detalle-pago text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        </a>
-                                        <a href="#" title="Abonar" class="btn-abonar-pago text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                            <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        </a>
-                                        <a href="#" title="Editar" class="btn-editar-pago text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                            <svg class="h-6 w-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                        </a>
-                                        <a href="#" title="Servicios" class="btn-gestionar-servicios text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                            <svg class="h-6 w-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                        </a>
-                                        ${mobiliarioTotal > 0 ? `<a href="#" title="Mobiliario" class="btn-gestionar-mobiliario text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                            <svg class="h-6 w-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                                        </a>` : ''}
-                                        <a href="#" title="Recibo PDF" class="btn-recibo-pdf text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                            <svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                        </a>
-                                        <a href="#" title="Eliminar" class="btn-eliminar-pago text-red-400 hover:text-white p-3 rounded-full hover:bg-red-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </a>
-                                    </div>
-                                </div>
                             </div>
                         </td>
                     </tr>
@@ -457,46 +455,41 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
         // --- Adjuntar Event Listeners después de que el HTML se ha cargado ---
         document.getElementById('btnNuevoPago').addEventListener('click', () => mostrarFormularioNuevoPago());
 
-        function adjuntarListenersDropdown() {
-            document.querySelectorAll('.dropdown-container').forEach(container => {
-                const button = container.querySelector('button');
-                const menu = container.querySelector('.dropdown-menu');
-                if (button && menu) {
-                    // Prevenir doble listener
-                    if (button.dataset.dropdownAttached) return;
-                    button.dataset.dropdownAttached = 'true';
+        function adjuntarListenersPillMenu() {
+            document.querySelectorAll('.pill-menu-container').forEach(container => {
+                const button = container.querySelector('.pill-menu-button');
+                if (button) {
+                    if (button.dataset.pillMenuAttached) return;
+                    button.dataset.pillMenuAttached = 'true';
 
                     button.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const isHidden = menu.classList.contains('hidden');
-                        
-                        // Cerrar todos los demás menús
-                        document.querySelectorAll('.dropdown-menu').forEach(m => {
-                            if (m !== menu) {
-                                m.classList.add('hidden');
+                        // Close other active menus
+                        document.querySelectorAll('.pill-menu-container.active').forEach(otherContainer => {
+                            if (otherContainer !== container) {
+                                otherContainer.classList.remove('active');
                             }
                         });
-
-                        // Alternar el menú actual
-                        menu.classList.toggle('hidden', !isHidden);
+                        // Toggle current menu
+                        container.classList.toggle('active');
                     });
                 }
             });
         }
 
         // Listener global para cerrar los menús. Se añade una sola vez.
-        if (!window.dropdownClickListenerAdded) {
+        if (!window.pillMenuClickListenerAdded) {
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('.dropdown-container')) {
-                    document.querySelectorAll('.dropdown-menu').forEach(m => {
-                        m.classList.add('hidden');
+                if (!e.target.closest('.pill-menu-container')) {
+                    document.querySelectorAll('.pill-menu-container.active').forEach(container => {
+                        container.classList.remove('active');
                     });
                 }
             });
-            window.dropdownClickListenerAdded = true;
+            window.pillMenuClickListenerAdded = true;
         }
         
-        adjuntarListenersDropdown();
+        adjuntarListenersPillMenu();
         document.querySelectorAll('.btn-detalle-pago').forEach(button => {
             button.addEventListener('click', (e) => {
                 const pagoId = e.currentTarget.dataset.pagoId;
@@ -711,48 +704,45 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                             <td class="px-2 py-2 text-xs text-gray-700">${pago.mesCorrespondiente || 'N/A'}</td>
                             <td class="px-2 py-2 text-xs text-gray-800">${serviciosHtml}</td>
                             <td class="px-2 py-2 text-xs text-gray-800">${mobiliarioHtml}</td>
-                            <td class="px-2 py-2 text-xs text-right">
-                                <div class="relative inline-block text-left dropdown-container">
-                                    <button type="button" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150" aria-haspopup="true" aria-expanded="true">
-                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                        </svg>
-                                    </button>
-                                    <div class="dropdown-menu absolute right-0 bottom-full mb-2 w-auto rounded-xl shadow-2xl bg-gray-900 bg-opacity-80 backdrop-blur-md ring-1 ring-white ring-opacity-10 focus:outline-none hidden z-20 transition-all duration-300 ease-in-out transform origin-bottom-right" role="menu" aria-orientation="horizontal">
-                                        <div class="flex items-center p-2 space-x-2" role="none">
-                                            <a href="#" title="Detalles" class="btn-detalle-pago text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                            </a>
-                                            <a href="#" title="Abonar" class="btn-abonar-pago text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                                <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            </a>
-                                            <a href="#" title="Editar" class="btn-editar-pago text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                                <svg class="h-6 w-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                            </a>
-                                            <a href="#" title="Servicios" class="btn-gestionar-servicios text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                                <svg class="h-6 w-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                            </a>
-                                            ${mobiliarioTotal > 0 ? `<a href="#" title="Mobiliario" class="btn-gestionar-mobiliario text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                                <svg class="h-6 w-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                                            </a>` : ''}
-                                            <a href="#" title="Recibo PDF" class="btn-recibo-pdf text-gray-300 hover:text-white p-3 rounded-full hover:bg-gray-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                                <svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                            </a>
-                                            <a href="#" title="Eliminar" class="btn-eliminar-pago text-red-400 hover:text-white p-3 rounded-full hover:bg-red-700/50 transition-all duration-200" role="menuitem" data-pago-id="${pago.id}">
-                                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                                                    <td class="px-2 py-2 text-xs text-right">
+                                                        <div class="pill-menu-container">
+                                                            <div class="pill-menu-actions">
+                                                                <a href="#" title="Detalles" class="btn-detalle-pago text-gray-300 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                                </a>
+                                                                <a href="#" title="Abonar" class="btn-abonar-pago text-green-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                                </a>
+                                                                <a href="#" title="Editar" class="btn-editar-pago text-orange-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                                </a>
+                                                                <a href="#" title="Servicios" class="btn-gestionar-servicios text-purple-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                                </a>
+                                                                ${mobiliarioTotal > 0 ? `<a href="#" title="Mobiliario" class="btn-gestionar-mobiliario text-teal-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                                                </a>` : ''}
+                                                                <a href="#" title="Recibo PDF" class="btn-recibo-pdf text-indigo-400 hover:text-white hover:bg-gray-700/50" role="menuitem" data-pago-id="${pago.id}">
+                                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                                                </a>
+                                                                <a href="#" title="Eliminar" class="btn-eliminar-pago text-red-400 hover:text-white hover:bg-red-500/50" role="menuitem" data-pago-id="${pago.id}">
+                                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                                </a>
+                                                            </div>
+                                                            <button type="button" class="pill-menu-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150">
+                                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </td>                        </tr>
                     `;
                 });
             }
             document.querySelector('.min-w-full tbody').innerHTML = tablaFilas;
 
             // Re-adjuntar listeners para los nuevos elementos
-            adjuntarListenersDropdown();
+            adjuntarListenersPillMenu();
 
 document.querySelectorAll('.btn-detalle-pago').forEach(button => {
     button.addEventListener('click', (e) => {
