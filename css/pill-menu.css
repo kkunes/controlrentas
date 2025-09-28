@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     position: absolute;
-    right: 0; /* Inicia desde el borde derecho del contenedor */
+    right: 45px; /* Ajustado para que no se solape con el botón */
     top: 50%;
     transform: translateY(-50%);
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Transición con "rebote" */
@@ -27,7 +27,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     padding: 0;
-    width: 40px; /* Inicia con el ancho del botón */
+    width: 0; /* Inicia con ancho 0 */
     height: 40px; /* Misma altura que el botón */
     opacity: 0;
 }
