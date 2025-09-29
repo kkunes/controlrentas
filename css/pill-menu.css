@@ -56,7 +56,8 @@
 }
 
 .pill-menu-actions a:hover {
-    background-color: rgba(133, 128, 128, 0.527); /* Un fondo blanco sutil al pasar el mouse */
+    background-color: var(--icon-color);
+    color: white !important;
 }
 
 .pill-menu-container.active .pill-menu-actions a {
