@@ -11,31 +11,33 @@
     /* Styles for the main button (the three dots) */
     z-index: 10;
     cursor: pointer;
+    min-width: 52px; /* Make button larger for touch */
+    min-height: 52px; /* Make button larger for touch */
 }
 
 .pill-menu-actions {
     display: flex;
     align-items: center;
     position: absolute;
-    right: 45px; /* Ajustado para que no se solape con el botón */
+    right: 52px; /* Adjusted to be next to the larger button */
     top: 50%;
     transform: translateY(-50%);
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Transición con "rebote" */
     overflow: hidden;
     border-radius: 9999px; /* pill shape */
-    background-color: rgba(55, 55, 56, 0.568); /* Un blanco casi opaco con transparencia */
+    background-color: rgba(10, 10, 10, 0.568); /* Un blanco casi opaco con transparencia */
     backdrop-filter: blur(16px); /* Aumentamos el desenfoque para mayor contraste */
     -webkit-backdrop-filter: blur(16px);
-    padding: 0;
+    padding: 0; /* No padding, buttons fill height */
     width: 0; /* Inicia con ancho 0 */
-    height: 40px; /* Misma altura que el botón */
+    height: 52px; /* Adjusted height to accommodate larger buttons */
     opacity: 0;
     border: 1px solid rgba(255, 255, 255, 0.3); /* Borde blanco sutil */
 }
 
 .pill-menu-container.active .pill-menu-actions {
     width: auto; /* Se expande al contenido */
-    padding: 5px;
+    padding: 0; /* No padding, buttons fill height */
     opacity: 1;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
 }
@@ -44,13 +46,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px; /* Un poco más pequeño para que quepa bien */
-    margin: 0 3px; /* Espacio entre botones */
+    padding: 14px; /* Increased padding for larger touch area */
+    margin: 0 6px; /* Adjusted margin for better spacing */
     border-radius: 9999px;
     transition: background-color 0.2s ease, transform 0.2s ease;
     transform: scale(0) rotate(-90deg); /* Inicia escalado a 0 y rotado */
     opacity: 0;
     transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.2s ease;
+}
+
+.pill-menu-actions a:hover {
+    background-color: rgba(133, 128, 128, 0.527); /* Un fondo blanco sutil al pasar el mouse */
 }
 
 .pill-menu-container.active .pill-menu-actions a {
