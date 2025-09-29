@@ -290,7 +290,7 @@ export async function mostrarInventarioMobiliario() {
                         data-condicion="${(mob.condicion || '').toLowerCase()}">
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium text-gray-900">${mob.nombre}</td>
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-700 hidden sm:table-cell">${mob.descripcion || '-'}</td>
-                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-900">$${(mob.costoRenta || 0).toFixed(2)}</td>
+                        <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-900">${(mob.costoRenta || 0).toFixed(2)}</td>
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm">
                             <span class="inline-flex px-2 sm:px-3 py-1 text-xs font-semibold rounded-full ${estadoClass}">
                                 ${estadoTexto}
@@ -300,51 +300,32 @@ export async function mostrarInventarioMobiliario() {
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold ${cantidadDisponible > 0 ? 'text-green-600' : 'text-red-600'}">${cantidadDisponible}</td>
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-700 max-w-xs truncate hidden sm:table-cell" title="${asignacionesTexto}">${asignacionesTexto}</td>
                         <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-right">
-                            <div class="flex flex-wrap justify-end gap-1.5">
-                                <button onclick="verHistorialMobiliario('${mob.id}')" 
-                                    class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
-                                    text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            <div class="pill-menu-container">
+                                <div class="pill-menu-actions">
+                                    <a href="#" title="Historial" onclick="verHistorialMobiliario('${mob.id}')" class="text-purple-500 p-2" style="--icon-color: #A855F7;">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    </a>
+                                    <a href="#" title="Editar" onclick="editarMueble('${mob.id}')" class="text-yellow-500 p-2" style="--icon-color: #EAB308;">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </a>
+                                    ${cantidadDisponible > 0 ? `
+                                        <a href="#" title="Asignar" onclick="asignarMueble('${mob.id}')" class="text-blue-500 p-2" style="--icon-color: #3B82F6;">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                        </a>
+                                    ` : ''}
+                                    ${cantidadAsignada > 0 ? `
+                                        <a href="#" title="Liberar" onclick="liberarMobiliario('${mob.id}')" class="text-orange-500 p-2" style="--icon-color: #F97316;">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                                        </a>
+                                    ` : ''}
+                                    <a href="#" title="Eliminar" onclick="eliminarMueble('${mob.id}')" class="text-red-500 p-2" style="--icon-color: #EF4444;" ${cantidadAsignada > 0 ? 'disabled' : ''}>
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </a>
+                                </div>
+                                <button type="button" class="pill-menu-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150">
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                                     </svg>
-                                    Historial
-                                </button>
-                                <button onclick="editarMueble('${mob.id}')" 
-                                    class="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
-                                    text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                    Editar
-                                </button>
-                                ${cantidadDisponible > 0 ? `
-                                    <button onclick="asignarMueble('${mob.id}')" 
-                                        class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
-                                        text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                        </svg>
-                                        Asignar
-                                    </button>
-                                ` : ''}
-                                ${cantidadAsignada > 0 ? `
-                                    <button onclick="liberarMobiliario('${mob.id}')" 
-                                        class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 
-                                        text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-                                        </svg>
-                                        Liberar
-                                    </button>
-                                ` : ''}
-                                <button onclick="eliminarMueble('${mob.id}')" 
-                                    class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
-                                    text-white px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center justify-center gap-1.5"
-                                    ${cantidadAsignada > 0 ? 'disabled title="No se puede eliminar mobiliario asignado"' : ''}>
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                    Eliminar
                                 </button>
                             </div>
                         </td>
@@ -361,6 +342,42 @@ export async function mostrarInventarioMobiliario() {
         `;
 
         document.getElementById("contenido").innerHTML = html;
+
+        function adjuntarListenersPillMenu() {
+            document.querySelectorAll('.pill-menu-container').forEach(container => {
+                const button = container.querySelector('.pill-menu-button');
+                if (button) {
+                    if (button.dataset.pillMenuAttached) return;
+                    button.dataset.pillMenuAttached = 'true';
+
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Close other active menus
+                        document.querySelectorAll('.pill-menu-container.active').forEach(otherContainer => {
+                            if (otherContainer !== container) {
+                                otherContainer.classList.remove('active');
+                            }
+                        });
+                        // Toggle current menu
+                        container.classList.toggle('active');
+                    });
+                }
+            });
+        }
+
+        // Listener global para cerrar los menús. Se añade una sola vez.
+        if (!window.pillMenuClickListenerAdded) {
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.pill-menu-container')) {
+                    document.querySelectorAll('.pill-menu-container.active').forEach(container => {
+                        container.classList.remove('active');
+                    });
+                }
+            });
+            window.pillMenuClickListenerAdded = true;
+        }
+        
+        adjuntarListenersPillMenu();
 
         document.getElementById('btn-agregar-mobiliario').addEventListener('click', mostrarFormularioNuevoMueble);
         document.getElementById('btn-exportar-pdf').addEventListener('click', exportarMobiliarioPDF);

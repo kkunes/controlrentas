@@ -60,6 +60,11 @@
     color: white !important;
 }
 
+.pill-menu-actions a[disabled] {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
 .pill-menu-container.active .pill-menu-actions a {
     transform: scale(1) rotate(0deg); /* Vuelve a la normalidad */
     opacity: 1;
