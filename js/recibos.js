@@ -6,29 +6,31 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase
 window.seleccionarFirmaYGenerarRecibo = function (pagoId) {
     const modalHtml = `
         <div class="p-6">
-            <h3 class="text-xl font-semibold mb-4 text-center text-gray-700">Selecciona una firma para el recibo</h3>
+            <h3 class="text-xl font-semibold mb-4 text-center">Selecciona una firma para el recibo</h3>
             <div class="flex flex-col items-center gap-6">
                 <div class="flex gap-4">
-                    <button class="firma-option" data-firma="firmaCarlos.png">
-                        <img src="./img/firmaCarlos.png" alt="Firma Carlos" class="h-20 border rounded shadow hover:ring-2 ring-blue-500">
-                        <p class="mt-2 text-sm text-center text-gray-600">Carlos</p>
+                    <button class="firma-option text-white" data-firma="firmaCarlos.png">
+                        <img src="./img/firmaCarlos.png" alt="Firma Carlos" class="h-20 border-2 border-white/50 rounded shadow bg-white/50 hover:ring-2 ring-blue-400">
+                        <p class="mt-2 text-sm text-center">Carlos</p>
                     </button>
-                    <button class="firma-option" data-firma="firmaKarla.png">
-                        <img src="./img/firmaKarla.png" alt="Firma Karla" class="h-20 border rounded shadow hover:ring-2 ring-blue-500">
-                        <p class="mt-2 text-sm text-center text-gray-600">Karla</p>
+                    <button class="firma-option text-white" data-firma="firmaKarla.png">
+                        <img src="./img/firmaKarla.png" alt="Firma Karla" class="h-20 border-2 border-white/50 rounded shadow bg-white/50 hover:ring-2 ring-blue-400">
+                        <p class="mt-2 text-sm text-center">Karla</p>
                     </button>
                 </div>
-                <button class="mt-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-medium firma-option" data-firma="">Usar sin firma</button>
+                <button class="mt-6 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md text-sm font-medium firma-option" data-firma="">Usar sin firma</button>
             </div>
         </div>
     `;
 
     const modalContenedor = document.createElement('div');
     modalContenedor.id = 'modalFirma';
-    modalContenedor.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
+    modalContenedor.className = 'fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50';
     modalContenedor.innerHTML = `
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md relative animate-fade-in">
-            <button id="cerrarModalFirma" class="absolute top-3 right-3 text-gray-600 hover:text-black text-xl">×</button>
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg shadow-2xl w-full max-w-md relative animate-fade-in text-white">
+            <button id="cerrarModalFirma" class="absolute top-2 right-2 h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             ${modalHtml}
         </div>
     `;
@@ -62,6 +64,10 @@ export async function generarReciboPDF(pagoId, firma = '') {
     const inquilino = inquilinoDoc.exists() ? inquilinoDoc.data() : {};
     const inmuebleDoc = await getDoc(doc(db, "inmuebles", pago.inmuebleId));
     const inmueble = inmuebleDoc.exists() ? inmuebleDoc.data() : {};
+
+    let yIzq, yDer;
+    const xIzq = 12;
+    const xDer = 100;
 
     // --- Calcula el periodo cubierto por el pago ---
     let periodoTexto = "";
@@ -161,7 +167,7 @@ export async function generarReciboPDF(pagoId, firma = '') {
                     // Busca el monto correspondiente
                     const montoKey = key + 'Monto';
                     const monto = pago.serviciosPagados[montoKey];
-                    servicios.push(`${key.charAt(0).toUpperCase() + key.slice(1)}${monto ? `: $${parseFloat(monto).toFixed(2)}` : ''}`);
+                    servicios.push(`${key.charAt(0).toUpperCase() + key.slice(1)}${monto ? `: ${parseFloat(monto).toFixed(2)}` : ''}`);
                 }
             }
             serviciosTexto = servicios.join('   |   ');
@@ -179,10 +185,8 @@ export async function generarReciboPDF(pagoId, firma = '') {
         pdf.setDrawColor(37, 99, 235);
         pdf.line(10, yLinea, 205, yLinea);
 
-        let yIzq = yLinea + 7;   // Para la columna izquierda
-        let yDer = yLinea + 7;   // Para la columna derecha
-        const xIzq = 12;
-        const xDer = 100; // <-- Antes 120, ahora más a la izquierda
+        yIzq = yLinea + 7;   // Para la columna izquierda
+        yDer = yLinea + 7;   // Para la columna derecha
 
         // --- Columna izquierda: Inquilino e inmueble ---
         pdf.setFont("helvetica", "bold");
