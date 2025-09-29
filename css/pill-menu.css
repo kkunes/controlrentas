@@ -46,9 +46,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 14px; /* Increased padding for larger touch area */
+    padding: 8px 16px; /* px-4 py-2 */
     margin: 0 6px; /* Adjusted margin for better spacing */
     border-radius: 9999px;
+    gap: 0.5rem;
     transition: background-color 0.2s ease, transform 0.2s ease;
     transform: scale(0) rotate(-90deg); /* Inicia escalado a 0 y rotado */
     opacity: 0;

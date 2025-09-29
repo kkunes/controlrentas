@@ -949,7 +949,7 @@ main {
 .card, .bg-white, .rounded-lg, .shadow-md {
   transition: box-shadow 0.2s, transform 0.2s;
 }
-.card:not(.no-hover-effect):hover, .bg-white:not(.no-hover-effect):hover, .rounded-lg:not(.no-hover-effect):hover, .shadow-md:not(.no-hover-effect):hover {
+.card:not(.no-hover-effect):hover, .rounded-lg:not(.no-hover-effect):hover, .shadow-md:not(.no-hover-effect):hover {
   transform: translateY(-2px) scale(1.01);
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }

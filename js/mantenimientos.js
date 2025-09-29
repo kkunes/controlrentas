@@ -135,7 +135,7 @@ export async function mostrarMantenimientos() {
             <div id="total-mantenimientos-container" class="mb-6"></div>
             ${filtrosHtml}
             ${btnNuevoHtml}
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 no-hover-effect">
                 <div class="overflow-x-auto">
                     <table class="w-full table-auto divide-y divide-gray-200 text-xs sm:text-sm">
                         <thead class="bg-gray-50">
@@ -327,16 +327,16 @@ export async function mostrarMantenimientos() {
                     let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Urgente:"bg-red-100 text-red-800",Alta:"bg-orange-100 text-orange-800",Media:"bg-yellow-100 text-yellow-800",Baja:"bg-green-100 text-green-800"}[m.prioridad] || "bg-gray-100 text-gray-800");
                     let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Pendiente:"bg-red-100 text-red-800","En Progreso":"bg-yellow-100 text-yellow-800",Completado:"bg-green-100 text-green-800",Cancelado:"bg-gray-100 text-gray-800"}[m.estado] || "bg-gray-100 text-gray-800");
                     const materialesBtn = m.materiales && m.materiales.length > 0 ? `
-                        <button onclick="mostrarMaterialesMantenimiento('${m.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded-md text-xs flex items-center justify-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                            Ver Materiales
-                        </button>
+                        <a href="#" title="Ver Materiales" onclick="mostrarMaterialesMantenimiento('${m.id}')" class="text-purple-500 p-2 flex items-center gap-2" style="--icon-color: #A855F7;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            <span>Ver Materiales</span>
+                        </a>
                     ` : '';
                     const pagosObreroBtn = m.costo_mano_obra > 0 ? `
-                        <button onclick="gestionarPagosManoDeObra('${m.id}')" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 rounded-md text-xs flex items-center justify-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                            Pagos Obrero
-                        </button>
+                        <a href="#" title="Pagos Obrero" onclick="gestionarPagosManoDeObra('${m.id}')" class="text-teal-500 p-2 flex items-center gap-2" style="--icon-color: #14B8A6;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            <span>Pagos Obrero</span>
+                        </a>
                     ` : '';
                     return `
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
@@ -353,24 +353,35 @@ export async function mostrarMantenimientos() {
                             <td class="px-3 py-2 text-sm text-gray-700 hidden md:table-cell">${m.fechaMantenimiento || 'N/A'}</td>
                             <td class="px-3 py-2 text-sm text-gray-800">${m.pagadoPor}</td>
                             <td class="px-3 py-2 text-sm text-right">
-                                <div class="flex flex-wrap justify-end gap-1">
-                                    ${materialesBtn}
-                                    ${pagosObreroBtn}
-                                    <button onclick="editarMantenimiento('${m.id}')" class="btn-editar-mantenimiento bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Editar</button>
-                                    <button onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="btn-eliminar-mantenimiento bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Eliminar</button>
-                                    ${m.estado !== 'Completado' ? `
-                                    <button onclick="cambiarEstadoCosto('${m.id}')" class="btn-cambiar-estado bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-2 py-1 rounded-md text-xs transition-all duration-200 flex items-center justify-center" data-id="${m.id}">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                <div class="pill-menu-container">
+                                    <div class="pill-menu-actions">
+                                        ${materialesBtn}
+                                        ${pagosObreroBtn}
+                                        <a href="#" title="Editar" onclick="editarMantenimiento('${m.id}')" class="text-blue-500 p-2 flex items-center gap-2" style="--icon-color: #3B82F6;">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            <span>Editar</span>
+                                        </a>
+                                        <a href="#" title="Eliminar" onclick="eliminarDocumento('mantenimientos', '${m.id}', mostrarMantenimientos)" class="text-red-500 p-2 flex items-center gap-2" style="--icon-color: #EF4444;">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            <span>Eliminar</span>
+                                        </a>
+                                        ${m.estado !== 'Completado' ? `
+                                            <a href="#" title="Seguimiento" onclick="cambiarEstadoCosto('${m.id}')" class="text-yellow-500 p-2 flex items-center gap-2" style="--icon-color: #EAB308;">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                <span>Seguimiento</span>
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                    <button type="button" class="pill-menu-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150">
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                                         </svg>
-                                        Seguimiento
                                     </button>
-                                    ` : ''}
                                 </div>
                             </td>
                         </tr>`;
                 }).join('');
+                adjuntarListenersPillMenu();
             }
         }
 
@@ -387,6 +398,40 @@ export async function mostrarMantenimientos() {
             document.getElementById('filtroAnio').value = "";
             renderTablaMantenimientos();
         });
+
+        function adjuntarListenersPillMenu() {
+            document.querySelectorAll('.pill-menu-container').forEach(container => {
+                const button = container.querySelector('.pill-menu-button');
+                if (button) {
+                    if (button.dataset.pillMenuAttached) return;
+                    button.dataset.pillMenuAttached = 'true';
+
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Close other active menus
+                        document.querySelectorAll('.pill-menu-container.active').forEach(otherContainer => {
+                            if (otherContainer !== container) {
+                                otherContainer.classList.remove('active');
+                            }
+                        });
+                        // Toggle current menu
+                        container.classList.toggle('active');
+                    });
+                }
+            });
+        }
+
+        // Listener global para cerrar los menús. Se añade una sola vez.
+        if (!window.pillMenuClickListenerAdded) {
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.pill-menu-container')) {
+                    document.querySelectorAll('.pill-menu-container.active').forEach(container => {
+                        container.classList.remove('active');
+                    });
+                }
+            });
+            window.pillMenuClickListenerAdded = true;
+        }
 
         if (!document.getElementById('filtroMes').value && !document.getElementById('filtroAnio').value) {
             document.getElementById('filtroMes').value = mesActual;
