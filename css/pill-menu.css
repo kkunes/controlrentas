@@ -25,7 +25,7 @@
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Transición con "rebote" */
     overflow: hidden;
     border-radius: 9999px; /* pill shape */
-    background-color: rgba(240, 240, 240, 0.9); /* Un blanco casi opaco con transparencia */
+    background-color: rgba(129, 126, 126, 0.575); /* Un blanco casi opaco con transparencia */
     backdrop-filter: blur(16px); /* Aumentamos el desenfoque para mayor contraste */
     -webkit-backdrop-filter: blur(16px);
     padding: 0; /* No padding, buttons fill height */
