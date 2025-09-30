@@ -672,11 +672,13 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <input type="url" id="urlIdentificacion" value="${inquilinoExistente.urlIdentificacion || ''}" class="form-control" placeholder="https://docs.google.com/...">
             </div>
 
+            <!-- Checkbox de Depósito -->
             <div class="flex items-center">
                 <input type="checkbox" id="depositoRecibido" class="form-checkbox h-5 w-5 text-blue-600" ${inquilinoExistente.depositoRecibido ? 'checked' : ''}>
                 <label for="depositoRecibido" class="ml-2 block text-sm text-gray-900">¿Se recibió depósito en garantía?</label>
             </div>
 
+            <!-- Campos de Depósito (se muestran/ocultan con el checkbox de arriba) -->
             <div id="camposDeposito" class="${inquilinoExistente.depositoRecibido ? '' : 'hidden'} space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -689,7 +691,31 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Checkbox de Servicios -->
+            <div class="flex items-center">
+                <input type="checkbox" id="pagaServicios" class="form-checkbox h-5 w-5 text-blue-600" ${inquilinoExistente.pagaServicios ? 'checked' : ''}>
+                <label for="pagaServicios" class="ml-2 block text-sm text-gray-900">¿Este inquilino paga servicios?</label>
+            </div>
+
+            <!-- Contenedor de Servicios (se muestra/oculta con el checkbox de arriba) -->
+            <div id="serviciosContainer" class="${inquilinoExistente.pagaServicios ? 'bg-gray-50 p-4 rounded-lg border border-gray-200' : 'hidden'}">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-lg font-semibold text-gray-800">Servicios Asignados</h4>
+                    <button type="button" id="btn-agregar-servicio" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm text-sm">
+                        Agregar Servicio
+                    </button>
+                </div>
+                <div id="listaServicios" class="space-y-4">
+                    ${(inquilinoExistente.servicios && inquilinoExistente.servicios.length > 0) ? 
+                        inquilinoExistente.servicios.map((servicio, index) => `
+                            <!-- Aquí se generará cada servicio existente -->
+                        `).join('') : 
+                        '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>'
+                    }
+                </div>
+            </div>
+
             <div class="flex items-center">
                 <input type="checkbox" id="activo" class="form-checkbox h-5 w-5 text-blue-600" ${inquilinoExistente.activo === false ? '' : 'checked'}>
                 <label for="activo" class="ml-2 block text-sm text-gray-900">Inquilino Activo</label>
@@ -702,6 +728,11 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         </form>
     `;
     mostrarModal(modalHtml);
+
+    // Lógica para mostrar/ocultar el contenedor de servicios
+    document.getElementById('pagaServicios').addEventListener('change', function() {
+        document.getElementById('serviciosContainer').classList.toggle('hidden', !this.checked);
+    });
 
     // Logic to handle form submission
     const form = document.getElementById('formularioInquilino');
@@ -718,6 +749,21 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         const montoDeposito = document.getElementById('montoDeposito').value;
         const fechaDeposito = document.getElementById('fechaDeposito').value;
         const activo = document.getElementById('activo').checked;
+        const pagaServicios = document.getElementById('pagaServicios').checked;
+
+        // Recolectar servicios
+        const servicios = [];
+        if (pagaServicios) {
+            const servicioItems = document.querySelectorAll('.servicio-item');
+            servicioItems.forEach((item, index) => {
+                const tipo = item.querySelector(`[name="servicios[${index}][tipo]"]`).value;
+                const monto = parseFloat(item.querySelector(`[name="servicios[${index}][monto]"]`).value);
+                const notas = item.querySelector(`[name="servicios[${index}][notas]"]`).value;
+                if (tipo && !isNaN(monto)) {
+                    servicios.push({ tipo, monto, notas });
+                }
+            });
+        }
 
         const inquilinoData = {
             nombre,
@@ -729,7 +775,9 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             depositoRecibido,
             montoDeposito: depositoRecibido ? parseFloat(montoDeposito) : 0,
             fechaDeposito: depositoRecibido ? fechaDeposito : '',
-            activo
+            activo,
+            pagaServicios,
+            servicios
         };
 
         try {
@@ -753,6 +801,79 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     // Show/hide deposit fields based on checkbox
     document.getElementById('depositoRecibido').addEventListener('change', (e) => {
         document.getElementById('camposDeposito').classList.toggle('hidden', !e.target.checked);
+    });
+
+    // --- Lógica para Servicios ---
+    function renderizarServicios() {
+        const listaServicios = document.getElementById('listaServicios');
+        if (!listaServicios) return;
+
+        const servicios = inquilinoExistente.servicios || [];
+        if (servicios.length === 0) {
+            listaServicios.innerHTML = '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>';
+            return;
+        }
+
+        listaServicios.innerHTML = servicios.map((servicio, index) => `
+            <div class="servicio-item border border-gray-200 rounded-lg p-3 mb-3 bg-white">
+                <div class="flex justify-between items-center mb-2">
+                    <h5 class="font-medium text-gray-700">Servicio #${index + 1}</h5>
+                    <button type="button" class="btn-eliminar-servicio text-red-500 hover:text-red-700" data-index="${index}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio</label>
+                        <select name="servicios[${index}][tipo]" class="form-control">
+                            <option value="Internet" ${servicio.tipo === 'Internet' ? 'selected' : ''}>Internet</option>
+                            <option value="Cable" ${servicio.tipo === 'Cable' ? 'selected' : ''}>Cable</option>
+                            <option value="Agua" ${servicio.tipo === 'Agua' ? 'selected' : ''}>Agua</option>
+                            <option value="Luz" ${servicio.tipo === 'Luz' ? 'selected' : ''}>Luz</option>
+                            <option value="Gas" ${servicio.tipo === 'Gas' ? 'selected' : ''}>Gas</option>
+                            <option value="Otro" ${servicio.tipo === 'Otro' ? 'selected' : ''}>Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Monto Mensual</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-gray-500 sm:text-sm">$</span></div>
+                            <input type="number" name="servicios[${index}][monto]" value="${servicio.monto || ''}" step="0.01" min="0" class="form-control pl-7 pr-12" placeholder="0.00">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"><span class="text-gray-500 sm:text-sm">MXN</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                    <textarea name="servicios[${index}][notas]" rows="2" class="form-control" placeholder="Detalles adicionales...">${servicio.notas || ''}</textarea>
+                </div>
+            </div>
+        `).join('');
+
+        // Re-attach event listeners for delete buttons
+        document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.servicio-item').remove();
+                // Opcional: Renumerar si es necesario
+            });
+        });
+    }
+
+    // Renderizar servicios existentes al cargar el formulario
+    renderizarServicios();
+
+    // Evento para agregar un nuevo servicio
+    document.getElementById('btn-agregar-servicio').addEventListener('click', () => {
+        const listaServicios = document.getElementById('listaServicios');
+        if (listaServicios.innerHTML.includes('No hay servicios agregados')) {
+            listaServicios.innerHTML = '';
+        }
+        const nuevoIndice = listaServicios.querySelectorAll('.servicio-item').length;
+        const nuevoServicioHtml = `
+            <!-- Aquí va el HTML de un nuevo servicio, similar al de renderizarServicios pero vacío -->
+        `;
+        // Simplificado: simplemente llamamos a una función que añade el HTML
+        agregarServicioAlFormulario();
     });
 }
 
