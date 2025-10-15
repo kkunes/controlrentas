@@ -87,18 +87,25 @@ export function ocultarModal() {
  *
  * @param {string} mensaje - El texto que se mostrará en la notificación.
  * @param {'success'|'error'|'info'|'warning'} [tipo='info'] - El tipo de notificación, que determina el color y el ícono.
- * @param {number} [duracion=4000] - El tiempo en milisegundos que la notificación permanecerá visible.
+ * @param {number} [duracion=3000] - El tiempo en milisegundos que la notificación permanecerá visible.
+ * @param {'esquina'|'centro'} [posicion='esquina'] - Dónde mostrar la notificación.
  */
-export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
+export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 3000, posicion = 'esquina') {
     // Forzar la duración para las advertencias para asegurar que se auto-cierren.
     if (tipo === 'warning') {
         duracion = 4000;
     }
 
-    const contenedor = document.getElementById('notificacionContainer');
+    const containerId = posicion === 'centro' ? 'notificacionContainerCentrado' : 'notificacionContainer';
+    let contenedor = document.getElementById(containerId);
+
+    // Si el contenedor no existe (especialmente el centrado), lo creamos
     if (!contenedor) {
-        
-        return;
+        contenedor = document.createElement('div');
+        contenedor.id = containerId;
+        document.body.appendChild(contenedor);
+        // Re-aplicamos los estilos desde el CSS
+        // (El CSS ya tiene las reglas para el nuevo ID)
     }
 
     const toast = document.createElement('div');
@@ -113,6 +120,11 @@ export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
         </div>
         <button class="toast-close-btn" aria-label="Cerrar">&times;</button>
     `;
+
+    // Aplicar animación de entrada diferente si está en el centro
+    if (posicion === 'centro') {
+        toast.style.transform = 'translateY(20px) scale(0.95)';
+    }
 
     contenedor.appendChild(toast);
 
