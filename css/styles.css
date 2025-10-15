@@ -365,16 +365,19 @@
 /* Notificaciones Toast estilo Fluent */
 #notificacionContainer {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 12px; /* Espaciado entre notificaciones */
-    align-items: flex-end;
+    align-items: center; /* Centrar toasts horizontalmente */
+    pointer-events: none; /* Permite hacer clic a través del contenedor */
 }
 
 .toast-notification {
+    pointer-events: all; /* El toast sí debe ser clickeable */
     display: flex;
     align-items: flex-start;
     width: 360px;
@@ -387,14 +390,14 @@
     border: 1px solid rgba(0, 0, 0, 0.08);
     padding: 16px;
     opacity: 0;
-    transform: translateX(20px) scale(0.95);
+    transform: translateY(20px) scale(0.95);
     transition: all 0.4s cubic-bezier(0.21, 1.02, 0.73, 1); /* Transición más suave */
     overflow: hidden;
 }
 
 .toast-notification.show {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0) scale(1);
 }
 
 .toast-icon {

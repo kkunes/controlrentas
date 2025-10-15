@@ -1,5 +1,6 @@
 import { db } from './firebaseConfig.js';
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { mostrarNotificacion } from './ui.js';
 
 
 
@@ -291,6 +292,7 @@ export async function generarReciboPDF(pagoId, firma = '') {
                 // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
                 const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
                 pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
+                mostrarNotificacion("Recibo generado exitosamente.", "success");
             };
         } else {
             // Si no hay firma, solo finaliza y descarga el PDF
@@ -357,6 +359,7 @@ export async function generarReciboPDF(pagoId, firma = '') {
         // Limpiar el nombre del inmueble para usarlo en el nombre del archivo (quitar caracteres especiales)
         const nombreInmuebleLimpio = (inmueble.nombre || 'Inmueble').replace(/[^a-zA-Z0-9]/g, '_');
         pdf.save(`${nombreInmuebleLimpio}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}.pdf`);
+        mostrarNotificacion("Recibo generado exitosamente.", "success");
     }
 }
 
