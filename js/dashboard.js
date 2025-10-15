@@ -27,6 +27,11 @@ window.listaPagosParciales = [];
 window.listaPagosProximos = [];
 window.listaPagosVencidos = [];
 
+// Variables para el caché del dashboard
+let cachedDashboardHTML = null;
+let dashboardCacheTimestamp = null;
+const CACHE_DURATION_MS = 10 * 60 * 1000; // 10 minutos
+
 import { mostrarRecordatoriosRenovacion } from './recordatorios.js';
 
 async function mostrarMantenimientosPendientes() {
@@ -176,8 +181,37 @@ async function mostrarModalMantenimientos(mantenimientos) {
     mostrarModal(modalContent, true);
 }
 
+function adjuntarListenersDashboard() {
+    // Re-adjuntar listeners que se pierden al cargar desde caché
+    mostrarMantenimientosPendientes();
+
+    const btnVerRenovaciones = document.getElementById('btnVerRenovaciones');
+    if (btnVerRenovaciones) {
+        btnVerRenovaciones.addEventListener('click', async () => {
+            // Importar dinámicamente para evitar problemas de circularidad
+            const { verificarContratosProximosARenovar, mostrarDetallesRenovacion } = await import('./recordatorios.js');
+            const contratos = await verificarContratosProximosARenovar();
+            mostrarDetallesRenovacion(contratos);
+        });
+    }
+}
 
 export async function mostrarDashboard() {
+    const contenedor = document.getElementById("contenido");
+    if (!contenedor) {
+        console.error("Contenedor 'contenido' no encontrado.");
+        mostrarNotificacion("Error: No se pudo cargar la sección del dashboard.", 'error');
+        return;
+    }
+
+    // --- Lógica de Caché ---
+    if (cachedDashboardHTML && dashboardCacheTimestamp && (new Date() - dashboardCacheTimestamp < CACHE_DURATION_MS)) {
+        console.log("Cargando dashboard desde la caché.");
+        contenedor.innerHTML = cachedDashboardHTML;
+        adjuntarListenersDashboard(); // Re-adjuntar listeners necesarios
+        return; // Termina la ejecución para no volver a cargar datos
+    }
+
     // Sobrescribir temporalmente la función mostrarNotificacion para evitar la notificación específica
     const originalMostrarNotificacion = window.mostrarNotificacion;
     window.mostrarNotificacion = function(mensaje, tipo) {
@@ -190,13 +224,6 @@ export async function mostrarDashboard() {
     // Verificar contratos próximos a renovar
     mostrarRecordatoriosRenovacion();
     
-    const contenedor = document.getElementById("contenido");
-    if (!contenedor) {
-        console.error("Contenedor 'contenido' no encontrado.");
-        mostrarNotificacion("Error: No se pudo cargar la sección del dashboard.", 'error');
-        return;
-    }
-
     let totalInmuebles = 0;
     let totalInquilinos = 0;
     let inmueblesOcupados = 0; // NUEVO
@@ -804,7 +831,11 @@ proximoPago.setHours(0, 0, 0, 0);
                 </div>
             </div>
         `;
-        mostrarMantenimientosPendientes();
+        // Guardar el HTML generado y la marca de tiempo en el caché
+        cachedDashboardHTML = contenedor.innerHTML;
+        dashboardCacheTimestamp = new Date();
+        console.log("Dashboard guardado en caché.");
+        adjuntarListenersDashboard();
     } catch (error) {
         console.error("Error al cargar el dashboard:", error);
         mostrarNotificacion("Error al cargar el dashboard.", 'error');
@@ -813,17 +844,6 @@ proximoPago.setHours(0, 0, 0, 0);
         // Restaurar la función original de mostrarNotificacion
         if (window.mostrarNotificacion !== mostrarNotificacion) {
             window.mostrarNotificacion = mostrarNotificacion;
-        }
-        
-        // Agregar event listener para el botón de ver renovaciones
-        const btnVerRenovaciones = document.getElementById('btnVerRenovaciones');
-        if (btnVerRenovaciones) {
-            btnVerRenovaciones.addEventListener('click', async () => {
-                // Importar dinámicamente para evitar problemas de circularidad
-                const { verificarContratosProximosARenovar, mostrarDetallesRenovacion } = await import('./recordatorios.js');
-                const contratos = await verificarContratosProximosARenovar();
-                mostrarDetallesRenovacion(contratos);
-            });
         }
     }
 }
