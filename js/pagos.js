@@ -375,6 +375,7 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
                 <div class="flex gap-2">
                     <button id="btnNuevoPago" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Pago</button>
                     <button id="btnPagoServicio" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Pago de Servicio</button>
+                    <button id="btnGenerarReporte" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Generar Reporte PDF</button>
                 </div>
             </div>
             ${filtrosHtml}
@@ -551,6 +552,8 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
         });
 
  // --- Filtros interactivos ---
+        document.getElementById('btnGenerarReporte').addEventListener('click', () => mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap));
+
         function aplicarFiltros() {
             const filtroInmueble = document.getElementById('filtroInmueble').value;
             const filtroInquilino = document.getElementById('filtroInquilino').value;
@@ -873,11 +876,135 @@ function actualizarMesCorrespondiente(fechaRegistroInput) {
     }
 }
 
+
+// Nueva función para mostrar el modal de reporte de pagos
+function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
+    const inmueblesOptions = [...inmueblesMap.entries()].map(([id, nombre]) =>
+        `<option value="${id}">${nombre}</option>`).join('');
+    const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) =>
+        `<option value="${id}">${nombre}</option>`).join('');
+
+    const modalHtml = `
+        <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
+            <button id="btnCerrarModalReporte" class="absolute top-3 right-3 text-white hover:text-blue-200 transition-colors duration-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-2xl font-bold text-center">Generar Reporte de Pagos</h3>
+        </div>
+        <div class="space-y-4 p-4">
+            <div>
+                <label for="reporteInmueble" class="block text-sm font-semibold text-gray-700 mb-1">Inmueble</label>
+                <select id="reporteInmueble" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Todos</option>
+                    ${inmueblesOptions}
+                </select>
+            </div>
+            <div>
+                <label for="reporteInquilino" class="block text-sm font-semibold text-gray-700 mb-1">Inquilino</label>
+                <select id="reporteInquilino" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Todos</option>
+                    ${inquilinosOptions}
+                </select>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="reporteFechaInicio" class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Inicio</label>
+                    <input type="date" id="reporteFechaInicio" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="reporteFechaFin" class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Fin</label>
+                    <input type="date" id="reporteFechaFin" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6 p-4">
+            <button type="button" id="btnCancelarReporte" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
+            <button type="button" id="btnGenerarPdf" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">Generar PDF</button>
+        </div>
+    `;
+
+    mostrarModal(modalHtml);
+
+    document.getElementById('btnCerrarModalReporte').addEventListener('click', ocultarModal);
+    document.getElementById('btnCancelarReporte').addEventListener('click', ocultarModal);
+    document.getElementById('btnGenerarPdf').addEventListener('click', () => {
+        generarReportePDF(pagosList);
+    });
+}
+
+// Nueva función para generar el PDF del reporte de pagos
+function generarReportePDF(pagosList) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const filtroInmueble = document.getElementById('reporteInmueble').value;
+    const filtroInquilino = document.getElementById('reporteInquilino').value;
+    const filtroFechaInicio = document.getElementById('reporteFechaInicio').value;
+    const filtroFechaFin = document.getElementById('reporteFechaFin').value;
+
+    let pagosFiltrados = pagosList.filter(pago => {
+        const fechaPago = new Date(pago.fechaRegistro);
+        const fechaInicio = filtroFechaInicio ? new Date(filtroFechaInicio) : null;
+        const fechaFin = filtroFechaFin ? new Date(filtroFechaFin) : null;
+
+        if (fechaInicio) fechaInicio.setHours(0, 0, 0, 0);
+        if (fechaFin) fechaFin.setHours(23, 59, 59, 999);
+
+
+        return (!filtroInmueble || pago.inmuebleId === filtroInmueble) &&
+               (!filtroInquilino || pago.inquilinoId === filtroInquilino) &&
+               (!fechaInicio || fechaPago >= fechaInicio) &&
+               (!fechaFin || fechaPago <= fechaFin);
+    });
+
+    if (pagosFiltrados.length === 0) {
+        mostrarNotificacion("No hay pagos que coincidan con los filtros seleccionados.", "info");
+        return;
+    }
+
+    // Ordenar los pagos por fecha de registro (más reciente primero)
+    pagosFiltrados.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
+
+    doc.setFontSize(18);
+    doc.text("Reporte de Pagos", 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+
+    const tableColumn = ["Inmueble", "Inquilino", "Monto Pagado", "Fecha de Pago", "Mes Correspondiente"];
+    const tableRows = [];
+
+    pagosFiltrados.forEach(pago => {
+        const pagoData = [
+            pago.nombreInmueble,
+            pago.nombreInquilino,
+            `${(pago.montoPagado || 0).toFixed(2)}`,
+            pago.fechaRegistro,
+            `${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`
+        ];
+        tableRows.push(pagoData);
+    });
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        theme: 'grid',
+        headStyles: { fillColor: [22, 160, 133] },
+        styles: { font: 'helvetica', fontSize: 10 },
+    });
+
+    doc.save('reporte_pagos.pdf');
+    ocultarModal();
+}
+
 /**
  * Muestra el formulario para registrar o editar un pago.
  * @param {string} id - El ID del pago a editar (opcional).
  */
 export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
+
     let pago = {};
     let inmuebles = [];
     let inquilinos = [];

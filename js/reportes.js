@@ -180,6 +180,73 @@ export async function mostrarReportes() {
     await generarGraficoAnual(new Date().getFullYear());
 }
 
+export async function generarReportePagosPDF() {
+    const inmuebleId = document.getElementById('filtroInmueblePagos').value;
+    const inquilinoId = document.getElementById('filtroInquilinoPagos').value;
+    const fechaInicio = document.getElementById('filtroFechaInicioPagos').value;
+    const fechaFin = document.getElementById('filtroFechaFinPagos').value;
+
+    let pagosQuery = query(collection(db, "pagos"));
+
+    if (inmuebleId) {
+        pagosQuery = query(pagosQuery, where("inmuebleId", "==", inmuebleId));
+    }
+    if (inquilinoId) {
+        pagosQuery = query(pagosQuery, where("inquilinoId", "==", inquilinoId));
+    }
+    if (fechaInicio) {
+        pagosQuery = query(pagosQuery, where("fechaRegistro", ">=", fechaInicio));
+    }
+    if (fechaFin) {
+        pagosQuery = query(pagosQuery, where("fechaRegistro", "<=", fechaFin));
+    }
+
+    const pagosSnap = await getDocs(pagosQuery);
+    if (pagosSnap.empty) {
+        mostrarNotificacion("No se encontraron pagos con los filtros seleccionados.", "warning");
+        return;
+    }
+
+    const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+    const inquilinosMap = new Map();
+    inquilinosSnap.forEach(doc => {
+        inquilinosMap.set(doc.id, doc.data().nombre);
+    });
+
+    const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+    const inmueblesMap = new Map();
+    inmueblesSnap.forEach(doc => {
+        inmueblesMap.set(doc.id, doc.data().nombre);
+    });
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.text("Reporte de Pagos", 14, 16);
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 22);
+
+    const tableColumn = ["Inmueble", "Inquilino", "Monto Pagado", "Fecha de Registro", "Mes Correspondiente"];
+    const tableRows = [];
+
+    pagosSnap.forEach(pagoDoc => {
+        const pago = pagoDoc.data();
+        const rowData = [
+            inmueblesMap.get(pago.inmuebleId) || 'N/A',
+            inquilinosMap.get(pago.inquilinoId) || 'N/A',
+            pago.montoPagado ? `${pago.montoPagado.toFixed(2)}` : '$0.00',
+            pago.fechaRegistro,
+            `${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`
+        ];
+        tableRows.push(rowData);
+    });
+
+    doc.autoTable(tableColumn, tableRows, { startY: 30 });
+
+    doc.save('reporte_pagos.pdf');
+    mostrarNotificacion("Reporte de pagos generado exitosamente.", "success");
+}
+
 /**
 * Imprime el reporte anual abriendo una nueva ventana con el contenido para imprimir.
 */
