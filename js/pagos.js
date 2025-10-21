@@ -375,7 +375,10 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
                 <div class="flex gap-2">
                     <button id="btnNuevoPago" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Pago</button>
                     <button id="btnPagoServicio" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Pago de Servicio</button>
-                    <button id="btnGenerarReporte" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Generar Reporte PDF</button>
+                    <button id="btnGenerarReporte" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Generar Reporte PDF</span>
+                    </button>
                 </div>
             </div>
             ${filtrosHtml}
@@ -883,45 +886,58 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
     const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join('');
 
     const modalHtml = `
-        <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
-            <button id="btnCerrarModalReporte" class="absolute top-3 right-4 text-white hover:text-blue-200 transition-colors duration-200 focus:outline-none">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <h3 class="text-2xl font-bold text-center">Generar Reporte de Pagos</h3>
+    <style>
+        .tom-select-large .ts-control {
+            padding: 0.5rem 0.75rem;
+            min-height: 44px;
+        }
+        .tom-select-large .ts-input {
+            font-size: 1rem;
+        }
+        .tom-select-large .ts-dropdown .ts-option {
+            padding: 0.75rem 0.75rem;
+            font-size: 1rem;
+        }
+    </style>
+    <div class="px-6 py-4 bg-gradient-to-r from-pink-600 to-pink-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
+        <button id="btnCerrarModalReporte" class="absolute top-3 right-4 text-white hover:text-pink-200 transition-colors duration-200 focus:outline-none">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <h3 class="text-2xl font-bold text-center">Generar Reporte de Pagos</h3>
+    </div>
+    <div class="space-y-6 p-5">
+        <div class="tom-select-large">
+            <label for="reporteInmueble" class="block text-lg font-semibold text-gray-800 mb-2">1. Seleccione Inmueble(s)</label>
+            <select id="reporteInmueble" multiple placeholder="Elegir uno o más inmuebles...">${inmueblesOptions}</select>
         </div>
-        <div class="space-y-6 p-5">
-            <div>
-                <label for="reporteInmueble" class="block text-lg font-semibold text-gray-800 mb-2">1. Seleccione Inmueble(s)</label>
-                <select id="reporteInmueble" multiple placeholder="Elegir uno o más inmuebles...">${inmueblesOptions}</select>
-            </div>
-            <div>
-                <label for="reporteInquilino" class="block text-lg font-semibold text-gray-800 mb-2">2. Seleccione Inquilino(s)</label>
-                <select id="reporteInquilino" multiple placeholder="Elegir uno o más inquilinos...">${inquilinosOptions}</select>
-            </div>
-            <div>
-                <label class="block text-lg font-semibold text-gray-800 mb-2">3. Seleccione Rango de Fechas (Opcional)</label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                    <div>
-                        <label for="reporteFechaInicio" class="block text-sm font-medium text-gray-600 mb-1">Desde</label>
-                        <input type="date" id="reporteFechaInicio" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base">
-                    </div>
-                    <div>
-                        <label for="reporteFechaFin" class="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
-                        <input type="date" id="reporteFechaFin" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base">
-                    </div>
+        <div class="tom-select-large">
+            <label for="reporteInquilino" class="block text-lg font-semibold text-gray-800 mb-2">2. Seleccione Inquilino(s)</label>
+            <select id="reporteInquilino" multiple placeholder="Elegir uno o más inquilinos...">${inquilinosOptions}</select>
+        </div>
+        <div>
+            <label class="block text-lg font-semibold text-gray-800 mb-2">3. Seleccione Rango de Fechas (Opcional)</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <div>
+                    <label for="reporteFechaInicio" class="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+                    <input type="date" id="reporteFechaInicio" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base">
+                </div>
+                <div>
+                    <label for="reporteFechaFin" class="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+                    <input type="date" id="reporteFechaFin" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base">
                 </div>
             </div>
         </div>
-        <div class="flex justify-end space-x-4 mt-8 p-4 bg-gray-50 -mx-6 -mb-6 rounded-b-lg">
-            <button type="button" id="btnCancelarReporte" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
-            <button type="button" id="btnGenerarPdf" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                Generar PDF
-            </button>
-        </div>
-    `;
+    </div>
+    <div class="flex justify-end space-x-4 mt-8 p-4 bg-gray-50 -mx-6 -mb-6 rounded-b-lg">
+        <button type="button" id="btnCancelarReporte" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
+        <button type="button" id="btnGenerarPdf" class="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            Generar PDF
+        </button>
+    </div>
+`;
 
     mostrarModal(modalHtml);
 
