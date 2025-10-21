@@ -877,70 +877,79 @@ function actualizarMesCorrespondiente(fechaRegistroInput) {
 }
 
 
-// Nueva función para mostrar el modal de reporte de pagos
+// Nueva función para mostrar el modal de reporte de pagos con UI mejorada y selección múltiple
 function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
-    const inmueblesOptions = [...inmueblesMap.entries()].map(([id, nombre]) =>
-        `<option value="${id}">${nombre}</option>`).join('');
-    const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) =>
-        `<option value="${id}">${nombre}</option>`).join('');
+    const inmueblesOptions = [...inmueblesMap.entries()].map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join('');
+    const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join('');
 
     const modalHtml = `
-        <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
-            <button id="btnCerrarModalReporte" class="absolute top-3 right-3 text-white hover:text-blue-200 transition-colors duration-200 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
+            <button id="btnCerrarModalReporte" class="absolute top-3 right-4 text-white hover:text-blue-200 transition-colors duration-200 focus:outline-none">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
             <h3 class="text-2xl font-bold text-center">Generar Reporte de Pagos</h3>
         </div>
-        <div class="space-y-4 p-4">
+        <div class="space-y-6 p-5">
             <div>
-                <label for="reporteInmueble" class="block text-sm font-semibold text-gray-700 mb-1">Inmueble</label>
-                <select id="reporteInmueble" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-                    <option value="">Todos</option>
-                    ${inmueblesOptions}
-                </select>
+                <label for="reporteInmueble" class="block text-lg font-semibold text-gray-800 mb-2">1. Seleccione Inmueble(s)</label>
+                <select id="reporteInmueble" multiple placeholder="Elegir uno o más inmuebles...">${inmueblesOptions}</select>
             </div>
             <div>
-                <label for="reporteInquilino" class="block text-sm font-semibold text-gray-700 mb-1">Inquilino</label>
-                <select id="reporteInquilino" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-                    <option value="">Todos</option>
-                    ${inquilinosOptions}
-                </select>
+                <label for="reporteInquilino" class="block text-lg font-semibold text-gray-800 mb-2">2. Seleccione Inquilino(s)</label>
+                <select id="reporteInquilino" multiple placeholder="Elegir uno o más inquilinos...">${inquilinosOptions}</select>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="reporteFechaInicio" class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Inicio</label>
-                    <input type="date" id="reporteFechaInicio" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div>
-                    <label for="reporteFechaFin" class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Fin</label>
-                    <input type="date" id="reporteFechaFin" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-2">3. Seleccione Rango de Fechas (Opcional)</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label for="reporteFechaInicio" class="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+                        <input type="date" id="reporteFechaInicio" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base">
+                    </div>
+                    <div>
+                        <label for="reporteFechaFin" class="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+                        <input type="date" id="reporteFechaFin" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base">
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="flex justify-end space-x-3 mt-6 p-4">
-            <button type="button" id="btnCancelarReporte" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-colors duration-200">Cancelar</button>
-            <button type="button" id="btnGenerarPdf" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-md shadow-md transition-colors duration-200">Generar PDF</button>
+        <div class="flex justify-end space-x-4 mt-8 p-4 bg-gray-50 -mx-6 -mb-6 rounded-b-lg">
+            <button type="button" id="btnCancelarReporte" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
+            <button type="button" id="btnGenerarPdf" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                Generar PDF
+            </button>
         </div>
     `;
 
     mostrarModal(modalHtml);
 
+    const tomSelectInmueble = new TomSelect('#reporteInmueble', {
+        plugins: ['remove_button'],
+        maxItems: null,
+        sortField: { field: "text", direction: "asc" }
+    });
+    const tomSelectInquilino = new TomSelect('#reporteInquilino', {
+        plugins: ['remove_button'],
+        maxItems: null,
+        sortField: { field: "text", direction: "asc" }
+    });
+
     document.getElementById('btnCerrarModalReporte').addEventListener('click', ocultarModal);
     document.getElementById('btnCancelarReporte').addEventListener('click', ocultarModal);
     document.getElementById('btnGenerarPdf').addEventListener('click', () => {
-        generarReportePDF(pagosList);
+        generarReportePDF(pagosList, tomSelectInmueble, tomSelectInquilino);
     });
 }
 
 // Nueva función para generar el PDF del reporte de pagos
-function generarReportePDF(pagosList) {
+function generarReportePDF(pagosList, tomSelectInmueble, tomSelectInquilino) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    const filtroInmueble = document.getElementById('reporteInmueble').value;
-    const filtroInquilino = document.getElementById('reporteInquilino').value;
+    const filtrosInmueble = tomSelectInmueble.getValue();
+    const filtrosInquilino = tomSelectInquilino.getValue();
     const filtroFechaInicio = document.getElementById('reporteFechaInicio').value;
     const filtroFechaFin = document.getElementById('reporteFechaFin').value;
 
@@ -952,9 +961,11 @@ function generarReportePDF(pagosList) {
         if (fechaInicio) fechaInicio.setHours(0, 0, 0, 0);
         if (fechaFin) fechaFin.setHours(23, 59, 59, 999);
 
+        const inmuebleMatch = filtrosInmueble.length === 0 || filtrosInmueble.includes(pago.inmuebleId);
+        const inquilinoMatch = filtrosInquilino.length === 0 || filtrosInquilino.includes(pago.inquilinoId);
 
-        return (!filtroInmueble || pago.inmuebleId === filtroInmueble) &&
-               (!filtroInquilino || pago.inquilinoId === filtroInquilino) &&
+        return inmuebleMatch &&
+               inquilinoMatch &&
                (!fechaInicio || fechaPago >= fechaInicio) &&
                (!fechaFin || fechaPago <= fechaFin);
     });
@@ -964,36 +975,97 @@ function generarReportePDF(pagosList) {
         return;
     }
 
-    // Ordenar los pagos por fecha de registro (más reciente primero)
-    pagosFiltrados.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
+    // Agrupar pagos
+    const agruparPorInmueble = filtrosInmueble.length > 1;
+    const agruparPorInquilino = filtrosInquilino.length > 1 && !agruparPorInmueble;
+
+    let grupos = {};
+    if (agruparPorInmueble) {
+        pagosFiltrados.forEach(pago => {
+            if (!grupos[pago.inmuebleId]) {
+                grupos[pago.inmuebleId] = { nombre: pago.nombreInmueble, pagos: [] };
+            }
+            grupos[pago.inmuebleId].pagos.push(pago);
+        });
+    } else if (agruparPorInquilino) {
+        pagosFiltrados.forEach(pago => {
+            if (!grupos[pago.inquilinoId]) {
+                grupos[pago.inquilinoId] = { nombre: pago.nombreInquilino, pagos: [] };
+            }
+            grupos[pago.inquilinoId].pagos.push(pago);
+        });
+    } else {
+        // Si no hay agrupación múltiple, se crea un solo grupo para mantener la lógica
+        grupos['todos'] = { nombre: 'Todos los pagos seleccionados', pagos: pagosFiltrados };
+    }
+
+    const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    
+    // Ordenar los pagos dentro de cada grupo
+    for (const key in grupos) {
+        grupos[key].pagos.sort((a, b) => {
+            if (b.anioCorrespondiente !== a.anioCorrespondiente) {
+                return b.anioCorrespondiente - a.anioCorrespondiente;
+            }
+            return mesesNombres.indexOf(b.mesCorrespondiente) - mesesNombres.indexOf(a.mesCorrespondiente);
+        });
+    }
 
     doc.setFontSize(18);
     doc.text("Reporte de Pagos", 14, 22);
     doc.setFontSize(11);
     doc.setTextColor(100);
+    let startY = 30;
 
     const tableColumn = ["Inmueble", "Inquilino", "Monto Pagado", "Fecha de Pago", "Mes Correspondiente"];
-    const tableRows = [];
 
-    pagosFiltrados.forEach(pago => {
-        const pagoData = [
-            pago.nombreInmueble,
-            pago.nombreInquilino,
-            `${(pago.montoPagado || 0).toFixed(2)}`,
-            pago.fechaRegistro,
-            `${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`
-        ];
-        tableRows.push(pagoData);
-    });
+    for (const key in grupos) {
+        const grupo = grupos[key];
+        if (grupo.pagos.length === 0) continue;
 
-    doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 30,
-        theme: 'grid',
-        headStyles: { fillColor: [22, 160, 133] },
-        styles: { font: 'helvetica', fontSize: 10 },
-    });
+        if (agruparPorInmueble || agruparPorInquilino) {
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(grupo.nombre, 14, startY);
+            startY += 8;
+        }
+
+        const tableRows = [];
+        grupo.pagos.forEach(pago => {
+            const pagoData = [
+                pago.nombreInmueble,
+                pago.nombreInquilino,
+                `${(pago.montoPagado || 0).toFixed(2)}`,
+                pago.fechaRegistro,
+                `${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`
+            ];
+            tableRows.push(pagoData);
+        });
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: startY,
+            theme: 'grid',
+            headStyles: { fillColor: [22, 160, 133] },
+            styles: { font: 'helvetica', fontSize: 10 },
+            didDrawPage: (data) => {
+                startY = data.cursor.y + 10; // Actualizar startY para la siguiente tabla
+            }
+        });
+        
+        // Si autoTable no ha terminado (porque no ha dibujado la página),
+        // necesitamos una estimación para el siguiente Y.
+        if (doc.autoTable.previous.finalY) {
+             startY = doc.autoTable.previous.finalY + 10;
+        }
+
+        // Añadir espacio antes de la siguiente sección
+        if (startY > 250) { // Evitar que el espacio empuje a una nueva página innecesariamente
+            doc.addPage();
+            startY = 20;
+        }
+    }
 
     doc.save('reporte_pagos.pdf');
     ocultarModal();
