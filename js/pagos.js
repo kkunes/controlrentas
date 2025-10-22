@@ -882,90 +882,76 @@ function actualizarMesCorrespondiente(fechaRegistroInput) {
 
 // Nueva función para mostrar el modal de reporte de pagos con UI mejorada y selección múltiple
 function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
-    const inmueblesOptions = [...inmueblesMap.entries()].map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join('');
-    const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join('');
+    const createCheckboxList = (id, items) => {
+        const itemsHtml = [...items.entries()].map(([itemId, name]) => `
+            <label class="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors duration-200">
+                <input type="checkbox" value="${itemId}" name="${id}" class="h-5 w-5 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
+                <span class="ml-3 text-base text-gray-800">${name}</span>
+            </label>
+        `).join('');
+        return `<div id="${id}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 border border-gray-200 rounded-lg p-4 max-h-60 overflow-y-auto">${itemsHtml}</div>`;
+    };
+
+    const inmueblesCheckboxList = createCheckboxList('reporteInmueblesList', inmueblesMap);
+    const inquilinosCheckboxList = createCheckboxList('reporteInquilinosList', inquilinosMap);
 
     const modalHtml = `
-    <style>
-        .tom-select-large .ts-control {
-            padding: 0.5rem 0.75rem;
-            min-height: 44px;
-        }
-        .tom-select-large .ts-input {
-            font-size: 1rem;
-        }
-        .tom-select-large .ts-dropdown .ts-option {
-            padding: 0.75rem 0.75rem;
-            font-size: 1rem;
-        }
-    </style>
-    <div class="px-6 py-4 bg-gradient-to-r from-pink-600 to-pink-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
-        <button id="btnCerrarModalReporte" class="absolute top-3 right-4 text-white hover:text-pink-200 transition-colors duration-200 focus:outline-none">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-        <h3 class="text-2xl font-bold text-center">Generar Reporte de Pagos</h3>
-    </div>
-    <div class="space-y-6 p-5">
-        <div class="tom-select-large">
-            <label for="reporteInmueble" class="block text-lg font-semibold text-gray-800 mb-2">1. Seleccione Inmueble(s)</label>
-            <select id="reporteInmueble" multiple placeholder="Elegir uno o más inmuebles...">${inmueblesOptions}</select>
+        <div class="px-6 py-4 bg-gradient-to-r from-pink-600 to-pink-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
+            <button id="btnCerrarModalReporte" class="absolute top-3 right-4 text-white hover:text-pink-200 transition-colors duration-200 focus:outline-none">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-2xl font-bold text-center">Generar Reporte de Pagos</h3>
         </div>
-        <div class="tom-select-large">
-            <label for="reporteInquilino" class="block text-lg font-semibold text-gray-800 mb-2">2. Seleccione Inquilino(s)</label>
-            <select id="reporteInquilino" multiple placeholder="Elegir uno o más inquilinos...">${inquilinosOptions}</select>
-        </div>
-        <div>
-            <label class="block text-lg font-semibold text-gray-800 mb-2">3. Seleccione Rango de Fechas (Opcional)</label>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <div>
-                    <label for="reporteFechaInicio" class="block text-sm font-medium text-gray-600 mb-1">Desde</label>
-                    <input type="date" id="reporteFechaInicio" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base">
-                </div>
-                <div>
-                    <label for="reporteFechaFin" class="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
-                    <input type="date" id="reporteFechaFin" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base">
+        <div class="space-y-6 p-5">
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-2">1. Seleccione Inmueble(s)</label>
+                ${inmueblesCheckboxList}
+            </div>
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-2">2. Seleccione Inquilino(s)</label>
+                ${inquilinosCheckboxList}
+            </div>
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-2">3. Seleccione Rango de Fechas (Opcional)</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label for="reporteFechaInicio" class="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+                        <input type="date" id="reporteFechaInicio" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base">
+                    </div>
+                    <div>
+                        <label for="reporteFechaFin" class="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+                        <input type="date" id="reporteFechaFin" class="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="flex justify-end space-x-4 mt-8 p-4 bg-gray-50 -mx-6 -mb-6 rounded-b-lg">
-        <button type="button" id="btnCancelarReporte" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
-        <button type="button" id="btnGenerarPdf" class="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-            Generar PDF
-        </button>
-    </div>
-`;
+        <div class="flex justify-end space-x-4 mt-8 p-4 bg-gray-50 -mx-6 -mb-6 rounded-b-lg">
+            <button type="button" id="btnCancelarReporte" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors duration-200">Cancelar</button>
+            <button type="button" id="btnGenerarPdf" class="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                Generar PDF
+            </button>
+        </div>
+    `;
 
     mostrarModal(modalHtml);
-
-    const tomSelectInmueble = new TomSelect('#reporteInmueble', {
-        plugins: ['remove_button'],
-        maxItems: null,
-        sortField: { field: "text", direction: "asc" }
-    });
-    const tomSelectInquilino = new TomSelect('#reporteInquilino', {
-        plugins: ['remove_button'],
-        maxItems: null,
-        sortField: { field: "text", direction: "asc" }
-    });
 
     document.getElementById('btnCerrarModalReporte').addEventListener('click', ocultarModal);
     document.getElementById('btnCancelarReporte').addEventListener('click', ocultarModal);
     document.getElementById('btnGenerarPdf').addEventListener('click', () => {
-        generarReportePDF(pagosList, tomSelectInmueble, tomSelectInquilino);
+        generarReportePDF(pagosList);
     });
 }
 
 // Nueva función para generar el PDF del reporte de pagos
-function generarReportePDF(pagosList, tomSelectInmueble, tomSelectInquilino) {
+function generarReportePDF(pagosList) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    const filtrosInmueble = tomSelectInmueble.getValue();
-    const filtrosInquilino = tomSelectInquilino.getValue();
+    const filtrosInmueble = Array.from(document.querySelectorAll('#reporteInmueblesList input:checked')).map(cb => cb.value);
+    const filtrosInquilino = Array.from(document.querySelectorAll('#reporteInquilinosList input:checked')).map(cb => cb.value);
     const filtroFechaInicio = document.getElementById('reporteFechaInicio').value;
     const filtroFechaFin = document.getElementById('reporteFechaFin').value;
 
@@ -1070,14 +1056,11 @@ function generarReportePDF(pagosList, tomSelectInmueble, tomSelectInquilino) {
             }
         });
         
-        // Si autoTable no ha terminado (porque no ha dibujado la página),
-        // necesitamos una estimación para el siguiente Y.
         if (doc.autoTable.previous.finalY) {
              startY = doc.autoTable.previous.finalY + 10;
         }
 
-        // Añadir espacio antes de la siguiente sección
-        if (startY > 250) { // Evitar que el espacio empuje a una nueva página innecesariamente
+        if (startY > 250) { 
             doc.addPage();
             startY = 20;
         }
