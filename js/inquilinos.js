@@ -154,11 +154,11 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
                                         
                                         <div class="relative inline-block ml-3">
-                                            <span id="total-pill-${inquilino.id}" class="total-pill-trigger cursor-pointer inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-blue-200 text-blue-900 hover:bg-blue-300 transition-colors duration-200" title="Clic para ver desglose mensual">
+                                            <span id="total-pill-${inquilino.id}" class="total-pill-trigger cursor-pointer inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-blue-200 text-blue-900 hover:bg-blue-300 transition-colors duration-200 border-2 border-blue-400 shadow-md" title="Clic para ver desglose mensual">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                                 ${totales.totalGeneral.toFixed(2)}/mes
                                             </span>
-                                            <div id="total-breakdown-${inquilino.id}" class="total-breakdown-popup absolute z-20 hidden bg-slate-200/75 backdrop-blur-md shadow-xl rounded-lg p-4 border border-slate-300/75 text-sm mt-2 w-64">
+                                            <div id="total-breakdown-${inquilino.id}" class="total-breakdown-popup absolute z-20 hidden bg-slate-200/75 backdrop-blur-md shadow-xl rounded-lg p-4 border-2 border-blue-400 text-sm mt-2 w-64">
                                                 <h4 class="font-bold text-slate-900 mb-3 text-base">Desglose Mensual</h4>
                                                 <div class="space-y-3">
                                                     <div class="flex justify-between items-center">
