@@ -146,205 +146,225 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 const totales = await calcularTotalesInquilino(inquilino.id);
 
                 tarjetasInquilinosHtml += `
-                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${inquilino.activo ? 'border-green-500' : 'border-red-500'} overflow-hidden transform hover:-translate-y-1" data-id="${inquilino.id}">
-                        <div class="p-4 sm:p-5 md:p-6">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="flex-grow">
-                                    <div class="flex items-center flex-wrap">
-                                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
-                                        
-                                        <div class="relative inline-block ml-3">
-                                            <span id="total-pill-${inquilino.id}" class="total-pill-trigger cursor-pointer inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors duration-200" title="Clic para ver desglose mensual">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                ${totales.totalGeneral.toFixed(2)}/mes
-                                            </span>
-                                            <div id="total-breakdown-${inquilino.id}" class="total-breakdown-popup absolute z-20 hidden bg-white shadow-xl rounded-lg p-4 border border-gray-200 text-sm mt-2 w-60" style="left: 0;">
-                                                <h4 class="font-bold text-gray-800 mb-3">Desglose de Pago Mensual</h4>
-                                                <div class="space-y-2">
-                                                    <div class="flex justify-between"><span>Renta:</span> <span class="font-semibold">${totales.totalRenta.toFixed(2)}</span></div>
-                                                    <div class="flex justify-between"><span>Servicios:</span> <span class="font-semibold">${totales.totalServicios.toFixed(2)}</span></div>
-                                                    <div class="flex justify-between"><span>Mobiliario:</span> <span class="font-semibold">${totales.totalMobiliario.toFixed(2)}</span></div>
+                                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${inquilino.activo ? 'border-green-500' : 'border-red-500'} overflow-hidden transform hover:-translate-y-1" data-id="${inquilino.id}">
+                                        <div class="p-4 sm:p-5 md:p-6">
+                                            <div class="flex justify-between items-start mb-4">
+                                                <div class="flex-grow">
+                                                    <div class="flex items-center flex-wrap">
+                                                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
+                                                        
+                                                        <div class="relative inline-block ml-3">
+                                                            <span id="total-pill-${inquilino.id}" class="total-pill-trigger cursor-pointer inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-blue-200 text-blue-900 hover:bg-blue-300 transition-colors duration-200" title="Clic para ver desglose mensual">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                                ${totales.totalGeneral.toFixed(2)}/mes
+                                                            </span>
+                                                            <div id="total-breakdown-${inquilino.id}" class="total-breakdown-popup absolute z-20 hidden bg-white shadow-xl rounded-lg p-4 border border-gray-200 text-sm mt-2 w-64">
+                                                                <h4 class="font-bold text-gray-800 mb-3 text-base">Desglose Mensual</h4>
+                                                                <div class="space-y-3">
+                                                                    <div class="flex justify-between items-center">
+                                                                        <span class="flex items-center font-medium text-gray-700">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                                                            Renta:
+                                                                        </span>
+                                                                        <span class="font-bold text-lg text-green-600">${totales.totalRenta.toFixed(2)}</span>
+                                                                    </div>
+                                                                    <div class="flex justify-between items-center">
+                                                                        <span class="flex items-center font-medium text-gray-700">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                                                            Servicios:
+                                                                        </span>
+                                                                        <span class="font-bold text-lg text-yellow-600">${totales.totalServicios.toFixed(2)}</span>
+                                                                    </div>
+                                                                    <div class="flex justify-between items-center">
+                                                                        <span class="flex items-center font-medium text-gray-700">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                                                            Mobiliario:
+                                                                        </span>
+                                                                        <span class="font-bold text-lg text-purple-600">${totales.totalMobiliario.toFixed(2)}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="border-t mt-4 pt-3">
+                                                                    <div class="flex justify-between items-center font-bold text-lg">
+                                                                        <span>Total:</span>
+                                                                        <span class="text-blue-700">${totales.totalGeneral.toFixed(2)}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="border-t mt-3 pt-2">
-                                                    <div class="flex justify-between font-bold text-base"><span>Total:</span> <span class="text-blue-600">${totales.totalGeneral.toFixed(2)}</span></div>
+                                                <div class="flex flex-col items-end flex-shrink-0">
+                                                    <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${inquilino.activo ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}" />
+                                                        </svg>
+                                                        ${inquilino.activo ? 'Activo' : 'Inactivo'}
+                                                    </span>
+                                                    ${tieneDesperfectos ? `
+                                                        <span onclick="window.mostrarTotalDesperfectosInquilino('${inquilino.id}')" class="cursor-pointer mt-2 breathing-icon" title="Este inquilino tiene desperfectos registrados">
+                                                            <svg class="w-7 h-7 text-red-500 hover:text-red-600 transition-all duration-200 transform hover:scale-110" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+                                                        </span>
+                                                    ` : ''}
                                                 </div>
                                             </div>
+                
+                                            <div class="space-y-3 mb-6">
+                                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                    </svg>
+                                                    <span class="text-sm font-medium">${inquilino.telefono}</span>
+                                                </div>
+                
+                                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                    </svg>
+                                                    <span class="text-sm font-medium">${inquilino.nombreInmueble}</span>
+                                                </div>
+                
+                                                ${inquilino.depositoRecibido && inquilino.montoDeposito && inquilino.fechaDeposito ? `
+                                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span class="text-sm font-medium">Depósito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
+                                                    </div>
+                                                ` : ''}
+                
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                                    ${inquilino.fechaOcupacion ? `
+                                                        <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            <span class="text-sm font-medium">Inicio Pagos: ${inquilino.fechaOcupacion}</span>
+                                                        </div>
+                                                    ` : ''}
+                                                    ${inquilino.fechaLlegada ? `
+                                                        <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            <span class="text-sm font-medium">Firma: ${inquilino.fechaLlegada}</span>
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                
+                                                ${inquilino.urlIdentificacion ? `
+                                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Identificación</a>
+                                                    </div>
+                                                ` : ''}
+                                                
+                                                ${inquilino.pagaServicios && inquilino.servicios && Array.isArray(inquilino.servicios) && inquilino.servicios.length > 0 ? `
+                                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                        </svg>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-sm font-medium">Servicios:</span>
+                                                            ${inquilino.servicios.map(servicio => 
+                                                                `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
+                                                            ).join('')}
+                                                        </div>
+                                                    </div>
+                                                ` : ''}
+                                                
+                                                ${inquilino.pagaServicios && inquilino.tipoServicio && inquilino.montoServicio && (!inquilino.servicios || !Array.isArray(inquilino.servicios)) ? `
+                                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                        </svg>
+                                                        <span class="text-sm font-medium">Servicio: ${inquilino.tipoServicio} - ${parseFloat(inquilino.montoServicio).toFixed(2)}/mes</span>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" 
+                                                    title="Ver historial de pagos del inquilino"
+                                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>Pagos</span>
+                                                </button>
+                                                ${inquilino.activo ? 
+                                                    `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" 
+                                                        title="Marcar inquilino como desocupado"
+                                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                                        </svg>
+                                                        <span>Desocupar</span>
+                                                    </button>` : 
+                                                    `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" 
+                                                        title="Reactivar inquilino inactivo"
+                                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                        </svg>
+                                                        <span>Reactivar</span>
+                                                    </button>`
+                                                }
+                                                <button onclick="editarInquilino('${inquilino.id}')" 
+                                                    title="Editar información del inquilino"
+                                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                    <span>Editar</span>
+                                                </button>
+                                                <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" 
+                                                    title="Eliminar este inquilino"
+                                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    <span>Eliminar</span>
+                                                </button>
+                                                <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" 
+                                                    title="Ver historial de abonos del inquilino"
+                                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                    <span>Abonos</span>
+                                                </button>
+                                                <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" 
+                                                    title="Ver saldo a favor del inquilino"
+                                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>Saldo</span>
+                                                </button>
+                                                <button onclick="mostrarMobiliarioAsignadoInquilino('${inquilino.id}', '${inquilino.nombre}')" 
+                                                    title="Ver mobiliario asignado al inquilino"
+                                                    class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                    </svg>
+                                                    <span class="hidden sm:inline">Mobiliario</span>
+                                                    <span class="sm:hidden">Mob.</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+                                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700 flex items-center gap-1.5 transition-colors duration-200" title="Arrastrar para reordenar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                                                </svg>
+                                                <span class="text-xs">Reordenar</span>
+                                            </span>
+                                            <span id="badge-adeudos-${inquilino.id}" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="flex flex-col items-end flex-shrink-0">
-                                    <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${inquilino.activo ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}" />
-                                        </svg>
-                                        ${inquilino.activo ? 'Activo' : 'Inactivo'}
-                                    </span>
-                                    ${tieneDesperfectos ? `
-                                        <span onclick="window.mostrarTotalDesperfectosInquilino('${inquilino.id}')" class="cursor-pointer mt-2 breathing-icon" title="Este inquilino tiene desperfectos registrados">
-                                            <svg class="w-7 h-7 text-red-500 hover:text-red-600 transition-all duration-200 transform hover:scale-110" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
-                                        </span>
-                                    ` : ''}
-                                </div>
-                            </div>
-
-                            <div class="space-y-3 mb-6">
-                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
-                                    <span class="text-sm font-medium">${inquilino.telefono}</span>
-                                </div>
-
-                                <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                    <span class="text-sm font-medium">${inquilino.nombreInmueble}</span>
-                                </div>
-
-                                ${inquilino.depositoRecibido && inquilino.montoDeposito && inquilino.fechaDeposito ? `
-                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <span class="text-sm font-medium">Depósito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
-                                    </div>
-                                ` : ''}
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                    ${inquilino.fechaOcupacion ? `
-                                        <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <span class="text-sm font-medium">Inicio Pagos: ${inquilino.fechaOcupacion}</span>
-                                        </div>
-                                    ` : ''}
-                                    ${inquilino.fechaLlegada ? `
-                                        <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <span class="text-sm font-medium">Firma: ${inquilino.fechaLlegada}</span>
-                                        </div>
-                                    ` : ''}
-                                </div>
-
-                                ${inquilino.urlIdentificacion ? `
-                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Identificación</a>
-                                    </div>
-                                ` : ''}
-                                
-                                ${inquilino.pagaServicios && inquilino.servicios && Array.isArray(inquilino.servicios) && inquilino.servicios.length > 0 ? `
-                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                        </svg>
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-medium">Servicios:</span>
-                                            ${inquilino.servicios.map(servicio => 
-                                                `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
-                                            ).join('')}
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                ${inquilino.pagaServicios && inquilino.tipoServicio && inquilino.montoServicio && (!inquilino.servicios || !Array.isArray(inquilino.servicios)) ? `
-                                    <div class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                        </svg>
-                                        <span class="text-sm font-medium">Servicio: ${inquilino.tipoServicio} - ${parseFloat(inquilino.montoServicio).toFixed(2)}/mes</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                                <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" 
-                                    title="Ver historial de pagos del inquilino"
-                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span>Pagos</span>
-                                </button>
-                                ${inquilino.activo ? 
-                                    `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" 
-                                        title="Marcar inquilino como desocupado"
-                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                        </svg>
-                                        <span>Desocupar</span>
-                                    </button>` :
-                                    `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" 
-                                        title="Reactivar inquilino inactivo"
-                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        <span>Reactivar</span>
-                                    </button>`
-                                }
-                                <button onclick="editarInquilino('${inquilino.id}')" 
-                                    title="Editar información del inquilino"
-                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    <span>Editar</span>
-                                </button>
-                                <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" 
-                                    title="Eliminar este inquilino"
-                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    <span>Eliminar</span>
-                                </button>
-                                <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" 
-                                    title="Ver historial de abonos del inquilino"
-                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    <span>Abonos</span>
-                                </button>
-                                <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" 
-                                    title="Ver saldo a favor del inquilino"
-                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span>Saldo</span>
-                                </button>
-                                <button onclick="mostrarMobiliarioAsignadoInquilino('${inquilino.id}', '${inquilino.nombre}')" 
-                                    title="Ver mobiliario asignado al inquilino"
-                                    class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                    <span class="hidden sm:inline">Mobiliario</span>
-                                    <span class="sm:hidden">Mob.</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-                            <span class="handle-move cursor-move text-gray-400 hover:text-gray-700 flex items-center gap-1.5 transition-colors duration-200" title="Arrastrar para reordenar">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                                </svg>
-                                <span class="text-xs">Reordenar</span>
-                            </span>
-                            <span id="badge-adeudos-${inquilino.id}" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
-                        </div>
-                    </div>
-                `;
-            }
+                                `;            }
         }
 
         contenedor.innerHTML = `
