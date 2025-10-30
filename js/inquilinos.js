@@ -6,6 +6,52 @@ import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebase
 import { obtenerMesesAdeudadosHistorico, mostrarFormularioNuevoPago, mostrarFormularioPagoServicio, mostrarFormularioPagoMobiliario } from './pagos.js';
 import { mostrarTotalDesperfectosInquilino } from './desperfectos.js';
 
+// Nueva función para calcular totales
+async function calcularTotalesInquilino(inquilinoId) {
+    const inquilinoRef = doc(db, "inquilinos", inquilinoId);
+    const inquilinoSnap = await getDoc(inquilinoRef);
+
+    if (!inquilinoSnap.exists()) {
+        return { totalGeneral: 0, totalRenta: 0, totalServicios: 0, totalMobiliario: 0 };
+    }
+
+    const inquilino = inquilinoSnap.data();
+    let totalRenta = 0;
+    let totalServicios = 0;
+    let totalMobiliario = 0;
+
+    // Calcular renta
+    if (inquilino.inmuebleAsociadoId) {
+        const inmuebleRef = doc(db, "inmuebles", inquilino.inmuebleAsociadoId);
+        const inmuebleSnap = await getDoc(inmuebleRef);
+        if (inmuebleSnap.exists()) {
+            totalRenta = parseFloat(inmuebleSnap.data().rentaMensual) || 0;
+        }
+    }
+
+    // Calcular servicios
+    if (inquilino.pagaServicios && inquilino.servicios) {
+        totalServicios = inquilino.servicios.reduce((acc, servicio) => acc + (parseFloat(servicio.monto) || 0), 0);
+    }
+
+    // Calcular mobiliario
+    const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+    mobiliarioSnap.forEach(doc => {
+        const mob = doc.data();
+        if (Array.isArray(mob.asignaciones)) {
+            const asignacion = mob.asignaciones.find(a => a.inquilinoId === inquilinoId && a.activa === true && a.cantidad > 0);
+            if (asignacion) {
+                totalMobiliario += (parseFloat(mob.costoRenta) || 0) * asignacion.cantidad;
+            }
+        }
+    });
+
+    const totalGeneral = totalRenta + totalServicios + totalMobiliario;
+
+    return { totalGeneral, totalRenta, totalServicios, totalMobiliario };
+}
+
+
 // Variables globales para el manejo de modales anidados
 window.vieneDeAdeudos = false;
 window.adeudosModalContent = '';
@@ -95,19 +141,38 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         if (inquilinosList.length === 0) {
             tarjetasInquilinosHtml = `<p class="text-gray-500 text-center py-8">No hay inquilinos registrados.</p>`;
         } else {
-            tarjetasInquilinosHtml = inquilinosList.map(inquilino => {
-                // Busca el depósito de este inquilino
-                const deposito = pagosDepositoMap.get(inquilino.id);
+            for (const inquilino of inquilinosList) {
                 const tieneDesperfectos = desperfectosPorInquilino.has(inquilino.id);
+                const totales = await calcularTotalesInquilino(inquilino.id);
 
-                return `
+                tarjetasInquilinosHtml += `
                     <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${inquilino.activo ? 'border-green-500' : 'border-red-500'} overflow-hidden transform hover:-translate-y-1" data-id="${inquilino.id}">
                         <div class="p-4 sm:p-5 md:p-6">
                             <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
+                                <div class="flex-grow">
+                                    <div class="flex items-center flex-wrap">
+                                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
+                                        
+                                        <div class="relative inline-block ml-3">
+                                            <span id="total-pill-${inquilino.id}" class="total-pill-trigger cursor-pointer inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors duration-200" title="Clic para ver desglose mensual">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                ${totales.totalGeneral.toFixed(2)}/mes
+                                            </span>
+                                            <div id="total-breakdown-${inquilino.id}" class="total-breakdown-popup absolute z-20 hidden bg-white shadow-xl rounded-lg p-4 border border-gray-200 text-sm mt-2 w-60" style="left: 0;">
+                                                <h4 class="font-bold text-gray-800 mb-3">Desglose de Pago Mensual</h4>
+                                                <div class="space-y-2">
+                                                    <div class="flex justify-between"><span>Renta:</span> <span class="font-semibold">${totales.totalRenta.toFixed(2)}</span></div>
+                                                    <div class="flex justify-between"><span>Servicios:</span> <span class="font-semibold">${totales.totalServicios.toFixed(2)}</span></div>
+                                                    <div class="flex justify-between"><span>Mobiliario:</span> <span class="font-semibold">${totales.totalMobiliario.toFixed(2)}</span></div>
+                                                </div>
+                                                <div class="border-t mt-3 pt-2">
+                                                    <div class="flex justify-between font-bold text-base"><span>Total:</span> <span class="text-blue-600">${totales.totalGeneral.toFixed(2)}</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="flex flex-col items-end">
+                                <div class="flex flex-col items-end flex-shrink-0">
                                     <span class="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm ${inquilino.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${inquilino.activo ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}" />
@@ -279,8 +344,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                         </div>
                     </div>
                 `;
-        }).join('');
-        
+            }
         }
 
         contenedor.innerHTML = `
@@ -341,6 +405,41 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 }
             });
         });
+
+        // Listener para las nuevas píldoras de total
+        document.querySelectorAll('.total-pill-trigger').forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                e.stopPropagation(); // Evita que el clic se propague al documento
+                const breakdownId = pill.id.replace('total-pill-', 'total-breakdown-');
+                const breakdownPopup = document.getElementById(breakdownId);
+                
+                // Ocultar todos los otros popups abiertos
+                document.querySelectorAll('.total-breakdown-popup').forEach(popup => {
+                    if (popup.id !== breakdownId) {
+                        popup.classList.add('hidden');
+                    }
+                });
+
+                // Mostrar u ocultar el popup actual
+                if (breakdownPopup) {
+                    breakdownPopup.classList.toggle('hidden');
+                }
+            });
+        });
+
+        // Listener global para cerrar popups al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            const openPopups = document.querySelectorAll('.total-breakdown-popup:not(.hidden)');
+            openPopups.forEach(popup => {
+                // Si el clic no fue dentro del popup ni en su píldora de activación
+                const pillId = popup.id.replace('total-breakdown-', 'total-pill-');
+                const pill = document.getElementById(pillId);
+                if (!popup.contains(e.target) && !pill.contains(e.target)) {
+                    popup.classList.add('hidden');
+                }
+            });
+        });
+
 
         const lista = document.getElementById('listaInquilinos');
         if (lista) {
