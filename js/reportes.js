@@ -537,10 +537,15 @@ async function generarGraficoAnual(anio) {
     }
 }
 
-function abrirModalPropietarios(movimientos, propietariosMap) {
-    let propietariosOptions = '<option value="">Todos</option>';
+function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
+    let propietariosOptions = '<option value="">Propietarios</option>';
     propietariosMap.forEach((nombre, id) => {
         propietariosOptions += `<option value="${id}">${nombre}</option>`;
+    });
+
+    let inquilinosOptions = '<option value="">Inquilinos</option>';
+    inquilinosMap.forEach((nombre, id) => {
+        inquilinosOptions += `<option value="${id}">${nombre}</option>`;
     });
 
     const modalHtml = `
@@ -552,8 +557,16 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
                 </button>
             </div>
             <div class="p-6 flex-grow overflow-y-auto">
-                <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <input type="date" id="filtroFechaInicioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <input type="date" id="filtroFechaFinModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <select id="filtroInquilinoModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${inquilinosOptions}</select>
                     <select id="filtroPropietarioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${propietariosOptions}</select>
+                    <select id="filtroTipoModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="">Tipos</option>
+                        <option value="ingreso">Ingreso</option>
+                        <option value="gasto">Gasto</option>
+                    </select>
                 </div>
                 <div id="resumenFiltradoModal" class="mb-4"></div>
                 <div id="tablaModalContainer"></div>
@@ -572,8 +585,39 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
 
     const renderTabla = () => {
         const propietarioId = document.getElementById('filtroPropietarioModal').value;
+        const inquilinoId = document.getElementById('filtroInquilinoModal').value;
+        const fechaInicio = document.getElementById('filtroFechaInicioModal').value;
+        const fechaFin = document.getElementById('filtroFechaFinModal').value;
+        const tipo = document.getElementById('filtroTipoModal').value;
 
-        const movimientosFiltrados = propietarioId ? movimientos.filter(mov => mov.propietarioId === propietarioId) : movimientos;
+        let movimientosFiltrados = movimientos;
+
+        if (propietarioId) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.propietarioId === propietarioId);
+        }
+
+        if (inquilinoId) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.inquilinoId === inquilinoId);
+        }
+
+        if (fechaInicio) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.fecha >= fechaInicio);
+        }
+
+        if (fechaFin) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.fecha <= fechaFin);
+        }
+
+        if (tipo) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => {
+                if (tipo === 'ingreso') {
+                    return mov.tipo.startsWith('Ingreso');
+                } else if (tipo === 'gasto') {
+                    return mov.tipo.startsWith('Gasto');
+                }
+                return true;
+            });
+        }
 
         let totalFiltrado = 0;
         movimientosFiltrados.forEach(mov => {
@@ -622,12 +666,49 @@ function abrirModalPropietarios(movimientos, propietariosMap) {
     };
 
     document.getElementById('filtroPropietarioModal').addEventListener('change', renderTabla);
+    document.getElementById('filtroInquilinoModal').addEventListener('change', renderTabla);
+    document.getElementById('filtroFechaInicioModal').addEventListener('change', renderTabla);
+    document.getElementById('filtroFechaFinModal').addEventListener('change', renderTabla);
+    document.getElementById('filtroTipoModal').addEventListener('change', renderTabla);
 
     renderTabla();
 
     document.getElementById('generarPdfModalBtn').addEventListener('click', () => {
         const propietarioId = document.getElementById('filtroPropietarioModal').value;
-        const movimientosFiltrados = propietarioId ? movimientos.filter(mov => mov.propietarioId === propietarioId) : movimientos;
+        const inquilinoId = document.getElementById('filtroInquilinoModal').value;
+        const fechaInicio = document.getElementById('filtroFechaInicioModal').value;
+        const fechaFin = document.getElementById('filtroFechaFinModal').value;
+        const tipo = document.getElementById('filtroTipoModal').value;
+
+        let movimientosFiltrados = movimientos;
+
+        if (propietarioId) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.propietarioId === propietarioId);
+        }
+
+        if (inquilinoId) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.inquilinoId === inquilinoId);
+        }
+
+        if (fechaInicio) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.fecha >= fechaInicio);
+        }
+
+        if (fechaFin) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.fecha <= fechaFin);
+        }
+
+        if (tipo) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => {
+                if (tipo === 'ingreso') {
+                    return mov.tipo.startsWith('Ingreso');
+                } else if (tipo === 'gasto') {
+                    return mov.tipo.startsWith('Gasto');
+                }
+                return true;
+            });
+        }
+        
         generarPdfMovimientosPropietario(movimientosFiltrados, propietariosMap, propietarioId);
     });
 }
@@ -825,6 +906,7 @@ async function generarReporteMensual(mes, anio) {
                     monto: montoPagado,
                     propietario: propietarioNombre,
                     propietarioId,
+                    inquilinoId: data.inquilinoId, // Añadir inquilinoId
                     formaPago: data.formaPago
                 });
 
@@ -1023,7 +1105,7 @@ async function generarReporteMensual(mes, anio) {
         `;
 
         document.getElementById('btnIngresoPropietario').addEventListener('click', () => {
-            abrirModalPropietarios(todosLosMovimientos, propietariosMap);
+            abrirModalPropietarios(todosLosMovimientos, propietariosMap, inquilinosMap);
         });
 
         document.getElementById('btnDescargarPDF').addEventListener('click', () => {

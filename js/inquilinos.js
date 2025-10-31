@@ -177,7 +177,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                                     </div>
                                                     <div class="flex justify-between items-center">
                                                         <span class="flex items-center font-medium text-slate-800">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19V8h14v11a2 2 0 01-2 2H7a2 2 0 01-2-2zm-1-9h16" /></svg>
                                                             Mobiliario:
                                                         </span>
                                                         <span class="font-bold text-lg text-purple-700">${totales.totalMobiliario.toFixed(2)}</span>
@@ -347,7 +347,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     title="Ver mobiliario asignado al inquilino"
                                     class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19V8h14v11a2 2 0 01-2 2H7a2 2 0 01-2-2zm-1-9h16" />
                                     </svg>
                                     <span class="hidden sm:inline">Mobiliario</span>
                                     <span class="sm:hidden">Mob.</span>
