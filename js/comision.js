@@ -112,6 +112,40 @@ export async function renderComisiones() {
             comisionesEstado[docSnap.id] = docSnap.data();
         });
 
+        // --- NUEVA LÓGICA DE OBTENCIÓN DE DATOS ---
+        // A. Obtener todos los inquilinos y mapearlos por ID
+        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+        const tenantMap = new Map();
+        inquilinosSnap.forEach(doc => {
+            const data = doc.data();
+                    tenantMap.set(doc.id, {
+                        nombre: data.nombre, // <-- Añadir nombre
+                        fechaOcupacion: data.fechaOcupacion,
+                        fechaDesocupacion: data.fechaDesocupacion
+                    });        });
+
+        // B. Obtener todos los inmuebles y construir la lista de "inmuebles con ocupación" correcta
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesConOcupacion = [];
+        inmueblesSnap.forEach(doc => {
+            const inmuebleData = doc.data();
+            // Usar el inquilino actual o el último inquilino para obtener las fechas
+            const inquilinoId = inmuebleData.inquilinoActualId;
+            if (inquilinoId) {
+                const tenantInfo = tenantMap.get(inquilinoId);
+                if (tenantInfo && tenantInfo.fechaOcupacion) {
+                    inmueblesConOcupacion.push({
+                        id: doc.id,
+                        nombre: inmuebleData.nombre,
+                        nombreInquilino: tenantInfo.nombre, // <-- Añadir nombre del inquilino
+                        fechaOcupacion: tenantInfo.fechaOcupacion,
+                        fechaDesocupacion: tenantInfo.fechaDesocupacion
+                    });
+                }
+            }
+        });
+        // --- FIN DE LA NUEVA LÓGICA ---
+
         // 3. Construcción de filtros
         const mesesDisponibles = Object.keys(pagosPorMes);
         const anios = [...new Set(mesesDisponibles.map(m => m.split('-')[0]))].sort();
@@ -179,32 +213,20 @@ export async function renderComisiones() {
             return;
         }
 
-        // Obtén la lista de todos los inmuebles que tienen o han tenido una fecha de ocupación.
-        // Esto es crucial para verificar pagos de meses pasados, incluso si el inmueble ya no está "Ocupado".
-        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        const inmueblesConOcupacion = [];
-        inmueblesSnap.forEach(doc => {
-            const data = doc.data();
-            if (data.fechaOcupacion) {
-                inmueblesConOcupacion.push({
-                    id: doc.id,
-                    nombre: data.nombre,
-                    fechaOcupacion: data.fechaOcupacion
-                    // Nota: Para una lógica 100% precisa, se necesitaría una 'fechaDesocupacion'.
-                    // Sin ella, un inmueble que fue desocupado podría seguir apareciendo como que le falta pago 
-                    // en meses posteriores a su desocupación.
-                });
-            }
-        });
-
         mesesFiltrados.sort().reverse().forEach(mes => {
             const [anio, mesNum] = mes.split('-').map(Number);
             const finDeMes = new Date(anio, mesNum, 0);
 
             const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
                 if (!inmueble.fechaOcupacion) return false;
+
                 const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
-                return fechaOcupacion <= finDeMes;
+                const inicioDeMes = new Date(anio, mesNum - 1, 1);
+
+                const estuvoOcupado = fechaOcupacion <= finDeMes && 
+                                    (!inmueble.fechaDesocupacion || new Date(inmueble.fechaDesocupacion + 'T00:00:00') >= inicioDeMes);
+
+                return estuvoOcupado;
             });
 
             const pagos = pagosPorMes[mes] || [];
@@ -261,14 +283,7 @@ export async function renderComisiones() {
                     <span class="text-2xl font-extrabold text-green-600">${totalComision.toFixed(2)}</span>
                 </div>
             </div>
-            ${faltanPagos ? `
-                <div class="flex items-center gap-2 mt-2 mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 font-semibold shadow animate-pulse">
-                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    ¡Faltan pagos de: ${faltantesNombres.join(', ')}!
-                </div>
-            ` : ''}
+
         </div>
         `;
         });
@@ -411,12 +426,48 @@ export async function renderComisiones() {
                 const [anio, mesNum] = mes.split('-').map(Number);
                 const finDeMes = new Date(anio, mesNum, 0);
 
-                const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
-                    if (!inmueble.fechaOcupacion) {
-                        return false;
+                // --- INICIO DE LA CORRECCIÓN: Volver a obtener los datos frescos ---
+                const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+                const tenantMap = new Map();
+                inquilinosSnap.forEach(doc => {
+                    const data = doc.data();
+                    tenantMap.set(doc.id, {
+                        nombre: data.nombre,
+                        fechaOcupacion: data.fechaOcupacion,
+                        fechaDesocupacion: data.fechaDesocupacion
+                    });
+                });
+
+                const freshInmueblesSnap = await getDocs(collection(db, "inmuebles"));
+                const freshInmueblesConOcupacion = [];
+                freshInmueblesSnap.forEach(doc => {
+                    const inmuebleData = doc.data();
+                    const inquilinoId = inmuebleData.inquilinoActualId;
+                    if (inquilinoId) {
+                        const tenantInfo = tenantMap.get(inquilinoId);
+                        if (tenantInfo && tenantInfo.fechaOcupacion) {
+                            freshInmueblesConOcupacion.push({
+                                id: doc.id,
+                                nombre: inmuebleData.nombre,
+                                nombreInquilino: tenantInfo.nombre,
+                                fechaOcupacion: tenantInfo.fechaOcupacion,
+                                fechaDesocupacion: tenantInfo.fechaDesocupacion
+                            });
+                        }
                     }
+                });
+                // --- FIN DE LA CORRECCIÓN ---
+
+                const inmueblesOcupadosEsteMes = freshInmueblesConOcupacion.filter(inmueble => {
+                    if (!inmueble.fechaOcupacion) return false;
+
                     const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
-                    return fechaOcupacion <= finDeMes;
+                    const inicioDeMes = new Date(anio, mesNum - 1, 1);
+
+                    const estuvoOcupado = fechaOcupacion <= finDeMes && 
+                                        (!inmueble.fechaDesocupacion || new Date(inmueble.fechaDesocupacion + 'T00:00:00') >= inicioDeMes);
+
+                    return estuvoOcupado;
                 });
 
                 const pagos = pagosPorMes[mes] || [];
@@ -433,26 +484,42 @@ export async function renderComisiones() {
                         </svg>
                     </button>
                     <div class="px-4 py-3 bg-yellow-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow flex flex-col items-center">
-                        <h3 class="text-xl font-bold text-center mb-1">Inmuebles ocupados sin pago en el mes</h3>
+                        <h3 class="text-xl font-bold text-center mb-1">Inmuebles Ocupados Sin Pago</h3>
                         <div class="flex items-center gap-2 mt-1 mb-2">
                             <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-yellow-600 font-extrabold text-lg shadow">${faltantes.length}</span>
-                            <span class="text-sm text-yellow-100 font-medium">sin pago</span>
+                            <span class="text-sm text-yellow-100 font-medium">sin pago registrado en este mes</span>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
                         ${
                             faltantes.length > 0
-                            ? `<ul class="divide-y divide-yellow-100 bg-yellow-50 rounded-lg shadow p-4">
-                                ${faltantes.map(inm => `
-                                    <li class="flex items-center gap-3 py-2">
-                                        <svg class="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span class="font-medium text-yellow-900">${inm.nombre}</span>
-                                    </li>
-                                `).join('')}
-                            </ul>`
+                            ? `<table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inmueble</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inquilino a Cargo</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    ${faltantes.map(inm => `
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-yellow-100 rounded-full">
+                                                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">${inm.nombre}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">${inm.nombreInquilino || 'No asignado'}</div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>`
                             : `<div class="p-6 text-center text-green-700 font-semibold bg-green-50 rounded-lg shadow">Todos los inmuebles ocupados tienen pago registrado.</div>`
                         }
                     </div>
