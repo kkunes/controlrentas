@@ -1,7 +1,7 @@
 // js/abonos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 
 let pagosMap = new Map();
 
@@ -9,9 +9,11 @@ let pagosMap = new Map();
  * Muestra la sección principal de abonos/saldos a favor.
  */
 export async function mostrarAbonos() {
+    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         mostrarNotificacion("Error: No se pudo cargar la sección de saldos a favor.", 'error');
+        ocultarLoader();
         return;
     }
 
@@ -299,6 +301,8 @@ export async function mostrarAbonos() {
         console.error("Error al cargar los abonos a favor:", error);
         mostrarNotificacion("Error al cargar los saldos a favor.", 'error');
         contenedor.innerHTML = `<p class="text-red-500 text-center py-8">Error al cargar los saldos a favor: ${error.message}</p>`;
+    } finally {
+        ocultarLoader();
     }
 }
 

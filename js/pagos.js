@@ -1,16 +1,18 @@
 // js/pagos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { generarReciboPDF } from './recibos.js';
 /**
  * Muestra la lista de pagos.
  */
 export async function mostrarPagos(mostrarTabla = false) {
+    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de pagos.", 'error');
+        ocultarLoader();
         return;
     }
     
@@ -106,6 +108,7 @@ export async function mostrarPagos(mostrarTabla = false) {
         });
         document.getElementById('btnHistorialPagos').addEventListener('click', () => mostrarPagos(true));
         
+        ocultarLoader();
         return;
     }
 
@@ -826,6 +829,8 @@ document.querySelectorAll('.btn-gestionar-mobiliario').forEach(button => {
     } catch (error) {
         console.error("Error al mostrar pagos:", error);
         mostrarNotificacion("Error al cargar la lista de pagos.", 'error');
+    } finally {
+        ocultarLoader();
     }
 }
 

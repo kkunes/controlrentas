@@ -1,7 +1,7 @@
 // js/inquilinos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // Alias para evitar conflicto
 import { obtenerMesesAdeudadosHistorico, mostrarFormularioNuevoPago, mostrarFormularioPagoServicio, mostrarFormularioPagoMobiliario } from './pagos.js';
 import { mostrarTotalDesperfectosInquilino } from './desperfectos.js';
@@ -64,10 +64,12 @@ window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
  * Muestra la lista de inquilinos en forma de tarjetas.
  */
 export async function mostrarInquilinos(filtroActivo = "Todos") {
+    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de inquilinos.", 'error');
+        ocultarLoader();
         return;
     }
 
@@ -713,6 +715,8 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
     } catch (error) {
         console.error("Error al obtener inquilinos:", error);
         mostrarNotificacion("Error al cargar los inquilinos.", 'error');
+    } finally {
+        ocultarLoader();
     }
 }
 

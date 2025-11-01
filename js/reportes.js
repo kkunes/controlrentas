@@ -1,6 +1,6 @@
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarNotificacion, mostrarModal, ocultarModal } from './ui.js';
+import { mostrarLoader, ocultarLoader, mostrarNotificacion, mostrarModal, ocultarModal } from './ui.js';
 
 let annualChartInstance = null;
 let isReportesListenerAttached = false;
@@ -9,10 +9,12 @@ let isReportesListenerAttached = false;
  * Muestra la sección principal de reportes y configura los selectores de mes/año.
  */
 export async function mostrarReportes() {
+    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de reportes.", 'error');
+        ocultarLoader();
         return;
     }
 
@@ -171,13 +173,19 @@ export async function mostrarReportes() {
         isReportesListenerAttached = true;
     }
 
-    // Set initial values and generate reports
-    document.getElementById('selectMes').value = new Date().getMonth() + 1;
-    document.getElementById('selectAnio').value = new Date().getFullYear();
-    document.getElementById('selectAnioGrafica').value = new Date().getFullYear();
+    try {
+        document.getElementById('selectMes').value = new Date().getMonth() + 1;
+        document.getElementById('selectAnio').value = new Date().getFullYear();
+        document.getElementById('selectAnioGrafica').value = new Date().getFullYear();
 
-    await generarReporteMensual(new Date().getMonth() + 1, new Date().getFullYear());
-    await generarGraficoAnual(new Date().getFullYear());
+        await generarReporteMensual(new Date().getMonth() + 1, new Date().getFullYear());
+        await generarGraficoAnual(new Date().getFullYear());
+    } catch (error) {
+        console.error("Error al mostrar reportes:", error);
+        mostrarNotificacion("Error al cargar los reportes.", 'error');
+    } finally {
+        ocultarLoader();
+    }
 }
 
 export async function generarReportePagosPDF() {

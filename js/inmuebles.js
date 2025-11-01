@@ -1,7 +1,7 @@
 // js/inmuebles.js
 import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { mostrarHistorialPagosInmueble } from './pagos.js'; // Importar para mostrar historial de pagos
 import { mostrarPropietarios, editarPropietario, eliminarPropietario } from './propietarios.js'; // Importar funciones de propietarios
 
@@ -11,10 +11,12 @@ import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm"; // S
  * Muestra la lista de inmuebles en forma de tarjetas.
  */
 export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
+    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de inmuebles.", 'error');
+        ocultarLoader();
         return;
     }
 
@@ -351,6 +353,8 @@ inmueblesList.forEach(inmueble => {
     } catch (error) {
         console.error("Error al obtener inmuebles:", error);
         mostrarNotificacion("Error al cargar los inmuebles.", 'error');
+    } finally {
+        ocultarLoader();
     }
 }
 

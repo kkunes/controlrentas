@@ -1,6 +1,6 @@
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 
 async function exportarMobiliarioPDF() {
     const { jsPDF } = window.jspdf;
@@ -124,6 +124,7 @@ async function exportarMobiliarioPDF() {
  * Muestra el inventario de mobiliario con estado mejorado.
  */
 export async function mostrarInventarioMobiliario() {
+    mostrarLoader();
     try {
         const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
         const mobiliario = [];
@@ -423,6 +424,8 @@ export async function mostrarInventarioMobiliario() {
     } catch (error) {
         console.error("Error al cargar el inventario de mobiliario:", error);
         mostrarNotificacion("Error al cargar el inventario de mobiliario.", "error");
+    } finally {
+        ocultarLoader();
     }
 }
 

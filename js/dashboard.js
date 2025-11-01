@@ -197,6 +197,7 @@ function adjuntarListenersDashboard() {
 }
 
 export async function mostrarDashboard() {
+    
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");

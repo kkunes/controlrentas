@@ -3,6 +3,26 @@
 import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
 /**
+ * Muestra el loader principal de la aplicación.
+ */
+export function mostrarLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.classList.remove('hidden');
+    }
+}
+
+/**
+ * Oculta el loader principal de la aplicación.
+ */
+export function ocultarLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.classList.add('hidden');
+    }
+}
+
+/**
  * Muestra un diálogo de confirmación personalizado.
  * @param {string} mensaje - El mensaje HTML a mostrar
  * @param {string} botonConfirmar - Texto del botón de confirmación

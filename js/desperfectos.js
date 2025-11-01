@@ -1,7 +1,7 @@
 // js/desperfectos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
-import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
+import { mostrarModal, ocultarModal, mostrarNotificacion, mostrarLoader, ocultarLoader } from './ui.js';
 
 /**
  * Muestra la lista de desperfectos agrupados por inquilino en formato de tarjetas.
@@ -13,6 +13,8 @@ export async function mostrarDesperfectos() {
         mostrarNotificacion("Error: No se pudo cargar la sección de desperfectos.", 'error');
         return;
     }
+
+    mostrarLoader();
 
     try {
         const desperfectosSnap = await getDocs(collection(db, "desperfectos"));
@@ -152,6 +154,8 @@ export async function mostrarDesperfectos() {
     } catch (error) {
         console.error("Error al obtener desperfectos:", error);
         mostrarNotificacion("Error al cargar los desperfectos.", 'error');
+    } finally {
+        ocultarLoader();
     }
 }
 

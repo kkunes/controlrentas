@@ -1,5 +1,6 @@
 import { db } from './firebaseConfig.js';
 import { collection, doc, getDocs, query, where, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { mostrarLoader, ocultarLoader } from './ui.js';
 
 // Agrupa pagos por mes de pago (YYYY-MM)
 function agruparPorMes(pagos) {
@@ -96,29 +97,27 @@ let filtroEstadoCobro = ''; // Nuevo filtro para estado de cobro
 export async function renderComisiones() {
     const contenedor = document.getElementById('contenido');
     if (!contenedor) return;
-    contenedor.innerHTML = `
-        <div class="flex items-center justify-center h-32">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        </div>
-    `;
+    
+    mostrarLoader();
 
-    // 1. Obtiene los pagos reales de Firestore
-    const pagosRenta = await obtenerPagosRentaComisiones();
-    const pagosPorMes = agruparPorMes(pagosRenta);
+    try {
+        // 1. Obtiene los pagos reales de Firestore
+        const pagosRenta = await obtenerPagosRentaComisiones();
+        const pagosPorMes = agruparPorMes(pagosRenta);
 
-    // 2. Obtiene el estado de cobro de cada mes desde la colección comisiones
-    const comisionesSnap = await getDocs(collection(db, "comisiones"));
-    const comisionesEstado = {};
-    comisionesSnap.forEach(docSnap => {
-        comisionesEstado[docSnap.id] = docSnap.data();
-    });
+        // 2. Obtiene el estado de cobro de cada mes desde la colección comisiones
+        const comisionesSnap = await getDocs(collection(db, "comisiones"));
+        const comisionesEstado = {};
+        comisionesSnap.forEach(docSnap => {
+            comisionesEstado[docSnap.id] = docSnap.data();
+        });
 
-    // 3. Construcción de filtros
-    const mesesDisponibles = Object.keys(pagosPorMes);
-    const anios = [...new Set(mesesDisponibles.map(m => m.split('-')[0]))].sort();
-    const mesesNumeros = [...new Set(mesesDisponibles.map(m => m.split('-')[1]))].sort();
+        // 3. Construcción de filtros
+        const mesesDisponibles = Object.keys(pagosPorMes);
+        const anios = [...new Set(mesesDisponibles.map(m => m.split('-')[0]))].sort();
+        const mesesNumeros = [...new Set(mesesDisponibles.map(m => m.split('-')[1]))].sort();
 
-    let filtrosHtml = `
+        let filtrosHtml = `
 <div class="flex flex-wrap gap-4 mb-6 items-end">
     <div>
         <label class="block text-sm font-semibold text-gray-700 mb-1">Año</label>
@@ -149,79 +148,79 @@ export async function renderComisiones() {
 </div>
 `;
 
-    // 4. Construcción del HTML de pagos agrupados y filtrados
-    let html = `
+        // 4. Construcción del HTML de pagos agrupados y filtrados
+        let html = `
     <div class="max-w-3xl mx-auto px-2">
         <h2 class="text-3xl font-extrabold mb-6 text-indigo-700 text-center">Pagos de Renta Registrados</h2>
         ${filtrosHtml}
     `;
 
-    // Filtrar meses según los filtros seleccionados
-    let mesesFiltrados = Object.keys(pagosPorMes).filter(mes => {
-        const [anio, mesNum] = mes.split('-'); // mesNum SIEMPRE es string de dos dígitos
-        const coincideAnio = !filtroAnio || filtroAnio === anio;
-        const coincideMes = !filtroMes || filtroMes === mesNum;
-        const comisionMes = comisionesEstado[mes];
-        const estado = filtroEstadoCobro || '';
+        // Filtrar meses según los filtros seleccionados
+        let mesesFiltrados = Object.keys(pagosPorMes).filter(mes => {
+            const [anio, mesNum] = mes.split('-'); // mesNum SIEMPRE es string de dos dígitos
+            const coincideAnio = !filtroAnio || filtroAnio === anio;
+            const coincideMes = !filtroMes || filtroMes === mesNum;
+            const comisionMes = comisionesEstado[mes];
+            const estado = filtroEstadoCobro || '';
 
-        if (estado === 'cobrado') {
-            return coincideAnio && coincideMes && !!comisionMes && comisionMes.cobrado === true;
-        }
-        if (estado === 'nocobrado') {
-            return coincideAnio && coincideMes && (!comisionMes || comisionMes.cobrado !== true);
-        }
-        // Si es "Todos" (""), muestra todos
-        return coincideAnio && coincideMes;
-    });
-
-    if (mesesFiltrados.length === 0) {
-        html += `<p class="text-gray-500 text-center">No hay pagos registrados para los filtros seleccionados.</p></div>`;
-        contenedor.innerHTML = html;
-        return;
-    }
-
-    // Obtén la lista de todos los inmuebles que tienen o han tenido una fecha de ocupación.
-    // Esto es crucial para verificar pagos de meses pasados, incluso si el inmueble ya no está "Ocupado".
-    const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-    const inmueblesConOcupacion = [];
-    inmueblesSnap.forEach(doc => {
-        const data = doc.data();
-        if (data.fechaOcupacion) {
-            inmueblesConOcupacion.push({
-                id: doc.id,
-                nombre: data.nombre,
-                fechaOcupacion: data.fechaOcupacion
-                // Nota: Para una lógica 100% precisa, se necesitaría una 'fechaDesocupacion'.
-                // Sin ella, un inmueble que fue desocupado podría seguir apareciendo como que le falta pago 
-                // en meses posteriores a su desocupación.
-            });
-        }
-    });
-
-    mesesFiltrados.sort().reverse().forEach(mes => {
-        const [anio, mesNum] = mes.split('-').map(Number);
-        const finDeMes = new Date(anio, mesNum, 0);
-
-        const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
-            if (!inmueble.fechaOcupacion) return false;
-            const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
-            return fechaOcupacion <= finDeMes;
+            if (estado === 'cobrado') {
+                return coincideAnio && coincideMes && !!comisionMes && comisionMes.cobrado === true;
+            }
+            if (estado === 'nocobrado') {
+                return coincideAnio && coincideMes && (!comisionMes || comisionMes.cobrado !== true);
+            }
+            // Si es "Todos" (""), muestra todos
+            return coincideAnio && coincideMes;
         });
 
-        const pagos = pagosPorMes[mes] || [];
-        const totalRentas = pagos.reduce((sum, p) => sum + p.monto, 0);
-        const totalComision = totalRentas * 0.10;
-        const nombreMes = new Date(2000, parseInt(mes.split('-')[1], 10) - 1, 1).toLocaleString('es-MX', { month: 'long' });
-        const comisionMes = comisionesEstado[mes];
-        const cobrado = comisionMes?.cobrado === true;
-        const fechaCobro = comisionMes?.fechaCobro ? new Date(comisionMes.fechaCobro).toLocaleString('es-MX') : '';
+        if (mesesFiltrados.length === 0) {
+            html += `<p class="text-gray-500 text-center">No hay pagos registrados para los filtros seleccionados.</p></div>`;
+            contenedor.innerHTML = html;
+            return;
+        }
 
-        const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
-        const faltantes = inmueblesOcupadosEsteMes.filter(inm => !pagosInmuebleIds.includes(inm.id));
-        const faltanPagos = faltantes.length > 0;
-        const faltantesNombres = faltantes.map(f => f.nombre);
+        // Obtén la lista de todos los inmuebles que tienen o han tenido una fecha de ocupación.
+        // Esto es crucial para verificar pagos de meses pasados, incluso si el inmueble ya no está "Ocupado".
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesConOcupacion = [];
+        inmueblesSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.fechaOcupacion) {
+                inmueblesConOcupacion.push({
+                    id: doc.id,
+                    nombre: data.nombre,
+                    fechaOcupacion: data.fechaOcupacion
+                    // Nota: Para una lógica 100% precisa, se necesitaría una 'fechaDesocupacion'.
+                    // Sin ella, un inmueble que fue desocupado podría seguir apareciendo como que le falta pago 
+                    // en meses posteriores a su desocupación.
+                });
+            }
+        });
 
-        html += `
+        mesesFiltrados.sort().reverse().forEach(mes => {
+            const [anio, mesNum] = mes.split('-').map(Number);
+            const finDeMes = new Date(anio, mesNum, 0);
+
+            const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
+                if (!inmueble.fechaOcupacion) return false;
+                const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
+                return fechaOcupacion <= finDeMes;
+            });
+
+            const pagos = pagosPorMes[mes] || [];
+            const totalRentas = pagos.reduce((sum, p) => sum + p.monto, 0);
+            const totalComision = totalRentas * 0.10;
+            const nombreMes = new Date(2000, parseInt(mes.split('-')[1], 10) - 1, 1).toLocaleString('es-MX', { month: 'long' });
+            const comisionMes = comisionesEstado[mes];
+            const cobrado = comisionMes?.cobrado === true;
+            const fechaCobro = comisionMes?.fechaCobro ? new Date(comisionMes.fechaCobro).toLocaleString('es-MX') : '';
+
+            const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
+            const faltantes = inmueblesOcupadosEsteMes.filter(inm => !pagosInmuebleIds.includes(inm.id));
+            const faltanPagos = faltantes.length > 0;
+            const faltantesNombres = faltantes.map(f => f.nombre);
+
+            html += `
         <div class="mb-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-xl p-8 transition hover:shadow-2xl border border-indigo-100">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                 <div class="flex items-center gap-3">
@@ -272,75 +271,75 @@ export async function renderComisiones() {
             ` : ''}
         </div>
         `;
-    });
+        });
 
-    html += `</div>`;
-    contenedor.innerHTML = html;
+        html += `</div>`;
+        contenedor.innerHTML = html;
 
-    // 5. Asigna eventos a los filtros
-    document.getElementById('filtroAnio').addEventListener('change', function() {
-        filtroAnio = this.value;
-        renderComisiones();
-    });
-    document.getElementById('filtroMes').addEventListener('change', function() {
-        filtroMes = this.value;
-        renderComisiones();
-    });
-    document.getElementById('filtroEstadoCobro').addEventListener('change', function() {
-        filtroEstadoCobro = this.value || '';
-        renderComisiones();
-    });
-
-    // 6. Asigna eventos a los botones de cobrado
-    document.querySelectorAll('.marcar-cobrado').forEach(btn => {
-        btn.addEventListener('click', async function(e) {
-            if (this.disabled) {
-                mostrarNotificacion("No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado.", "warning");
-                return;
-            }
-            const mes = this.getAttribute('data-mes');
-            const cobradoActual = this.getAttribute('data-cobrado') === 'true';
-            const pagos = pagosPorMes[mes];
-            const totalRentas = pagos.reduce((sum, p) => sum + p.monto, 0);
-            const totalComision = totalRentas * 0.10;
-            const ref = doc(db, "comisiones", mes);
-
-            if (!cobradoActual) {
-                // Marcar como cobrado
-                await setDoc(ref, {
-                    mes,
-                    totalComision,
-                    fechaCobro: new Date().toISOString(),
-                    cobrado: true
-                }, { merge: true });
-            } else {
-                // Desmarcar como cobrado
-                await setDoc(ref, {
-                    mes,
-                    totalComision,
-                    fechaCobro: null,
-                    cobrado: false
-                }, { merge: true });
-            }
+        // 5. Asigna eventos a los filtros
+        document.getElementById('filtroAnio').addEventListener('change', function() {
+            filtroAnio = this.value;
             renderComisiones();
         });
-    });
+        document.getElementById('filtroMes').addEventListener('change', function() {
+            filtroMes = this.value;
+            renderComisiones();
+        });
+        document.getElementById('filtroEstadoCobro').addEventListener('change', function() {
+            filtroEstadoCobro = this.value || '';
+            renderComisiones();
+        });
 
-    document.querySelectorAll('.btn-ver-pagos').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const mes = this.getAttribute('data-mes');
-            const pagos = pagosPorMes[mes];
+        // 6. Asigna eventos a los botones de cobrado
+        document.querySelectorAll('.marcar-cobrado').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                if (this.disabled) {
+                    mostrarNotificacion("No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado.", "warning");
+                    return;
+                }
+                const mes = this.getAttribute('data-mes');
+                const cobradoActual = this.getAttribute('data-cobrado') === 'true';
+                const pagos = pagosPorMes[mes];
+                const totalRentas = pagos.reduce((sum, p) => sum + p.monto, 0);
+                const totalComision = totalRentas * 0.10;
+                const ref = doc(db, "comisiones", mes);
 
-            // Trae todos los inmuebles para mapear id -> nombre
-            const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-            const inmueblesMap = {};
-            inmueblesSnap.forEach(doc => {
-                const data = doc.data();
-                inmueblesMap[doc.id] = data.nombre || '';
+                if (!cobradoActual) {
+                    // Marcar como cobrado
+                    await setDoc(ref, {
+                        mes,
+                        totalComision,
+                        fechaCobro: new Date().toISOString(),
+                        cobrado: true
+                    }, { merge: true });
+                } else {
+                    // Desmarcar como cobrado
+                    await setDoc(ref, {
+                        mes,
+                        totalComision,
+                        fechaCobro: null,
+                        cobrado: false
+                    }, { merge: true });
+                }
+                renderComisiones();
             });
+        });
 
-            // --- Para el modal de "Ver Pagos" ---
-            let tabla = `
+        document.querySelectorAll('.btn-ver-pagos').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const mes = this.getAttribute('data-mes');
+                const pagos = pagosPorMes[mes];
+
+                // Trae todos los inmuebles para mapear id -> nombre
+                const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+                const inmueblesMap = {};
+                inmueblesSnap.forEach(doc => {
+                    const data = doc.data();
+                    inmueblesMap[doc.id] = data.nombre || '';
+                });
+
+                // --- Para el modal de "Ver Pagos" ---
+                let tabla = `
                 <div class="relative">
                     <button onclick="ocultarModal()" class="absolute top-2 right-2 z-20 bg-white/80 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition-all focus:outline-none focus:ring-2 focus:ring-red-400" style="font-size:1.5rem;line-height:1;">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,31 +401,31 @@ export async function renderComisiones() {
                     }
                 </style>
             `;
-            mostrarModal(`<div class="modal-content">${tabla}</div>`);
-        });
-    });
-
-    document.querySelectorAll('.btn-ver-faltantes').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const mes = this.getAttribute('data-mes');
-            const [anio, mesNum] = mes.split('-').map(Number);
-            const finDeMes = new Date(anio, mesNum, 0);
-
-            const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
-                if (!inmueble.fechaOcupacion) {
-                    return false;
-                }
-                const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
-                return fechaOcupacion <= finDeMes;
+                mostrarModal(`<div class="modal-content">${tabla}</div>`);
             });
+        });
 
-            const pagos = pagosPorMes[mes] || [];
-            const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
+        document.querySelectorAll('.btn-ver-faltantes').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const mes = this.getAttribute('data-mes');
+                const [anio, mesNum] = mes.split('-').map(Number);
+                const finDeMes = new Date(anio, mesNum, 0);
 
-            const faltantes = inmueblesOcupadosEsteMes.filter(inm => !pagosInmuebleIds.includes(inm.id));
+                const inmueblesOcupadosEsteMes = inmueblesConOcupacion.filter(inmueble => {
+                    if (!inmueble.fechaOcupacion) {
+                        return false;
+                    }
+                    const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
+                    return fechaOcupacion <= finDeMes;
+                });
 
-            // --- Para el modal de "Inmuebles sin pago" ---
-            let tablaFaltantes = `
+                const pagos = pagosPorMes[mes] || [];
+                const pagosInmuebleIds = pagos.map(p => p.inmuebleId);
+
+                const faltantes = inmueblesOcupadosEsteMes.filter(inm => !pagosInmuebleIds.includes(inm.id));
+
+                // --- Para el modal de "Inmuebles sin pago" ---
+                let tablaFaltantes = `
                 <div class="relative">
                     <button onclick="ocultarModal()" class="absolute top-2 right-2 z-20 bg-white/80 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition-all focus:outline-none focus:ring-2 focus:ring-red-400" style="font-size:1.5rem;line-height:1;">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -467,9 +466,16 @@ export async function renderComisiones() {
                     </div>
                 </div>
             `;
-            mostrarModal(tablaFaltantes);
+                mostrarModal(tablaFaltantes);
+            });
         });
-    });
+    } catch (error) {
+        console.error("Error al renderizar comisiones:", error);
+        // Opcional: mostrar un mensaje de error en la UI
+        contenedor.innerHTML = `<p class="text-red-500 text-center">Error al cargar las comisiones. Por favor, intente de nuevo.</p>`;
+    } finally {
+        ocultarLoader();
+    }
 }
 
 // Integración con el menú lateral
