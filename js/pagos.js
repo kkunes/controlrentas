@@ -946,8 +946,68 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
     document.getElementById('btnCerrarModalReporte').addEventListener('click', ocultarModal);
     document.getElementById('btnCancelarReporte').addEventListener('click', ocultarModal);
     document.getElementById('btnGenerarPdf').addEventListener('click', () => {
-        generarReportePDF(pagosList);
+        const filtrosInmueble = Array.from(document.querySelectorAll('#reporteInmueblesList input:checked')).map(cb => cb.value);
+        const filtrosInquilino = Array.from(document.querySelectorAll('#reporteInquilinosList input:checked')).map(cb => cb.value);
+        const filtroFechaInicio = document.getElementById('reporteFechaInicio').value;
+        const filtroFechaFin = document.getElementById('reporteFechaFin').value;
+
+        let pagosFiltrados = pagosList.filter(pago => {
+            const fechaPago = new Date(pago.fechaRegistro);
+            const fechaInicio = filtroFechaInicio ? new Date(filtroFechaInicio) : null;
+            const fechaFin = filtroFechaFin ? new Date(filtroFechaFin) : null;
+
+            if (fechaInicio) fechaInicio.setHours(0, 0, 0, 0);
+            if (fechaFin) fechaFin.setHours(23, 59, 59, 999);
+
+            const inmuebleMatch = filtrosInmueble.length === 0 || filtrosInmueble.includes(pago.inmuebleId);
+            const inquilinoMatch = filtrosInquilino.length === 0 || filtrosInquilino.includes(pago.inquilinoId);
+
+            return inmuebleMatch &&
+                   inquilinoMatch &&
+                   (!fechaInicio || fechaPago >= fechaInicio) &&
+                   (!fechaFin || fechaPago <= fechaFin);
+        });
+
+        generarReportePDF(pagosFiltrados);
     });
+
+    // --- Lógica de Exclusión Mutua ---
+    const inmueblesContainer = document.getElementById('reporteInmueblesList');
+    const inquilinosContainer = document.getElementById('reporteInquilinosList');
+
+    const handleSelection = (container, otherContainer) => {
+        container.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox' && e.target.checked) {
+                const otherCheckboxes = otherContainer.querySelectorAll('input[type="checkbox"]:checked');
+                if (otherCheckboxes.length > 0) {
+                    // Revertir la selección
+                    e.target.checked = false;
+
+                    // Mostrar alerta con SweetAlert2
+                    Swal.fire({
+                        title: '¡Un momento! 🚦',
+                        html: 'Solo puedes filtrar por <b>inmuebles</b> o por <b>inquilinos</b> a la vez, ¡no ambos!',
+                        icon: 'warning',
+                        confirmButtonText: '¡Entendido!',
+                        confirmButtonColor: '#3B82F6', // Un azul más amigable
+                        background: '#fff url(/img/bubbles.png)', // Un fondo sutil si tienes una imagen de burbujas
+                        backdrop: `
+                            rgba(0,0,0,0.4)
+                            url("/img/nyan-cat.gif")
+                            left top
+                            no-repeat
+                        `,
+                        showClass: {
+                            popup: 'animate__animated animate__tada' // Animación más divertida
+                        }
+                    });
+                }
+            }
+        });
+    };
+
+    handleSelection(inmueblesContainer, inquilinosContainer);
+    handleSelection(inquilinosContainer, inmueblesContainer);
 }
 
 // Nueva función para generar el PDF del reporte de pagos
@@ -973,7 +1033,7 @@ function generarReportePDF(pagosList) {
 
         return inmuebleMatch &&
                inquilinoMatch &&
-               (!fechaInicio || fechaPago >= fechaInicio) &&
+               (!fechaInicio || fechaPago >= fechaInicio) && // Corregido aquí
                (!fechaFin || fechaPago <= fechaFin);
     });
 
