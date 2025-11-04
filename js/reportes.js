@@ -545,7 +545,7 @@ async function generarGraficoAnual(anio) {
     }
 }
 
-function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
+async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
     let propietariosOptions = '<option value="">Propietarios</option>';
     propietariosMap.forEach((nombre, id) => {
         propietariosOptions += `<option value="${id}">${nombre}</option>`;
@@ -565,7 +565,7 @@ function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
                 </button>
             </div>
             <div class="p-6 flex-grow overflow-y-auto">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                     <input type="date" id="filtroFechaInicioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
                     <input type="date" id="filtroFechaFinModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
                     <select id="filtroInquilinoModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${inquilinosOptions}</select>
@@ -574,6 +574,13 @@ function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
                         <option value="">Tipos</option>
                         <option value="ingreso">Ingreso</option>
                         <option value="gasto">Gasto</option>
+                    </select>
+                    <select id="filtroFormaPagoModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="">Forma de Pago</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Otro">Otro</option>
                     </select>
                 </div>
                 <div id="resumenFiltradoModal" class="mb-4"></div>
@@ -591,12 +598,16 @@ function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
     document.getElementById('closeModalBtn').addEventListener('click', ocultarModal);
     document.getElementById('closeModalFooterBtn').addEventListener('click', ocultarModal);
 
+    let movimientos = [];
+    let allDataLoaded = false;
+
     const renderTabla = () => {
         const propietarioId = document.getElementById('filtroPropietarioModal').value;
         const inquilinoId = document.getElementById('filtroInquilinoModal').value;
         const fechaInicio = document.getElementById('filtroFechaInicioModal').value;
         const fechaFin = document.getElementById('filtroFechaFinModal').value;
         const tipo = document.getElementById('filtroTipoModal').value;
+        const formaPago = document.getElementById('filtroFormaPagoModal').value;
 
         let movimientosFiltrados = movimientos;
 
@@ -625,6 +636,10 @@ function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
                 }
                 return true;
             });
+        }
+
+        if (formaPago) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.formaPago === formaPago);
         }
 
         let totalFiltrado = 0;
@@ -673,20 +688,123 @@ function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
         document.getElementById('tablaModalContainer').innerHTML = tablaHtml;
     };
 
-    document.getElementById('filtroPropietarioModal').addEventListener('change', renderTabla);
-    document.getElementById('filtroInquilinoModal').addEventListener('change', renderTabla);
-    document.getElementById('filtroFechaInicioModal').addEventListener('change', renderTabla);
-    document.getElementById('filtroFechaFinModal').addEventListener('change', renderTabla);
-    document.getElementById('filtroTipoModal').addEventListener('change', renderTabla);
+    const loadAllData = async () => {
+        mostrarLoader();
+        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+        const inmueblesMap = new Map();
+        inmueblesSnap.forEach(doc => {
+            const data = doc.data();
+            inmueblesMap.set(doc.id, {
+                nombre: data.nombre,
+                propietarioId: data.propietarioId
+            });
+        });
 
-    renderTabla();
+        const pagosRef = collection(db, "pagos");
+        const pagosSnap = await getDocs(pagosRef);
 
-    document.getElementById('generarPdfModalBtn').addEventListener('click', () => {
+        let pagosDetalle = [];
+        pagosSnap.forEach(doc => {
+            const data = doc.data();
+            const montoPagado = parseFloat(data.montoPagado);
+            const fechaPago = data.fechaUltimoAbono ? data.fechaUltimoAbono.substring(0, 10) : (data.fechaRegistro ? data.fechaRegistro.substring(0, 10) : '');
+            if (!isNaN(montoPagado)) {
+                const inquilinoNombre = inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido';
+                const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
+                const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+                const propietarioId = data.propietarioId || (inmuebleInfo ? inmuebleInfo.propietarioId : null);
+                const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
+
+                pagosDetalle.push({
+                    fecha: fechaPago,
+                    tipo: 'Ingreso (Pago de Renta)',
+                    descripcion: `Pago de ${inquilinoNombre} por ${inmuebleNombre} (Mes: ${data.mesCorrespondiente || 'N/A'})`,
+                    monto: montoPagado,
+                    propietario: propietarioNombre,
+                    propietarioId,
+                    inquilinoId: data.inquilinoId,
+                    formaPago: data.formaPago
+                });
+            }
+        });
+
+        const inquilinosSnapAll = await getDocs(collection(db, "inquilinos"));
+        inquilinosSnapAll.forEach(doc => {
+            const data = doc.data();
+            if (data.depositoRecibido && data.montoDeposito && data.fechaDeposito) {
+                const nombreInquilino = data.nombre || 'Inquilino Desconocido';
+                const inmuebleInfo = inmueblesMap.get(data.inmuebleAsociadoId);
+                const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+                const propietarioId = inmuebleInfo ? inmuebleInfo.propietarioId : null;
+                const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
+                pagosDetalle.push({
+                    fecha: data.fechaDeposito,
+                    tipo: 'Ingreso (Depósito)',
+                    descripcion: `Depósito de ${nombreInquilino} por ${inmuebleNombre}`,
+                    monto: parseFloat(data.montoDeposito),
+                    propietario: propietarioNombre,
+                    propietarioId,
+                    formaPago: 'N/A'
+                });
+            }
+        });
+
+        const mantenimientosRef = collection(db, "mantenimientos");
+        const qMantenimientos = query(mantenimientosRef, where("estado", "in", ["Completado", "En Progreso"]));
+        const mantenimientosSnap = await getDocs(qMantenimientos);
+
+        let mantenimientosDetalle = [];
+        mantenimientosSnap.forEach(doc => {
+            const data = doc.data();
+            const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
+            const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+            const propietarioId = inmuebleInfo ? inmuebleInfo.propietarioId : null;
+            const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
+            const tipoMantenimiento = data.tipoMantenimiento ? data.tipoMantenimiento : '';
+            const descripcionMantenimiento = data.descripcion ? data.descripcion : '';
+            const categoriaMantenimiento = data.categoria ? data.categoria : '';
+            mantenimientosDetalle.push({
+                fecha: data.fechaMantenimiento ? data.fechaMantenimiento.substring(0, 10) : '',
+                tipo: 'Gasto (Mantenimiento)',
+                descripcion: `Mantenimiento${tipoMantenimiento ? ': ' + tipoMantenimiento : ''}${descripcionMantenimiento ? ' - ' + descripcionMantenimiento : ''} (${inmuebleNombre})${categoriaMantenimiento ? ' [' + categoriaMantenimiento + ']' : ''}`,
+                monto: parseFloat(data.costo) || 0,
+                propietario: propietarioNombre,
+                propietarioId,
+                formaPago: 'N/A'
+            });
+        });
+
+        movimientos = [...pagosDetalle, ...mantenimientosDetalle].sort((a, b) => b.fecha.localeCompare(a.fecha));
+        allDataLoaded = true;
+        ocultarLoader();
+        renderTabla();
+    };
+
+    const handleFilterChange = async () => {
+        if (!allDataLoaded) {
+            await loadAllData();
+        } else {
+            renderTabla();
+        }
+    };
+
+    document.getElementById('filtroPropietarioModal').addEventListener('change', handleFilterChange);
+    document.getElementById('filtroInquilinoModal').addEventListener('change', handleFilterChange);
+    document.getElementById('filtroFechaInicioModal').addEventListener('change', handleFilterChange);
+    document.getElementById('filtroFechaFinModal').addEventListener('change', handleFilterChange);
+    document.getElementById('filtroTipoModal').addEventListener('change', handleFilterChange);
+    document.getElementById('filtroFormaPagoModal').addEventListener('change', handleFilterChange);
+
+    document.getElementById('generarPdfModalBtn').addEventListener('click', async () => {
+        if (!allDataLoaded) {
+            await loadAllData();
+        }
         const propietarioId = document.getElementById('filtroPropietarioModal').value;
         const inquilinoId = document.getElementById('filtroInquilinoModal').value;
         const fechaInicio = document.getElementById('filtroFechaInicioModal').value;
         const fechaFin = document.getElementById('filtroFechaFinModal').value;
         const tipo = document.getElementById('filtroTipoModal').value;
+        const formaPago = document.getElementById('filtroFormaPagoModal').value;
 
         let movimientosFiltrados = movimientos;
 
@@ -716,9 +834,107 @@ function abrirModalPropietarios(movimientos, propietariosMap, inquilinosMap) {
                 return true;
             });
         }
-        
+
+        if (formaPago) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.formaPago === formaPago);
+        }
+
         generarPdfMovimientosPropietario(movimientosFiltrados, propietariosMap, propietarioId);
     });
+
+    // Initial Load
+    const anio = new Date().getFullYear();
+    const mes = new Date().getMonth() + 1;
+    const startOfMonth = `${anio}-${String(mes).padStart(2, '0')}-01`;
+    const lastDayOfMonth = new Date(anio, mes, 0).getDate();
+    const endOfMonth = `${anio}-${String(mes).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`;
+
+    const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+    const inmueblesMap = new Map();
+    inmueblesSnap.forEach(doc => {
+        const data = doc.data();
+        inmueblesMap.set(doc.id, {
+            nombre: data.nombre,
+            propietarioId: data.propietarioId
+        });
+    });
+
+    const pagosRef = collection(db, "pagos");
+    const pagosSnap = await getDocs(query(pagosRef, where("fechaRegistro", ">=", startOfMonth), where("fechaRegistro", "<=", endOfMonth)));
+
+    let pagosDetalle = [];
+    pagosSnap.forEach(doc => {
+        const data = doc.data();
+        const montoPagado = parseFloat(data.montoPagado);
+        const fechaPago = data.fechaUltimoAbono ? data.fechaUltimoAbono.substring(0, 10) : (data.fechaRegistro ? data.fechaRegistro.substring(0, 10) : '');
+        if (!isNaN(montoPagado)) {
+            const inquilinoNombre = inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido';
+            const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
+            const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+            const propietarioId = data.propietarioId || (inmuebleInfo ? inmuebleInfo.propietarioId : null);
+            const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
+
+            pagosDetalle.push({
+                fecha: fechaPago,
+                tipo: 'Ingreso (Pago de Renta)',
+                descripcion: `Pago de ${inquilinoNombre} por ${inmuebleNombre} (Mes: ${data.mesCorrespondiente || 'N/A'})`,
+                monto: montoPagado,
+                propietario: propietarioNombre,
+                propietarioId,
+                inquilinoId: data.inquilinoId,
+                formaPago: data.formaPago
+            });
+        }
+    });
+
+    const inquilinosSnapAll = await getDocs(query(collection(db, "inquilinos"), where("fechaDeposito", ">=", startOfMonth), where("fechaDeposito", "<=", endOfMonth)));
+    inquilinosSnapAll.forEach(doc => {
+        const data = doc.data();
+        if (data.depositoRecibido && data.montoDeposito && data.fechaDeposito) {
+            const nombreInquilino = data.nombre || 'Inquilino Desconocido';
+            const inmuebleInfo = inmueblesMap.get(data.inmuebleAsociadoId);
+            const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+            const propietarioId = inmuebleInfo ? inmuebleInfo.propietarioId : null;
+            const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
+            pagosDetalle.push({
+                fecha: data.fechaDeposito,
+                tipo: 'Ingreso (Depósito)',
+                descripcion: `Depósito de ${nombreInquilino} por ${inmuebleNombre}`,
+                monto: parseFloat(data.montoDeposito),
+                propietario: propietarioNombre,
+                propietarioId,
+                formaPago: 'N/A'
+            });
+        }
+    });
+
+    const mantenimientosRef = collection(db, "mantenimientos");
+    const qMantenimientos = query(mantenimientosRef, where("fechaMantenimiento", ">=", startOfMonth), where("fechaMantenimiento", "<=", endOfMonth), where("estado", "in", ["Completado", "En Progreso"]));
+    const mantenimientosSnap = await getDocs(qMantenimientos);
+
+    let mantenimientosDetalle = [];
+    mantenimientosSnap.forEach(doc => {
+        const data = doc.data();
+        const inmuebleInfo = inmueblesMap.get(data.inmuebleId);
+        const inmuebleNombre = inmuebleInfo ? inmuebleInfo.nombre : 'Inmueble Desconocido';
+        const propietarioId = inmuebleInfo ? inmuebleInfo.propietarioId : null;
+        const propietarioNombre = propietariosMap.get(propietarioId) || 'N/A';
+        const tipoMantenimiento = data.tipoMantenimiento ? data.tipoMantenimiento : '';
+        const descripcionMantenimiento = data.descripcion ? data.descripcion : '';
+        const categoriaMantenimiento = data.categoria ? data.categoria : '';
+        mantenimientosDetalle.push({
+            fecha: data.fechaMantenimiento ? data.fechaMantenimiento.substring(0, 10) : '',
+            tipo: 'Gasto (Mantenimiento)',
+            descripcion: `Mantenimiento${tipoMantenimiento ? ': ' + tipoMantenimiento : ''}${descripcionMantenimiento ? ' - ' + descripcionMantenimiento : ''} (${inmuebleNombre})${categoriaMantenimiento ? ' [' + categoriaMantenimiento + ']' : ''}`,
+            monto: parseFloat(data.costo) || 0,
+            propietario: propietarioNombre,
+            propietarioId,
+            formaPago: 'N/A'
+        });
+    });
+
+    movimientos = [...pagosDetalle, ...mantenimientosDetalle].sort((a, b) => b.fecha.localeCompare(a.fecha));
+    renderTabla();
 }
 
 /**
@@ -1113,7 +1329,7 @@ async function generarReporteMensual(mes, anio) {
         `;
 
         document.getElementById('btnIngresoPropietario').addEventListener('click', () => {
-            abrirModalPropietarios(todosLosMovimientos, propietariosMap, inquilinosMap);
+            abrirModalPropietarios(propietariosMap, inquilinosMap);
         });
 
         document.getElementById('btnDescargarPDF').addEventListener('click', () => {

@@ -1075,6 +1075,140 @@ function generarReportePDF(pagosList) {
     ocultarModal();
 }
 
+// Nueva función para el flujo guiado después de registrar un pago
+async function iniciarFlujoPostPago(pagoId, inquilinoId, enVistaTabla) {
+    ocultarModal();
+
+    try {
+        const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
+        if (!inquilinoDoc.exists()) {
+            mostrarNotificacion("No se encontró el inquilino.", "error");
+            if (enVistaTabla) mostrarPagos(true);
+            return;
+        }
+        const inquilinoData = inquilinoDoc.data();
+
+        const tieneServicios = inquilinoData.pagaServicios &&
+            ((inquilinoData.servicios && inquilinoData.servicios.length > 0) ||
+                (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+
+        // --- CORRECCIÓN: Verificar si el inquilino tiene mobiliario asignado ---
+        // La verificación se hace buscando en la colección 'mobiliario' si hay alguna
+        // asignación activa para este inquilino.
+        let tieneMobiliario = false;
+        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+        for (const mobDoc of mobiliarioSnap.docs) {
+            const mobData = mobDoc.data();
+            if (Array.isArray(mobData.asignaciones) && mobData.asignaciones.some(a => a.inquilinoId === inquilinoId && a.activa === true && a.cantidad > 0)) {
+                tieneMobiliario = true;
+                break; // Si encontramos al menos uno, es suficiente
+            }
+        }
+
+        // Iniciar el flujo de preguntas
+        if (tieneServicios) {
+            await preguntarPorServicios(pagoId, inquilinoId, tieneMobiliario, enVistaTabla);
+        } else if (tieneMobiliario) {
+            await preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla);
+        } else {
+            await preguntarPorRecibo(pagoId, enVistaTabla);
+        }
+
+    } catch (error) {
+        console.error("Error en el flujo post-pago:", error);
+        mostrarNotificacion("Ocurrió un error al verificar los datos del inquilino.", "error");
+        if (enVistaTabla) mostrarPagos(true);
+    }
+}
+
+async function preguntarPorServicios(pagoId, inquilinoId, tieneMobiliario, enVistaTabla) {
+    Swal.fire({
+        title: '¿Pago de Servicios?',
+        text: "Este inquilino tiene servicios asignados. ¿Deseas registrar el pago de servicios ahora?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, registrar',
+        cancelButtonText: 'No, omitir',
+        customClass: {
+            popup: 'animated fadeInDown'
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            // El usuario quiere registrar servicios.
+            // Pasamos una función de callback para continuar el flujo.
+            const callbackFlujo = () => {
+                if (tieneMobiliario) {
+                    preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla);
+                } else {
+                    preguntarPorRecibo(pagoId, enVistaTabla);
+                }
+            };
+            await mostrarFormularioPagoServicio(inquilinoId, pagoId, callbackFlujo);
+        } else {
+            // El usuario no quiere registrar servicios, pasar a la siguiente pregunta.
+            if (tieneMobiliario) {
+                await preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla);
+            } else {
+                await preguntarPorRecibo(pagoId, enVistaTabla);
+            }
+        }
+    });
+}
+
+async function preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla) {
+    Swal.fire({
+        title: '¿Pago de Mobiliario?',
+        text: "Este inquilino tiene mobiliario asignado. ¿Deseas registrar el pago del mobiliario ahora?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, registrar',
+        cancelButtonText: 'No, omitir',
+        customClass: {
+            popup: 'animated fadeInDown'
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            // El usuario quiere registrar mobiliario.
+            // Pasamos una función de callback para continuar el flujo.
+            const callbackFlujo = () => preguntarPorRecibo(pagoId, enVistaTabla);
+            await mostrarFormularioPagoMobiliario(inquilinoId, pagoId, callbackFlujo);
+        } else {
+            // El usuario no quiere registrar mobiliario, pasar a la siguiente pregunta.
+            await preguntarPorRecibo(pagoId, enVistaTabla);
+        }
+    });
+}
+
+async function preguntarPorRecibo(pagoId, enVistaTabla) {
+    Swal.fire({
+        title: '¿Generar Recibo?',
+        text: "¿Deseas generar el recibo de pago en PDF ahora?",
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, generar PDF',
+        cancelButtonText: 'No, finalizar',
+        customClass: {
+            popup: 'animated fadeInUp'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            seleccionarFirmaYGenerarRecibo(pagoId);
+        }
+        // Ya sea que se genere o no el recibo, refrescamos la vista principal.
+        if (enVistaTabla) {
+            mostrarPagos(true);
+        } else {
+            mostrarPagos();
+        }
+    });
+}
+
 /**
  * Muestra el formulario para registrar o editar un pago.
  * @param {string} id - El ID del pago a editar (opcional).
@@ -1531,17 +1665,15 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
             if (id) {
                 await updateDoc(doc(db, "pagos", id), datos);
                 mostrarNotificacion('Pago actualizado con éxito.', 'success');
+                ocultarModal();
+                if (enVistaTabla) {
+                    mostrarPagos(true);
+                }
             } else {
-                await addDoc(collection(db, "pagos"), datos);
-                mostrarNotificacion('Pago registrado con éxito.', 'success');
-            }
-            ocultarModal();
-            
-            // Mantener la vista de tabla si estábamos en ella
-            if (enVistaTabla) {
-                mostrarPagos(true);
-            } else {
-                mostrarPagos();
+                const docRef = await addDoc(collection(db, "pagos"), datos);
+                mostrarNotificacion('Pago de Renta Registrado.', 'success');
+                // Iniciar el nuevo flujo de preguntas
+                await iniciarFlujoPostPago(docRef.id, inquilinoId, enVistaTabla);
             }
             
         } catch (error) {
@@ -1628,7 +1760,7 @@ export async function editarPago(id) {
  * Muestra el formulario para registrar pagos de servicios (internet, agua, luz).
  * Permite registrar servicios de manera independiente o todos a la vez.
  */
-export async function mostrarFormularioPagoServicio() {
+export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado = null, pagoIdAsociado = null, callbackFlujo = null) {
     try {
         const inquilinosSnap = await getDocs(query(collection(db, "inquilinos"), where("activo", "==", true)));
         const inquilinos = [];
@@ -1747,11 +1879,42 @@ export async function mostrarFormularioPagoServicio() {
 
         mostrarModal(formHtml);
 
+        const inquilinoSelect = document.getElementById('inquilinoId');
+
+        if (inquilinoIdPreseleccionado) {
+            inquilinoSelect.value = inquilinoIdPreseleccionado;
+            inquilinoSelect.disabled = true;
+            // Disparar evento change para cargar los servicios del inquilino
+            inquilinoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+            // Cargar montos de servicios para el inquilino preseleccionado
+            const inquilinoPreseleccionado = inquilinos.find(i => i.id === inquilinoIdPreseleccionado);
+            if (inquilinoPreseleccionado && inquilinoPreseleccionado.pagaServicios) {
+                if (inquilinoPreseleccionado.servicios && Array.isArray(inquilinoPreseleccionado.servicios)) {
+                    inquilinoPreseleccionado.servicios.forEach(servicio => {
+                        const tipo = servicio.tipo.toLowerCase();
+                        const montoInput = document.getElementById(`monto${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+                        const checkbox = document.getElementById(`servicio${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+                        if (montoInput && checkbox) {
+                            checkbox.checked = true;
+                            montoInput.value = servicio.monto || '';
+                            montoInput.disabled = false;
+                        }
+                    });
+                } else if (inquilinoPreseleccionado.tipoServicio && inquilinoPreseleccionado.montoServicio) {
+                    const tipoServicio = inquilinoPreseleccionado.tipoServicio.toLowerCase();
+                    const montoInput = document.getElementById(`monto${tipoServicio.charAt(0).toUpperCase() + tipoServicio.slice(1)}`);
+                    if (montoInput) {
+                        montoInput.value = inquilinoPreseleccionado.montoServicio || '';
+                    }
+                }
+            }
+        }
+
         document.getElementById('btnCancelarPagoServicio').addEventListener('click', () => cerrarModalDePago(mostrarPagos));
 
         const buscadorInmuebleInput = document.getElementById('buscadorInmuebleServicios');
         const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleServicios');
-        const inquilinoSelect = document.getElementById('inquilinoId');
 
         buscadorInmuebleInput.addEventListener('keyup', () => {
             const searchTerm = buscadorInmuebleInput.value.toLowerCase();
@@ -1897,12 +2060,12 @@ export async function mostrarFormularioPagoServicio() {
             try {
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                 const inmuebleId = inquilinoDoc.data().inmuebleAsociadoId;
-                
+
                 const serviciosPagados = {
                     fechaRegistroServicio: fechaRegistro,
                     formaPagoServicio: formaPago
                 };
-                
+
                 if (servicioInternet) {
                     serviciosPagados.internet = true;
                     serviciosPagados.internetMonto = montoInternet;
@@ -1915,59 +2078,75 @@ export async function mostrarFormularioPagoServicio() {
                     serviciosPagados.luz = true;
                     serviciosPagados.luzMonto = montoLuz;
                 }
-                
-                const pagosRef = collection(db, "pagos");
-                const q = query(pagosRef, where("inmuebleId", "==", inmuebleId), where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
-                const querySnapshot = await getDocs(q);
-                
-                if (!querySnapshot.empty) {
-                    const pagoDoc = querySnapshot.docs[0];
-                    const pagoExistente = pagoDoc.data();
-                    const serviciosActualizados = pagoExistente.serviciosPagados || {};
-                    
-                    serviciosActualizados.fechaRegistroServicio = fechaRegistro;
-                    serviciosActualizados.formaPagoServicio = formaPago;
-                    
-                    if (servicioInternet) {
-                        serviciosActualizados.internet = true;
-                        serviciosActualizados.internetMonto = montoInternet;
-                    }
-                    if (servicioAgua) {
-                        serviciosActualizados.agua = true;
-                        serviciosActualizados.aguaMonto = montoAgua;
-                    }
-                    if (servicioLuz) {
-                        serviciosActualizados.luz = true;
-                        serviciosActualizados.luzMonto = montoLuz;
-                    }
-                    
-                    await updateDoc(doc(db, "pagos", pagoDoc.id), {
-                        serviciosPagados: { ...serviciosActualizados }
+
+                if (pagoIdAsociado) {
+                    // Estamos en el flujo guiado, actualizamos el pago de renta existente.
+                    const pagoRef = doc(db, "pagos", pagoIdAsociado);
+                    const pagoSnap = await getDoc(pagoRef);
+                    const pagoData = pagoSnap.data();
+
+                    const serviciosActualizados = { ...(pagoData.serviciosPagados || {}), ...serviciosPagados };
+
+                    await updateDoc(pagoRef, {
+                        serviciosPagados: serviciosActualizados
                     });
-                    
-                    mostrarNotificacion("Servicios agregados al pago existente.", "success");
+
+                    mostrarNotificacion("Pago de servicios añadido con éxito.", "success");
+                    ocultarModal();
+                    if (callbackFlujo) {
+                        callbackFlujo(); // Continuar con el flujo (mobiliario o recibo)
+                    }
                 } else {
-                    await addDoc(collection(db, "pagos"), {
-                        inmuebleId,
-                        inquilinoId,
-                        mesCorrespondiente,
-                        anioCorrespondiente,
-                        montoTotal: 0,
-                        montoPagado: 0,
-                        saldoPendiente: 0,
-                        estado: "pagado",
-                        fechaRegistro,
-                        formaPago,
-                        tipoPago: "servicios",
-                        serviciosPagados
-                    });
-                    
-                    mostrarNotificacion("Pago de servicios registrado con éxito.", "success");
+                    // Flujo normal: buscar un pago existente para el mes o crear uno nuevo.
+                    const pagosRef = collection(db, "pagos");
+                    const q = query(pagosRef, where("inmuebleId", "==", inmuebleId), where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const pagoDoc = querySnapshot.docs[0];
+                        const pagoExistente = pagoDoc.data();
+                        const serviciosActualizados = pagoExistente.serviciosPagados || {};
+
+                        if (servicioInternet) {
+                            serviciosActualizados.internet = true;
+                            serviciosActualizados.internetMonto = montoInternet;
+                        }
+                        if (servicioAgua) {
+                            serviciosActualizados.agua = true;
+                            serviciosActualizados.aguaMonto = montoAgua;
+                        }
+                        if (servicioLuz) {
+                            serviciosActualizados.luz = true;
+                            serviciosActualizados.luzMonto = montoLuz;
+                        }
+
+                        await updateDoc(doc(db, "pagos", pagoDoc.id), {
+                            serviciosPagados: { ...serviciosActualizados, fechaRegistroServicio: fechaRegistro, formaPagoServicio: formaPago }
+                        });
+
+                        mostrarNotificacion("Servicios agregados al pago existente.", "success");
+                    } else {
+                        await addDoc(collection(db, "pagos"), {
+                            inmuebleId,
+                            inquilinoId,
+                            mesCorrespondiente,
+                            anioCorrespondiente,
+                            montoTotal: 0,
+                            montoPagado: 0,
+                            saldoPendiente: 0,
+                            estado: "pagado",
+                            fechaRegistro,
+                            formaPago,
+                            tipoPago: "servicios",
+                            serviciosPagados
+                        });
+
+                        mostrarNotificacion("Pago de servicios registrado con éxito.", "success");
+                    }
+                    ocultarModal();
+                    mostrarPagos(true);
                 }
-                
-                ocultarModal();
-                mostrarPagos();
-                
+
             } catch (error) {
                 console.error("Error al registrar pago de servicios:", error);
                 mostrarNotificacion("Error al registrar el pago de servicios.", "error");
@@ -1984,7 +2163,7 @@ export async function mostrarFormularioPagoServicio() {
  * Muestra el formulario para registrar un pago específico de mobiliario.
  * Considera la fecha de asignación para determinar si se cobra en el mes actual o siguiente.
  */
-export async function mostrarFormularioPagoMobiliario() {
+export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado = null, pagoIdAsociado = null, callbackFlujo = null) {
     try {
         const inquilinosSnap = await getDocs(query(collection(db, "inquilinos"), where("activo", "==", true)));
         const inquilinos = [];
@@ -2094,11 +2273,87 @@ export async function mostrarFormularioPagoMobiliario() {
 
         mostrarModal(formHtml);
 
+        const inquilinoSelect = document.getElementById('inquilinoId');
+
+        // Si se preselecciona un inquilino (desde el flujo guiado)
+        if (inquilinoIdPreseleccionado) {
+            // La declaración de inquilinoSelect se movió arriba para que esté disponible aquí.
+            inquilinoSelect.value = inquilinoIdPreseleccionado;
+            inquilinoSelect.disabled = true;
+            // Disparar el evento 'change' para cargar y marcar automáticamente el mobiliario
+            const event = new Event('change', { bubbles: true });
+            inquilinoSelect.dispatchEvent(event);
+        }
+
+
         document.getElementById('btnCancelarPagoMobiliario').addEventListener('click', () => cerrarModalDePago(mostrarPagos));
 
         const buscadorInmuebleInput = document.getElementById('buscadorInmuebleMobiliario');
         const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleMobiliario');
-        const inquilinoSelect = document.getElementById('inquilinoId');
+
+        document.addEventListener('click', function(event) {
+            if (buscadorInmuebleInput && !buscadorInmuebleInput.contains(event.target) && !resultadosBusquedaInmueble.contains(event.target)) {
+                resultadosBusquedaInmueble.style.display = 'none';
+            }
+        });
+
+        const fechaActual = new Date();
+        document.getElementById('mesCorrespondiente').value = meses[fechaActual.getMonth()];
+        document.getElementById('anioCorrespondiente').value = fechaActual.getFullYear();
+
+        const cargarMobiliarioParaInquilino = async () => {
+            const inquilinoId = inquilinoSelect.value;
+            if (!inquilinoId) {
+                document.getElementById('listaMobiliarioAsignado').innerHTML = '<p class="text-gray-500 text-center">Selecciona un inquilino para ver su mobiliario asignado</p>';
+                return;
+            }
+
+            const mobiliarioInquilino = mobiliarioAsignado.filter(mob => 
+                mob.asignacionesActivas.some(a => a.inquilinoId === inquilinoId)
+            );
+
+            if (mobiliarioInquilino.length === 0) {
+                document.getElementById('listaMobiliarioAsignado').innerHTML = '<p class="text-gray-500 text-center">Este inquilino no tiene mobiliario asignado</p>';
+                return;
+            }
+
+            let html = '';
+            mobiliarioInquilino.forEach(mob => {
+                const asignacion = mob.asignacionesActivas.find(a => a.inquilinoId === inquilinoId);
+                if (asignacion) {
+                    const costoTotal = (mob.costoRenta || 0) * asignacion.cantidad;
+                    
+                    html += `
+                        <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
+                            <div class="flex items-start" data-auto-check="${inquilinoIdPreseleccionado ? 'true' : 'false'}">
+                                <input type="checkbox" name="mobiliario" value="${mob.id}" data-costo="${costoTotal.toFixed(2)}" data-asignacion-id="${asignacion.id || ''}" class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <div class="ml-3">
+                                    <p class="font-medium">${mob.nombre} (${asignacion.cantidad} unidades)</p>
+                                    <p class="text-sm text-gray-600">Costo Mensual: ${costoTotal.toFixed(2)}</p>
+                                    <p class="text-xs text-gray-500">Asignado: ${new Date(asignacion.fechaAsignacion).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('listaMobiliarioAsignado').innerHTML = html;
+
+            // Si venimos del flujo guiado, marcar todos los checkboxes
+            if (inquilinoIdPreseleccionado) {
+                document.querySelectorAll('#listaMobiliarioAsignado input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+            }
+        };
+
+        inquilinoSelect.addEventListener('change', cargarMobiliarioParaInquilino);
+
+        // Si hay un inquilino preseleccionado, llama a la función directamente
+        if (inquilinoIdPreseleccionado) {
+            cargarMobiliarioParaInquilino.call(inquilinoSelect);
+        }
 
         buscadorInmuebleInput.addEventListener('keyup', () => {
             const searchTerm = buscadorInmuebleInput.value.toLowerCase();
@@ -2129,64 +2384,13 @@ export async function mostrarFormularioPagoMobiliario() {
                 const inmuebleSeleccionado = inmuebles.find(inm => inm.id === inmuebleId);
                 if (inmuebleSeleccionado && inmuebleSeleccionado.inquilinoActualId) {
                     inquilinoSelect.value = inmuebleSeleccionado.inquilinoActualId;
-                    const event = new Event('change', { bubbles: true });
-                    inquilinoSelect.dispatchEvent(event);
+                    cargarMobiliarioParaInquilino.call(inquilinoSelect);
                 }
 
                 buscadorInmuebleInput.value = '';
                 resultadosBusquedaInmueble.innerHTML = '';
                 resultadosBusquedaInmueble.style.display = 'none';
             }
-        });
-
-        document.addEventListener('click', function(event) {
-            if (buscadorInmuebleInput && !buscadorInmuebleInput.contains(event.target) && !resultadosBusquedaInmueble.contains(event.target)) {
-                resultadosBusquedaInmueble.style.display = 'none';
-            }
-        });
-
-        const fechaActual = new Date();
-        document.getElementById('mesCorrespondiente').value = meses[fechaActual.getMonth()];
-        document.getElementById('anioCorrespondiente').value = fechaActual.getFullYear();
-
-        document.getElementById('inquilinoId').addEventListener('change', function() {
-            const inquilinoId = this.value;
-            if (!inquilinoId) {
-                document.getElementById('listaMobiliarioAsignado').innerHTML = '<p class="text-gray-500 text-center">Selecciona un inquilino para ver su mobiliario asignado</p>';
-                return;
-            }
-
-            const mobiliarioInquilino = mobiliarioAsignado.filter(mob => 
-                mob.asignacionesActivas.some(a => a.inquilinoId === inquilinoId)
-            );
-
-            if (mobiliarioInquilino.length === 0) {
-                document.getElementById('listaMobiliarioAsignado').innerHTML = '<p class="text-gray-500 text-center">Este inquilino no tiene mobiliario asignado</p>';
-                return;
-            }
-
-            let html = '';
-            mobiliarioInquilino.forEach(mob => {
-                const asignacion = mob.asignacionesActivas.find(a => a.inquilinoId === inquilinoId);
-                if (asignacion) {
-                    const costoTotal = (mob.costoRenta || 0) * asignacion.cantidad;
-                    
-                    html += `
-                        <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
-                            <div class="flex items-start">
-                                <input type="checkbox" name="mobiliario" value="${mob.id}" data-costo="${costoTotal.toFixed(2)}" data-asignacion-id="${asignacion.id || ''}" class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                                <div class="ml-3">
-                                    <p class="font-medium">${mob.nombre} (${asignacion.cantidad} unidades)</p>
-                                    <p class="text-sm text-gray-600">Costo Mensual: ${costoTotal.toFixed(2)}</p>
-                                    <p class="text-xs text-gray-500">Asignado: ${new Date(asignacion.fechaAsignacion).toLocaleDateString()}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-
-            document.getElementById('listaMobiliarioAsignado').innerHTML = html;
         });
 
         document.getElementById('formPagoMobiliario').addEventListener('submit', async (e) => {
@@ -2213,11 +2417,7 @@ export async function mostrarFormularioPagoMobiliario() {
             try {
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                 const inmuebleId = inquilinoDoc.data().inmuebleAsociadoId;
-                
-                const pagosRef = collection(db, "pagos");
-                const q = query(pagosRef, where("inmuebleId", "==", inmuebleId), where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
-                const querySnapshot = await getDocs(q);
-                
+
                 const nuevoMobiliario = mobiliarioSeleccionado.map(checkbox => ({
                     mobiliarioId: checkbox.value,
                     costo: parseFloat(checkbox.dataset.costo),
@@ -2225,45 +2425,64 @@ export async function mostrarFormularioPagoMobiliario() {
                     fechaRegistroMobiliario: fechaRegistro,
                     formaPagoMobiliario: formaPago
                 }));
-                
-                if (!querySnapshot.empty) {
-                    const pagoDoc = querySnapshot.docs[0];
-                    const pagoExistente = pagoDoc.data();
-                    const mobiliarioActualizado = Array.isArray(pagoExistente.mobiliarioPagado) ? [...pagoExistente.mobiliarioPagado, ...nuevoMobiliario] : nuevoMobiliario;
-                    const nuevoMontoTotal = pagoExistente.montoTotal + montoTotal;
-                    const nuevoMontoPagado = pagoExistente.montoPagado + montoTotal;
-                    
-                    await updateDoc(doc(db, "pagos", pagoDoc.id), {
-                        mobiliarioPagado: mobiliarioActualizado,
-                        montoTotal: nuevoMontoTotal,
-                        montoPagado: nuevoMontoPagado
+
+                if (pagoIdAsociado) {
+                    // Estamos en el flujo guiado, actualizamos el pago de renta existente.
+                    const pagoRef = doc(db, "pagos", pagoIdAsociado);
+                    const pagoSnap = await getDoc(pagoRef);
+                    const pagoData = pagoSnap.data();
+
+                    const mobiliarioActualizado = Array.isArray(pagoData.mobiliarioPagado) ? [...pagoData.mobiliarioPagado, ...nuevoMobiliario] : nuevoMobiliario;
+
+                    await updateDoc(pagoRef, {
+                        mobiliarioPagado: mobiliarioActualizado
                     });
-                    
-                    mostrarNotificacion("Mobiliario agregado al pago existente.", "success");
+
+                    mostrarNotificacion("Pago de mobiliario añadido con éxito.", "success");
+                    ocultarModal();
+                    if (callbackFlujo) {
+                        callbackFlujo(); // Continuar con el flujo (recibo)
+                    }
                 } else {
-                    const pagoData = {
-                        inmuebleId,
-                        inquilinoId,
-                        mesCorrespondiente,
-                        anioCorrespondiente,
-                        montoTotal,
-                        montoPagado: montoTotal,
-                        saldoPendiente: 0,
-                        estado: "pagado",
-                        fechaRegistro,
-                        abonos: [{ montoAbonado: montoTotal, fechaAbono: fechaRegistro }],
-                        formaPago,
-                        tipoPago: "mobiliario",
-                        mobiliarioPagado: nuevoMobiliario
-                    };
-                    
-                    await addDoc(collection(db, "pagos"), pagoData);
-                    mostrarNotificacion("Pago de mobiliario registrado con éxito.", "success");
+                    // Flujo normal: buscar un pago existente para el mes o crear uno nuevo.
+                    const pagosRef = collection(db, "pagos");
+                    const q = query(pagosRef, where("inmuebleId", "==", inmuebleId), where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const pagoDoc = querySnapshot.docs[0];
+                        const pagoExistente = pagoDoc.data();
+                        const mobiliarioActualizado = Array.isArray(pagoExistente.mobiliarioPagado) ? [...pagoExistente.mobiliarioPagado, ...nuevoMobiliario] : nuevoMobiliario;
+                        
+                        await updateDoc(doc(db, "pagos", pagoDoc.id), {
+                            mobiliarioPagado: mobiliarioActualizado
+                        });
+
+                        mostrarNotificacion("Mobiliario agregado al pago existente.", "success");
+                    } else {
+                        const pagoData = {
+                            inmuebleId,
+                            inquilinoId,
+                            mesCorrespondiente,
+                            anioCorrespondiente,
+                            montoTotal: montoTotal, // El total es solo el mobiliario en este caso
+                            montoPagado: montoTotal,
+                            saldoPendiente: 0,
+                            estado: "pagado",
+                            fechaRegistro,
+                            abonos: [{ montoAbonado: montoTotal, fechaAbono: fechaRegistro }],
+                            formaPago,
+                            tipoPago: "mobiliario",
+                            mobiliarioPagado: nuevoMobiliario
+                        };
+
+                        await addDoc(collection(db, "pagos"), pagoData);
+                        mostrarNotificacion("Pago de mobiliario registrado con éxito.", "success");
+                    }
+                    ocultarModal();
+                    mostrarPagos(true);
                 }
-                
-                ocultarModal();
-                mostrarPagos();
-                
+
             } catch (error) {
                 console.error("Error al registrar pago de mobiliario:", error);
                 mostrarNotificacion("Error al registrar el pago de mobiliario.", "error");

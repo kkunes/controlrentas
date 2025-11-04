@@ -9,9 +9,9 @@ import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, co
 import { mostrarPagos, mostrarFormularioNuevoPago, editarPago, mostrarFormularioRegistrarAbono, revisarPagosVencidos, mostrarHistorialPagosInmueble, eliminarDocumento as eliminarPagoDoc, mostrarHistorialPagosInquilino } from './pagos.js'; // Added mostrarHistorialPagosInquilino import
 import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc, cambiarEstadoCosto } from './mantenimientos.js';
 import { mostrarInventarioMobiliario, mostrarFormularioNuevoMueble, eliminarMueble } from './mobiliario.js';
-import { mostrarReportes } from './reportes.js';
+import { mostrarReportes } from './reportes.js'; 
 import { mostrarAbonos, mostrarFormularioNuevoAbono, editarAbono, eliminarAbono, aplicarSaldoFavorManual } from './abonos.js';
-import { mostrarDesperfectos, mostrarFormularioNuevoDesperfecto, mostrarTotalDesperfectosInquilino } from './desperfectos.js';
+import { mostrarDesperfectos, mostrarFormularioNuevoDesperfecto, mostrarTotalDesperfectosInquilino, editarDesperfecto } from './desperfectos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { renderComisiones } from './comision.js';

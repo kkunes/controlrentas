@@ -399,7 +399,7 @@ export async function mostrarFormularioNuevoDesperfecto(id = null, inquilinoIdPr
     });
 }
 
-window.editarDesperfecto = async function(id) {
+export async function editarDesperfecto(id) {
     mostrarFormularioNuevoDesperfecto(id);
 }
 

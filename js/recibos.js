@@ -265,6 +265,13 @@ export async function generarReciboPDF(pagoId, firma = '') {
                         montoTotal += pago.serviciosPagados.luzMonto;
                     }
                 }
+
+                // Sumar el mobiliario pagado al monto total
+                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                    pago.mobiliarioPagado.forEach(item => {
+                        montoTotal += item.costo || 0;
+                    });
+                }
                 pdf.text(`Monto total:`, xDer, yDer);
                 pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
                 yDer += 6;
@@ -331,6 +338,13 @@ export async function generarReciboPDF(pagoId, firma = '') {
             if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
                 montoTotal += pago.serviciosPagados.luzMonto;
             }
+        }
+
+        // Sumar el mobiliario pagado al monto total
+        if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+            pago.mobiliarioPagado.forEach(item => {
+                montoTotal += item.costo || 0;
+            });
         }
         pdf.text(`Monto total:`, xDer, yDer);
         pdf.text(`${montoTotal.toFixed(2)}`, xDer + 35, yDer);
