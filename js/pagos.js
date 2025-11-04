@@ -993,7 +993,7 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
                         background: '#fff url(/img/bubbles.png)', // Un fondo sutil si tienes una imagen de burbujas
                         backdrop: `
                             rgba(0,0,0,0.4)
-                            url("/img/nyan-cat.gif")
+                            url("img/nyan-cat.gif")
                             left top
                             no-repeat
                         `,
