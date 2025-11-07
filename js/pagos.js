@@ -2117,6 +2117,30 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                 return;
             }
             
+            // --- INICIO: Verificación de duplicados ---
+            const pagosRefCheck = collection(db, "pagos");
+            const qCheck = query(pagosRefCheck, where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
+            const querySnapshotCheck = await getDocs(qCheck);
+
+            if (!querySnapshotCheck.empty) {
+                const pagoExistente = querySnapshotCheck.docs[0].data();
+                if (pagoExistente.serviciosPagados) {
+                    if (servicioInternet && pagoExistente.serviciosPagados.internet) {
+                        mostrarNotificacion("El pago de Internet para este mes ya fue registrado.", "error");
+                        return;
+                    }
+                    if (servicioAgua && pagoExistente.serviciosPagados.agua) {
+                        mostrarNotificacion("El pago de Agua para este mes ya fue registrado.", "error");
+                        return;
+                    }
+                    if (servicioLuz && pagoExistente.serviciosPagados.luz) {
+                        mostrarNotificacion("El pago de Luz para este mes ya fue registrado.", "error");
+                        return;
+                    }
+                }
+            }
+            // --- FIN: Verificación de duplicados ---
+
             try {
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                 const inmuebleId = inquilinoDoc.data().inmuebleAsociadoId;
@@ -2469,6 +2493,20 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                 return;
             }
             
+            // --- INICIO: Verificación de duplicados ---
+            const pagosRefCheck = collection(db, "pagos");
+            const qCheck = query(pagosRefCheck, where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
+            const querySnapshotCheck = await getDocs(qCheck);
+
+            if (!querySnapshotCheck.empty) {
+                const pagoExistente = querySnapshotCheck.docs[0].data();
+                if (pagoExistente.mobiliarioPagado && Array.isArray(pagoExistente.mobiliarioPagado) && pagoExistente.mobiliarioPagado.length > 0) {
+                    mostrarNotificacion("El pago de mobiliario para este mes ya fue registrado.", "error");
+                    return;
+                }
+            }
+            // --- FIN: Verificación de duplicados ---
+
             let montoTotal = 0;
             mobiliarioSeleccionado.forEach(checkbox => {
                 montoTotal += parseFloat(checkbox.dataset.costo);
