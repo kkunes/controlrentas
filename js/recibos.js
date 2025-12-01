@@ -224,14 +224,14 @@ export async function generarReciboPDF(pagoId, firma = '') {
         pdf.setTextColor(55, 65, 81);
         pdf.text("Firma", xIzq + 45, yIzq + 5, { align: "center" });
 
-         // --- AGREGAR FIRMA COMO IMAGEN SOLO SI SE SELECCIONÓ ---
+        // --- AGREGAR FIRMA COMO IMAGEN SOLO SI SE SELECCIONÓ ---
         if (firma) {
             const firmaImg = new Image();
             firmaImg.src = './img/' + firma;
 
             firmaImg.onload = () => {
                 // Agregar imagen encima de la línea de firma
-                pdf.addImage(firmaImg, 'PNG', xIzq + 20, yIzq - 20, 40, 20); 
+                pdf.addImage(firmaImg, 'PNG', xIzq + 20, yIzq - 20, 40, 20);
                 // x, y, width, height
 
                 // Mensaje de agradecimiento
@@ -253,23 +253,27 @@ export async function generarReciboPDF(pagoId, firma = '') {
                 pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
                 yDer += 6;
                 // Calcular el monto total sumando servicios pagados
-                let montoTotal = pago.montoTotal || 0;
+                // Calcular el monto total sumando servicios pagados
+                // Usar la renta mensual actual del inmueble si existe, sino usar el monto del pago
+                let montoBase = inmueble.rentaMensual || pago.montoTotal || 0;
+                let montoTotal = parseFloat(montoBase);
+
                 if (pago.serviciosPagados) {
                     if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
-                        montoTotal += pago.serviciosPagados.internetMonto;
+                        montoTotal += parseFloat(pago.serviciosPagados.internetMonto);
                     }
                     if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
-                        montoTotal += pago.serviciosPagados.aguaMonto;
+                        montoTotal += parseFloat(pago.serviciosPagados.aguaMonto);
                     }
                     if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
-                        montoTotal += pago.serviciosPagados.luzMonto;
+                        montoTotal += parseFloat(pago.serviciosPagados.luzMonto);
                     }
                 }
 
                 // Sumar el mobiliario pagado al monto total
                 if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
                     pago.mobiliarioPagado.forEach(item => {
-                        montoTotal += item.costo || 0;
+                        montoTotal += parseFloat(item.costo || 0);
                     });
                 }
                 pdf.text(`Monto total:`, xDer, yDer);
@@ -327,23 +331,27 @@ export async function generarReciboPDF(pagoId, firma = '') {
         pdf.text(`${pago.mesCorrespondiente} ${pago.anioCorrespondiente}`, xDer + 35, yDer);
         yDer += 6;
         // Calcular el monto total sumando servicios pagados
-        let montoTotal = pago.montoTotal || 0;
+        // Calcular el monto total sumando servicios pagados
+        // Usar la renta mensual actual del inmueble si existe, sino usar el monto del pago
+        let montoBase = inmueble.rentaMensual || pago.montoTotal || 0;
+        let montoTotal = parseFloat(montoBase);
+
         if (pago.serviciosPagados) {
             if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
-                montoTotal += pago.serviciosPagados.internetMonto;
+                montoTotal += parseFloat(pago.serviciosPagados.internetMonto);
             }
             if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
-                montoTotal += pago.serviciosPagados.aguaMonto;
+                montoTotal += parseFloat(pago.serviciosPagados.aguaMonto);
             }
             if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
-                montoTotal += pago.serviciosPagados.luzMonto;
+                montoTotal += parseFloat(pago.serviciosPagados.luzMonto);
             }
         }
 
         // Sumar el mobiliario pagado al monto total
         if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
             pago.mobiliarioPagado.forEach(item => {
-                montoTotal += item.costo || 0;
+                montoTotal += parseFloat(item.costo || 0);
             });
         }
         pdf.text(`Monto total:`, xDer, yDer);
