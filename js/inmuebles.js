@@ -11,14 +11,15 @@ import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm"; // S
  * Muestra la lista de inmuebles en forma de tarjetas.
  */
 export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
-    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de inmuebles.", 'error');
-        ocultarLoader();
         return;
     }
+
+    // ✨ SHOW SKELETON LOADERS WHILE LOADING
+    showSkeletons(contenedor, 'property', 6);
 
     try {
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
@@ -28,50 +29,50 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
         });
 
         // Obtener todos los inquilinos
-const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
-let inquilinosList = [];
-inquilinosSnap.forEach(doc => {
-    inquilinosList.push({ id: doc.id, ...doc.data() });
-});
-
-// Para cada inmueble, busca el inquilino actual
-inmueblesList.forEach(inmueble => {
-    if (inmueble.estado !== "Ocupado") {
-        inmueble.inquilinoActual = null;
-        return;
-    }
-    const hoy = new Date().toISOString().slice(0, 10);
-
-    // Filtra inquilinos asignados a este inmueble y con contrato/desocupación vigente
-    const posibles = inquilinosList.filter(i => {
-        // Normaliza y compara IDs como string
-        if (String(i.inmuebleAsociadoId).trim() !== String(inmueble.id).trim()) return false;
-
-        // Normaliza fechas
-        const finContrato = i.fechaFinContrato ? i.fechaFinContrato.slice(0, 10) : null;
-        const desocupacion = i.fechaDesocupacion ? i.fechaDesocupacion.slice(0, 10) : null;
-
-        // Es actual si:
-        // - No tiene fecha de fin de contrato o es hoy/futuro
-        // - Y no tiene fecha de desocupación o es hoy/futuro
-        const contratoVigente = !finContrato || finContrato >= hoy;
-        const desocupacionVigente = !desocupacion || desocupacion >= hoy;
-
-        return contratoVigente && desocupacionVigente;
-    });
-
-    // Si hay varios, toma el más reciente por fechaInicioContrato o fechaInicio
-    if (posibles.length > 0) {
-        posibles.sort((a, b) => {
-            const aInicio = a.fechaInicioContrato || a.fechaInicio || '';
-            const bInicio = b.fechaInicioContrato || b.fechaInicio || '';
-            return bInicio.localeCompare(aInicio); // descendente
+        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+        let inquilinosList = [];
+        inquilinosSnap.forEach(doc => {
+            inquilinosList.push({ id: doc.id, ...doc.data() });
         });
-        inmueble.inquilinoActual = posibles[0];
-    } else {
-        inmueble.inquilinoActual = null;
-    }
-});
+
+        // Para cada inmueble, busca el inquilino actual
+        inmueblesList.forEach(inmueble => {
+            if (inmueble.estado !== "Ocupado") {
+                inmueble.inquilinoActual = null;
+                return;
+            }
+            const hoy = new Date().toISOString().slice(0, 10);
+
+            // Filtra inquilinos asignados a este inmueble y con contrato/desocupación vigente
+            const posibles = inquilinosList.filter(i => {
+                // Normaliza y compara IDs como string
+                if (String(i.inmuebleAsociadoId).trim() !== String(inmueble.id).trim()) return false;
+
+                // Normaliza fechas
+                const finContrato = i.fechaFinContrato ? i.fechaFinContrato.slice(0, 10) : null;
+                const desocupacion = i.fechaDesocupacion ? i.fechaDesocupacion.slice(0, 10) : null;
+
+                // Es actual si:
+                // - No tiene fecha de fin de contrato o es hoy/futuro
+                // - Y no tiene fecha de desocupación o es hoy/futuro
+                const contratoVigente = !finContrato || finContrato >= hoy;
+                const desocupacionVigente = !desocupacion || desocupacion >= hoy;
+
+                return contratoVigente && desocupacionVigente;
+            });
+
+            // Si hay varios, toma el más reciente por fechaInicioContrato o fechaInicio
+            if (posibles.length > 0) {
+                posibles.sort((a, b) => {
+                    const aInicio = a.fechaInicioContrato || a.fechaInicio || '';
+                    const bInicio = b.fechaInicioContrato || b.fechaInicio || '';
+                    return bInicio.localeCompare(aInicio); // descendente
+                });
+                inmueble.inquilinoActual = posibles[0];
+            } else {
+                inmueble.inquilinoActual = null;
+            }
+        });
 
         // Filtrar por estado si se solicita
         if (estadoFiltro && estadoFiltro !== "Todos") {
@@ -95,7 +96,7 @@ inmueblesList.forEach(inmueble => {
                 let borderColor = 'border-green-500'; // Disponible
                 let estadoBg = 'bg-green-100 text-green-800';
                 let estadoIcon = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'; // Checkmark icon
-                
+
                 if (inmueble.estado === 'Ocupado') {
                     borderColor = 'border-orange-500';
                     estadoBg = 'bg-orange-100 text-orange-800';
@@ -170,11 +171,10 @@ inmueblesList.forEach(inmueble => {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
     <span class="text-sm font-medium">
-        ${
-            inmueble.inquilinoActual
-                ? `<button onclick="mostrarTarjetaInquilino('${inmueble.inquilinoActual.id}')" class="text-indigo-600 hover:underline font-semibold">${inmueble.inquilinoActual.nombre}</button>`
-                : '<span class="text-gray-400 italic">Sin inquilino actual</span>'
-        }
+        ${inmueble.inquilinoActual
+                        ? `<button onclick="mostrarTarjetaInquilino('${inmueble.inquilinoActual.id}')" class="text-indigo-600 hover:underline font-semibold">${inmueble.inquilinoActual.nombre}</button>`
+                        : '<span class="text-gray-400 italic">Sin inquilino actual</span>'
+                    }
     </span>
 </div>
 
@@ -316,16 +316,16 @@ inmueblesList.forEach(inmueble => {
         document.getElementById('filtroEstado').addEventListener('change', function () {
             mostrarInmuebles(this.value, document.getElementById('filtroTipo').value);
         });
-        
+
         // Listener para el cuadro de búsqueda
-        document.getElementById('busquedaInmueble').addEventListener('input', function() {
+        document.getElementById('busquedaInmueble').addEventListener('input', function () {
             const busqueda = this.value.toLowerCase();
             const tarjetas = document.querySelectorAll('#listaInmuebles > div');
-            
+
             tarjetas.forEach(tarjeta => {
                 const nombre = tarjeta.querySelector('h3')?.textContent.toLowerCase() || '';
                 const direccion = tarjeta.querySelector('.text-gray-600 .text-sm')?.textContent.toLowerCase() || '';
-                
+
                 if (nombre.includes(busqueda) || direccion.includes(busqueda)) {
                     tarjeta.style.display = '';
                 } else {
@@ -353,8 +353,6 @@ inmueblesList.forEach(inmueble => {
     } catch (error) {
         console.error("Error al obtener inmuebles:", error);
         mostrarNotificacion("Error al cargar los inmuebles.", 'error');
-    } finally {
-        ocultarLoader();
     }
 }
 
@@ -682,12 +680,12 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
     document.getElementById('btnObtenerUbicacion').addEventListener('click', async () => {
         // Mostrar notificación de espera
         mostrarNotificacion("Obteniendo ubicación...", "info");
-        
+
         try {
             // Usar un servicio de geolocalización por IP como alternativa
             const response = await fetch('https://ipapi.co/json/');
             const data = await response.json();
-            
+
             if (data && data.latitude && data.longitude) {
                 document.getElementById('latitud').value = data.latitude;
                 document.getElementById('longitud').value = data.longitude;
@@ -698,7 +696,7 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
         } catch (error) {
             console.error("Error al obtener ubicación:", error);
             mostrarNotificacion("No se pudo obtener la ubicación. Usando coordenadas predeterminadas.", "warning");
-            
+
             // Usar coordenadas predeterminadas como respaldo
             document.getElementById('latitud').value = "19.4326";
             document.getElementById('longitud').value = "-99.1332";
@@ -713,7 +711,7 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
 
         // Asegurarse de que rentaMensual es un número
         data.rentaMensual = parseFloat(data.rentaMensual);
-        
+
         // Convertir latitud y longitud a números si existen
         if (data.latitud) data.latitud = parseFloat(data.latitud);
         if (data.longitud) data.longitud = parseFloat(data.longitud);
@@ -743,7 +741,7 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
             }
             ocultarModal();
             mostrarInmuebles(); // Recargar la lista de inmuebles
-         
+
         } catch (err) {
             console.error("Error al guardar el inmueble:", err);
             mostrarNotificacion("Error al guardar el inmueble.", 'error');
@@ -828,17 +826,17 @@ export async function mostrarMapaInmueble(inmuebleId) {
         }
 
         const inmueble = inmuebleDoc.data();
-        
+
         if (!inmueble.latitud || !inmueble.longitud) {
             // Si no hay coordenadas, mostrar un formulario para añadirlas
             mostrarFormularioUbicacion(inmuebleId, inmueble);
             return;
         }
-        
+
         // Validar que las coordenadas sean números válidos
         const lat = parseFloat(inmueble.latitud);
         const lng = parseFloat(inmueble.longitud);
-        
+
         if (isNaN(lat) || isNaN(lng)) {
             mostrarNotificacion("Las coordenadas del inmueble no son válidas", "error");
             return;
@@ -858,7 +856,7 @@ export async function mostrarMapaInmueble(inmuebleId) {
                         scrolling="no" 
                         marginheight="0" 
                         marginwidth="0" 
-                        src="https://www.openstreetmap.org/export/embed.html?bbox=${inmueble.longitud-0.01}%2C${inmueble.latitud-0.01}%2C${inmueble.longitud+0.01}%2C${inmueble.latitud+0.01}&amp;layer=mapnik&amp;marker=${inmueble.latitud}%2C${inmueble.longitud}" 
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=${inmueble.longitud - 0.01}%2C${inmueble.latitud - 0.01}%2C${inmueble.longitud + 0.01}%2C${inmueble.latitud + 0.01}&amp;layer=mapnik&amp;marker=${inmueble.latitud}%2C${inmueble.longitud}" 
                         style="border: none;">
                     </iframe>
                 </div>
@@ -901,9 +899,9 @@ export async function mostrarMapaInmueble(inmuebleId) {
                 </button>
             </div>
         `;
-        
+
         mostrarModal(modalContent);
-        
+
     } catch (error) {
         console.error("Error al mostrar el mapa:", error);
         mostrarNotificacion("Error al cargar el mapa", "error");
@@ -969,38 +967,38 @@ function mostrarFormularioUbicacionManual() {
             </div>
         </div>
     `;
-    
+
     mostrarModal(modalContent);
-    
+
     // Evento para guardar la ubicación manual
     document.getElementById('btnGuardarUbicacionManual').addEventListener('click', () => {
         const latitud = document.getElementById('latitudManual').value.trim();
         const longitud = document.getElementById('longitudManual').value.trim();
-        
+
         if (!latitud || !longitud) {
             mostrarNotificacion("Por favor, ingresa ambas coordenadas", "error");
             return;
         }
-        
+
         // Validar que sean números válidos
         const latNum = parseFloat(latitud);
         const lonNum = parseFloat(longitud);
-        
+
         if (isNaN(latNum) || isNaN(lonNum)) {
             mostrarNotificacion("Las coordenadas deben ser números válidos", "error");
             return;
         }
-        
+
         // Validar rango de coordenadas
         if (latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
             mostrarNotificacion("Las coordenadas están fuera de rango válido", "error");
             return;
         }
-        
+
         // Asignar valores a los campos del formulario principal
         document.getElementById('latitud').value = latNum;
         document.getElementById('longitud').value = lonNum;
-        
+
         mostrarNotificacion("Ubicación guardada correctamente", "success");
         ocultarModal();
     });
@@ -1071,41 +1069,41 @@ export async function mostrarFormularioUbicacion(inmuebleId, inmueble) {
             </div>
         </form>
     `;
-    
+
     mostrarModal(modalContent);
-    
+
     // Evento para obtener la ubicación actual
     document.getElementById('btnObtenerUbicacionForm').addEventListener('click', () => {
         // Mostrar formulario para ingresar ubicación manualmente
         mostrarFormularioUbicacionManualParaForm(inmuebleId);
     });
-    
+
     // Evento para guardar la ubicación
     document.getElementById('formUbicacion').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const latitud = parseFloat(document.getElementById('latitudForm').value);
         const longitud = parseFloat(document.getElementById('longitudForm').value);
-        
+
         if (isNaN(latitud) || isNaN(longitud)) {
             mostrarNotificacion("Por favor, ingresa coordenadas válidas", "error");
             return;
         }
-        
+
         try {
             await updateDoc(doc(db, "inmuebles", inmuebleId), {
                 latitud,
                 longitud
             });
-            
+
             mostrarNotificacion("Ubicación guardada correctamente", "success");
             ocultarModal();
-            
+
             // Mostrar el mapa con las nuevas coordenadas
             setTimeout(() => {
                 mostrarMapaInmueble(inmuebleId);
             }, 500);
-            
+
         } catch (error) {
             console.error("Error al guardar la ubicación:", error);
             mostrarNotificacion("Error al guardar la ubicación", "error");
@@ -1173,49 +1171,49 @@ function mostrarFormularioUbicacionManualParaForm(inmuebleId) {
             </div>
         </div>
     `;
-    
+
     mostrarModal(modalContent);
-    
+
     // Evento para guardar la ubicación manual
     document.getElementById('btnGuardarUbicacionManualForm').addEventListener('click', async () => {
         const latitud = document.getElementById('latitudManualForm').value.trim();
         const longitud = document.getElementById('longitudManualForm').value.trim();
-        
+
         if (!latitud || !longitud) {
             mostrarNotificacion("Por favor, ingresa ambas coordenadas", "error");
             return;
         }
-        
+
         // Validar que sean números válidos
         const latNum = parseFloat(latitud);
         const lonNum = parseFloat(longitud);
-        
+
         if (isNaN(latNum) || isNaN(lonNum)) {
             mostrarNotificacion("Las coordenadas deben ser números válidos", "error");
             return;
         }
-        
+
         // Validar rango de coordenadas
         if (latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
             mostrarNotificacion("Las coordenadas están fuera de rango válido", "error");
             return;
         }
-        
+
         try {
             // Guardar directamente en la base de datos
             await updateDoc(doc(db, "inmuebles", inmuebleId), {
                 latitud: latNum,
                 longitud: lonNum
             });
-            
+
             mostrarNotificacion("Ubicación guardada correctamente", "success");
             ocultarModal();
-            
+
             // Mostrar el mapa con las nuevas coordenadas
             setTimeout(() => {
                 mostrarMapaInmueble(inmuebleId);
             }, 500);
-            
+
         } catch (error) {
             console.error("Error al guardar la ubicación:", error);
             mostrarNotificacion("Error al guardar la ubicación", "error");
@@ -1246,14 +1244,14 @@ export function compartirUbicacion(latitud, longitud, nombre) {
         // Validar que las coordenadas sean números válidos
         const lat = parseFloat(latitud);
         const lng = parseFloat(longitud);
-        
+
         if (isNaN(lat) || isNaN(lng)) {
             throw new Error("Coordenadas inválidas");
         }
-        
+
         // Crear URL de Google Maps
         const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        
+
         // Usar directamente el método alternativo de compartir
         copiarAlPortapapeles(mapsUrl);
         mostrarOpcionesCompartir(mapsUrl, nombre);
@@ -1296,7 +1294,7 @@ function copiarAlPortapapelesLegacy(texto) {
     input.style.opacity = '0';
     document.body.appendChild(input);
     input.select();
-    
+
     try {
         // Ejecutar el comando de copia
         const exito = document.execCommand('copy');
@@ -1309,7 +1307,7 @@ function copiarAlPortapapelesLegacy(texto) {
         console.error("Error al copiar:", err);
         mostrarNotificacion("No se pudo copiar la URL. " + texto, "info", 5000);
     }
-    
+
     // Eliminar el elemento temporal
     document.body.removeChild(input);
 }
@@ -1365,9 +1363,9 @@ function mostrarOpcionesCompartir(url, nombre) {
             </button>
         </div>
     `;
-    
+
     mostrarModal(modalContent);
-    
+
     // Evento para el botón de copiar
     document.getElementById('btnCopiarURL').addEventListener('click', () => {
         copiarAlPortapapeles(url);
@@ -1441,10 +1439,10 @@ export async function mostrarHistorialInquilinosInmueble(inmuebleId, inmuebleNom
                                     <td class="px-4 py-3 text-sm text-gray-900">${h.telefono || '-'}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900">${h.correo || '-'}</td>
                                     <td class="px-4 py-3 text-center">
-                                        ${h.actual ? 
-                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actual</span>' : 
-                                            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Anterior</span>'
-                                        }
+                                        ${h.actual ?
+                    '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actual</span>' :
+                    '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Anterior</span>'
+                }
                                     </td>
                                 </tr>
                             `).join('')}
@@ -1531,7 +1529,7 @@ export async function eliminarDocumento(coleccion, id, callback, callbackDashboa
     }
 }
 
-window.mostrarPropietarios = async function() {
+window.mostrarPropietarios = async function () {
     try {
         // Obtener lista de propietarios
         const propietariosSnap = await getDocs(collection(db, "propietarios"));
@@ -1670,7 +1668,7 @@ window.mostrarPropietarios = async function() {
 };
 
 // Función para editar propietario
-window.editarPropietario = async function(id) {
+window.editarPropietario = async function (id) {
     try {
         const docSnap = await getDoc(doc(db, "propietarios", id));
         if (!docSnap.exists()) {
@@ -1715,7 +1713,7 @@ window.editarPropietario = async function(id) {
             e.preventDefault();
             const nombre = document.getElementById('nombrePropietario').value.trim();
             const telefono = document.getElementById('telefonoPropietario').value.trim();
-            
+
             try {
                 await updateDoc(doc(db, "propietarios", id), { nombre, telefono });
                 mostrarNotificacion("Propietario actualizado con éxito.", 'success');
@@ -1733,7 +1731,7 @@ window.editarPropietario = async function(id) {
 };
 
 // Función para eliminar propietario
-window.eliminarPropietario = async function(id) {
+window.eliminarPropietario = async function (id) {
     if (confirm('¿Estás seguro de que deseas eliminar este propietario?')) {
         try {
             await deleteDoc(doc(db, "propietarios", id));
@@ -1857,7 +1855,7 @@ export async function mostrarHistorialMantenimientoInmueble(inmuebleId, inmueble
     }
 }
 
-window.mostrarTarjetaInquilino = async function(id) {
+window.mostrarTarjetaInquilino = async function (id) {
     try {
         const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js");
         const { db } = await import('./firebaseConfig.js');
@@ -1888,9 +1886,9 @@ window.mostrarTarjetaInquilino = async function(id) {
                     </svg>
                     <div class="flex flex-col">
                         <span class="text-sm font-medium">Servicios:</span>
-                        ${inquilino.servicios.map(servicio => 
-                            `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
-                        ).join('')}
+                        ${inquilino.servicios.map(servicio =>
+                `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
+            ).join('')}
                     </div>
                 </div>
             `;

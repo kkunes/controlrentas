@@ -1,6 +1,7 @@
 import { db } from './firebaseConfig.js';
 import { collection, doc, getDocs, query, where, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { mostrarLoader, ocultarLoader } from './ui.js';
+import { showSkeletons } from './skeletonUtils.js';
 
 // Agrupa pagos por mes de pago (YYYY-MM)
 function agruparPorMes(pagos) {
@@ -97,8 +98,9 @@ let filtroEstadoCobro = ''; // Nuevo filtro para estado de cobro
 export async function renderComisiones() {
     const contenedor = document.getElementById('contenido');
     if (!contenedor) return;
-    
-    mostrarLoader();
+
+    // ✨ SHOW SKELETON LOADERS WHILE LOADING
+    showSkeletons(contenedor, 'property', 6);
 
     try {
         // 1. Obtiene los pagos reales de Firestore
@@ -118,11 +120,12 @@ export async function renderComisiones() {
         const tenantMap = new Map();
         inquilinosSnap.forEach(doc => {
             const data = doc.data();
-                    tenantMap.set(doc.id, {
-                        nombre: data.nombre, // <-- Añadir nombre
-                        fechaOcupacion: data.fechaOcupacion,
-                        fechaDesocupacion: data.fechaDesocupacion
-                    });        });
+            tenantMap.set(doc.id, {
+                nombre: data.nombre, // <-- Añadir nombre
+                fechaOcupacion: data.fechaOcupacion,
+                fechaDesocupacion: data.fechaDesocupacion
+            });
+        });
 
         // B. Obtener todos los inmuebles y construir la lista de "inmuebles con ocupación" correcta
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
@@ -165,10 +168,10 @@ export async function renderComisiones() {
         <select id="filtroMes" class="mt-1 block w-32 rounded-lg border-gray-300 shadow focus:ring-indigo-500 focus:border-indigo-500">
             <option value="">Todos</option>
             ${mesesNumeros.map(mesNum => {
-                const mesStr = String(mesNum).padStart(2, '0');
-                const nombreMes = new Date(2000, parseInt(mesNum, 10) - 1, 1).toLocaleString('es-MX', { month: 'long' });
-                return `<option value="${mesStr}" ${filtroMes === mesStr ? 'selected' : ''}>${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}</option>`;
-            }).join('')}
+            const mesStr = String(mesNum).padStart(2, '0');
+            const nombreMes = new Date(2000, parseInt(mesNum, 10) - 1, 1).toLocaleString('es-MX', { month: 'long' });
+            return `<option value="${mesStr}" ${filtroMes === mesStr ? 'selected' : ''}>${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}</option>`;
+        }).join('')}
         </select>
     </div>
     <div>
@@ -223,8 +226,8 @@ export async function renderComisiones() {
                 const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
                 const inicioDeMes = new Date(anio, mesNum - 1, 1);
 
-                const estuvoOcupado = fechaOcupacion <= finDeMes && 
-                                    (!inmueble.fechaDesocupacion || new Date(inmueble.fechaDesocupacion + 'T00:00:00') >= inicioDeMes);
+                const estuvoOcupado = fechaOcupacion <= finDeMes &&
+                    (!inmueble.fechaDesocupacion || new Date(inmueble.fechaDesocupacion + 'T00:00:00') >= inicioDeMes);
 
                 return estuvoOcupado;
             });
@@ -248,20 +251,20 @@ export async function renderComisiones() {
                 <div class="flex items-center gap-3">
                     <span class="inline-block bg-indigo-600 text-white px-4 py-2 rounded-full text-lg font-bold shadow">${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)} ${mes.split('-')[0]}</span>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${cobrado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} shadow">
-                        ${cobrado ? 
-                            `<svg class="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Cobrado` : 
-                            `<svg class="w-4 h-4 mr-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01" /></svg> No cobrado`
-                        }
+                        ${cobrado ?
+                    `<svg class="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Cobrado` :
+                    `<svg class="w-4 h-4 mr-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01" /></svg> No cobrado`
+                }
                     </span>
                     ${cobrado && fechaCobro ? `<span class="ml-2 text-xs text-gray-500">(${fechaCobro})</span>` : ''}
                 </div>
                 <div class="flex gap-2">
                     <button class="marcar-cobrado px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold shadow transition flex items-center gap-2"
                         data-mes="${mes}" data-cobrado="${cobrado}" ${faltanPagos ? 'disabled title="No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado."' : ''}>
-                        ${cobrado ? 
-                            `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg> Desmarcar` : 
-                            `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Marcar cobrado`
-                        }
+                        ${cobrado ?
+                    `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg> Desmarcar` :
+                    `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Marcar cobrado`
+                }
                     </button>
                     <button class="px-4 py-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold shadow transition btn-ver-pagos flex items-center gap-2" data-mes="${mes}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -292,22 +295,22 @@ export async function renderComisiones() {
         contenedor.innerHTML = html;
 
         // 5. Asigna eventos a los filtros
-        document.getElementById('filtroAnio').addEventListener('change', function() {
+        document.getElementById('filtroAnio').addEventListener('change', function () {
             filtroAnio = this.value;
             renderComisiones();
         });
-        document.getElementById('filtroMes').addEventListener('change', function() {
+        document.getElementById('filtroMes').addEventListener('change', function () {
             filtroMes = this.value;
             renderComisiones();
         });
-        document.getElementById('filtroEstadoCobro').addEventListener('change', function() {
+        document.getElementById('filtroEstadoCobro').addEventListener('change', function () {
             filtroEstadoCobro = this.value || '';
             renderComisiones();
         });
 
         // 6. Asigna eventos a los botones de cobrado
         document.querySelectorAll('.marcar-cobrado').forEach(btn => {
-            btn.addEventListener('click', async function(e) {
+            btn.addEventListener('click', async function (e) {
                 if (this.disabled) {
                     mostrarNotificacion("No puedes marcar como cobrado hasta que todos los inmuebles ocupados tengan pago registrado.", "warning");
                     return;
@@ -341,7 +344,7 @@ export async function renderComisiones() {
         });
 
         document.querySelectorAll('.btn-ver-pagos').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 const mes = this.getAttribute('data-mes');
                 const pagos = pagosPorMes[mes];
 
@@ -421,7 +424,7 @@ export async function renderComisiones() {
         });
 
         document.querySelectorAll('.btn-ver-faltantes').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 const mes = this.getAttribute('data-mes');
                 const [anio, mesNum] = mes.split('-').map(Number);
                 const finDeMes = new Date(anio, mesNum, 0);
@@ -464,8 +467,8 @@ export async function renderComisiones() {
                     const fechaOcupacion = new Date(inmueble.fechaOcupacion + 'T00:00:00');
                     const inicioDeMes = new Date(anio, mesNum - 1, 1);
 
-                    const estuvoOcupado = fechaOcupacion <= finDeMes && 
-                                        (!inmueble.fechaDesocupacion || new Date(inmueble.fechaDesocupacion + 'T00:00:00') >= inicioDeMes);
+                    const estuvoOcupado = fechaOcupacion <= finDeMes &&
+                        (!inmueble.fechaDesocupacion || new Date(inmueble.fechaDesocupacion + 'T00:00:00') >= inicioDeMes);
 
                     return estuvoOcupado;
                 });
@@ -491,9 +494,8 @@ export async function renderComisiones() {
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        ${
-                            faltantes.length > 0
-                            ? `<table class="min-w-full divide-y divide-gray-200">
+                        ${faltantes.length > 0
+                        ? `<table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inmueble</th>
@@ -520,8 +522,8 @@ export async function renderComisiones() {
                                     `).join('')}
                                 </tbody>
                             </table>`
-                            : `<div class="p-6 text-center text-green-700 font-semibold bg-green-50 rounded-lg shadow">Todos los inmuebles ocupados tienen pago registrado.</div>`
-                        }
+                        : `<div class="p-6 text-center text-green-700 font-semibold bg-green-50 rounded-lg shadow">Todos los inmuebles ocupados tienen pago registrado.</div>`
+                    }
                     </div>
                     <div class="flex justify-end mt-6">
                         <button onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 hover:shadow-md">
@@ -546,14 +548,14 @@ export async function renderComisiones() {
 }
 
 // Integración con el menú lateral
-window.mostrarComisiones = function() {
+window.mostrarComisiones = function () {
     renderComisiones();
     if (typeof setActiveSection === 'function') setActiveSection('comisiones');
 };
 
 
 // Integración con el menú lateral
-window.mostrarComisiones = function() {
+window.mostrarComisiones = function () {
     renderComisiones();
     if (typeof setActiveSection === 'function') setActiveSection('comisiones');
 };

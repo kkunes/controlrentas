@@ -7,18 +7,20 @@ import { generarReciboPDF } from './recibos.js';
  * Muestra la lista de pagos.
  */
 export async function mostrarPagos(mostrarTabla = false) {
-    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de pagos.", 'error');
-        ocultarLoader();
         return;
     }
-    
-    // Si no se solicita mostrar la tabla directamente, mostrar los botones grandes
-    if (!mostrarTabla) {
-        contenedor.innerHTML = `
+
+    // ✨ SHOW SKELETON LOADERS WHILE LOADING
+    showSkeletons(contenedor, 'payment', 8);
+
+    try {
+        // Si no se solicita mostrar la tabla directamente, mostrar los botones grandes
+        if (!mostrarTabla) {
+            contenedor.innerHTML = `
             <div class="flex flex-col items-center justify-center py-10">
                 <h2 class="text-3xl font-bold text-gray-800 mb-10">Gestión de Pagos</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
@@ -51,12 +53,12 @@ export async function mostrarPagos(mostrarTabla = false) {
                 </div>
             </div>
         `;
-        
-        // Agregar event listeners a los botones
-        document.getElementById('btnNuevoPago').addEventListener('click', () => mostrarFormularioNuevoPago());
-        document.getElementById('btnPagoServicio').addEventListener('click', () => {
-            // Mostrar opciones para elegir entre pago de servicios o mobiliario
-            const opcionesHtml = `
+
+            // Agregar event listeners a los botones
+            document.getElementById('btnNuevoPago').addEventListener('click', () => mostrarFormularioNuevoPago());
+            document.getElementById('btnPagoServicio').addEventListener('click', () => {
+                // Mostrar opciones para elegir entre pago de servicios o mobiliario
+                const opcionesHtml = `
                 <div class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
                     <button id="btnCerrarModal" class="absolute top-3 right-3 text-white hover:text-indigo-200 transition-colors duration-200 focus:outline-none">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,184 +90,184 @@ export async function mostrarPagos(mostrarTabla = false) {
                     </button>
                 </div>
             `;
-            
-            mostrarModal(opcionesHtml);
-            
-            // Agregar event listeners a los botones
-            document.getElementById('btnCerrarModal').addEventListener('click', () => {
-                ocultarModal();
+
+                mostrarModal(opcionesHtml);
+
+                // Agregar event listeners a los botones
+                document.getElementById('btnCerrarModal').addEventListener('click', () => {
+                    ocultarModal();
+                });
+
+                document.getElementById('btnPagarServicios').addEventListener('click', () => {
+                    ocultarModal();
+                    mostrarFormularioPagoServicio();
+                });
+
+                document.getElementById('btnPagarMobiliario').addEventListener('click', () => {
+                    ocultarModal();
+                    mostrarFormularioPagoMobiliario();
+                });
+            })
+                ;
+            document.getElementById('btnHistorialPagos').addEventListener('click', () => mostrarPagos(true));
+
+            return;
+        }
+
+        try {
+            const pagosSnap = await getDocs(collection(db, "pagos"));
+            const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+            const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+
+            const inmueblesMap = new Map();
+            inmueblesSnap.forEach(doc => {
+                inmueblesMap.set(doc.id, doc.data().nombre);
             });
-            
-            document.getElementById('btnPagarServicios').addEventListener('click', () => {
-                ocultarModal();
-                mostrarFormularioPagoServicio();
+
+            const inquilinosMap = new Map();
+            inquilinosSnap.forEach(doc => {
+                inquilinosMap.set(doc.id, doc.data().nombre);
             });
-            
-            document.getElementById('btnPagarMobiliario').addEventListener('click', () => {
-                ocultarModal();
-                mostrarFormularioPagoMobiliario();
+
+            let pagosList = [];
+            pagosSnap.forEach(doc => {
+                const data = doc.data();
+                const nombreInmueble = inmueblesMap.get(data.inmuebleId) || 'Inmueble Desconocido';
+                const nombreInquilino = inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido';
+                pagosList.push({ id: doc.id, ...data, nombreInmueble, nombreInquilino });
             });
-        });
-        document.getElementById('btnHistorialPagos').addEventListener('click', () => mostrarPagos(true));
-        
-        ocultarLoader();
-        return;
-    }
 
-    try {
-        const pagosSnap = await getDocs(collection(db, "pagos"));
-        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+            // Ordenar los pagos por fecha de registro (el más reciente primero)
+            pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
 
-        const inmueblesMap = new Map();
-        inmueblesSnap.forEach(doc => {
-            inmueblesMap.set(doc.id, doc.data().nombre);
-        });
-
-        const inquilinosMap = new Map();
-        inquilinosSnap.forEach(doc => {
-            inquilinosMap.set(doc.id, doc.data().nombre);
-        });
-
-        let pagosList = [];
-        pagosSnap.forEach(doc => {
-            const data = doc.data();
-            const nombreInmueble = inmueblesMap.get(data.inmuebleId) || 'Inmueble Desconocido';
-            const nombreInquilino = inquilinosMap.get(data.inquilinoId) || 'Inquilino Desconocido';
-            pagosList.push({ id: doc.id, ...data, nombreInmueble, nombreInquilino });
-        });
-
-        // Ordenar los pagos por fecha de registro (el más reciente primero)
-        pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
-
-        let tablaFilas = "";
-        if (pagosList.length === 0) {
-            tablaFilas = `<tr><td colspan="10" class="text-center py-4 text-gray-500">No hay pagos registrados.</td></tr>`;
-        } else {
-            pagosList.forEach(pago => {
-                // Clases para el estado del pago
-                let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
-                switch (pago.estado) {
-                    case "pagado":
-                        estadoClass += " bg-green-100 text-green-800";
-                        break;
-                    case "parcial":
-                        estadoClass += " bg-yellow-100 text-yellow-800";
-                        break;
-                    case "pendiente":
-                        estadoClass += " bg-red-100 text-red-800";
-                        break;
-                    case "vencido":
-                        estadoClass += " bg-purple-100 text-purple-800";
-                        break;
-                    default:
-                        estadoClass += " bg-gray-100 text-gray-800";
-                        break;
-                }
-
-                // Obtener el costo real del inmueble desde la colección de inmuebles
-                let montoBase = 0;
-                const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
-                if (inmuebleData && inmuebleData.rentaMensual) {
-                    montoBase = inmuebleData.rentaMensual;
-                } else {
-                    montoBase = pago.montoBase || pago.montoTotal || 0;
-                }
-                
-                // Calcular el monto total sumando servicios y mobiliario
-                let montoTotal = montoBase;
-                
-                // Sumar montos de servicios pagados
-                if (pago.serviciosPagados) {
-                    if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
-                        montoTotal += pago.serviciosPagados.internetMonto;
+            let tablaFilas = "";
+            if (pagosList.length === 0) {
+                tablaFilas = `<tr><td colspan="10" class="text-center py-4 text-gray-500">No hay pagos registrados.</td></tr>`;
+            } else {
+                pagosList.forEach(pago => {
+                    // Clases para el estado del pago
+                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
+                    switch (pago.estado) {
+                        case "pagado":
+                            estadoClass += " bg-green-100 text-green-800";
+                            break;
+                        case "parcial":
+                            estadoClass += " bg-yellow-100 text-yellow-800";
+                            break;
+                        case "pendiente":
+                            estadoClass += " bg-red-100 text-red-800";
+                            break;
+                        case "vencido":
+                            estadoClass += " bg-purple-100 text-purple-800";
+                            break;
+                        default:
+                            estadoClass += " bg-gray-100 text-gray-800";
+                            break;
                     }
-                    if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
-                        montoTotal += pago.serviciosPagados.aguaMonto;
-                    }
-                    if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
-                        montoTotal += pago.serviciosPagados.luzMonto;
-                    }
-                }
-                
-                // Sumar el mobiliario pagado al monto total
-                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-                    pago.mobiliarioPagado.forEach(item => {
-                        montoTotal += item.costo || 0;
-                    });
-                }
-                
-                // Asegurar que los montos se muestren con 2 decimales, incluso si son null o undefined
-                const montoTotalFormatted = montoTotal.toFixed(2);
-                const montoPagadoFormatted = pago.montoPagado ? pago.montoPagado.toFixed(2) : '0.00';
-                const saldoPendienteFormatted = pago.saldoPendiente ? pago.saldoPendiente.toFixed(2) : '0.00';
 
-                // Verificar si el inquilino tiene servicios asignados
-                const inquilinoData = inquilinosSnap.docs.find(doc => doc.id === pago.inquilinoId)?.data();
-                const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
-                    ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
-                    (inquilinoData.tipoServicio && inquilinoData.montoServicio));
-                
-                // Verificar si el inquilino tiene mobiliario asignado
-                const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado && 
-                    Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
-                
-                // En la generación de filas de la tabla:
-                const servicios = [];
-                if (pago.serviciosPagados?.internet) {
-                    servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
-                }
-                if (pago.serviciosPagados?.agua) {
-                    servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)}`);
-                }
-                if (pago.serviciosPagados?.luz) {
-                    servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
-                }
-                
-                // Determinar si hay servicios pendientes
-                let serviciosHtml = '';
-                if (servicios.length > 0) {
-                    serviciosHtml = servicios.join('<br>');
-                } else if (tieneServicios) {
-                    serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
-                } else {
-                    serviciosHtml = '-';
-                }
-                
-                // Calcular total de mobiliario
-let mobiliarioTotal = 0;
-if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-    pago.mobiliarioPagado.forEach(item => {
-        mobiliarioTotal += item.costo || 0;
-    });
-}
+                    // Obtener el costo real del inmueble desde la colección de inmuebles
+                    let montoBase = 0;
+                    const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
+                    if (inmuebleData && inmuebleData.rentaMensual) {
+                        montoBase = inmuebleData.rentaMensual;
+                    } else {
+                        montoBase = pago.montoBase || pago.montoTotal || 0;
+                    }
 
-// BLOQUE PRINCIPAL
-// Determinar si hay mobiliario pendiente
-let mobiliarioHtml = '';
-if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
-    let mobiliarioTotal = 0;
-    pago.mobiliarioPagado.forEach(item => {
-        mobiliarioTotal += item.costo || 0;
-    });
-    mobiliarioHtml = `
+                    // Calcular el monto total sumando servicios y mobiliario
+                    let montoTotal = montoBase;
+
+                    // Sumar montos de servicios pagados
+                    if (pago.serviciosPagados) {
+                        if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
+                            montoTotal += pago.serviciosPagados.internetMonto;
+                        }
+                        if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
+                            montoTotal += pago.serviciosPagados.aguaMonto;
+                        }
+                        if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
+                            montoTotal += pago.serviciosPagados.luzMonto;
+                        }
+                    }
+
+                    // Sumar el mobiliario pagado al monto total
+                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                        pago.mobiliarioPagado.forEach(item => {
+                            montoTotal += item.costo || 0;
+                        });
+                    }
+
+                    // Asegurar que los montos se muestren con 2 decimales, incluso si son null o undefined
+                    const montoTotalFormatted = montoTotal.toFixed(2);
+                    const montoPagadoFormatted = pago.montoPagado ? pago.montoPagado.toFixed(2) : '0.00';
+                    const saldoPendienteFormatted = pago.saldoPendiente ? pago.saldoPendiente.toFixed(2) : '0.00';
+
+                    // Verificar si el inquilino tiene servicios asignados
+                    const inquilinoData = inquilinosSnap.docs.find(doc => doc.id === pago.inquilinoId)?.data();
+                    const tieneServicios = inquilinoData && inquilinoData.pagaServicios &&
+                        ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) ||
+                            (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+
+                    // Verificar si el inquilino tiene mobiliario asignado
+                    const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado &&
+                        Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
+
+                    // En la generación de filas de la tabla:
+                    const servicios = [];
+                    if (pago.serviciosPagados?.internet) {
+                        servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
+                    }
+                    if (pago.serviciosPagados?.agua) {
+                        servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)}`);
+                    }
+                    if (pago.serviciosPagados?.luz) {
+                        servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
+                    }
+
+                    // Determinar si hay servicios pendientes
+                    let serviciosHtml = '';
+                    if (servicios.length > 0) {
+                        serviciosHtml = servicios.join('<br>');
+                    } else if (tieneServicios) {
+                        serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                    } else {
+                        serviciosHtml = '-';
+                    }
+
+                    // Calcular total de mobiliario
+                    let mobiliarioTotal = 0;
+                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                        pago.mobiliarioPagado.forEach(item => {
+                            mobiliarioTotal += item.costo || 0;
+                        });
+                    }
+
+                    // BLOQUE PRINCIPAL
+                    // Determinar si hay mobiliario pendiente
+                    let mobiliarioHtml = '';
+                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                        let mobiliarioTotal = 0;
+                        pago.mobiliarioPagado.forEach(item => {
+                            mobiliarioTotal += item.costo || 0;
+                        });
+                        mobiliarioHtml = `
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
             Pagado
         </span>
         <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
     `;
-} else if (tieneMobiliario) {
-    mobiliarioHtml = `
+                    } else if (tieneMobiliario) {
+                        mobiliarioHtml = `
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
             Pendiente
         </span>
     `;
-} else {
-    mobiliarioHtml = '-';
-}
+                    } else {
+                        mobiliarioHtml = '-';
+                    }
 
 
-                tablaFilas += `
+                    tablaFilas += `
                     <tr class="hover:bg-gray-50">
                         <td class="px-2 py-2 text-xs text-gray-800">${pago.nombreInmueble}</td>
                         <td class="px-2 py-2 text-xs text-gray-700">${pago.nombreInquilino}</td>
@@ -310,28 +312,28 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
                         </td>
                     </tr>
                 `;
-            });
-        }
+                });
+            }
 
-        // Opciones para los filtros
-        const inmueblesOptions = [...inmueblesMap.entries()].map(([id, nombre]) =>
-            `<option value="${id}">${nombre}</option>`).join('');
-        const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) =>
-            `<option value="${id}">${nombre}</option>`).join('');
-                const meses = [
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        ];
-        const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
-        const estados = ["pagado", "parcial", "pendiente", "vencido"];
-        const estadosOptions = estados.map(e => `<option value="${e}">${e.charAt(0).toUpperCase() + e.slice(1)}</option>`).join('');
-        // NUEVO: Opciones de año para filtro
-        const anioActual = new Date().getFullYear();
-        const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
-        const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
+            // Opciones para los filtros
+            const inmueblesOptions = [...inmueblesMap.entries()].map(([id, nombre]) =>
+                `<option value="${id}">${nombre}</option>`).join('');
+            const inquilinosOptions = [...inquilinosMap.entries()].map(([id, nombre]) =>
+                `<option value="${id}">${nombre}</option>`).join('');
+            const meses = [
+                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+            ];
+            const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
+            const estados = ["pagado", "parcial", "pendiente", "vencido"];
+            const estadosOptions = estados.map(e => `<option value="${e}">${e.charAt(0).toUpperCase() + e.slice(1)}</option>`).join('');
+            // NUEVO: Opciones de año para filtro
+            const anioActual = new Date().getFullYear();
+            const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
+            const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
-        // Filtros UI
-        const filtrosHtml = `
+            // Filtros UI
+            const filtrosHtml = `
             <div class="flex flex-wrap gap-4 mb-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Inmueble</label>
@@ -372,7 +374,7 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
             </div>
         `;
 
-        contenedor.innerHTML = `
+            contenedor.innerHTML = `
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-semibold text-gray-700">Listado de Pagos de Renta</h2>
                 <div class="flex gap-2">
@@ -407,9 +409,9 @@ if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobili
                 </table>
             </div>
         `;
-document.getElementById('btnPagoServicio').addEventListener('click', () => {
-    // Mostrar opciones para elegir entre pago de servicios o mobiliario
-    const opcionesHtml = `
+            document.getElementById('btnPagoServicio').addEventListener('click', () => {
+                // Mostrar opciones para elegir entre pago de servicios o mobiliario
+                const opcionesHtml = `
         <div class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative">
             <button id="btnCerrarModal" class="absolute top-3 right-3 text-white hover:text-indigo-200 transition-colors duration-200 focus:outline-none">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,268 +443,268 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
             </button>
         </div>
     `;
-    
-    mostrarModal(opcionesHtml);
-    
-    // Agregar event listeners a los botones
-    document.getElementById('btnCerrarModal').addEventListener('click', () => {
-        ocultarModal();
-    });
-    
-    document.getElementById('btnPagarServicios').addEventListener('click', () => {
-        ocultarModal();
-        mostrarFormularioPagoServicio();
-    });
-    
-    document.getElementById('btnPagarMobiliario').addEventListener('click', () => {
-        ocultarModal();
-        mostrarFormularioPagoMobiliario();
-    });
-});
-        // --- Adjuntar Event Listeners después de que el HTML se ha cargado ---
-        document.getElementById('btnNuevoPago').addEventListener('click', () => mostrarFormularioNuevoPago());
 
-        function adjuntarListenersPillMenu() {
-            document.querySelectorAll('.pill-menu-container').forEach(container => {
-                const button = container.querySelector('.pill-menu-button');
-                if (button) {
-                    if (button.dataset.pillMenuAttached) return;
-                    button.dataset.pillMenuAttached = 'true';
+                mostrarModal(opcionesHtml);
 
-                    button.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        // Close other active menus
-                        document.querySelectorAll('.pill-menu-container.active').forEach(otherContainer => {
-                            if (otherContainer !== container) {
-                                otherContainer.classList.remove('active');
-                            }
+                // Agregar event listeners a los botones
+                document.getElementById('btnCerrarModal').addEventListener('click', () => {
+                    ocultarModal();
+                });
+
+                document.getElementById('btnPagarServicios').addEventListener('click', () => {
+                    ocultarModal();
+                    mostrarFormularioPagoServicio();
+                });
+
+                document.getElementById('btnPagarMobiliario').addEventListener('click', () => {
+                    ocultarModal();
+                    mostrarFormularioPagoMobiliario();
+                });
+            });
+            // --- Adjuntar Event Listeners después de que el HTML se ha cargado ---
+            document.getElementById('btnNuevoPago').addEventListener('click', () => mostrarFormularioNuevoPago());
+
+            function adjuntarListenersPillMenu() {
+                document.querySelectorAll('.pill-menu-container').forEach(container => {
+                    const button = container.querySelector('.pill-menu-button');
+                    if (button) {
+                        if (button.dataset.pillMenuAttached) return;
+                        button.dataset.pillMenuAttached = 'true';
+
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            // Close other active menus
+                            document.querySelectorAll('.pill-menu-container.active').forEach(otherContainer => {
+                                if (otherContainer !== container) {
+                                    otherContainer.classList.remove('active');
+                                }
+                            });
+                            // Toggle current menu
+                            container.classList.toggle('active');
                         });
-                        // Toggle current menu
-                        container.classList.toggle('active');
-                    });
-                }
-            });
-        }
+                    }
+                });
+            }
 
-        // Listener global para cerrar los menús. Se añade una sola vez.
-        if (!window.pillMenuClickListenerAdded) {
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.pill-menu-container')) {
-                    document.querySelectorAll('.pill-menu-container.active').forEach(container => {
-                        container.classList.remove('active');
-                    });
-                }
-            });
-            window.pillMenuClickListenerAdded = true;
-        }
-        
-        adjuntarListenersPillMenu();
-        document.querySelectorAll('.btn-detalle-pago').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const pagoId = e.currentTarget.dataset.pagoId;
-                mostrarDetallePago(pagoId);
-            });
-        });
+            // Listener global para cerrar los menús. Se añade una sola vez.
+            if (!window.pillMenuClickListenerAdded) {
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.pill-menu-container')) {
+                        document.querySelectorAll('.pill-menu-container.active').forEach(container => {
+                            container.classList.remove('active');
+                        });
+                    }
+                });
+                window.pillMenuClickListenerAdded = true;
+            }
 
-        document.querySelectorAll('.btn-abonar-pago').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const pagoId = e.currentTarget.dataset.pagoId;
-                // Busca el pago en la lista para obtener los datos necesarios
-                const pagoData = pagosList.find(p => p.id === pagoId);
-                if (pagoData) {
-                    mostrarFormularioRegistrarAbono(pagoId, pagoData.montoTotal, pagoData.montoPagado);
+            adjuntarListenersPillMenu();
+            document.querySelectorAll('.btn-detalle-pago').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const pagoId = e.currentTarget.dataset.pagoId;
+                    mostrarDetallePago(pagoId);
+                });
+            });
+
+            document.querySelectorAll('.btn-abonar-pago').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const pagoId = e.currentTarget.dataset.pagoId;
+                    // Busca el pago en la lista para obtener los datos necesarios
+                    const pagoData = pagosList.find(p => p.id === pagoId);
+                    if (pagoData) {
+                        mostrarFormularioRegistrarAbono(pagoId, pagoData.montoTotal, pagoData.montoPagado);
+                    } else {
+                        mostrarNotificacion("Error: No se encontró la información del pago para abonar.", 'error');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.btn-editar-pago').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const pagoId = e.currentTarget.dataset.pagoId;
+                    editarPago(pagoId);
+                });
+            });
+
+            document.querySelectorAll('.btn-eliminar-pago').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const pagoId = e.currentTarget.dataset.pagoId;
+                    eliminarDocumento('pagos', pagoId, mostrarPagos);
+                });
+            });
+
+            document.querySelectorAll('.btn-gestionar-servicios').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const pagoId = e.currentTarget.dataset.pagoId;
+                    gestionarServiciosPago(pagoId);
+                });
+            });
+
+            // Actualizar la tabla cuando se elimina un servicio
+            document.addEventListener('servicioEliminado', () => {
+                mostrarPagos(); // Recargar la tabla para reflejar los cambios
+            });
+
+            document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const pagoId = e.currentTarget.dataset.pagoId;
+                    seleccionarFirmaYGenerarRecibo(pagoId);
+                });
+            });
+
+            document.querySelectorAll('.btn-gestionar-mobiliario').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const pagoId = e.currentTarget.dataset.pagoId;
+                    gestionarMobiliarioPago(pagoId);
+                });
+            });
+
+            // --- Filtros interactivos ---
+            document.getElementById('btnGenerarReporte').addEventListener('click', () => mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap));
+
+            function aplicarFiltros() {
+                const filtroInmueble = document.getElementById('filtroInmueble').value;
+                const filtroInquilino = document.getElementById('filtroInquilino').value;
+                const filtroMes = document.getElementById('filtroMes').value;
+                const filtroAnio = document.getElementById('filtroAnio').value;
+                const filtroEstado = document.getElementById('filtroEstado').value;
+
+                let pagosFiltrados = pagosList.filter(pago => {
+                    return (!filtroInmueble || pago.inmuebleId === filtroInmueble)
+                        && (!filtroInquilino || pago.inquilinoId === filtroInquilino)
+                        && (!filtroMes || pago.mesCorrespondiente === filtroMes)
+                        && (!filtroAnio || pago.anioCorrespondiente == filtroAnio)
+                        && (!filtroEstado || pago.estado === filtroEstado);
+                });
+
+                // Generar filas de tabla con pagos filtrados
+                let tablaFilas = "";
+                if (pagosFiltrados.length === 0) {
+                    tablaFilas = `<tr><td colspan="10" class="text-center py-4 text-gray-500">No hay pagos registrados.</td></tr>`;
                 } else {
-                    mostrarNotificacion("Error: No se encontró la información del pago para abonar.", 'error');
-                }
-            });
-        });
-
-        document.querySelectorAll('.btn-editar-pago').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const pagoId = e.currentTarget.dataset.pagoId;
-                editarPago(pagoId);
-            });
-        });
-
-        document.querySelectorAll('.btn-eliminar-pago').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const pagoId = e.currentTarget.dataset.pagoId;
-                eliminarDocumento('pagos', pagoId, mostrarPagos);
-            });
-        });
-
-        document.querySelectorAll('.btn-gestionar-servicios').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const pagoId = e.currentTarget.dataset.pagoId;
-                gestionarServiciosPago(pagoId);
-            });
-        });
-        
-        // Actualizar la tabla cuando se elimina un servicio
-        document.addEventListener('servicioEliminado', () => {
-            mostrarPagos(); // Recargar la tabla para reflejar los cambios
-        });
-
-        document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const pagoId = e.currentTarget.dataset.pagoId;
-                seleccionarFirmaYGenerarRecibo(pagoId);
-            });
-        });
-
-        document.querySelectorAll('.btn-gestionar-mobiliario').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const pagoId = e.currentTarget.dataset.pagoId;
-                gestionarMobiliarioPago(pagoId);
-            });
-        });
-
- // --- Filtros interactivos ---
-        document.getElementById('btnGenerarReporte').addEventListener('click', () => mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap));
-
-        function aplicarFiltros() {
-            const filtroInmueble = document.getElementById('filtroInmueble').value;
-            const filtroInquilino = document.getElementById('filtroInquilino').value;
-            const filtroMes = document.getElementById('filtroMes').value;
-            const filtroAnio = document.getElementById('filtroAnio').value;
-            const filtroEstado = document.getElementById('filtroEstado').value;
-
-            let pagosFiltrados = pagosList.filter(pago => {
-                return (!filtroInmueble || pago.inmuebleId === filtroInmueble)
-                    && (!filtroInquilino || pago.inquilinoId === filtroInquilino)
-                    && (!filtroMes || pago.mesCorrespondiente === filtroMes)
-                    && (!filtroAnio || pago.anioCorrespondiente == filtroAnio)
-                    && (!filtroEstado || pago.estado === filtroEstado);
-            });
-
-            // Generar filas de tabla con pagos filtrados
-            let tablaFilas = "";
-            if (pagosFiltrados.length === 0) {
-                tablaFilas = `<tr><td colspan="10" class="text-center py-4 text-gray-500">No hay pagos registrados.</td></tr>`;
-            } else {
-                pagosFiltrados.forEach(pago => {
-                    // Clases para el estado del pago
-                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
-                    switch (pago.estado) {
-                        case "pagado":
-                            estadoClass += " bg-green-100 text-green-800";
-                            break;
-                        case "parcial":
-                            estadoClass += " bg-yellow-100 text-yellow-800";
-                            break;
-                        case "pendiente":
-                            estadoClass += " bg-red-100 text-red-800";
-                            break;
-                        case "vencido":
-                            estadoClass += " bg-purple-100 text-purple-800";
-                            break;
-                        default:
-                            estadoClass += " bg-gray-100 text-gray-800";
-                            break;
-                    }
-
-                    // Obtener el costo real del inmueble desde la colección de inmuebles
-                    let montoBase = 0;
-                    const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
-                    if (inmuebleData && inmuebleData.rentaMensual) {
-                        montoBase = inmuebleData.rentaMensual;
-                    } else {
-                        montoBase = pago.montoBase || pago.montoTotal || 0;
-                    }
-                    
-                    // Calcular el monto total sumando servicios y mobiliario
-                    let montoTotal = montoBase;
-                    
-                    // Sumar montos de servicios pagados
-                    if (pago.serviciosPagados) {
-                        if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
-                            montoTotal += pago.serviciosPagados.internetMonto;
+                    pagosFiltrados.forEach(pago => {
+                        // Clases para el estado del pago
+                        let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
+                        switch (pago.estado) {
+                            case "pagado":
+                                estadoClass += " bg-green-100 text-green-800";
+                                break;
+                            case "parcial":
+                                estadoClass += " bg-yellow-100 text-yellow-800";
+                                break;
+                            case "pendiente":
+                                estadoClass += " bg-red-100 text-red-800";
+                                break;
+                            case "vencido":
+                                estadoClass += " bg-purple-100 text-purple-800";
+                                break;
+                            default:
+                                estadoClass += " bg-gray-100 text-gray-800";
+                                break;
                         }
-                        if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
-                            montoTotal += pago.serviciosPagados.aguaMonto;
-                        }
-                        if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
-                            montoTotal += pago.serviciosPagados.luzMonto;
-                        }
-                    }
-                    
-                    // Sumar el mobiliario pagado al monto total
-                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-                        pago.mobiliarioPagado.forEach(item => {
-                            montoTotal += item.costo || 0;
-                        });
-                    }
-                    
-                    // Asegurar que los montos se muestren with 2 decimales, incluso si son null o undefined
-                    const montoTotalFormatted = montoTotal.toFixed(2);
-                    const montoPagadoFormatted = pago.montoPagado ? pago.montoPagado.toFixed(2) : '0.00';
-                    const saldoPendienteFormatted = pago.saldoPendiente ? pago.saldoPendiente.toFixed(2) : '0.00';
 
-                    // Verificar si el inquilino tiene servicios asignados
-                    const inquilinoData = inquilinosSnap.docs.find(doc => doc.id === pago.inquilinoId)?.data();
-                    const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
-                        ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
-                        (inquilinoData.tipoServicio && inquilinoData.montoServicio));
-                    
-                    // Verificar si el inquilino tiene mobiliario asignado
-                    const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado && 
-                        Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
-                    
-                    // En la generación de filas de la tabla:
-                    const servicios = [];
-                    if (pago.serviciosPagados?.internet) {
-                        servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
-                    }
-                    if (pago.serviciosPagados?.agua) {
-                        servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)}`);
-                    }
-                    if (pago.serviciosPagados?.luz) {
-                        servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
-                    }
-                    
-                    // Determinar si hay servicios pendientes
-                    let serviciosHtml = '';
-                    if (servicios.length > 0) {
-                        serviciosHtml = servicios.join('<br>');
-                    } else if (tieneServicios) {
-                        serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
-                    } else {
-                        serviciosHtml = '-';
-                    }
-                    
-                    // Calcular total de mobiliario
-                    let mobiliarioTotal = 0;
-                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
-                        pago.mobiliarioPagado.forEach(item => {
-                            mobiliarioTotal += item.costo || 0;
-                        });
-                    }
-                    
-                    // Determinar si hay mobiliario pendiente
-                    let mobiliarioHtml = '';
-                    if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                        // Obtener el costo real del inmueble desde la colección de inmuebles
+                        let montoBase = 0;
+                        const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
+                        if (inmuebleData && inmuebleData.rentaMensual) {
+                            montoBase = inmuebleData.rentaMensual;
+                        } else {
+                            montoBase = pago.montoBase || pago.montoTotal || 0;
+                        }
+
+                        // Calcular el monto total sumando servicios y mobiliario
+                        let montoTotal = montoBase;
+
+                        // Sumar montos de servicios pagados
+                        if (pago.serviciosPagados) {
+                            if (pago.serviciosPagados.internet && pago.serviciosPagados.internetMonto) {
+                                montoTotal += pago.serviciosPagados.internetMonto;
+                            }
+                            if (pago.serviciosPagados.agua && pago.serviciosPagados.aguaMonto) {
+                                montoTotal += pago.serviciosPagados.aguaMonto;
+                            }
+                            if (pago.serviciosPagados.luz && pago.serviciosPagados.luzMonto) {
+                                montoTotal += pago.serviciosPagados.luzMonto;
+                            }
+                        }
+
+                        // Sumar el mobiliario pagado al monto total
+                        if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                            pago.mobiliarioPagado.forEach(item => {
+                                montoTotal += item.costo || 0;
+                            });
+                        }
+
+                        // Asegurar que los montos se muestren with 2 decimales, incluso si son null o undefined
+                        const montoTotalFormatted = montoTotal.toFixed(2);
+                        const montoPagadoFormatted = pago.montoPagado ? pago.montoPagado.toFixed(2) : '0.00';
+                        const saldoPendienteFormatted = pago.saldoPendiente ? pago.saldoPendiente.toFixed(2) : '0.00';
+
+                        // Verificar si el inquilino tiene servicios asignados
+                        const inquilinoData = inquilinosSnap.docs.find(doc => doc.id === pago.inquilinoId)?.data();
+                        const tieneServicios = inquilinoData && inquilinoData.pagaServicios &&
+                            ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) ||
+                                (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+
+                        // Verificar si el inquilino tiene mobiliario asignado
+                        const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado &&
+                            Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
+
+                        // En la generación de filas de la tabla:
+                        const servicios = [];
+                        if (pago.serviciosPagados?.internet) {
+                            servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
+                        }
+                        if (pago.serviciosPagados?.agua) {
+                            servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)}`);
+                        }
+                        if (pago.serviciosPagados?.luz) {
+                            servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
+                        }
+
+                        // Determinar si hay servicios pendientes
+                        let serviciosHtml = '';
+                        if (servicios.length > 0) {
+                            serviciosHtml = servicios.join('<br>');
+                        } else if (tieneServicios) {
+                            serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
+                        } else {
+                            serviciosHtml = '-';
+                        }
+
+                        // Calcular total de mobiliario
                         let mobiliarioTotal = 0;
-                        pago.mobiliarioPagado.forEach(item => {
-                            mobiliarioTotal += item.costo || 0;
-                        });
-                        mobiliarioHtml = `
+                        if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado)) {
+                            pago.mobiliarioPagado.forEach(item => {
+                                mobiliarioTotal += item.costo || 0;
+                            });
+                        }
+
+                        // Determinar si hay mobiliario pendiente
+                        let mobiliarioHtml = '';
+                        if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                            let mobiliarioTotal = 0;
+                            pago.mobiliarioPagado.forEach(item => {
+                                mobiliarioTotal += item.costo || 0;
+                            });
+                            mobiliarioHtml = `
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 Pagado
                             </span>
                             <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
                         `;
-                    } else if (tieneMobiliario) {
-                        mobiliarioHtml = `
+                        } else if (tieneMobiliario) {
+                            mobiliarioHtml = `
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                 Pendiente
                             </span>
                         `;
-                    } else {
-                        mobiliarioHtml = '-';
-                    }
+                        } else {
+                            mobiliarioHtml = '-';
+                        }
 
 
-                    tablaFilas += `
+                        tablaFilas += `
                         <tr class="hover:bg-gray-50">
                             <td class="px-2 py-2 text-xs text-gray-800">${pago.nombreInmueble}</td>
                             <td class="px-2 py-2 text-xs text-gray-700">${pago.nombreInquilino}</td>
@@ -748,89 +750,91 @@ document.getElementById('btnPagoServicio').addEventListener('click', () => {
                                                         </div>
                                                     </td>                        </tr>
                     `;
+                    });
+                }
+                document.querySelector('.min-w-full tbody').innerHTML = tablaFilas;
+
+                // Re-adjuntar listeners para los nuevos elementos
+                adjuntarListenersPillMenu();
+
+                document.querySelectorAll('.btn-detalle-pago').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pagoId = e.currentTarget.dataset.pagoId;
+                        mostrarDetallePago(pagoId);
+                    });
                 });
+                document.querySelectorAll('.btn-abonar-pago').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pagoId = e.currentTarget.dataset.pagoId;
+                        const pagoData = pagosList.find(p => p.id === pagoId);
+                        if (pagoData) {
+                            mostrarFormularioRegistrarAbono(pagoId, pagoData.montoTotal, pagoData.montoPagado);
+                        } else {
+                            mostrarNotificacion("Error: No se encontró la información del pago para abonar.", 'error');
+                        }
+                    });
+                });
+                document.querySelectorAll('.btn-editar-pago').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pagoId = e.currentTarget.dataset.pagoId;
+                        editarPago(pagoId);
+                    });
+                });
+                document.querySelectorAll('.btn-eliminar-pago').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pagoId = e.currentTarget.dataset.pagoId;
+                        eliminarDocumento('pagos', pagoId, mostrarPagos);
+                    });
+                });
+                document.querySelectorAll('.btn-gestionar-servicios').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pagoId = e.currentTarget.dataset.pagoId;
+                        gestionarServiciosPago(pagoId);
+                    });
+                });
+                document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pagoId = e.currentTarget.dataset.pagoId;
+                        seleccionarFirmaYGenerarRecibo(pagoId);
+                    });
+                });
+                document.querySelectorAll('.btn-gestionar-mobiliario').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pagoId = e.currentTarget.dataset.pagoId;
+                        gestionarMobiliarioPago(pagoId);
+                    });
+                });
+
             }
-            document.querySelector('.min-w-full tbody').innerHTML = tablaFilas;
-
-            // Re-adjuntar listeners para los nuevos elementos
-            adjuntarListenersPillMenu();
-
-document.querySelectorAll('.btn-detalle-pago').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const pagoId = e.currentTarget.dataset.pagoId;
-        mostrarDetallePago(pagoId);
-    });
-});
-document.querySelectorAll('.btn-abonar-pago').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const pagoId = e.currentTarget.dataset.pagoId;
-        const pagoData = pagosList.find(p => p.id === pagoId);
-        if (pagoData) {
-            mostrarFormularioRegistrarAbono(pagoId, pagoData.montoTotal, pagoData.montoPagado);
-        } else {
-            mostrarNotificacion("Error: No se encontró la información del pago para abonar.", 'error');
-        }
-    });
-});
-document.querySelectorAll('.btn-editar-pago').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const pagoId = e.currentTarget.dataset.pagoId;
-        editarPago(pagoId);
-    });
-});
-document.querySelectorAll('.btn-eliminar-pago').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const pagoId = e.currentTarget.dataset.pagoId;
-        eliminarDocumento('pagos', pagoId, mostrarPagos);
-    });
-});
-document.querySelectorAll('.btn-gestionar-servicios').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const pagoId = e.currentTarget.dataset.pagoId;
-        gestionarServiciosPago(pagoId);
-    });
-});
-document.querySelectorAll('.btn-recibo-pdf').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const pagoId = e.currentTarget.dataset.pagoId;
-        seleccionarFirmaYGenerarRecibo(pagoId);
-    });
-});
-document.querySelectorAll('.btn-gestionar-mobiliario').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const pagoId = e.currentTarget.dataset.pagoId;
-        gestionarMobiliarioPago(pagoId);
-    });
-});
-
-        }
 
             // Listeners de filtros
-        document.getElementById('filtroInmueble').addEventListener('change', aplicarFiltros);
-        document.getElementById('filtroInquilino').addEventListener('change', aplicarFiltros);
-        document.getElementById('filtroMes').addEventListener('change', aplicarFiltros);
-        document.getElementById('filtroAnio').addEventListener('change', aplicarFiltros);
-        document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
-        document.getElementById('btnLimpiarFiltros').addEventListener('click', () => {
-            document.getElementById('filtroInmueble').value = "";
-            document.getElementById('filtroInquilino').value = "";
-            document.getElementById('filtroMes').value = "";
-            document.getElementById('filtroAnio').value = "";
-            document.getElementById('filtroEstado').value = "";
+            document.getElementById('filtroInmueble').addEventListener('change', aplicarFiltros);
+            document.getElementById('filtroInquilino').addEventListener('change', aplicarFiltros);
+            document.getElementById('filtroMes').addEventListener('change', aplicarFiltros);
+            document.getElementById('filtroAnio').addEventListener('change', aplicarFiltros);
+            document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
+            document.getElementById('btnLimpiarFiltros').addEventListener('click', () => {
+                document.getElementById('filtroInmueble').value = "";
+                document.getElementById('filtroInquilino').value = "";
+                document.getElementById('filtroMes').value = "";
+                document.getElementById('filtroAnio').value = "";
+                document.getElementById('filtroEstado').value = "";
+                aplicarFiltros();
+            });
+            if (!document.getElementById('filtroMes').value && !document.getElementById('filtroAnio').value) {
+                const fechaActual = new Date();
+                document.getElementById('filtroMes').value = meses[fechaActual.getMonth()];
+                document.getElementById('filtroAnio').value = fechaActual.getFullYear();
+            }
             aplicarFiltros();
-        });
- if (!document.getElementById('filtroMes').value && !document.getElementById('filtroAnio').value) {
-            const fechaActual = new Date();
-            document.getElementById('filtroMes').value = meses[fechaActual.getMonth()];
-            document.getElementById('filtroAnio').value = fechaActual.getFullYear();
-        }
-        aplicarFiltros();
 
+        } catch (error) {
+            console.error("Error al mostrar pagos:", error);
+            mostrarNotificacion("Error al cargar la lista de pagos.", 'error');
+        }
     } catch (error) {
-        console.error("Error al mostrar pagos:", error);
-        mostrarNotificacion("Error al cargar la lista de pagos.", 'error');
-    } finally {
-        ocultarLoader();
+        console.error("Error general en mostrarPagos:", error);
+        mostrarNotificacion("Error al cargar la sección de pagos.", 'error');
     }
 }
 
@@ -845,11 +849,11 @@ function determinarMesCorrespondiente(fechaPago) {
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
-    
+
     // Siempre corresponde al mes actual, independientemente del día
     const mesActual = fechaPago.getMonth();
     const anioActual = fechaPago.getFullYear();
-    
+
     // Siempre devolvemos el mes actual
     return {
         mes: mesesNombres[mesActual],
@@ -867,17 +871,17 @@ function actualizarMesCorrespondiente(fechaRegistroInput) {
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
-    
+
     const fechaValue = fechaRegistroInput.value;
     if (!fechaValue) return;
-    
+
     const fecha = new Date(fechaValue);
     const mesCorrespondienteObj = determinarMesCorrespondiente(fecha);
-    
+
     // Actualizar los campos del formulario
     const mesSelect = document.getElementById('mesCorrespondiente');
     const anioSelect = document.getElementById('anioCorrespondiente');
-    
+
     if (mesSelect && anioSelect) {
         mesSelect.value = mesCorrespondienteObj.mes;
         anioSelect.value = mesCorrespondienteObj.anio;
@@ -963,9 +967,9 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
             const inquilinoMatch = filtrosInquilino.length === 0 || filtrosInquilino.includes(pago.inquilinoId);
 
             return inmuebleMatch &&
-                   inquilinoMatch &&
-                   (!fechaInicio || fechaPago >= fechaInicio) &&
-                   (!fechaFin || fechaPago <= fechaFin);
+                inquilinoMatch &&
+                (!fechaInicio || fechaPago >= fechaInicio) &&
+                (!fechaFin || fechaPago <= fechaFin);
         });
 
         generarReportePDF(pagosFiltrados);
@@ -1032,9 +1036,9 @@ function generarReportePDF(pagosList) {
         const inquilinoMatch = filtrosInquilino.length === 0 || filtrosInquilino.includes(pago.inquilinoId);
 
         return inmuebleMatch &&
-               inquilinoMatch &&
-               (!fechaInicio || fechaPago >= fechaInicio) && // Corregido aquí
-               (!fechaFin || fechaPago <= fechaFin);
+            inquilinoMatch &&
+            (!fechaInicio || fechaPago >= fechaInicio) && // Corregido aquí
+            (!fechaFin || fechaPago <= fechaFin);
     });
 
     if (pagosFiltrados.length === 0) {
@@ -1067,7 +1071,7 @@ function generarReportePDF(pagosList) {
     }
 
     const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    
+
     // Ordenar los pagos dentro de cada grupo
     for (const key in grupos) {
         grupos[key].pagos.sort((a, b) => {
@@ -1120,12 +1124,12 @@ function generarReportePDF(pagosList) {
                 startY = data.cursor.y + 10; // Actualizar startY para la siguiente tabla
             }
         });
-        
+
         if (doc.autoTable.previous.finalY) {
-             startY = doc.autoTable.previous.finalY + 10;
+            startY = doc.autoTable.previous.finalY + 10;
         }
 
-        if (startY > 250) { 
+        if (startY > 250) {
             doc.addPage();
             startY = 20;
         }
@@ -1511,7 +1515,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         });
 
         if (resultados.length > 0) {
-            resultadosBusqueda.innerHTML = resultados.map(r => 
+            resultadosBusqueda.innerHTML = resultados.map(r =>
                 `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre} <span class="text-xs text-gray-500">(${r.tipo})</span></div>`
             ).join('');
             resultadosBusqueda.style.display = 'block';
@@ -1525,7 +1529,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         if (e.target.closest('[data-id]')) {
             const inmuebleId = e.target.closest('[data-id]').dataset.id;
             inmuebleSelect.value = inmuebleId;
-            
+
             // Disparar el evento change para que se actualice el inquilino
             const event = new Event('change', { bubbles: true });
             inmuebleSelect.dispatchEvent(event);
@@ -1537,7 +1541,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     });
 
     // Ocultar resultados si se hace clic fuera
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
         if (!buscadorInput.contains(event.target) && !resultadosBusqueda.contains(event.target)) {
             resultadosBusqueda.style.display = 'none';
         }
@@ -1573,7 +1577,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     }
 
     // En el event listener de cambio del inmueble, usar la función calcularTotal
-    inmuebleSelect.addEventListener('change', async function() {
+    inmuebleSelect.addEventListener('change', async function () {
         const inmuebleId = this.value;
         const total = await calcularTotal(inmuebleId);
         montoTotalInput.value = total;
@@ -1595,14 +1599,14 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     // Si es edición, selecciona los valores actuales
     inmuebleSelect.value = selectedInmueble;
     inquilinoSelect.value = selectedInquilino;
-    
+
     // Si es un nuevo pago, determinar el mes correspondiente según la fecha de registro
     if (!id) {
         const fechaRegistroInput = document.getElementById('fechaRegistro');
         actualizarMesCorrespondiente(fechaRegistroInput);
-        
+
         // Actualizar mes correspondiente cuando cambie la fecha de registro
-        fechaRegistroInput.addEventListener('change', function() {
+        fechaRegistroInput.addEventListener('change', function () {
             actualizarMesCorrespondiente(this);
         });
     } else {
@@ -1610,7 +1614,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         document.getElementById('mesCorrespondiente').value = selectedMes;
         document.getElementById('anioCorrespondiente').value = selectedAnio;
     }
-    
+
     montoTotalInput.value = montoTotal;
     montoPagoInput.value = montoPagado;
 
@@ -1619,7 +1623,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         e.preventDefault();
         // Verificar si estamos en la vista de tabla
         const enVistaTabla = document.querySelector('.min-w-full') !== null;
-        
+
         const inmuebleId = inmuebleSelect.value;
         const inquilinoId = inquilinoSelect.value;
         const montoTotal = parseFloat(montoTotalInput.value);
@@ -1655,7 +1659,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         } else if (montoPago > 0) {
             estado = "parcial";
         }
-        
+
         // Determinar el mes correspondiente según la fecha de pago
         // Si el pago se realiza el día 15, se considera como pago del mes actual
         const fechaPago = new Date(fechaRegistro);
@@ -1663,37 +1667,37 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         // No modificamos mesCorrespondiente ni anioCorrespondiente ya que el usuario los selecciona manualmente
 
         // --- AQUÍ VA EL FRAGMENTO DE SALDO A FAVOR ---
-    if (montoPago > montoTotal) {
-        const excedente = montoPago - montoTotal;
-        const abonosSnap = await getDocs(query(
-            collection(db, "abonosSaldoFavor"),
-            where("inquilinoId", "==", inquilinoId),
-            where("saldoRestante", ">", 0)
-        ));
-        if (!abonosSnap.empty) {
-            const abonoDoc = abonosSnap.docs[0];
-            const abonoData = abonoDoc.data();
-            await updateDoc(doc(db, "abonosSaldoFavor", abonoDoc.id), {
-                saldoRestante: abonoData.saldoRestante + excedente,
-                montoOriginal: abonoData.montoOriginal + excedente
-            });
-        } else {
-            await addDoc(collection(db, "abonosSaldoFavor"), {
-                inquilinoId,
-                montoOriginal: excedente,
-                saldoRestante: excedente,
-                descripcion: "Saldo a favor generado por pago excedente",
-                fechaAbono: fechaRegistro,
-                fechaRegistro: fechaRegistro
-            });
+        if (montoPago > montoTotal) {
+            const excedente = montoPago - montoTotal;
+            const abonosSnap = await getDocs(query(
+                collection(db, "abonosSaldoFavor"),
+                where("inquilinoId", "==", inquilinoId),
+                where("saldoRestante", ">", 0)
+            ));
+            if (!abonosSnap.empty) {
+                const abonoDoc = abonosSnap.docs[0];
+                const abonoData = abonoDoc.data();
+                await updateDoc(doc(db, "abonosSaldoFavor", abonoDoc.id), {
+                    saldoRestante: abonoData.saldoRestante + excedente,
+                    montoOriginal: abonoData.montoOriginal + excedente
+                });
+            } else {
+                await addDoc(collection(db, "abonosSaldoFavor"), {
+                    inquilinoId,
+                    montoOriginal: excedente,
+                    saldoRestante: excedente,
+                    descripcion: "Saldo a favor generado por pago excedente",
+                    fechaAbono: fechaRegistro,
+                    fechaRegistro: fechaRegistro
+                });
+            }
         }
-    }
-    // --- FIN DEL FRAGMENTO ---
+        // --- FIN DEL FRAGMENTO ---
 
         const formaPago = document.getElementById('formaPago').value;
         const propietarioId = document.getElementById('propietarioId').value;
         const serviciosPagados = {};
-        
+
         // Verificar si existen los elementos de servicios antes de acceder a ellos
         const servicioInternet = document.getElementById('servicioInternet');
         if (servicioInternet && servicioInternet.checked) {
@@ -1735,20 +1739,20 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
                 // Iniciar el nuevo flujo de preguntas
                 await iniciarFlujoPostPago(docRef.id, inquilinoId, enVistaTabla);
             }
-            
+
         } catch (error) {
             mostrarNotificacion('Error al guardar el pago.', 'error');
         }
     });
 
     if (document.getElementById('servicioInternet')) {
-        document.getElementById('servicioInternet').addEventListener('change', function() {
+        document.getElementById('servicioInternet').addEventListener('change', function () {
             document.getElementById('montoInternet').style.display = this.checked ? 'inline-block' : 'none';
         });
     }
 
     document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
-        btn.addEventListener('click', async function() {
+        btn.addEventListener('click', async function () {
             const servicio = this.dataset.servicio;
             if (confirm(`¿Eliminar el servicio "${servicio}" de este pago?`)) {
                 // Elimina el servicio y su monto del objeto
@@ -1780,28 +1784,28 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
 export async function editarPago(id) {
     // Guardar el estado actual para saber si estamos en la vista de tabla
     const enVistaTabla = document.querySelector('.min-w-full') !== null;
-    
+
     // Mostrar el formulario de edición
     await mostrarFormularioNuevoPago(id);
-    
+
     // Modificar el comportamiento del formulario para mantener la vista de tabla
     const formPago = document.getElementById('formPago');
     if (formPago) {
         const originalSubmitHandler = formPago.onsubmit;
         formPago.onsubmit = async (e) => {
             e.preventDefault();
-            
+
             // Obtener todos los datos del formulario
             const formData = new FormData(formPago);
             const datos = Object.fromEntries(formData.entries());
-            
+
             try {
                 // Procesar los datos como lo haría normalmente
                 // (Aquí iría la lógica de procesamiento que ya tienes)
-                
+
                 // Cerrar el modal
                 ocultarModal();
-                
+
                 // Mostrar la vista de tabla si estábamos en ella
                 if (enVistaTabla) {
                     mostrarPagos(true);
@@ -1984,12 +1988,12 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                 return;
             }
 
-            const resultados = inmuebles.filter(inmueble => 
+            const resultados = inmuebles.filter(inmueble =>
                 inmueble.nombre.toLowerCase().includes(searchTerm) && inmueble.estado === 'Ocupado'
             );
 
             if (resultados.length > 0) {
-                resultadosBusquedaInmueble.innerHTML = resultados.map(r => 
+                resultadosBusquedaInmueble.innerHTML = resultados.map(r =>
                     `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre}</div>`
                 ).join('');
                 resultadosBusquedaInmueble.style.display = 'block';
@@ -2015,7 +2019,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
             }
         });
 
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             if (buscadorInmuebleInput && !buscadorInmuebleInput.contains(event.target) && !resultadosBusquedaInmueble.contains(event.target)) {
                 resultadosBusquedaInmueble.style.display = 'none';
             }
@@ -2071,17 +2075,17 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
         document.getElementById('mesCorrespondiente').value = meses[fechaActual.getMonth()];
         document.getElementById('anioCorrespondiente').value = fechaActual.getFullYear();
 
-        document.getElementById('servicioInternet').addEventListener('change', function() {
+        document.getElementById('servicioInternet').addEventListener('change', function () {
             document.getElementById('montoInternet').disabled = !this.checked;
             if (!this.checked) document.getElementById('montoInternet').value = '';
         });
-        
-        document.getElementById('servicioAgua').addEventListener('change', function() {
+
+        document.getElementById('servicioAgua').addEventListener('change', function () {
             document.getElementById('montoAgua').disabled = !this.checked;
             if (!this.checked) document.getElementById('montoAgua').value = '';
         });
-        
-        document.getElementById('servicioLuz').addEventListener('change', function() {
+
+        document.getElementById('servicioLuz').addEventListener('change', function () {
             document.getElementById('montoLuz').disabled = !this.checked;
             if (!this.checked) document.getElementById('montoLuz').value = '';
         });
@@ -2092,31 +2096,31 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
 
         document.getElementById('formPagoServicio').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const inquilinoId = document.getElementById('inquilinoId').value;
             const mesCorrespondiente = document.getElementById('mesCorrespondiente').value;
             const anioCorrespondiente = parseInt(document.getElementById('anioCorrespondiente').value);
             const fechaRegistro = document.getElementById('fechaRegistro').value;
             const formaPago = document.getElementById('formaPago').value;
-            
+
             const servicioInternet = document.getElementById('servicioInternet').checked;
             const servicioAgua = document.getElementById('servicioAgua').checked;
             const servicioLuz = document.getElementById('servicioLuz').checked;
-            
+
             if (!servicioInternet && !servicioAgua && !servicioLuz) {
                 mostrarNotificacion("Debes seleccionar al menos un servicio para registrar el pago.", "error");
                 return;
             }
-            
+
             const montoInternet = servicioInternet ? parseFloat(document.getElementById('montoInternet').value) || 0 : 0;
             const montoAgua = servicioAgua ? parseFloat(document.getElementById('montoAgua').value) || 0 : 0;
             const montoLuz = servicioLuz ? parseFloat(document.getElementById('montoLuz').value) || 0 : 0;
-            
+
             if ((servicioInternet && montoInternet <= 0) || (servicioAgua && montoAgua <= 0) || (servicioLuz && montoLuz <= 0)) {
                 mostrarNotificacion("Debes ingresar un monto válido para cada servicio seleccionado.", "error");
                 return;
             }
-            
+
             // --- INICIO: Verificación de duplicados ---
             const pagosRefCheck = collection(db, "pagos");
             const qCheck = query(pagosRefCheck, where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
@@ -2236,7 +2240,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                 mostrarNotificacion("Error al registrar el pago de servicios.", "error");
             }
         });
-        
+
     } catch (error) {
         console.error("Error al preparar formulario de pago de servicios:", error);
         mostrarNotificacion("Error al preparar el formulario de pago.", "error");
@@ -2375,7 +2379,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
         const buscadorInmuebleInput = document.getElementById('buscadorInmuebleMobiliario');
         const resultadosBusquedaInmueble = document.getElementById('resultadosBusquedaInmuebleMobiliario');
 
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             if (buscadorInmuebleInput && !buscadorInmuebleInput.contains(event.target) && !resultadosBusquedaInmueble.contains(event.target)) {
                 resultadosBusquedaInmueble.style.display = 'none';
             }
@@ -2392,7 +2396,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                 return;
             }
 
-            const mobiliarioInquilino = mobiliarioAsignado.filter(mob => 
+            const mobiliarioInquilino = mobiliarioAsignado.filter(mob =>
                 mob.asignacionesActivas.some(a => a.inquilinoId === inquilinoId)
             );
 
@@ -2406,7 +2410,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                 const asignacion = mob.asignacionesActivas.find(a => a.inquilinoId === inquilinoId);
                 if (asignacion) {
                     const costoTotal = (mob.costoRenta || 0) * asignacion.cantidad;
-                    
+
                     html += `
                         <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
                             <div class="flex items-start" data-auto-check="${inquilinoIdPreseleccionado ? 'true' : 'false'}">
@@ -2447,12 +2451,12 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                 return;
             }
 
-            const resultados = inmuebles.filter(inmueble => 
+            const resultados = inmuebles.filter(inmueble =>
                 inmueble.nombre.toLowerCase().includes(searchTerm) && inmueble.estado === 'Ocupado'
             );
 
             if (resultados.length > 0) {
-                resultadosBusquedaInmueble.innerHTML = resultados.map(r => 
+                resultadosBusquedaInmueble.innerHTML = resultados.map(r =>
                     `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-id="${r.id}">${r.nombre}</div>`
                 ).join('');
                 resultadosBusquedaInmueble.style.display = 'block';
@@ -2479,20 +2483,20 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
 
         document.getElementById('formPagoMobiliario').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const inquilinoId = document.getElementById('inquilinoId').value;
             const mesCorrespondiente = document.getElementById('mesCorrespondiente').value;
             const anioCorrespondiente = parseInt(document.getElementById('anioCorrespondiente').value);
             const fechaRegistro = document.getElementById('fechaRegistro').value;
             const formaPago = document.getElementById('formaPago').value;
-            
+
             const mobiliarioSeleccionado = Array.from(document.querySelectorAll('input[name="mobiliario"]:checked'));
-            
+
             if (mobiliarioSeleccionado.length === 0) {
                 mostrarNotificacion("Debes seleccionar al menos un mobiliario para registrar el pago.", "error");
                 return;
             }
-            
+
             // --- INICIO: Verificación de duplicados ---
             const pagosRefCheck = collection(db, "pagos");
             const qCheck = query(pagosRefCheck, where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
@@ -2511,7 +2515,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
             mobiliarioSeleccionado.forEach(checkbox => {
                 montoTotal += parseFloat(checkbox.dataset.costo);
             });
-            
+
             try {
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                 const inmuebleId = inquilinoDoc.data().inmuebleAsociadoId;
@@ -2551,7 +2555,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                         const pagoDoc = querySnapshot.docs[0];
                         const pagoExistente = pagoDoc.data();
                         const mobiliarioActualizado = Array.isArray(pagoExistente.mobiliarioPagado) ? [...pagoExistente.mobiliarioPagado, ...nuevoMobiliario] : nuevoMobiliario;
-                        
+
                         await updateDoc(doc(db, "pagos", pagoDoc.id), {
                             mobiliarioPagado: mobiliarioActualizado
                         });
@@ -2586,7 +2590,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                 mostrarNotificacion("Error al registrar el pago de mobiliario.", "error");
             }
         });
-        
+
     } catch (error) {
         console.error("Error al preparar formulario de pago de mobiliario:", error);
         mostrarNotificacion("Error al preparar el formulario de pago.", "error");
@@ -2748,10 +2752,10 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
 
             // Verificar si estamos en la vista de tabla
             const enVistaTabla = document.querySelector('.min-w-full') !== null;
-            
+
             mostrarNotificacion('Abono registrado con éxito.', 'success');
             ocultarModal();
-            
+
             // Mantener la vista de tabla si estábamos en ella
             if (enVistaTabla) {
                 mostrarPagos(true);
@@ -2796,7 +2800,7 @@ export async function mostrarDetallePago(pagoId) {
                 if (propietarioDoc.exists()) {
                     nombrePropietario = propietarioDoc.data().nombre;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
 
         // Generar HTML para servicios pagados
@@ -2806,10 +2810,10 @@ export async function mostrarDetallePago(pagoId) {
             // Usar explícitamente los campos específicos de servicios
             const fechaServicio = pago.serviciosPagados.fechaRegistroServicio || pago.fechaRegistro || 'N/A';
             const formaPagoServicio = pago.serviciosPagados.formaPagoServicio || pago.formaPago || 'N/A';
-            
+
             console.log("Detalle pago - Fecha servicio:", fechaServicio, "Forma pago servicio:", formaPagoServicio);
             console.log("Campos disponibles en serviciosPagados:", Object.keys(pago.serviciosPagados));
-            
+
             if (pago.serviciosPagados.internet) {
                 servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
             }
@@ -2819,7 +2823,7 @@ export async function mostrarDetallePago(pagoId) {
             if (pago.serviciosPagados.luz) {
                 servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
             }
-            
+
             if (servicios.length > 0) {
                 serviciosHtml = `
                     <h4 class="text-lg font-semibold mt-6 mb-2 text-gray-800">Servicios Pagados:</h4>
@@ -2837,17 +2841,17 @@ export async function mostrarDetallePago(pagoId) {
         if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
             let mobiliarioTotal = 0;
             const mobiliarioItems = [];
-            
+
             for (const item of pago.mobiliarioPagado) {
                 const costo = item.costo || 0;
                 mobiliarioTotal += costo;
-                
+
                 // Obtener fecha y forma de pago específicas del mobiliario o usar las del pago general
                 const fechaMobiliario = item.fechaRegistroMobiliario || pago.fechaRegistro || 'N/A';
                 const formaPagoMobiliario = item.formaPagoMobiliario || pago.formaPago || 'N/A';
-                
+
                 console.log("Fecha mobiliario:", fechaMobiliario, "Forma pago mobiliario:", formaPagoMobiliario);
-                
+
                 // Intentar obtener el nombre del mobiliario
                 let nombreMobiliario = 'Mobiliario';
                 try {
@@ -2855,11 +2859,11 @@ export async function mostrarDetallePago(pagoId) {
                     if (mobDoc.exists()) {
                         nombreMobiliario = mobDoc.data().nombre || 'Mobiliario';
                     }
-                } catch (e) {}
-                
+                } catch (e) { }
+
                 mobiliarioItems.push(`${nombreMobiliario}: ${costo.toFixed(2)} | Fecha: ${fechaMobiliario} | Forma de pago: ${formaPagoMobiliario}`);
             }
-            
+
             mobiliarioHtml = `
                 <h4 class="text-lg font-semibold mt-6 mb-2 text-gray-800">Mobiliario Pagado:</h4>
                 <div class="bg-green-50 p-3 rounded-lg border border-green-200">
@@ -2961,12 +2965,12 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
         const inquilinoData = inquilinoDoc.exists() ? inquilinoDoc.data() : null;
         const nombreInquilino = inquilinoData ? inquilinoData.nombre : 'Inquilino Desconocido';
-        
+
         // Verificar si el inquilino tiene servicios asignados
-        const tieneServicios = inquilinoData && inquilinoData.pagaServicios && 
-            ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) || 
-            (inquilinoData.tipoServicio && inquilinoData.montoServicio));
-        
+        const tieneServicios = inquilinoData && inquilinoData.pagaServicios &&
+            ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) ||
+                (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+
         // Verificar si el inquilino tiene inmueble asignado
         const tieneInmueble = inquilinoData && inquilinoData.inmuebleAsociadoId;
         const inmuebleAsociado = tieneInmueble ? inmueblesMap.get(inquilinoData.inmuebleAsociadoId) || 'Inmueble Desconocido' : 'Sin inmueble asignado';
@@ -3003,11 +3007,11 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                         <div class="ml-3">
                             <p class="text-sm text-blue-700">
                                 Este inquilino tiene servicios asignados. 
-                                ${pagoMesActual ? 
-                                    (pagoMesActual.serviciosPagados ? 
-                                        '<span class="font-semibold text-green-600">Servicios pagados para el mes actual.</span>' : 
-                                        '<span class="font-semibold text-red-600">Servicios pendientes de pago para el mes actual.</span>') : 
-                                    '<span class="font-semibold text-red-600">No hay registro de pago para el mes actual.</span>'}
+                                ${pagoMesActual ?
+                    (pagoMesActual.serviciosPagados ?
+                        '<span class="font-semibold text-green-600">Servicios pagados para el mes actual.</span>' :
+                        '<span class="font-semibold text-red-600">Servicios pendientes de pago para el mes actual.</span>') :
+                    '<span class="font-semibold text-red-600">No hay registro de pago para el mes actual.</span>'}
                             </p>
                         </div>
                     </div>
@@ -3029,11 +3033,11 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                         <div class="ml-3">
                             <p class="text-sm text-green-700">
                                 Inmueble asignado: <span class="font-semibold">${inmuebleAsociado}</span>
-                                ${pagoMesActual ? 
-                                    (pagoMesActual.estado === 'pagado' ? 
-                                        '<span class="ml-2 font-semibold text-green-600">Renta pagada para el mes actual.</span>' : 
-                                        '<span class="ml-2 font-semibold text-red-600">Renta pendiente o parcial para el mes actual.</span>') : 
-                                    '<span class="ml-2 font-semibold text-red-600">No hay registro de pago para el mes actual.</span>'}
+                                ${pagoMesActual ?
+                    (pagoMesActual.estado === 'pagado' ?
+                        '<span class="ml-2 font-semibold text-green-600">Renta pagada para el mes actual.</span>' :
+                        '<span class="ml-2 font-semibold text-red-600">Renta pendiente o parcial para el mes actual.</span>') :
+                    '<span class="ml-2 font-semibold text-red-600">No hay registro de pago para el mes actual.</span>'}
                             </p>
                         </div>
                     </div>
@@ -3097,7 +3101,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             pagosSnap.forEach(doc => {
                 pagosOrdenados.push({ id: doc.id, ...doc.data() });
             });
-            
+
             pagosOrdenados.sort((a, b) => {
                 const mesA = mesesNombres.indexOf(a.mesCorrespondiente);
                 const mesB = mesesNombres.indexOf(b.mesCorrespondiente);
@@ -3128,7 +3132,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     if (pago.serviciosPagados.internet) servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
                     if (pago.serviciosPagados.agua) servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)}`);
                     if (pago.serviciosPagados.luz) servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)}`);
-                    
+
                     if (servicios.length > 0) {
                         serviciosHtml = `
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -3150,27 +3154,27 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                 } else {
                     serviciosHtml = `<span class="text-xs text-gray-500">N/A</span>`;
                 }
-                
+
                 // Verificar mobiliario pagado
                 let mobiliarioHtml = '';
-if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
-    let mobiliarioTotal = 0;
-    pago.mobiliarioPagado.forEach(item => {
-        mobiliarioTotal += item.costo || 0;
-    });
-    mobiliarioHtml = `
+                if (pago.mobiliarioPagado && Array.isArray(pago.mobiliarioPagado) && pago.mobiliarioPagado.length > 0) {
+                    let mobiliarioTotal = 0;
+                    pago.mobiliarioPagado.forEach(item => {
+                        mobiliarioTotal += item.costo || 0;
+                    });
+                    mobiliarioHtml = `
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
             Pagado
         </span>
         <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
     `;
-} else {
-    mobiliarioHtml = `
+                } else {
+                    mobiliarioHtml = `
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
             Pendiente
         </span>
     `;
-}
+                }
 
                 // Resaltar el mes actual
                 const esMesActual = pago.mesCorrespondiente === mesActualNombre && pago.anioCorrespondiente === anioActual;
@@ -3430,14 +3434,14 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh) {
         try {
             await deleteDoc(doc(db, coleccion, id));
             mostrarNotificacion('Elemento eliminado con éxito.', 'success');
-            
+
             // Si estamos en la vista de pagos, mostrar la tabla de pagos directamente
             if (coleccion === 'pagos') {
                 mostrarPagos(true); // Parámetro true para mostrar la tabla en lugar de los botones
             } else if (callbackRefresh) {
                 callbackRefresh();
             }
-            
+
         } catch (error) {
             console.error('Error al eliminar el documento:', error);
             mostrarNotificacion('Error al eliminar el elemento.', 'error');
@@ -3475,8 +3479,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         const inquilinoData = inquilinoDoc.exists() ? inquilinoDoc.data() : null;
         const tieneServicios = inquilinoData && inquilinoData.pagaServicios &&
             ((inquilinoData.servicios && Array.isArray(inquilinoData.servicios) && inquilinoData.servicios.length > 0) ||
-            (inquilinoData.tipoServicio && inquilinoData.montoServicio));
-        
+                (inquilinoData.tipoServicio && inquilinoData.montoServicio));
+
         // FIX: Determine the end date for debt calculation
         const fechaFinCalculo = inquilinoData && inquilinoData.fechaDesocupacion ? new Date(inquilinoData.fechaDesocupacion) : hoy;
         fechaFinCalculo.setHours(0, 0, 0, 0);
@@ -3494,7 +3498,7 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         const pagosSnap = await getDocs(pagosQuery);
         const pagosList = [];
         pagosSnap.forEach(doc => {
-            pagosList.push({...doc.data(), id: doc.id});
+            pagosList.push({ ...doc.data(), id: doc.id });
         });
 
         // Mes y año de ocupación
@@ -3524,8 +3528,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
 
             // Only check for debts from occupation month onwards
             const isBeforeOccupationMonth = currentIterYear < anioOcupacion ||
-                                            (currentIterYear === anioOcupacion &&
-                                             currentIterMonth < mesOcupacion);
+                (currentIterYear === anioOcupacion &&
+                    currentIterMonth < mesOcupacion);
 
             if (!isBeforeOccupationMonth) {
                 // Search payments for this month/year
@@ -3546,8 +3550,8 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
 
                     if (tieneServicios && pago.serviciosPagados) {
                         const tieneServiciosPagados = pago.serviciosPagados.internet ||
-                                                    pago.serviciosPagados.agua ||
-                                                    pago.serviciosPagados.luz;
+                            pago.serviciosPagados.agua ||
+                            pago.serviciosPagados.luz;
                         if (tieneServiciosPagados) {
                             serviciosPagados = true;
                         }
@@ -3602,7 +3606,7 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
  */
 function calcularTotalServicios(serviciosPagados) {
     if (!serviciosPagados) return 0;
-    
+
     let total = 0;
     if (serviciosPagados.internet && serviciosPagados.internetMonto) {
         total += parseFloat(serviciosPagados.internetMonto) || 0;
@@ -3653,24 +3657,24 @@ export async function gestionarServiciosPago(pagoId) {
             mostrarNotificacion("Pago no encontrado", "error");
             return;
         }
-        
+
         const pago = pagoDoc.data();
         const serviciosPagados = pago.serviciosPagados || {};
-        
+
         // Obtener información del inmueble y del inquilino
         const inmuebleDoc = await getDoc(doc(db, "inmuebles", pago.inmuebleId));
         const nombreInmueble = inmuebleDoc.exists() ? inmuebleDoc.data().nombre : 'Inmueble Desconocido';
-        
+
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", pago.inquilinoId));
         const nombreInquilino = inquilinoDoc.exists() ? inquilinoDoc.data().nombre : 'Inquilino Desconocido';
-        
+
         // Preparar datos de servicios existentes
         const servicios = [
             { id: "internet", nombre: "Internet", monto: serviciosPagados.internetMonto || 0, activo: serviciosPagados.internet || false },
             { id: "agua", nombre: "Agua", monto: serviciosPagados.aguaMonto || 0, activo: serviciosPagados.agua || false },
             { id: "luz", nombre: "Luz", monto: serviciosPagados.luzMonto || 0, activo: serviciosPagados.luz || false }
         ];
-        
+
         // Generar HTML para el formulario
         let serviciosHtml = '';
         servicios.forEach(servicio => {
@@ -3697,7 +3701,7 @@ export async function gestionarServiciosPago(pagoId) {
                 </div>
             `;
         });
-        
+
         const formHtml = `
             <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
                 <h3 class="text-2xl font-bold text-center">Gestionar Servicios</h3>
@@ -3724,42 +3728,42 @@ export async function gestionarServiciosPago(pagoId) {
                 </div>
             </form>
         `;
-        
+
         mostrarModal(formHtml);
-        
+
         // Manejar cambios en checkboxes
-        document.getElementById('serviciointernet').addEventListener('change', function() {
+        document.getElementById('serviciointernet').addEventListener('change', function () {
             document.getElementById('montointernet').disabled = !this.checked;
         });
-        
-        document.getElementById('servicioagua').addEventListener('change', function() {
+
+        document.getElementById('servicioagua').addEventListener('change', function () {
             document.getElementById('montoagua').disabled = !this.checked;
         });
-        
-        document.getElementById('servicioluz').addEventListener('change', function() {
+
+        document.getElementById('servicioluz').addEventListener('change', function () {
             document.getElementById('montoluz').disabled = !this.checked;
         });
-        
+
         // Manejar eliminación de servicios
         document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 const servicioId = this.dataset.servicio;
-                
+
                 if (confirm(`¿Estás seguro de eliminar el servicio de ${servicioId}?`)) {
                     try {
                         // Eliminar el servicio
                         delete serviciosPagados[servicioId];
                         delete serviciosPagados[`${servicioId}Monto`];
-                        
+
                         // Actualizar en Firestore solo los servicios
-                        await updateDoc(doc(db, "pagos", pagoId), { 
+                        await updateDoc(doc(db, "pagos", pagoId), {
                             serviciosPagados: serviciosPagados
                         });
-                        
+
                         // Disparar un evento personalizado para notificar que se eliminó un servicio
                         const event = new CustomEvent('servicioEliminado', { detail: { pagoId, servicio: servicioId } });
                         document.dispatchEvent(event);
-                        
+
                         mostrarNotificacion(`Servicio ${servicioId} eliminado correctamente`, "success");
                         ocultarModal();
                         mostrarPagos();
@@ -3770,42 +3774,42 @@ export async function gestionarServiciosPago(pagoId) {
                 }
             });
         });
-        
+
         // Manejar envío del formulario
         document.getElementById('formGestionServicios').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             // Recopilar datos del formulario
             const nuevoServicios = {
                 // Agregar fecha y forma de pago específicas para servicios
                 fechaRegistroServicio: fechaRegistro,
                 formaPagoServicio: formaPago
             };
-            
+
             // Internet
             if (document.getElementById('serviciointernet').checked) {
                 nuevoServicios.internet = true;
                 nuevoServicios.internetMonto = parseFloat(document.getElementById('montointernet').value) || 0;
             }
-            
+
             // Agua
             if (document.getElementById('servicioagua').checked) {
                 nuevoServicios.agua = true;
                 nuevoServicios.aguaMonto = parseFloat(document.getElementById('montoagua').value) || 0;
             }
-            
+
             // Luz
             if (document.getElementById('servicioluz').checked) {
                 nuevoServicios.luz = true;
                 nuevoServicios.luzMonto = parseFloat(document.getElementById('montoluz').value) || 0;
             }
-            
+
             try {
                 // Actualizar en Firestore solo los servicios
-                await updateDoc(doc(db, "pagos", pagoId), { 
+                await updateDoc(doc(db, "pagos", pagoId), {
                     serviciosPagados: nuevoServicios
                 });
-                
+
                 mostrarNotificacion("Servicios actualizados correctamente", "success");
                 ocultarModal();
                 mostrarPagos(); // Recargar la lista de pagos
@@ -3814,7 +3818,7 @@ export async function gestionarServiciosPago(pagoId) {
                 mostrarNotificacion("Error al actualizar los servicios", "error");
             }
         });
-        
+
     } catch (error) {
         console.error("Error al gestionar servicios:", error);
         mostrarNotificacion("Error al cargar el formulario de servicios", "error");
@@ -3833,27 +3837,27 @@ export async function eliminarServicioDePago(pagoId, nombreServicio) {
             mostrarNotificacion("Pago no encontrado", "error");
             return;
         }
-        
+
         const pago = pagoDoc.data();
         if (!pago.serviciosPagados) return;
 
         // Guardar el monto del servicio antes de eliminarlo
         const montoServicio = pago.serviciosPagados[`${nombreServicio}Monto`] || 0;
-        
+
         // Elimina el servicio y su monto
         delete pago.serviciosPagados[nombreServicio];
         delete pago.serviciosPagados[`${nombreServicio}Monto`];
 
         // Actualizar en Firestore solo los servicios, sin modificar montoTotal
         // El montoTotal en la base de datos solo incluye la renta base
-        await updateDoc(doc(db, "pagos", pagoId), { 
+        await updateDoc(doc(db, "pagos", pagoId), {
             serviciosPagados: pago.serviciosPagados
         });
-        
+
         // Disparar un evento personalizado para notificar que se eliminó un servicio
         const event = new CustomEvent('servicioEliminado', { detail: { pagoId, servicio: nombreServicio } });
         document.dispatchEvent(event);
-        
+
         mostrarNotificacion("Servicio eliminado correctamente", "success");
         mostrarPagos(); // Recargar la lista de pagos
     } catch (error) {
@@ -3873,17 +3877,17 @@ export async function gestionarMobiliarioPago(pagoId) {
             mostrarNotificacion("Pago no encontrado", "error");
             return;
         }
-        
+
         const pago = pagoDoc.data();
         const mobiliarioPagado = pago.mobiliarioPagado || [];
-        
+
         // Obtener información del inmueble y del inquilino
         const inmuebleDoc = await getDoc(doc(db, "inmuebles", pago.inmuebleId));
         const nombreInmueble = inmuebleDoc.exists() ? inmuebleDoc.data().nombre : 'Inmueble Desconocido';
-        
+
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", pago.inquilinoId));
         const nombreInquilino = inquilinoDoc.exists() ? inquilinoDoc.data().nombre : 'Inquilino Desconocido';
-        
+
         // Obtener detalles del mobiliario
         const mobiliarioDetalles = [];
         for (const item of mobiliarioPagado) {
@@ -3911,7 +3915,7 @@ export async function gestionarMobiliarioPago(pagoId) {
                 console.error("Error al obtener detalles del mobiliario:", error);
             }
         }
-        
+
         // Generar HTML para el formulario
         let mobiliarioHtml = '';
         if (mobiliarioDetalles.length === 0) {
@@ -3936,7 +3940,7 @@ export async function gestionarMobiliarioPago(pagoId) {
                 `;
             });
         }
-        
+
         const formHtml = `
             <div class="px-4 py-3 bg-green-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
                 <h3 class="text-2xl font-bold text-center">Gestionar Mobiliario</h3>
@@ -3965,32 +3969,32 @@ export async function gestionarMobiliarioPago(pagoId) {
                 </div>
             </div>
         `;
-        
+
         mostrarModal(formHtml);
-        
+
         // Manejar eliminación de mobiliario
         document.querySelectorAll('.btn-eliminar-mobiliario').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 const index = parseInt(this.dataset.index);
                 const mobiliario = mobiliarioDetalles[index];
-                
+
                 if (confirm(`¿Estás seguro de eliminar "${mobiliario.nombre}" de este pago?`)) {
                     try {
                         // Eliminar el mobiliario del array
                         const nuevoMobiliario = [...mobiliarioPagado];
                         nuevoMobiliario.splice(index, 1);
-                        
+
                         // Recalcular el monto total
                         const nuevoMontoTotal = pago.montoTotal - mobiliario.costo;
-                        
+
                         // Actualizar en Firestore
-                        await updateDoc(doc(db, "pagos", pagoId), { 
+                        await updateDoc(doc(db, "pagos", pagoId), {
                             mobiliarioPagado: nuevoMobiliario,
                             montoTotal: nuevoMontoTotal,
                             montoPagado: Math.min(pago.montoPagado, nuevoMontoTotal),
                             saldoPendiente: Math.max(0, nuevoMontoTotal - pago.montoPagado)
                         });
-                        
+
                         mostrarNotificacion(`Mobiliario eliminado correctamente`, "success");
                         ocultarModal();
                         mostrarPagos();
@@ -4001,7 +4005,7 @@ export async function gestionarMobiliarioPago(pagoId) {
                 }
             });
         });
-        
+
     } catch (error) {
         console.error("Error al gestionar mobiliario:", error);
         mostrarNotificacion("Error al cargar el formulario de mobiliario", "error");

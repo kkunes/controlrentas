@@ -11,7 +11,7 @@ const notificacionesIgnoradas = ["Asignaciones Actualizadas Correctamente"];
 
 // Sobrescribir la función mostrarNotificacion para filtrar mensajes específicos
 const originalMostrarNotificacion = window.mostrarNotificacion;
-window.mostrarNotificacion = function(mensaje, tipo = 'info', duracion = 3500) {
+window.mostrarNotificacion = function (mensaje, tipo = 'info', duracion = 3500) {
     if (notificacionesIgnoradas.includes(mensaje)) {
         return; // No mostrar esta notificación
     }
@@ -90,27 +90,27 @@ async function mostrarModalMantenimientos(mantenimientos) {
     const getStatusInfo = (estado) => {
         switch (estado) {
             case 'Pendiente':
-                return { 
-                    gradient: 'from-amber-400 to-yellow-500', 
-                    text: 'text-white', 
+                return {
+                    gradient: 'from-amber-400 to-yellow-500',
+                    text: 'text-white',
                     icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
                 };
             case 'En Progreso':
-                return { 
-                    gradient: 'from-blue-400 to-indigo-500', 
-                    text: 'text-white', 
+                return {
+                    gradient: 'from-blue-400 to-indigo-500',
+                    text: 'text-white',
                     icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 20h5v-5M20 4h-5v5"></path></svg>'
                 };
             case 'Cancelado':
-                return { 
-                    gradient: 'from-red-500 to-rose-500', 
-                    text: 'text-white', 
+                return {
+                    gradient: 'from-red-500 to-rose-500',
+                    text: 'text-white',
                     icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
                 };
             default:
-                return { 
-                    gradient: 'from-gray-400 to-gray-500', 
-                    text: 'text-white', 
+                return {
+                    gradient: 'from-gray-400 to-gray-500',
+                    text: 'text-white',
                     icon: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4c0-1.193.52-2.267 1.343-3.072M12 6V3m0 18v-3"></path></svg>'
                 };
         }
@@ -197,7 +197,7 @@ function adjuntarListenersDashboard() {
 }
 
 export async function mostrarDashboard() {
-    
+
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
@@ -213,18 +213,21 @@ export async function mostrarDashboard() {
         return; // Termina la ejecución para no volver a cargar datos
     }
 
+    // ✨ SHOW SKELETON LOADERS WHILE LOADING
+    showSkeletons(contenedor, 'dashboard', 4);
+
     // Sobrescribir temporalmente la función mostrarNotificacion para evitar la notificación específica
     const originalMostrarNotificacion = window.mostrarNotificacion;
-    window.mostrarNotificacion = function(mensaje, tipo) {
+    window.mostrarNotificacion = function (mensaje, tipo) {
         if (mensaje === "Asignaciones Actualizadas Correctamente") {
             return; // No mostrar esta notificación específica
         }
         originalMostrarNotificacion(mensaje, tipo);
     };
-    
+
     // Verificar contratos próximos a renovar
     mostrarRecordatoriosRenovacion();
-    
+
     let totalInmuebles = 0;
     let totalInquilinos = 0;
     let inmueblesOcupados = 0; // NUEVO
@@ -294,7 +297,7 @@ export async function mostrarDashboard() {
         const pagosSnap = await getDocs(collection(db, "pagos"));
         console.log('Fecha inicio mes:', startDateOfMonth);
         console.log('Fecha fin mes:', endDateOfMonth);
-        
+
         pagosSnap.forEach(doc => {
             const pago = doc.data();
             console.log('Procesando pago:', pago);
@@ -412,45 +415,45 @@ export async function mostrarDashboard() {
 
         // --- Cálculo de inquilinos con pago próximo en 3 días SOLO usando fechaOcupacion ---
         const hoy = new Date();
-hoy.setUTCHours(0, 0, 0, 0);
+        hoy.setUTCHours(0, 0, 0, 0);
 
-let inquilinosProximoPago = [];
-inquilinosSnap.forEach(doc => {
-    const inquilino = doc.data();
-    if (!inquilino.activo) return;
+        let inquilinosProximoPago = [];
+        inquilinosSnap.forEach(doc => {
+            const inquilino = doc.data();
+            if (!inquilino.activo) return;
 
-    let fechaOcupacion = inquilino.fechaOcupacion;
-    if (!fechaOcupacion) return;
+            let fechaOcupacion = inquilino.fechaOcupacion;
+            if (!fechaOcupacion) return;
 
-    // Convierte a objeto Date si es string
-    let fechaOcupacionDate = typeof fechaOcupacion === 'string'
-        ? new Date(fechaOcupacion)
-        : (fechaOcupacion.toDate ? fechaOcupacion.toDate() : null);
+            // Convierte a objeto Date si es string
+            let fechaOcupacionDate = typeof fechaOcupacion === 'string'
+                ? new Date(fechaOcupacion)
+                : (fechaOcupacion.toDate ? fechaOcupacion.toDate() : null);
 
-    if (!fechaOcupacionDate) return;
+            if (!fechaOcupacionDate) return;
 
-    // Calcula el próximo aniversario mensual de la fecha de ocupación
-    let dia = fechaOcupacionDate.getDate();
-    let proximoPago;
-if (hoy.getDate() < dia) {
-    proximoPago = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
-} else {
-    proximoPago = new Date(hoy.getFullYear(), hoy.getMonth() + 1, dia);
-}
-proximoPago.setHours(0, 0, 0, 0);
+            // Calcula el próximo aniversario mensual de la fecha de ocupación
+            let dia = fechaOcupacionDate.getDate();
+            let proximoPago;
+            if (hoy.getDate() < dia) {
+                proximoPago = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
+            } else {
+                proximoPago = new Date(hoy.getFullYear(), hoy.getMonth() + 1, dia);
+            }
+            proximoPago.setHours(0, 0, 0, 0);
 
-    const diffDias = Math.floor((proximoPago - hoy) / (1000 * 60 * 60 * 24));
-    if (diffDias >= 0 && diffDias <= 3) {
-        inquilinosProximoPago.push({
-            id: doc.id,
-            nombre: inquilino.nombre,
-            inmueble: inquilino.nombreInmueble || '',
-            proximoPago: proximoPago.toISOString().split('T')[0],
-            diffDias
+            const diffDias = Math.floor((proximoPago - hoy) / (1000 * 60 * 60 * 24));
+            if (diffDias >= 0 && diffDias <= 3) {
+                inquilinosProximoPago.push({
+                    id: doc.id,
+                    nombre: inquilino.nombre,
+                    inmueble: inquilino.nombreInmueble || '',
+                    proximoPago: proximoPago.toISOString().split('T')[0],
+                    diffDias
+                });
+                console.log('proximoPago calculado:', proximoPago.toISOString().split('T')[0], 'para inquilino', inquilino.nombre);
+            }
         });
-        console.log('proximoPago calculado:', proximoPago.toISOString().split('T')[0], 'para inquilino', inquilino.nombre);
-    }
-});
 
         inquilinosProximoPago.forEach(iq => {
             // Evita duplicados si ya hay un pago próximo a vencer para este inquilino este mes
@@ -536,10 +539,10 @@ proximoPago.setHours(0, 0, 0, 0);
         const inquilinosActivos = Array.from(inquilinosSnap.docs)
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(inquilino => inquilino.activo);
-            
+
         // Crear un mapa para almacenar adeudos por inquilino
         const adeudosPorInquilino = new Map();
-        
+
         // Primero procesar los pagos vencidos existentes
         listaPagosVencidos.forEach(pago => {
             const inquilinoId = pago.inquilinoId;
@@ -552,12 +555,12 @@ proximoPago.setHours(0, 0, 0, 0);
                     adeudosSet: new Set()
                 });
             }
-            
+
             const inquilinoAdeudos = adeudosPorInquilino.get(inquilinoId);
             // Verificar que mes y año no sean undefined o null
             if (pago.mesCorrespondiente && pago.anioCorrespondiente) {
                 const key = `${inquilinoId}-${pago.mesCorrespondiente}-${pago.anioCorrespondiente}`;
-                
+
                 if (!inquilinoAdeudos.adeudosSet.has(key)) {
                     inquilinoAdeudos.mesesAdeudados.push({
                         mes: pago.mesCorrespondiente,
@@ -571,7 +574,7 @@ proximoPago.setHours(0, 0, 0, 0);
                 console.log(`Pago sin mes o año correspondiente para inquilino ${pago.nombreInquilino || inquilinoId}:`, pago);
             }
         });
-        
+
         // Luego calcular y añadir los adeudos históricos
         for (const inquilino of inquilinosActivos) {
             if (inquilino.fechaOcupacion && inquilino.inmuebleAsociadoId) {
@@ -587,7 +590,7 @@ proximoPago.setHours(0, 0, 0, 0);
                         inquilino.inmuebleAsociadoId,
                         fechaOcupacionCorrected
                     );
-                    
+
                     // Asegurarse de que mesesAdeudados sea un array y tenga elementos
                     if (Array.isArray(mesesAdeudados) && mesesAdeudados.length > 0) {
                         if (!adeudosPorInquilino.has(inquilino.id)) {
@@ -599,9 +602,9 @@ proximoPago.setHours(0, 0, 0, 0);
                                 adeudosSet: new Set()
                             });
                         }
-                        
+
                         const inquilinoAdeudos = adeudosPorInquilino.get(inquilino.id);
-                        
+
                         mesesAdeudados.forEach(mes => {
                             // Verificar que mes y año no sean undefined o null
                             if (mes && mes.mes && mes.anio) {
@@ -629,27 +632,27 @@ proximoPago.setHours(0, 0, 0, 0);
                 console.log(`Inquilino ${inquilino.nombre} (ID: ${inquilino.id}) no tiene fecha de ocupación o inmueble asociado`);
             }
         }
-        
+
         // Limpiar la lista de pagos vencidos y reconstruirla con los adeudos agrupados
         listaPagosVencidos = [];
-        
+
         // Convertir el mapa a un array y añadir a la lista de pagos vencidos
         adeudosPorInquilino.forEach(inquilinoAdeudos => {
             // Ordenar los meses adeudados por año y mes
             inquilinoAdeudos.mesesAdeudados.sort((a, b) => {
                 if (a.anio !== b.anio) return a.anio - b.anio;
-                
-                const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-                               "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+                const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
                 return meses.indexOf(a.mes) - meses.indexOf(b.mes);
             });
-            
+
             // Añadir el total de adeudos
             inquilinoAdeudos.totalAdeudos = inquilinoAdeudos.mesesAdeudados.length;
-            
+
             // Eliminar el set de control que ya no necesitamos
             delete inquilinoAdeudos.adeudosSet;
-            
+
             // Añadir a la lista de pagos vencidos
             listaPagosVencidos.push(inquilinoAdeudos);
         });
@@ -660,12 +663,9 @@ proximoPago.setHours(0, 0, 0, 0);
         window.listaPagosProximos = listaPagosProximos;
         window.listaPagosVencidos = listaPagosVencidos;
 
-        // Actualizar contadores
-        pagosPendientes = listaPagosPendientes.length;
-        pagosParciales = listaPagosParciales.length;
-        pagosVencidos = listaPagosVencidos.length;
 
-        contenedor.innerHTML = `
+        // ✨ SMOOTHLY TRANSITION FROM SKELETONS TO CONTENT
+        const dashboardHTML = `
             <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
                 <div class="py-4 sm:py-6">
                     <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 text-center sm:text-left">Dashboard General</h2>
@@ -718,40 +718,42 @@ proximoPago.setHours(0, 0, 0, 0);
                                 <p class="text-2xl sm:text-4xl font-bold text-green-800 mt-1 sm:mt-2 dashboard-card-value">${totalInquilinos}</p>
                             </div>
                         </div>
-                    </div>
+                    </div >
 
-                    <!-- Tarjetas de ingresos y gastos -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-4 sm:p-6">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div class="text-center sm:text-left">
-                                    <p class="text-lg font-semibold text-emerald-700">Ingresos del Mes</p>
-                                    <p class="text-3xl sm:text-4xl font-bold text-emerald-800 mt-2 break-words">${ingresosEsteMes.toFixed(2)}</p>
-                                </div>
-                                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md mx-auto sm:mx-0">
-                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
+                    < !--Tarjetas de ingresos y gastos-- >
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="text-center sm:text-left">
+                            <p class="text-lg font-semibold text-emerald-700">Ingresos del Mes</p>
+                            <p class="text-3xl sm:text-4xl font-bold text-emerald-800 mt-2 break-words">${ingresosEsteMes.toFixed(2)}</p>
                         </div>
-
-                        <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-4 sm:p-6">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div class="text-center sm:text-left">
-                                    <p class="text-lg font-semibold text-rose-700">Gastos del Mes</p>
-                                    <p class="text-3xl sm:text-4xl font-bold text-rose-800 mt-2 break-words">${gastosEsteMes.toFixed(2)}</p>
-                                </div>
-                                <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center shadow-md mx-auto sm:mx-0">
-                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
+                        <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md mx-auto sm:mx-0">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Estado de Pagos -->
+                <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-sm p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="text-center sm:text-left">
+                            <p class="text-lg font-semibold text-rose-700">Gastos del Mes</p>
+                            <p class="text-3xl sm:text-4xl font-bold text-rose-800 mt-2 break-words">${gastosEsteMes.toFixed(2)}</p>
+                        </div>
+                        <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center shadow-md mx-auto sm:mx-0">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                    </div >
+
+                    < !--Estado de Pagos(Tarjetas)-- >
                     <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 mb-8">
                         <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center sm:text-left">Estado de Pagos</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
@@ -793,7 +795,7 @@ proximoPago.setHours(0, 0, 0, 0);
                         </div>
                     </div>
 
-                    <!-- Mantenimientos Pendientes -->
+                    <!--Mantenimientos Pendientes-- >
                     <div id="mantenimientos-pendientes-container" class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 mb-8">
                         <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center sm:text-left">Mantenimientos Pendientes</h3>
                         <div id="mantenimientos-pendientes-lista" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -801,52 +803,176 @@ proximoPago.setHours(0, 0, 0, 0);
                         </div>
                     </div>
                     
-                    <!-- Recordatorios de Renovación de Contratos -->
-                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-yellow-100">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
-                            <h3 class="text-xl sm:text-2xl font-bold text-gray-900 text-center sm:text-left">Renovación de Contratos</h3>
-                            <button id="btnVerRenovaciones" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md shadow-md transition-colors duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                Ver Renovaciones
-                            </button>
+                    <!--Recordatorios de Renovación de Contratos-- >
+            <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-yellow-100">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 text-center sm:text-left">Renovación de Contratos</h3>
+                    <button id="btnVerRenovaciones" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md shadow-md transition-colors duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Ver Renovaciones
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4 text-sm sm:text-base">Los contratos se renuevan cada 6 meses. El sistema mostrará recordatorios 15 días antes de la fecha de renovación.</p>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 sm:p-4 rounded-r-lg">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
                         </div>
-                        <p class="text-gray-600 mb-4 text-sm sm:text-base">Los contratos se renuevan cada 6 meses. El sistema mostrará recordatorios 15 días antes de la fecha de renovación.</p>
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 sm:p-4 rounded-r-lg">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0 mt-0.5">
-                                    <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">
-                                        Recuerda contactar a los inquilinos con anticipación para gestionar la renovación de sus contratos.
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                Recuerda contactar a los inquilinos con anticipación para gestionar la renovación de sus contratos.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-        `;
+                </div >
+            </div >
+            `;
+
+        // Apply content with smooth fade transition from skeletons
+        hideSkeletonsAndShowContent(contenedor, dashboardHTML);
+
         // Guardar el HTML generado y la marca de tiempo en el caché
-        cachedDashboardHTML = contenedor.innerHTML;
+        cachedDashboardHTML = dashboardHTML;
         dashboardCacheTimestamp = new Date();
         console.log("Dashboard guardado en caché.");
         adjuntarListenersDashboard();
+
+        // Renderizar gráficos - DESACTIVADO POR SOLICITUD DEL USUARIO
+        // renderCharts(inmueblesOcupados, inmueblesDisponibles, ingresosEsteMes, gastosEsteMes, pagosPendientes, pagosParciales, pagosVencidos);
+
     } catch (error) {
         console.error("Error al cargar el dashboard:", error);
         mostrarNotificacion("Error al cargar el dashboard.", 'error');
-        contenedor.innerHTML = `<p class="text-red-600 text-center">Error al cargar los datos del dashboard.</p>`;
+        contenedor.innerHTML = `< p class="text-red-600 text-center" > Error al cargar los datos del dashboard.</p > `;
     } finally {
         // Restaurar la función original de mostrarNotificacion
         if (window.mostrarNotificacion !== mostrarNotificacion) {
             window.mostrarNotificacion = mostrarNotificacion;
         }
     }
+}
+
+function renderCharts(ocupados, disponibles, ingresos, gastos, pendientes, parciales, vencidos) {
+    // Gráfico de Ocupación
+    const optionsOcupacion = {
+        series: [ocupados, disponibles],
+        chart: {
+            type: 'donut',
+            height: 250,
+            fontFamily: 'inherit'
+        },
+        labels: ['Ocupados', 'Disponibles'],
+        colors: ['#F97316', '#14B8A6'], // Orange-500, Teal-500
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '65%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            formatter: function (w) {
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        legend: {
+            position: 'bottom'
+        }
+    };
+    const chartOcupacion = new ApexCharts(document.querySelector("#chart-ocupacion"), optionsOcupacion);
+    chartOcupacion.render();
+
+    // Gráfico de Finanzas
+    const optionsFinanzas = {
+        series: [{
+            name: 'Monto',
+            data: [ingresos, gastos]
+        }],
+        chart: {
+            type: 'bar',
+            height: 250,
+            toolbar: { show: false },
+            fontFamily: 'inherit'
+        },
+        colors: ['#10B981', '#F43F5E'], // Emerald-500, Rose-500
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                horizontal: false,
+                columnWidth: '55%',
+                distributed: true
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        xaxis: {
+            categories: ['Ingresos', 'Gastos'],
+            labels: {
+                style: { fontSize: '12px' }
+            }
+        },
+        yaxis: {
+            labels: {
+                formatter: function (val) {
+                    return "$" + val.toFixed(0);
+                }
+            }
+        },
+        legend: { show: false },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return "$" + val.toFixed(2)
+                }
+            }
+        }
+    };
+    const chartFinanzas = new ApexCharts(document.querySelector("#chart-finanzas"), optionsFinanzas);
+    chartFinanzas.render();
+
+    // Gráfico de Estado de Pagos
+    // Calcular pagados (total inquilinos - pendientes - parciales - vencidos aprox)
+    // Nota: Esto es una aproximación visual ya que no tenemos el conteo exacto de "pagados" en las variables pasadas, 
+    // pero podemos inferirlo o simplemente mostrar los estados problemáticos vs "Al corriente".
+    // Para este ejemplo, usaremos los datos que tenemos.
+
+    const optionsPagos = {
+        series: [pendientes, parciales, vencidos],
+        chart: {
+            type: 'pie',
+            height: 250,
+            fontFamily: 'inherit'
+        },
+        labels: ['Pendientes', 'Parciales', 'Vencidos'],
+        colors: ['#3B82F6', '#10B981', '#EF4444'], // Blue, Emerald, Red
+        legend: {
+            position: 'bottom'
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return val.toFixed(1) + "%"
+            }
+        }
+    };
+    const chartPagos = new ApexCharts(document.querySelector("#chart-pagos"), optionsPagos);
+    chartPagos.render();
 }
 
 export async function mostrarInmueblesFiltrados(estado) {
@@ -857,9 +983,9 @@ export async function mostrarInmueblesFiltrados(estado) {
 window.mostrarInmueblesFiltrados = mostrarInmueblesFiltrados;
 
 window.cambiarEstadoCosto = cambiarEstadoCosto;
-window.mostrarListaPagosDashboard = function(tipo) {
-    console.log(`Mostrando lista de pagos tipo: ${tipo}`);
-    
+window.mostrarListaPagosDashboard = function (tipo) {
+    console.log(`Mostrando lista de pagos tipo: ${tipo} `);
+
     let lista = [];
     let titulo = '';
     let colorFondo = '';
@@ -867,7 +993,7 @@ window.mostrarListaPagosDashboard = function(tipo) {
     let colorBorde = '';
     let colorIcono = '';
     let colorGradiente = '';
-    
+
     if (tipo === 'pendientes') {
         lista = window.listaPagosPendientes;
         titulo = 'Pagos Pendientes';
@@ -900,15 +1026,15 @@ window.mostrarListaPagosDashboard = function(tipo) {
         colorBorde = 'border-red-200';
         colorIcono = 'text-red-500';
         colorGradiente = 'from-red-50 to-red-100';
-        
-        console.log(`Lista de pagos vencidos:`, lista);
-        
+
+        console.log(`Lista de pagos vencidos: `, lista);
+
         // Agrupar adeudos por inquilino
         const adeudosPorInquilino = new Map();
-        
+
         // Verificar si la lista contiene objetos con mesesAdeudados
         const tieneObjetosConMesesAdeudados = lista.some(item => item.mesesAdeudados && Array.isArray(item.mesesAdeudados));
-        
+
         if (tieneObjetosConMesesAdeudados) {
             // La lista ya contiene objetos agrupados con mesesAdeudados
             console.log("La lista ya contiene objetos agrupados con mesesAdeudados");
@@ -932,7 +1058,7 @@ window.mostrarListaPagosDashboard = function(tipo) {
                     console.error("Pago sin inquilinoId:", pago);
                     return;
                 }
-                
+
                 if (!adeudosPorInquilino.has(inquilinoId)) {
                     adeudosPorInquilino.set(inquilinoId, {
                         inquilinoId: inquilinoId,
@@ -942,7 +1068,7 @@ window.mostrarListaPagosDashboard = function(tipo) {
                         totalAdeudos: 0
                     });
                 }
-                
+
                 const inquilinoAdeudos = adeudosPorInquilino.get(inquilinoId);
                 // Verificar que mes y año no sean undefined o null
                 if (pago.mesCorrespondiente && pago.anioCorrespondiente) {
@@ -953,36 +1079,36 @@ window.mostrarListaPagosDashboard = function(tipo) {
                         esAdeudoHistorico: pago.esAdeudoHistorico || false
                     });
                     inquilinoAdeudos.totalAdeudos++;
-                    console.log(`Agregado mes adeudado: ${pago.mesCorrespondiente} ${pago.anioCorrespondiente} para ${pago.nombreInquilino || inquilinoId}`);
+                    console.log(`Agregado mes adeudado: ${pago.mesCorrespondiente} ${pago.anioCorrespondiente} para ${pago.nombreInquilino || inquilinoId} `);
                 } else {
-                    console.log(`Pago sin mes o año correspondiente para inquilino ${pago.nombreInquilino || inquilinoId}`);
+                    console.log(`Pago sin mes o año correspondiente para inquilino ${pago.nombreInquilino || inquilinoId} `);
                 }
             });
         }
-        
+
         // Asegurarse de que cada inquilino tenga sus meses adeudados correctamente
         adeudosPorInquilino.forEach((inquilino) => {
             // Verificar si hay meses adeudados y ordenarlos
             if (inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados)) {
                 // Filtrar meses inválidos
                 inquilino.mesesAdeudados = inquilino.mesesAdeudados.filter(mes => mes && mes.mes && mes.anio);
-                
+
                 if (inquilino.mesesAdeudados.length > 0) {
                     // Ordenar por año y mes
                     inquilino.mesesAdeudados.sort((a, b) => {
                         if (a.anio !== b.anio) return parseInt(a.anio) - parseInt(b.anio);
-                        
-                        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-                                      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+                        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
                         return meses.indexOf(a.mes) - meses.indexOf(b.mes);
                     });
-                    
+
                     // Asegurarse de que el total de adeudos sea correcto
                     inquilino.totalAdeudos = inquilino.mesesAdeudados.length;
-                    
+
                     // Crear una lista de meses adeudados como texto para mostrar en el resumen
                     inquilino.resumenAdeudos = inquilino.mesesAdeudados
-                        .map(mes => `${mes.mes} ${mes.anio}`)
+                        .map(mes => `${mes.mes} ${mes.anio} `)
                         .join(', ');
                 } else {
                     inquilino.totalAdeudos = 0;
@@ -993,30 +1119,30 @@ window.mostrarListaPagosDashboard = function(tipo) {
                 inquilino.totalAdeudos = 0;
                 inquilino.resumenAdeudos = "No hay meses adeudados";
             }
-            
+
             // Depuración para verificar los meses adeudados
-            console.log(`Inquilino: ${inquilino.nombreInquilino}, Meses adeudados: ${inquilino.totalAdeudos}`, 
-                        inquilino.mesesAdeudados ? JSON.stringify(inquilino.mesesAdeudados) : "[]");
+            console.log(`Inquilino: ${inquilino.nombreInquilino}, Meses adeudados: ${inquilino.totalAdeudos} `,
+                inquilino.mesesAdeudados ? JSON.stringify(inquilino.mesesAdeudados) : "[]");
         });
-        
+
         // Reemplazar la lista original con la lista agrupada
         lista = Array.from(adeudosPorInquilino.values());
-        
+
         // Ordenar la lista por nombre de inquilino
         lista.sort((a, b) => a.nombreInquilino.localeCompare(b.nombreInquilino));
     }
 
     let html = `
-        <div class="px-3 sm:px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6 modal-header-responsive">
-            <div class="flex items-center justify-between">
-                <h3 class="text-xl sm:text-2xl font-bold modal-title-responsive">${titulo}</h3>
-                <button onclick="ocultarModal()" class="text-white hover:text-gray-200 transition-colors duration-200">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
+            < div class="px-3 sm:px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6 modal-header-responsive" >
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl sm:text-2xl font-bold modal-title-responsive">${titulo}</h3>
+                    <button onclick="ocultarModal()" class="text-white hover:text-gray-200 transition-colors duration-200">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+        </div >
 
         <div class="overflow-x-auto -mx-6 px-3 sm:px-6 modal-responsive-padding">
             ${lista.length === 0 ? `
@@ -1028,9 +1154,9 @@ window.mostrarListaPagosDashboard = function(tipo) {
                 </div>
             ` : `
                 <div class="grid grid-cols-1 gap-4 sm:gap-6 modal-grid-responsive">
-                    ${tipo === 'vencidos' ? 
-                        // Vista agrupada por inquilino para pagos vencidos
-                        lista.map(inquilino => `
+                    ${tipo === 'vencidos' ?
+            // Vista agrupada por inquilino para pagos vencidos
+            lista.map(inquilino => `
                             <div class="bg-white rounded-lg shadow-sm border ${colorBorde} hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
                                 <div class="p-3 sm:p-6">
                                     <!-- Encabezado con información del inquilino -->
@@ -1060,30 +1186,30 @@ window.mostrarListaPagosDashboard = function(tipo) {
                                         <!-- Resumen de meses adeudados -->
                                         <div class="bg-red-50 border border-red-100 rounded-lg p-3 mb-3">
                                             <p class="text-sm text-red-800 font-medium">
-                                                ${inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados) && inquilino.mesesAdeudados.length > 0 ? 
-                                                    inquilino.mesesAdeudados.map(mes => `${mes.mes} ${mes.anio}`).join(', ') : 
-                                                    'No hay meses adeudados'}
+                                                ${inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados) && inquilino.mesesAdeudados.length > 0 ?
+                    inquilino.mesesAdeudados.map(mes => `${mes.mes} ${mes.anio}`).join(', ') :
+                    'No hay meses adeudados'}
                                             </p>
                                         </div>
                                         
                                         <!-- Detalle de meses adeudados -->
                                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                            ${inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados) && inquilino.mesesAdeudados.length > 0 ? 
-                                                inquilino.mesesAdeudados.map(mes => `
+                                            ${inquilino.mesesAdeudados && Array.isArray(inquilino.mesesAdeudados) && inquilino.mesesAdeudados.length > 0 ?
+                    inquilino.mesesAdeudados.map(mes => `
                                                     <div class="bg-red-50 border border-red-100 rounded-lg p-2 text-center">
                                                         <p class="font-medium text-red-800">${mes.mes && mes.anio ? `${mes.mes} ${mes.anio}` : 'Mes pendiente'}</p>
-                                                        ${mes.rentaPendiente && mes.serviciosPendientes ? 
-                                                            `<span class="text-xs text-red-600 block mt-1">Renta y Servicios Pendientes</span>` : 
-                                                            mes.rentaPendiente ? 
-                                                                `<span class="text-xs text-red-600 block mt-1">Renta Pendiente</span>` : 
-                                                                `<span class="text-xs text-red-600 block mt-1">Servicios Pendientes</span>`
-                                                        }
+                                                        ${mes.rentaPendiente && mes.serviciosPendientes ?
+                            `<span class="text-xs text-red-600 block mt-1">Renta y Servicios Pendientes</span>` :
+                            mes.rentaPendiente ?
+                                `<span class="text-xs text-red-600 block mt-1">Renta Pendiente</span>` :
+                                `<span class="text-xs text-red-600 block mt-1">Servicios Pendientes</span>`
+                        }
                                                     </div>
-                                                `).join('') : 
-                                                `<div class="col-span-2 sm:col-span-3 md:col-span-4 bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                                                `).join('') :
+                    `<div class="col-span-2 sm:col-span-3 md:col-span-4 bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
                                                     <p class="text-gray-500">No hay meses adeudados registrados</p>
                                                 </div>`
-                                            }
+                }
                                         </div>
                                     </div>
                                     
@@ -1091,23 +1217,23 @@ window.mostrarListaPagosDashboard = function(tipo) {
                                 </div>
                             </div>
                         `).join('')
-                    : 
-                        // Vista normal para otros tipos de pagos
-                        lista.map(pago => {
-                            const inquilinoData = window.inquilinosMap && window.inquilinosMap.get(pago.inquilinoId);
-                            const nombreInquilino = (pago.nombreInquilino || (inquilinoData && inquilinoData.nombre)) || pago.inquilinoId;
-                            const nombreInmueble = pago.nombreInmueble || (inquilinoData && inquilinoData.nombreInmueble) || 'No especificado';
-                            const fechaPago = pago.estado === 'Próximo (Ocupación)'
-                                ? (() => {
-                                    const d = new Date(pago.proximoPago);
-                                    const dia = String(d.getDate()+2).padStart(2, '0');
-                                    const mes = String(d.getMonth() + 1).padStart(2, '0');
-                                    const anio = d.getFullYear();
-                                    return `${dia}/${mes}/${anio}`;
-                                })()
-                                : (pago.mesCorrespondiente || '') + ' / ' + (pago.anioCorrespondiente || '');
+            :
+            // Vista normal para otros tipos de pagos
+            lista.map(pago => {
+                const inquilinoData = window.inquilinosMap && window.inquilinosMap.get(pago.inquilinoId);
+                const nombreInquilino = (pago.nombreInquilino || (inquilinoData && inquilinoData.nombre)) || pago.inquilinoId;
+                const nombreInmueble = pago.nombreInmueble || (inquilinoData && inquilinoData.nombreInmueble) || 'No especificado';
+                const fechaPago = pago.estado === 'Próximo (Ocupación)'
+                    ? (() => {
+                        const d = new Date(pago.proximoPago);
+                        const dia = String(d.getDate() + 2).padStart(2, '0');
+                        const mes = String(d.getMonth() + 1).padStart(2, '0');
+                        const anio = d.getFullYear();
+                        return `${dia}/${mes}/${anio}`;
+                    })()
+                    : (pago.mesCorrespondiente || '') + ' / ' + (pago.anioCorrespondiente || '');
 
-                            return `
+                return `
                                 <div class="bg-white rounded-lg shadow-sm border ${colorBorde} hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
                                     <div class="p-3 sm:p-6">
                                         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 sm:gap-6">
@@ -1181,7 +1307,7 @@ window.mostrarListaPagosDashboard = function(tipo) {
                                 </div>
                             </div>
                         `;
-                    }).join('')}
+            }).join('')}
                 </div>
             `}
         </div>
@@ -1194,12 +1320,12 @@ window.mostrarListaPagosDashboard = function(tipo) {
                 Cerrar
             </button>
         </div>
-    `;
+        `;
     mostrarModal(html);
 };
 
 // Asegurarse de que la función mostrarModal esté definida
-window.mostrarModal = function(contenido, animated = false) {
+window.mostrarModal = function (contenido, animated = false) {
     let modalContainer = document.getElementById('modal-container');
     if (!modalContainer) {
         modalContainer = document.createElement('div');
@@ -1207,45 +1333,45 @@ window.mostrarModal = function(contenido, animated = false) {
         document.body.appendChild(modalContainer);
     }
 
-    modalContainer.className = `fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4`;
-    
+    modalContainer.className = `fixed inset - 0 bg - gray - 900 bg - opacity - 60 overflow - y - auto h - full w - full z - 50 flex items - center justify - center p - 4`;
+
     const animationClasses = animated ? 'animate-fade-in-up' : '';
 
     modalContainer.innerHTML = `
-        <div id="modal-content" class="relative mx-auto shadow-2xl rounded-xl bg-gray-50 w-11/12 md:w-4/5 lg:w-3/4 max-w-4xl ${animationClasses}">
-            <div class="p-6">
-                ${contenido}
-            </div>
-        </div>
-    `;
+            < div id = "modal-content" class="relative mx-auto shadow-2xl rounded-xl bg-gray-50 w-11/12 md:w-4/5 lg:w-3/4 max-w-4xl ${animationClasses}" >
+                <div class="p-6">
+                    ${contenido}
+                </div>
+        </div >
+            `;
 
     // Add CSS for animations if not already present
     if (!document.getElementById('modal-animations')) {
         const style = document.createElement('style');
         style.id = 'modal-animations';
         style.innerHTML = `
-            @keyframes fade-in-up {
+        @keyframes fade -in -up {
                 from { opacity: 0; transform: translateY(20px); }
                 to { opacity: 1; transform: translateY(0); }
-            }
-            .animate-fade-in-up {
-                animation: fade-in-up 0.5s ease-out forwards;
-            }
-            .maintenance-card {
-                opacity: 0;
-                transform: translateY(20px);
-                animation: fade-in-up 0.5s ease-out forwards;
-            }
-            .maintenance-cards-container {
-                perspective: 1000px;
-            }
+        }
+            .animate - fade -in -up {
+            animation: fade -in -up 0.5s ease - out forwards;
+        }
+            .maintenance - card {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fade -in -up 0.5s ease - out forwards;
+        }
+            .maintenance - cards - container {
+            perspective: 1000px;
+        }
         `;
         document.head.appendChild(style);
     }
 };
 
 // Asegurarse de que la función ocultarModal esté definida
-window.ocultarModal = function() {
+window.ocultarModal = function () {
     const modalContainer = document.getElementById('modal-container');
     if (modalContainer) {
         modalContainer.remove();

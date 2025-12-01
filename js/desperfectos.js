@@ -14,7 +14,8 @@ export async function mostrarDesperfectos() {
         return;
     }
 
-    mostrarLoader();
+    // ✨ SHOW SKELETON LOADERS WHILE LOADING
+    showSkeletons(contenedor, 'property', 6);
 
     try {
         const desperfectosSnap = await getDocs(collection(db, "desperfectos"));
@@ -154,8 +155,6 @@ export async function mostrarDesperfectos() {
     } catch (error) {
         console.error("Error al obtener desperfectos:", error);
         mostrarNotificacion("Error al cargar los desperfectos.", 'error');
-    } finally {
-        ocultarLoader();
     }
 }
 
@@ -194,7 +193,7 @@ export async function mostrarFormularioNuevoDesperfecto(id = null, inquilinoIdPr
         // NEW LOGIC: If no desperfecto is being edited and no inquilino is preselected,
         // try to pre-select if there's only one occupied inmueble.
         if (!id && !inquilinoIdPreseleccionado && !inmuebleIdPreseleccionado) { // Added !inmuebleIdPreseleccionado
-            const occupiedInmuebles = inmueblesList.filter(inmueble => 
+            const occupiedInmuebles = inmueblesList.filter(inmueble =>
                 inmueble.estado === 'Ocupado' && inmueble.inquilinoActualId
             );
 
@@ -409,7 +408,7 @@ export async function editarDesperfecto(id) {
  * @param {string} currentStatus - Estado actual del desperfecto.
  * @param {string} inquilinoId - ID del inquilino al que pertenece el desperfecto (para refrescar la vista).
  */
-window.cambiarEstadoDesperfecto = async function(desperfectoId, currentStatus, inquilinoId) {
+window.cambiarEstadoDesperfecto = async function (desperfectoId, currentStatus, inquilinoId) {
     const estados = ["Pendiente", "Reparado", "Pagado"];
     const estadoOptions = estados.map(est => `
         <option value="${est}" ${currentStatus === est ? 'selected' : ''}>
@@ -475,7 +474,7 @@ window.cambiarEstadoDesperfecto = async function(desperfectoId, currentStatus, i
  * @param {string} id - ID del documento a eliminar.
  * @param {function} callbackRefresh - Función a llamar para refrescar la tabla después de la eliminación.
  */
-window.eliminarDocumento = async function(coleccion, id, callbackRefresh) {
+window.eliminarDocumento = async function (coleccion, id, callbackRefresh) {
     if (confirm('¿Estás seguro de que quieres eliminar este desperfecto? Esta acción es irreversible.')) {
         try {
             await deleteDoc(doc(db, coleccion, id));

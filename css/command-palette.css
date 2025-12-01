@@ -1,0 +1,349 @@
+/* css/command-palette.css */
+
+/* Backdrop with blur effect */
+#command-palette-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-out;
+}
+
+#command-palette-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Main Modal Container */
+#command-palette-modal {
+    width: 100%;
+    max-width: 640px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px;
+    box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 8px 10px -6px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transform: scale(0.95);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+#command-palette-backdrop.open #command-palette-modal {
+    transform: scale(1);
+}
+
+/* Search Input Area */
+.cp-search-container {
+    padding: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cp-search-icon {
+    width: 24px;
+    height: 24px;
+    color: #64748b;
+}
+
+#cp-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: #1e293b;
+    outline: none;
+    font-weight: 500;
+}
+
+#cp-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Results List */
+#cp-results {
+    padding: 8px;
+    overflow-y: auto;
+    max-height: 60vh;
+    scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+#cp-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+#cp-results::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#cp-results::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.5);
+    border-radius: 20px;
+}
+
+/* Result Item */
+.cp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: #334155;
+    text-decoration: none;
+    margin-bottom: 4px;
+}
+
+.cp-item:last-child {
+    margin-bottom: 0;
+}
+
+.cp-item.selected,
+.cp-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.cp-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(241, 245, 249, 0.8);
+    color: #64748b;
+    transition: all 0.15s ease;
+}
+
+.cp-item.selected .cp-item-icon {
+    background: #fff;
+    color: #2563eb;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+}
+
+.cp-item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cp-item-title {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.cp-item-subtitle {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.cp-item.selected .cp-item-subtitle {
+    color: #60a5fa;
+    margin-top: 2px;
+}
+
+.cp-item-shortcut {
+    font-size: 12px;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Footer */
+.cp-footer {
+    padding: 8px 16px;
+    background: rgba(248, 250, 252, 0.5);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.cp-footer-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cp-key {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 1px 4px;
+    font-family: monospace;
+    font-weight: 600;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Floating Action Button (FAB) */
+#cp-fab {
+    position: fixed;
+    bottom: 120px;
+    /* Raised higher to sit above other notifications */
+    right: 16px;
+    /* Aligned with other floating elements (standard 16px margin) */
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+
+    /* Premium Look & Glassmorphism */
+    background: rgba(255, 255, 255, 0.1);
+    /* Semi-transparent base */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+
+    /* Gradient Border/Glow Effect via pseudo-element or box-shadow */
+    box-shadow:
+        0 4px 30px rgba(0, 0, 0, 0.1),
+        inset 0 0 20px rgba(255, 255, 255, 0.2);
+
+    /* Content styling */
+    color: #3b82f6;
+    /* Blue icon by default */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9990;
+
+    /* Transitions for "Ghost" mode */
+    opacity: 0.6;
+    /* Dimmed by default */
+    transform: scale(0.95);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Inner Gradient Background (Optional, for more pop on hover) */
+#cp-fab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    padding: 2px;
+    /* Border width */
+    background: linear-gradient(135deg, #6366f1, #3b82f6, #0ea5e9);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+/* Hover State - "Wake up" */
+#cp-fab:hover {
+    opacity: 1;
+    transform: scale(1.1) translateY(-2px);
+    background: linear-gradient(135deg, #6366f1, #3b82f6, #0ea5e9);
+    color: white;
+    border-color: transparent;
+    box-shadow:
+        0 20px 40px -5px rgba(59, 130, 246, 0.6),
+        0 10px 20px -5px rgba(59, 130, 246, 0.4),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+#cp-fab:hover::before {
+    opacity: 0;
+    /* Hide border gradient on hover as background takes over */
+}
+
+#cp-fab:active {
+    transform: scale(0.95);
+}
+
+#cp-fab svg {
+    width: 26px;
+    height: 26px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.3s ease;
+}
+
+#cp-fab:hover svg {
+    transform: rotate(90deg);
+    /* Playful rotation on hover */
+    color: white;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+    #command-palette-modal {
+        width: 95%;
+        max-height: 85vh;
+        border-radius: 12px;
+    }
+
+    .cp-search-container {
+        padding: 12px;
+    }
+
+    #cp-input {
+        font-size: 16px;
+        /* Prevent zoom on iOS */
+    }
+
+    .cp-item {
+        padding: 14px 12px;
+        /* Larger touch target */
+    }
+
+    .cp-footer {
+        display: none;
+        /* Hide shortcuts on mobile */
+    }
+
+    /* Mobile specific adjustments for FAB */
+    #cp-fab {
+        bottom: 120px;
+        /* Keep high on mobile too */
+        opacity: 1;
+        /* Always visible on mobile (no hover) */
+        background: linear-gradient(135deg, #6366f1, #3b82f6, #0ea5e9);
+        color: white;
+        transform: scale(1);
+        border: none;
+        right: 16px;
+        /* Ensure consistent alignment on mobile */
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 641px) {
+    #cp-fab {
+        bottom: 73px;
+        /* Raised to avoid overlap with other floating buttons */
+        right: 20px;
+        /* Aligned with standard 20px margin */
+    }
+}
+
+/* Dark Mode Support (if needed in future, basic structure here) */
+@media (prefers-color-scheme: dark) {
+    /* Add dark mode overrides if the system supports it */
+}

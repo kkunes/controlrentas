@@ -7,14 +7,15 @@ import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotifi
  * Muestra la lista de mantenimientos en formato de tabla.
  */
 export async function mostrarMantenimientos() {
-    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de mantenimientos.", 'error');
-        ocultarLoader();
         return;
     }
+
+    // ✨ SHOW SKELETON LOADERS WHILE LOADING
+    showSkeletons(contenedor, 'property', 6);
 
     try {
         const mantenimientosSnap = await getDocs(collection(db, "mantenimientos"));
@@ -50,7 +51,7 @@ export async function mostrarMantenimientos() {
                 const mesMantenimiento = fechaMantenimiento.toLocaleString('es-MX', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
                 const anioMantenimiento = fechaMantenimiento.getFullYear();
 
-                const pagoCorrespondiente = pagosList.find(p => 
+                const pagoCorrespondiente = pagosList.find(p =>
                     p.inmuebleId === data.inmuebleId &&
                     p.mesCorrespondiente === mesMantenimiento &&
                     p.anioCorrespondiente === anioMantenimiento
@@ -174,10 +175,10 @@ export async function mostrarMantenimientos() {
                 const mes = fecha ? fecha.getMonth() + 1 : null;
                 const anio = fecha ? fecha.getFullYear() : null;
                 return (!filtroInmueble || m.inmuebleId === filtroInmueble) &&
-                       (!filtroCategoria || m.categoria === filtroCategoria) &&
-                       (!filtroEstado || m.estado === filtroEstado) &&
-                       (!filtroMes || mes === filtroMes) &&
-                       (!filtroAnio || anio === filtroAnio);
+                    (!filtroCategoria || m.categoria === filtroCategoria) &&
+                    (!filtroEstado || m.estado === filtroEstado) &&
+                    (!filtroMes || mes === filtroMes) &&
+                    (!filtroAnio || anio === filtroAnio);
             });
 
             const totalCosto = filtrados.reduce((sum, m) => sum + (Number(m.costo) || 0), 0);
@@ -270,12 +271,12 @@ export async function mostrarMantenimientos() {
             `;
 
             const opt = {
-                margin:       0.5,
-                filename:     `Reporte_Mantenimientos_${nombreMes}_${anioReporte}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
+                margin: 0.5,
+                filename: `Reporte_Mantenimientos_${nombreMes}_${anioReporte}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             html2pdf().from(pdfContent).set(opt).toPdf().get('pdf').then(function (pdf) {
@@ -304,10 +305,10 @@ export async function mostrarMantenimientos() {
                 const mes = fecha ? fecha.getMonth() + 1 : null;
                 const anio = fecha ? fecha.getFullYear() : null;
                 return (!filtroInmueble || m.inmuebleId === filtroInmueble) &&
-                       (!filtroCategoria || m.categoria === filtroCategoria) &&
-                       (!filtroEstado || m.estado === filtroEstado) &&
-                       (!filtroMes || mes === filtroMes) &&
-                       (!filtroAnio || anio === filtroAnio);
+                    (!filtroCategoria || m.categoria === filtroCategoria) &&
+                    (!filtroEstado || m.estado === filtroEstado) &&
+                    (!filtroMes || mes === filtroMes) &&
+                    (!filtroAnio || anio === filtroAnio);
             });
 
             const totalContainer = document.getElementById('total-mantenimientos-container');
@@ -326,8 +327,8 @@ export async function mostrarMantenimientos() {
             } else {
                 filtrados.sort((a, b) => new Date(b.fechaMantenimiento) - new Date(a.fechaMantenimiento));
                 tbody.innerHTML = filtrados.map(m => {
-                    let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Urgente:"bg-red-100 text-red-800",Alta:"bg-orange-100 text-orange-800",Media:"bg-yellow-100 text-yellow-800",Baja:"bg-green-100 text-green-800"}[m.prioridad] || "bg-gray-100 text-gray-800");
-                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Pendiente:"bg-red-100 text-red-800","En Progreso":"bg-yellow-100 text-yellow-800",Completado:"bg-green-100 text-green-800",Cancelado:"bg-gray-100 text-gray-800"}[m.estado] || "bg-gray-100 text-gray-800");
+                    let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({ Urgente: "bg-red-100 text-red-800", Alta: "bg-orange-100 text-orange-800", Media: "bg-yellow-100 text-yellow-800", Baja: "bg-green-100 text-green-800" }[m.prioridad] || "bg-gray-100 text-gray-800");
+                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({ Pendiente: "bg-red-100 text-red-800", "En Progreso": "bg-yellow-100 text-yellow-800", Completado: "bg-green-100 text-green-800", Cancelado: "bg-gray-100 text-gray-800" }[m.estado] || "bg-gray-100 text-gray-800");
                     const materialesBtn = m.materiales && m.materiales.length > 0 ? `
                         <a href="#" title="Ver Materiales" onclick="mostrarMaterialesMantenimiento('${m.id}')" class="text-purple-500 p-2 flex items-center gap-2" style="--icon-color: #A855F7;">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -448,8 +449,6 @@ export async function mostrarMantenimientos() {
     } catch (error) {
         console.error("Error al obtener mantenimientos:", error);
         mostrarNotificacion("Error al cargar los mantenimientos.", 'error');
-    } finally {
-        ocultarLoader();
     }
 }
 
@@ -507,7 +506,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
             ${est}
         </option>
     `).join('');
-    
+
     const materialesHtml = mantenimiento?.materiales?.map((material, index) => `
         <div class="flex items-center gap-2 material-entry">
             <input type="text" name="material_nombre_${index}" placeholder="Nombre del material" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${material.nombre}" required>
@@ -769,7 +768,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
 
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
-        
+
         const materiales = [];
         const materialEntries = document.querySelectorAll('.material-entry');
         let costoMateriales = 0;
@@ -783,7 +782,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
         });
 
         data.materiales = materiales;
-        
+
         const costoManoObra = parseFloat(data.costo);
         data.costo_mano_obra = costoManoObra;
         data.costo = costoManoObra + costoMateriales;

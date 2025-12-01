@@ -1,6 +1,7 @@
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarLoader, ocultarLoader, mostrarNotificacion, mostrarModal, ocultarModal } from './ui.js';
+import { showSkeletons } from './skeletonUtils.js';
 
 let annualChartInstance = null;
 let isReportesListenerAttached = false;
@@ -9,7 +10,6 @@ let isReportesListenerAttached = false;
  * Muestra la sección principal de reportes y configura los selectores de mes/año.
  */
 export async function mostrarReportes() {
-    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
@@ -169,7 +169,7 @@ export async function mostrarReportes() {
                 await generarGraficoAnual(parseInt(anioSeleccionado));
             }
         });
-       
+
         isReportesListenerAttached = true;
     }
 
@@ -269,7 +269,7 @@ async function imprimirReporteAnual() {
 
     try {
         const { imgURI } = await annualChartInstance.dataURI();
-        
+
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
             <html>
@@ -359,7 +359,7 @@ async function generarGraficoAnual(anio) {
         inquilinosSnap.forEach(doc => {
             const data = doc.data();
             if (data.depositoRecibido && data.montoDeposito && data.fechaDeposito) {
-                 const fechaDeposito = new Date(data.fechaDeposito + 'T00:00:00');
+                const fechaDeposito = new Date(data.fechaDeposito + 'T00:00:00');
                 if (fechaDeposito.getFullYear() === anio) {
                     const mesIndex = fechaDeposito.getMonth();
                     ingresosPorMes[mesIndex] += parseFloat(data.montoDeposito) || 0;
@@ -373,7 +373,7 @@ async function generarGraficoAnual(anio) {
         mantenimientosSnap.forEach(doc => {
             const data = doc.data();
             if (data.fechaMantenimiento) {
-                 const fechaMantenimiento = new Date(data.fechaMantenimiento + 'T00:00:00');
+                const fechaMantenimiento = new Date(data.fechaMantenimiento + 'T00:00:00');
                 if (fechaMantenimiento.getFullYear() === anio) {
                     const mesIndex = fechaMantenimiento.getMonth();
                     gastosPorMes[mesIndex] += parseFloat(data.costo) || 0;
@@ -415,10 +415,10 @@ async function generarGraficoAnual(anio) {
                     show: true
                 },
                 events: {
-                    mounted: function(chartContext, config) {
+                    mounted: function (chartContext, config) {
                         annualChartInstance = chartContext;
                     },
-                    updated: function(chartContext, config) {
+                    updated: function (chartContext, config) {
                         annualChartInstance = chartContext;
                     }
                 }
@@ -513,7 +513,7 @@ async function generarGraficoAnual(anio) {
                     },
                     xaxis: {
                         labels: {
-                            formatter: function(val) {
+                            formatter: function (val) {
                                 if (val == 0) return "0";
                                 if (Math.abs(val) >= 1000) {
                                     return "$" + (val / 1000).toFixed(0) + 'k';
@@ -1009,12 +1009,12 @@ function generarPdfMovimientosPropietario(movimientos, propietariosMap, propieta
     `;
 
     const opt = {
-        margin:       0.5,
-        filename:     nombreArchivo,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        margin: 0.5,
+        filename: nombreArchivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
     };
 
     html2pdf().from(contentHtml).set(opt).toPdf().get('pdf').then(function (pdf) {
@@ -1235,10 +1235,10 @@ async function generarReporteMensual(mes, anio) {
                                     <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-700">${mov.fecha}</td>
                                     <td class="px-3 py-2 whitespace-nowrap text-xs">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${mov.tipo.startsWith('Ingreso') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                            ${mov.tipo.startsWith('Ingreso') ? 
-                                                '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>' : 
-                                                '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>'
-                                            }
+                                            ${mov.tipo.startsWith('Ingreso') ?
+                    '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>' :
+                    '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>'
+                }
                                             ${mov.tipo}
                                         </span>
                                     </td>
@@ -1377,16 +1377,16 @@ function generarPDF(mes, anio, totalPagosRentaMes, totalDepositosMes, totalIngre
     const mainContent = document.querySelector('main'); // Apuntar al contenedor principal
 
     const opt = {
-        margin:       1,
-        filename:     nombreArchivo,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
+        margin: 1,
+        filename: nombreArchivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
             scale: 2,
             scrollY: -mainContent.scrollTop, // Usar el scroll del elemento <main>
             windowWidth: document.documentElement.offsetWidth
         },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
     };
 
     html2pdf().from(elemento).set(opt).toPdf().get('pdf').then(function (pdf) {
