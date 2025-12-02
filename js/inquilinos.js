@@ -64,15 +64,14 @@ window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
  * Muestra la lista de inquilinos en forma de tarjetas.
  */
 export async function mostrarInquilinos(filtroActivo = "Todos") {
+    mostrarLoader();
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de inquilinos.", 'error');
+        ocultarLoader();
         return;
     }
-
-    // ✨ SHOW SKELETON LOADERS WHILE LOADING
-    showSkeletons(contenedor, 'tenant', 6);
 
     try {
         // Obtener todos los desperfectos de una vez para optimizar
@@ -107,7 +106,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const inmueblesSnap = await getDocs(collection(db, "inmuebles")); // Para mapear nombres de inmuebles
-
+        
         const inmueblesMap = new Map();
         inmueblesSnap.forEach(doc => {
             inmueblesMap.set(doc.id, doc.data());
@@ -270,9 +269,9 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         </svg>
                                         <div class="flex flex-col">
                                             <span class="text-sm font-medium">Servicios:</span>
-                                            ${inquilino.servicios.map(servicio =>
-                    `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
-                ).join('')}
+                                            ${inquilino.servicios.map(servicio => 
+                                                `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
+                                            ).join('')}
                                         </div>
                                     </div>
                                 ` : ''}
@@ -296,16 +295,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     </svg>
                                     <span>Pagos</span>
                                 </button>
-                                ${inquilino.activo ?
-                        `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" 
+                                ${inquilino.activo ? 
+                                    `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" 
                                         title="Marcar inquilino como desocupado"
                                         class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                         </svg>
                                         <span>Desocupar</span>
-                                    </button>` :
-                        `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" 
+                                    </button>` : 
+                                    `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" 
                                         title="Reactivar inquilino inactivo"
                                         class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -313,7 +312,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         </svg>
                                         <span>Reactivar</span>
                                     </button>`
-                    }
+                                }
                                 <button onclick="editarInquilino('${inquilino.id}')" 
                                     title="Editar información del inquilino"
                                     class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
@@ -367,8 +366,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             <span id="badge-adeudos-${inquilino.id}" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
                         </div>
                     </div>
-                `;
-            }
+                `;            }
         }
 
         contenedor.innerHTML = `
@@ -411,17 +409,17 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         document.getElementById('filtroActivo').addEventListener('change', function () {
             mostrarInquilinos(this.value);
         });
-
+        
         // Listener para el cuadro de búsqueda
-        document.getElementById('busquedaInquilino').addEventListener('input', function () {
+        document.getElementById('busquedaInquilino').addEventListener('input', function() {
             const busqueda = this.value.toLowerCase();
             const tarjetas = document.querySelectorAll('#listaInquilinos > div');
-
+            
             tarjetas.forEach(tarjeta => {
                 const nombre = tarjeta.querySelector('h3')?.textContent.toLowerCase() || '';
                 const telefono = tarjeta.querySelector('.text-gray-600 .text-sm')?.textContent.toLowerCase() || '';
                 const inmueble = tarjeta.querySelectorAll('.text-gray-600 .text-sm')[1]?.textContent.toLowerCase() || '';
-
+                
                 if (nombre.includes(busqueda) || telefono.includes(busqueda) || inmueble.includes(busqueda)) {
                     tarjeta.style.display = '';
                 } else {
@@ -436,7 +434,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 e.stopPropagation(); // Evita que el clic se propague al documento
                 const breakdownId = pill.id.replace('total-pill-', 'total-breakdown-');
                 const breakdownPopup = document.getElementById(breakdownId);
-
+                
                 // Ocultar todos los otros popups abiertos
                 document.querySelectorAll('.total-breakdown-popup').forEach(popup => {
                     if (popup.id !== breakdownId) {
@@ -529,8 +527,8 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                 const esMesActualIteracion = fechaIteracion.getMonth() === hoy.getMonth() && fechaIteracion.getFullYear() === hoy.getFullYear();
                 const isBeforeOccupationMonth = fechaIteracion.getFullYear() < fechaInicioOcupacion.getFullYear() ||
-                    (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
-                        fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
+                                                (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                                                 fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
 
                 if (!isBeforeOccupationMonth) {
                     const shouldCheckRent = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
@@ -579,8 +577,8 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     const pagoRegistrado = pagosMap.get(clavePago);
 
                     const isBeforeOccupationMonth = fechaIteracionMobiliario.getFullYear() < fechaInicioOcupacion.getFullYear() ||
-                        (fechaIteracionMobiliario.getFullYear() === fechaInicioOcupacion.getFullYear() &&
-                            fechaIteracionMobiliario.getMonth() < fechaInicioOcupacion.getMonth());
+                                                  (fechaIteracionMobiliario.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                                                   fechaIteracionMobiliario.getMonth() < fechaInicioOcupacion.getMonth());
 
                     if (!isBeforeOccupationMonth) {
                         if (!pagoRegistrado || !pagoRegistrado.mobiliarioPagado || pagoRegistrado.mobiliarioPagado.length === 0) {
@@ -608,7 +606,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     if (totalAdeudosRentaCount > 0) textoBadge.push(`${totalAdeudosRentaCount} Renta`);
                     if (totalAdeudosServiciosCount > 0) textoBadge.push(`${totalAdeudosServiciosCount} Serv`);
                     if (totalAdeudosMobiliarioCount > 0) textoBadge.push(`${totalAdeudosMobiliarioCount} Mob`);
-
+                    
                     newBadge.textContent = textoBadge.join(' + ');
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
                     newBadge.title = "Haz clic para ver los detalles de adeudos";
@@ -716,7 +714,9 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         }
     } catch (error) {
         console.error("Error al obtener inquilinos:", error);
-        mostrarNotificacion("Error al cargar inquilinos.", 'error');
+        mostrarNotificacion("Error al cargar los inquilinos.", 'error');
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -830,12 +830,12 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                     </button>
                 </div>
                 <div id="listaServicios" class="space-y-4">
-                    ${(inquilinoExistente.servicios && inquilinoExistente.servicios.length > 0) ?
-            inquilinoExistente.servicios.map((servicio, index) => `
+                    ${(inquilinoExistente.servicios && inquilinoExistente.servicios.length > 0) ? 
+                        inquilinoExistente.servicios.map((servicio, index) => `
                             <!-- Aquí se generará cada servicio existente -->
-                        `).join('') :
-            '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>'
-        }
+                        `).join('') : 
+                        '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>'
+                    }
                 </div>
             </div>
 
@@ -853,7 +853,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     mostrarModal(modalHtml);
 
     // Lógica para mostrar/ocultar el contenedor de servicios
-    document.getElementById('pagaServicios').addEventListener('change', function () {
+    document.getElementById('pagaServicios').addEventListener('change', function() {
         document.getElementById('serviciosContainer').classList.toggle('hidden', !this.checked);
     });
 
@@ -920,7 +920,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             mostrarNotificacion("Error al guardar el inquilino.", "error");
         }
     });
-
+    
     // Show/hide deposit fields based on checkbox
     document.getElementById('depositoRecibido').addEventListener('change', (e) => {
         document.getElementById('camposDeposito').classList.toggle('hidden', !e.target.checked);
@@ -975,7 +975,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
 
         // Re-attach event listeners for delete buttons
         document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function() {
                 this.closest('.servicio-item').remove();
                 // Opcional: Renumerar si es necesario
             });
@@ -1014,7 +1014,7 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
         try {
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             const inquilinoSnap = await getDoc(inquilinoRef);
-
+            
             if (inquilinoSnap.exists()) {
                 const inquilinoData = inquilinoSnap.data();
                 const inmuebleId = inquilinoData.inmuebleAsociadoId;
@@ -1039,7 +1039,7 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
                 mostrarNotificacion("Inquilino no encontrado.", 'error');
             }
             mostrarInquilinos();
-
+            
         } catch (error) {
             console.error("Error al desocupar inquilino:", error);
             mostrarNotificacion("Error al desocupar inquilino.", "error");
@@ -1061,7 +1061,7 @@ export async function confirmarReactivacionInquilino(inquilinoId) {
             });
             mostrarNotificacion("Inquilino reactivado con éxito.", 'success');
             mostrarInquilinos();
-
+           
         } catch (error) {
             console.error("Error al reactivar inquilino:", error);
             mostrarNotificacion("Error al reactivar inquilino.", "error");
@@ -1121,7 +1121,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         // Using the main inquilino data instead.
         if (inquilino.inmuebleAsociadoId && inquilino.fechaOcupacion) {
             const mesesAdeudados = await obtenerMesesAdeudadosHistorico(inquilinoId, inquilino.inmuebleAsociadoId, new Date(inquilino.fechaOcupacion));
-            let adeudosHtml = '';
+                                                                         let adeudosHtml = '';
             if (mesesAdeudados.length > 0) {
                 adeudosHtml = `
                     <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
@@ -1466,11 +1466,11 @@ window.addEventListener('load', async () => {
 
 import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm";
 
-document.addEventListener('change', function (e) {
+document.addEventListener('change', function(e) {
     if (e.target && e.target.id === 'recibioDeposito') {
         document.getElementById('campoDeposito').style.display = e.target.checked ? 'block' : 'none';
     }
-
+    
     if (e.target && e.target.id === 'pagaServicios') {
         document.getElementById('serviciosContainer').style.display = e.target.checked ? 'block' : 'none';
     }
@@ -1480,16 +1480,16 @@ document.addEventListener('change', function (e) {
 function agregarServicioAlFormulario() {
     const listaServicios = document.getElementById('listaServicios');
     if (!listaServicios) return;
-
+    
     // Limpiar mensaje de "No hay servicios"
     if (listaServicios.innerHTML.includes('No hay servicios agregados')) {
         listaServicios.innerHTML = '';
     }
-
+    
     // Obtener el índice para el nuevo servicio
     const servicioItems = listaServicios.querySelectorAll('.servicio-item');
     const nuevoIndice = servicioItems.length;
-
+    
     // Crear el nuevo elemento de servicio
     const nuevoServicio = document.createElement('div');
     nuevoServicio.className = 'servicio-item border border-gray-200 rounded-lg p-3 mb-3 bg-white';
@@ -1536,30 +1536,30 @@ function agregarServicioAlFormulario() {
                 placeholder="Detalles adicionales sobre el servicio"></textarea>
         </div>
     `;
-
+    
     // Agregar el nuevo servicio a la lista
     listaServicios.appendChild(nuevoServicio);
-
+    
     // Agregar evento para eliminar el servicio
     const btnEliminar = nuevoServicio.querySelector('.btn-eliminar-servicio');
     if (btnEliminar) {
-        btnEliminar.addEventListener('click', function () {
+        btnEliminar.addEventListener('click', function() {
             eliminarServicio(this);
         });
     }
 }
 
 // Nueva funcionalidad: Filtrar inquilinos con adeudos
-document.addEventListener('change', function (e) {
+document.addEventListener('change', function(e) {
     if (e.target && e.target.id === 'filtroAdeudos') {
         const mostrarConAdeudos = e.target.checked;
         const listaInquilinos = document.getElementById('listaInquilinos');
-
+        
         if (listaInquilinos) {
             listaInquilinos.querySelectorAll('.bg-white').forEach(card => {
                 const inquilinoId = card.dataset.id;
                 const badge = document.getElementById(`badge-adeudos-${inquilinoId}`);
-
+                
                 if (badge) {
                     const tieneAdeudos = badge.textContent !== "Sin adeudos";
                     card.style.display = mostrarConAdeudos && !tieneAdeudos ? 'none' : 'block';
@@ -1575,7 +1575,7 @@ function eliminarServicio(btnEliminar) {
     if (servicioItem) {
         const listaServicios = document.getElementById('listaServicios');
         listaServicios.removeChild(servicioItem);
-
+        
         // Renumerar los servicios restantes
         const servicioItems = listaServicios.querySelectorAll('.servicio-item');
         if (servicioItems.length === 0) {
@@ -1587,7 +1587,7 @@ function eliminarServicio(btnEliminar) {
                 if (titulo) {
                     titulo.textContent = `Servicio #${index + 1}`;
                 }
-
+                
                 // Actualizar los índices en los nombres de los campos
                 const campos = item.querySelectorAll('[name^="servicios["]');
                 campos.forEach(campo => {
@@ -1595,7 +1595,7 @@ function eliminarServicio(btnEliminar) {
                     const nuevoNombre = nombreActual.replace(/servicios\[\d+\]/, `servicios[${index}]`);
                     campo.setAttribute('name', nuevoNombre);
                 });
-
+                
                 // Actualizar el atributo data-index del botón eliminar
                 const btnEliminar = item.querySelector('.btn-eliminar-servicio');
                 if (btnEliminar) {
@@ -1618,7 +1618,7 @@ if (contenedorFiltros) {
 }
 
 // Nueva funcionalidad: Mostrar mobiliario asignado a inquilinos
-window.mostrarMobiliarioAsignadoInquilino = async function (inquilinoId, inquilinoNombre) {
+window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilinoNombre) {
     const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
     let mobiliarioAsignado = [];
     mobiliarioSnap.forEach(doc => {
@@ -1655,9 +1655,9 @@ window.mostrarMobiliarioAsignadoInquilino = async function (inquilinoId, inquili
         <div class="w-full max-w-md mx-auto">
             <div class="divide-y divide-teal-100 rounded-lg shadow bg-white">
                 ${mobiliarioAsignado.map(mob => {
-        const subtotal = mob.cantidad * mob.costoRenta;
-        total += subtotal;
-        return `
+                    const subtotal = mob.cantidad * mob.costoRenta;
+                    total += subtotal;
+                    return `
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-2">
                             <div class="flex-1">
                                 <div class="font-semibold text-teal-800">${mob.nombre}</div>
@@ -1670,7 +1670,7 @@ window.mostrarMobiliarioAsignadoInquilino = async function (inquilinoId, inquili
                             </div>
                         </div>
                     `;
-    }).join('')}
+                }).join('')}
                 <div class="flex justify-between items-center px-3 py-3 bg-teal-50 rounded-b-lg">
                     <span class="font-bold text-teal-800">Total mobiliario</span>
                     <span class="font-bold text-lg text-teal-700">${total.toFixed(2)}</span>

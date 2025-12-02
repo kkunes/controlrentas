@@ -1,7 +1,6 @@
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
-import { showSkeletons } from './skeletonUtils.js';
 
 async function exportarMobiliarioPDF() {
     const { jsPDF } = window.jspdf;
@@ -125,19 +124,11 @@ async function exportarMobiliarioPDF() {
  * Muestra el inventario de mobiliario con estado mejorado.
  */
 export async function mostrarInventarioMobiliario() {
-    const contenedor = document.getElementById("contenido");
-    if (!contenedor) {
-        mostrarNotificacion("Error: No se pudo cargar la sección de mobiliario.", 'error');
-        return;
-    }
-
-    // ✨ SHOW SKELETON LOADERS WHILE LOADING
-    showSkeletons(contenedor, 'property', 6);
-
+    mostrarLoader();
     try {
         const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
         const mobiliario = [];
-
+        
         // Obtener nombres de inquilinos
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const inquilinosMap = new Map();
@@ -267,11 +258,11 @@ export async function mostrarInventarioMobiliario() {
                 const cantidadTotal = mob.cantidad || 0;
                 const cantidadAsignada = mob.cantidadAsignada || 0;
                 const cantidadDisponible = cantidadTotal - cantidadAsignada;
-
+                
                 // Determinar estado visual
                 let estadoClass = 'bg-green-100 text-green-800';
                 let estadoTexto = 'Disponible';
-
+                
                 if (cantidadDisponible === 0) {
                     estadoClass = 'bg-red-100 text-red-800';
                     estadoTexto = 'Totalmente Asignado';
@@ -386,7 +377,7 @@ export async function mostrarInventarioMobiliario() {
             });
             window.pillMenuClickListenerAdded = true;
         }
-
+        
         adjuntarListenersPillMenu();
 
         document.getElementById('btn-agregar-mobiliario').addEventListener('click', mostrarFormularioNuevoMueble);
@@ -410,7 +401,7 @@ export async function mostrarInventarioMobiliario() {
                 const cantidadDisponible = parseInt(fila.cells[5].textContent, 10);
 
                 const coincideBusqueda = nombre.includes(busqueda);
-
+                
                 let coincideEstado = true;
                 if (estado) {
                     if (estado === 'disponible') {
@@ -578,7 +569,7 @@ export function mostrarFormularioNuevoMueble() {
 /**
  * Editar mobiliario.
  */
-window.editarMueble = async function (id) {
+window.editarMueble = async function(id) {
     try {
         const muebleDoc = await getDoc(doc(db, "mobiliario", id));
         if (!muebleDoc.exists()) {
@@ -586,7 +577,7 @@ window.editarMueble = async function (id) {
             return;
         }
         const mueble = muebleDoc.data();
-
+        
         const formHtml = `
             <div class="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                 <div class="px-6 py-4 flex items-center justify-between">
@@ -754,15 +745,15 @@ export async function eliminarMueble(id) {
 /**
  * Asignar mobiliario a un inquilino.
  */
-window.asignarMueble = async function (id) {
+window.asignarMueble = async function(id) {
     try {
         // Obtener inquilinos activos
         const inquilinosSnap = await getDocs(query(collection(db, "inquilinos"), where("activo", "==", true)));
         const inquilinos = [];
         inquilinosSnap.forEach(doc => {
             const data = doc.data();
-            inquilinos.push({
-                id: doc.id,
+            inquilinos.push({ 
+                id: doc.id, 
                 ...data,
                 inmuebleNombre: data.inmuebleAsociadoNombre || 'No especificado'
             });
@@ -912,14 +903,14 @@ window.asignarMueble = async function (id) {
                 const fechaAsignacion = document.getElementById('fechaAsignacion').value;
                 const fechaAsignacionObj = new Date(fechaAsignacion);
                 const diaAsignacion = fechaAsignacionObj.getDate();
-
+                
                 // Determinar si se cobra en el mes actual o siguiente
                 const cobroEnMesActual = diaAsignacion < 15;
-
+                
                 // Actualizar asignaciones
                 let asignaciones = Array.isArray(mueble.asignaciones) ? [...mueble.asignaciones] : [];
                 const existingIndex = asignaciones.findIndex(a => a.inquilinoId === inquilinoId && a.activa !== false);
-
+                
                 if (existingIndex >= 0) {
                     asignaciones[existingIndex].cantidad += cantidad;
                     asignaciones[existingIndex].fechaUltimaModificacion = new Date().toISOString();
@@ -930,7 +921,7 @@ window.asignarMueble = async function (id) {
                     // Obtener el inmueble asociado al inquilino
                     const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
                     const inmuebleAsociadoId = inquilinoDoc.data()?.inmuebleAsociadoId;
-
+                    
                     asignaciones.push({
                         inquilinoId,
                         inmuebleAsociadoId,
@@ -983,7 +974,7 @@ window.asignarMueble = async function (id) {
 /**
  * Liberar mobiliario asignado.
  */
-window.liberarMobiliario = async function (id) {
+window.liberarMobiliario = async function(id) {
     try {
         const muebleDoc = await getDoc(doc(db, "mobiliario", id));
         if (!muebleDoc.exists()) {
@@ -1181,176 +1172,176 @@ window.liberarMobiliario = async function (id) {
                     </div>
                 </form>
             `;
-        mostrarModal(formHtml);
+            mostrarModal(formHtml);
 
-        document.getElementById('formLiberarMueble').addEventListener('submit', async (e) => {
-            e.preventDefault();
+            document.getElementById('formLiberarMueble').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const checkboxes = document.querySelectorAll('input[name="liberarAsignacion"]:checked');
+                if (checkboxes.length === 0) {
+                    mostrarNotificacion("Selecciona al menos una asignación para liberar.", "error");
+                    return;
+                }
 
-            const checkboxes = document.querySelectorAll('input[name="liberarAsignacion"]:checked');
-            if (checkboxes.length === 0) {
-                mostrarNotificacion("Selecciona al menos una asignación para liberar.", "error");
+                const condicionLiberacion = document.getElementById('condicionLiberacion').value;
+                const motivoLiberacion = document.getElementById('motivoLiberacion').value;
+                const notasLiberacion = document.getElementById('notasLiberacion').value.trim();
+
+                try {
+                    let asignaciones = [...(mueble.asignaciones || [])];
+                    let historial = [...(mueble.historial || [])];
+                    let cantidadLiberada = 0;
+
+                    // Procesar cada asignación seleccionada
+                    checkboxes.forEach(checkbox => {
+                        const inquilinoId = checkbox.value;
+                        const cantidadALiberar = parseInt(document.querySelector(`input[name="cantidadLiberar_${inquilinoId}"]`).value, 10);
+                        const asignacionIndex = asignaciones.findIndex(a => a.inquilinoId === inquilinoId && a.activa !== false);
+                        
+                        if (asignacionIndex >= 0) {
+                            const asignacion = asignaciones[asignacionIndex];
+                            
+                            if (cantidadALiberar > asignacion.cantidad) {
+                                throw new Error(`La cantidad a liberar no puede ser mayor a la cantidad asignada`);
+                            }
+
+                            cantidadLiberada += cantidadALiberar;
+                            
+                            if (cantidadALiberar === asignacion.cantidad) {
+                                // Si se libera todo, marcar como inactiva
+                                asignaciones[asignacionIndex] = {
+                                    ...asignacion,
+                                    activa: false,
+                                    fechaLiberacion: new Date().toISOString(),
+                                    condicionLiberacion,
+                                    motivoLiberacion,
+                                    notasLiberacion
+                                };
+                            } else {
+                                // Si se libera parcialmente, crear una nueva asignación con la cantidad restante
+                                const cantidadRestante = asignacion.cantidad - cantidadALiberar;
+                                
+                                // Marcar la asignación actual como inactiva
+                                asignaciones[asignacionIndex] = {
+                                    ...asignacion,
+                                    activa: false,
+                                    fechaLiberacion: new Date().toISOString(),
+                                    condicionLiberacion,
+                                    motivoLiberacion,
+                                    notasLiberacion,
+                                    cantidad: cantidadALiberar
+                                };
+
+                                // Agregar nueva asignación con la cantidad restante
+                                asignaciones.push({
+                                    ...asignacion,
+                                    cantidad: cantidadRestante,
+                                    fechaAsignacion: new Date().toISOString(),
+                                    activa: true
+                                });
+                            }
+
+                            // Agregar al historial
+                            const nombreInquilino = inquilinosMap.get(inquilinoId) || 'Inquilino Desconocido';
+                            historial.push({
+                                fecha: new Date().toISOString(),
+                                accion: "liberado",
+                                descripcion: `${cantidadALiberar} unidad(es) liberada(s) de ${nombreInquilino}`,
+                                inquilinoId,
+                                cantidad: cantidadALiberar,
+                                motivo: motivoLiberacion,
+                                condicion: condicionLiberacion,
+                                notas: notasLiberacion
+                            });
+                        }
+                    });
+
+                    const nuevaCantidadAsignada = (mueble.cantidadAsignada || 0) - cantidadLiberada;
+                    let nuevoEstado = "disponible";
+                    if (nuevaCantidadAsignada > 0) {
+                        nuevoEstado = nuevaCantidadAsignada >= (mueble.cantidad || 0) ? "totalmente_asignado" : "parcialmente_asignado";
+                    }
+
+                    await updateDoc(doc(db, "mobiliario", id), {
+                        cantidadAsignada: nuevaCantidadAsignada,
+                        estado: nuevoEstado,
+                        condicion: condicionLiberacion,
+                        asignaciones,
+                        historial,
+                        fechaUltimaLiberacion: new Date().toISOString()
+                    });
+
+                    mostrarNotificacion(`${cantidadLiberada} unidad(es) de mobiliario liberada(s) correctamente.`, "success");
+                    ocultarModal();
+                    mostrarInventarioMobiliario();
+                } catch (error) {
+                    console.error("Error al liberar mobiliario:", error);
+                    mostrarNotificacion(error.message || "Error al liberar mobiliario.", "error");
+                }
+            });
+
+            // Agregar el event listener para habilitar/deshabilitar el input de cantidad
+            document.querySelectorAll('input[name="liberarAsignacion"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const cantidadInput = document.querySelector(`input[name="cantidadLiberar_${this.value}"]`);
+                    if (cantidadInput) {
+                        cantidadInput.disabled = !this.checked;
+                    }
+                });
+            });
+        } catch (error) {
+            console.error("Error al preparar liberación:", error);
+            mostrarNotificacion("Error al cargar datos para la liberación.", "error");
+        }
+    };
+
+    /**
+     * Ver historial completo del mobiliario.
+     */
+    /**
+     * Ver historial completo del mobiliario.
+     * @param {string} id - ID del mobiliario a consultar.
+     */
+    window.verHistorialMobiliario = async function(id) {
+        try {
+            const muebleDoc = await getDoc(doc(db, "mobiliario", id));
+            if (!muebleDoc.exists()) {
+                mostrarNotificacion("Mobiliario no encontrado.", "error");
                 return;
             }
 
-            const condicionLiberacion = document.getElementById('condicionLiberacion').value;
-            const motivoLiberacion = document.getElementById('motivoLiberacion').value;
-            const notasLiberacion = document.getElementById('notasLiberacion').value.trim();
+            const mueble = muebleDoc.data();
+            const historial = mueble.historial || [];
 
-            try {
-                let asignaciones = [...(mueble.asignaciones || [])];
-                let historial = [...(mueble.historial || [])];
-                let cantidadLiberada = 0;
-
-                // Procesar cada asignación seleccionada
-                checkboxes.forEach(checkbox => {
-                    const inquilinoId = checkbox.value;
-                    const cantidadALiberar = parseInt(document.querySelector(`input[name="cantidadLiberar_${inquilinoId}"]`).value, 10);
-                    const asignacionIndex = asignaciones.findIndex(a => a.inquilinoId === inquilinoId && a.activa !== false);
-
-                    if (asignacionIndex >= 0) {
-                        const asignacion = asignaciones[asignacionIndex];
-
-                        if (cantidadALiberar > asignacion.cantidad) {
-                            throw new Error(`La cantidad a liberar no puede ser mayor a la cantidad asignada`);
-                        }
-
-                        cantidadLiberada += cantidadALiberar;
-
-                        if (cantidadALiberar === asignacion.cantidad) {
-                            // Si se libera todo, marcar como inactiva
-                            asignaciones[asignacionIndex] = {
-                                ...asignacion,
-                                activa: false,
-                                fechaLiberacion: new Date().toISOString(),
-                                condicionLiberacion,
-                                motivoLiberacion,
-                                notasLiberacion
-                            };
-                        } else {
-                            // Si se libera parcialmente, crear una nueva asignación con la cantidad restante
-                            const cantidadRestante = asignacion.cantidad - cantidadALiberar;
-
-                            // Marcar la asignación actual como inactiva
-                            asignaciones[asignacionIndex] = {
-                                ...asignacion,
-                                activa: false,
-                                fechaLiberacion: new Date().toISOString(),
-                                condicionLiberacion,
-                                motivoLiberacion,
-                                notasLiberacion,
-                                cantidad: cantidadALiberar
-                            };
-
-                            // Agregar nueva asignación con la cantidad restante
-                            asignaciones.push({
-                                ...asignacion,
-                                cantidad: cantidadRestante,
-                                fechaAsignacion: new Date().toISOString(),
-                                activa: true
-                            });
-                        }
-
-                        // Agregar al historial
-                        const nombreInquilino = inquilinosMap.get(inquilinoId) || 'Inquilino Desconocido';
-                        historial.push({
-                            fecha: new Date().toISOString(),
-                            accion: "liberado",
-                            descripcion: `${cantidadALiberar} unidad(es) liberada(s) de ${nombreInquilino}`,
-                            inquilinoId,
-                            cantidad: cantidadALiberar,
-                            motivo: motivoLiberacion,
-                            condicion: condicionLiberacion,
-                            notas: notasLiberacion
-                        });
-                    }
-                });
-
-                const nuevaCantidadAsignada = (mueble.cantidadAsignada || 0) - cantidadLiberada;
-                let nuevoEstado = "disponible";
-                if (nuevaCantidadAsignada > 0) {
-                    nuevoEstado = nuevaCantidadAsignada >= (mueble.cantidad || 0) ? "totalmente_asignado" : "parcialmente_asignado";
-                }
-
-                await updateDoc(doc(db, "mobiliario", id), {
-                    cantidadAsignada: nuevaCantidadAsignada,
-                    estado: nuevoEstado,
-                    condicion: condicionLiberacion,
-                    asignaciones,
-                    historial,
-                    fechaUltimaLiberacion: new Date().toISOString()
-                });
-
-                mostrarNotificacion(`${cantidadLiberada} unidad(es) de mobiliario liberada(s) correctamente.`, "success");
-                ocultarModal();
-                mostrarInventarioMobiliario();
-            } catch (error) {
-                console.error("Error al liberar mobiliario:", error);
-                mostrarNotificacion(error.message || "Error al liberar mobiliario.", "error");
-            }
-        });
-
-        // Agregar el event listener para habilitar/deshabilitar el input de cantidad
-        document.querySelectorAll('input[name="liberarAsignacion"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function () {
-                const cantidadInput = document.querySelector(`input[name="cantidadLiberar_${this.value}"]`);
-                if (cantidadInput) {
-                    cantidadInput.disabled = !this.checked;
-                }
+            // Obtener nombres de inquilinos
+            const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
+            const inquilinosMap = new Map();
+            inquilinosSnap.forEach(doc => {
+                inquilinosMap.set(doc.id, doc.data().nombre);
             });
-        });
-    } catch (error) {
-        console.error("Error al preparar liberación:", error);
-        mostrarNotificacion("Error al cargar datos para la liberación.", "error");
-    }
-};
 
-/**
- * Ver historial completo del mobiliario.
- */
-/**
- * Ver historial completo del mobiliario.
- * @param {string} id - ID del mobiliario a consultar.
- */
-window.verHistorialMobiliario = async function (id) {
-    try {
-        const muebleDoc = await getDoc(doc(db, "mobiliario", id));
-        if (!muebleDoc.exists()) {
-            mostrarNotificacion("Mobiliario no encontrado.", "error");
-            return;
-        }
+            // Obtener nombres de inmuebles
+            const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
+            const inmueblesMap = new Map();
+            inmueblesSnap.forEach(doc => {
+                inmueblesMap.set(doc.id, doc.data().nombre);
+            });
 
-        const mueble = muebleDoc.data();
-        const historial = mueble.historial || [];
+            // Ordenar historial por fecha (más reciente primero)
+            historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-        // Obtener nombres de inquilinos
-        const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
-        const inquilinosMap = new Map();
-        inquilinosSnap.forEach(doc => {
-            inquilinosMap.set(doc.id, doc.data().nombre);
-        });
+            const historialHtml = historial.map(h => {
+                const fecha = new Date(h.fecha).toLocaleString();
+                let descripcion = h.descripcion;
+                
+                // Si hay un inquilino asociado, mostrar su nombre y el inmueble
+                if (h.inquilinoId) {
+                    const nombreInquilino = inquilinosMap.get(h.inquilinoId) || 'Inquilino Desconocido';
+                    const nombreInmueble = h.inmuebleAsociadoId ? inmueblesMap.get(h.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+                    descripcion = descripcion.replace('Inquilino Desconocido', `${nombreInquilino} - Inmueble: ${nombreInmueble}`);
+                }
 
-        // Obtener nombres de inmuebles
-        const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-        const inmueblesMap = new Map();
-        inmueblesSnap.forEach(doc => {
-            inmueblesMap.set(doc.id, doc.data().nombre);
-        });
-
-        // Ordenar historial por fecha (más reciente primero)
-        historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-        const historialHtml = historial.map(h => {
-            const fecha = new Date(h.fecha).toLocaleString();
-            let descripcion = h.descripcion;
-
-            // Si hay un inquilino asociado, mostrar su nombre y el inmueble
-            if (h.inquilinoId) {
-                const nombreInquilino = inquilinosMap.get(h.inquilinoId) || 'Inquilino Desconocido';
-                const nombreInmueble = h.inmuebleAsociadoId ? inmueblesMap.get(h.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
-                descripcion = descripcion.replace('Inquilino Desconocido', `${nombreInquilino} - Inmueble: ${nombreInmueble}`);
-            }
-
-            return `
+                return `
                     <div class="border-l-4 ${getColorBorde(h.accion)} pl-4 py-2">
                         <div class="flex justify-between items-start">
                             <div>
@@ -1361,14 +1352,14 @@ window.verHistorialMobiliario = async function (id) {
                         </div>
                     </div>
                 `;
-        }).join('');
+            }).join('');
 
-        // Obtener asignaciones activas
-        const asignacionesActivas = (mueble.asignaciones || []).filter(a => a.activa !== false);
-        const resumenAsignaciones = asignacionesActivas.map(a => {
-            const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
-            const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
-            return `
+            // Obtener asignaciones activas
+            const asignacionesActivas = (mueble.asignaciones || []).filter(a => a.activa !== false);
+            const resumenAsignaciones = asignacionesActivas.map(a => {
+                const nombreInquilino = inquilinosMap.get(a.inquilinoId) || 'Inquilino Desconocido';
+                const nombreInmueble = a.inmuebleAsociadoId ? inmueblesMap.get(a.inmuebleAsociadoId) || 'No especificado' : 'No especificado';
+                return `
                     <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
                         <div class="flex items-center justify-between">
                             <div>
@@ -1380,9 +1371,9 @@ window.verHistorialMobiliario = async function (id) {
                         </div>
                     </div>
                 `;
-        }).join('');
+            }).join('');
 
-        const modalHtml = `
+            const modalHtml = `
                 <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-t-xl -mx-6 -mt-6 mb-6">
                     <div class="px-6 py-4 flex items-center justify-between">
                         <div class="flex items-center space-x-3">
@@ -1478,84 +1469,84 @@ window.verHistorialMobiliario = async function (id) {
                     </div>
                 </div>
             `;
-        mostrarModal(modalHtml);
+            mostrarModal(modalHtml);
 
-        // Agrega la función global para limpiar historial:
-        window.limpiarHistorialMueble = async function (id) {
-            if (confirm("¿Estás seguro de que deseas limpiar el historial de este mobiliario? Esta acción no se puede deshacer.")) {
-                try {
-                    await updateDoc(doc(db, "mobiliario", id), {
-                        historial: []
-                    });
-                    mostrarNotificacion("Historial limpiado correctamente.", "success");
-                    ocultarModal();
-                    mostrarInventarioMobiliario();
-                } catch (error) {
-                    mostrarNotificacion("Error al limpiar el historial.", "error");
+            // Agrega la función global para limpiar historial:
+            window.limpiarHistorialMueble = async function(id) {
+                if (confirm("¿Estás seguro de que deseas limpiar el historial de este mobiliario? Esta acción no se puede deshacer.")) {
+                    try {
+                        await updateDoc(doc(db, "mobiliario", id), {
+                            historial: []
+                        });
+                        mostrarNotificacion("Historial limpiado correctamente.", "success");
+                        ocultarModal();
+                        mostrarInventarioMobiliario();
+                    } catch (error) {
+                        mostrarNotificacion("Error al limpiar el historial.", "error");
+                    }
                 }
-            }
-        };
-    } catch (error) {
-        console.error("Error al cargar historial:", error);
-        mostrarNotificacion("Error al cargar el historial del mobiliario.", "error");
-    }
-};
+            };
+        } catch (error) {
+            console.error("Error al cargar historial:", error);
+            mostrarNotificacion("Error al cargar el historial del mobiliario.", "error");
+        }
+    };
 
-window.actualizarAsignacionesInmuebles = async function () {
-    try {
-        // Obtener todos los documentos de mobiliario
-        const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+    window.actualizarAsignacionesInmuebles = async function() {
+        try {
+            // Obtener todos los documentos de mobiliario
+            const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
+            
+            for (const mobDoc of mobiliarioSnap.docs) {
+                const mobiliario = mobDoc.data();
+                const asignaciones = mobiliario.asignaciones || [];
+                let asignacionesActualizadas = false;
 
-        for (const mobDoc of mobiliarioSnap.docs) {
-            const mobiliario = mobDoc.data();
-            const asignaciones = mobiliario.asignaciones || [];
-            let asignacionesActualizadas = false;
-
-            // Actualizar cada asignación
-            for (let asignacion of asignaciones) {
-                if (asignacion.activa !== false && !asignacion.inmuebleAsociadoId) {
-                    // Obtener el inquilino
-                    const inquilinoDoc = await getDoc(doc(db, "inquilinos", asignacion.inquilinoId));
-                    if (inquilinoDoc.exists()) {
-                        const inmuebleAsociadoId = inquilinoDoc.data()?.inmuebleAsociadoId;
-                        if (inmuebleAsociadoId) {
-                            asignacion.inmuebleAsociadoId = inmuebleAsociadoId;
-                            asignacionesActualizadas = true;
+                // Actualizar cada asignación
+                for (let asignacion of asignaciones) {
+                    if (asignacion.activa !== false && !asignacion.inmuebleAsociadoId) {
+                        // Obtener el inquilino
+                        const inquilinoDoc = await getDoc(doc(db, "inquilinos", asignacion.inquilinoId));
+                        if (inquilinoDoc.exists()) {
+                            const inmuebleAsociadoId = inquilinoDoc.data()?.inmuebleAsociadoId;
+                            if (inmuebleAsociadoId) {
+                                asignacion.inmuebleAsociadoId = inmuebleAsociadoId;
+                                asignacionesActualizadas = true;
+                            }
                         }
                     }
                 }
+
+                // Si se actualizaron asignaciones, guardar los cambios
+                if (asignacionesActualizadas) {
+                    await updateDoc(doc(db, "mobiliario", mobDoc.id), {
+                        asignaciones: asignaciones
+                    });
+                }
             }
 
-            // Si se actualizaron asignaciones, guardar los cambios
-            if (asignacionesActualizadas) {
-                await updateDoc(doc(db, "mobiliario", mobDoc.id), {
-                    asignaciones: asignaciones
-                });
-            }
+            // No mostrar notificación
+            mostrarInventarioMobiliario();
+        } catch (error) {
+            console.error("Error al actualizar asignaciones:", error);
+            mostrarNotificacion("Error al actualizar las asignaciones.", "error");
         }
+    };
 
-        // No mostrar notificación
-        mostrarInventarioMobiliario();
-    } catch (error) {
-        console.error("Error al actualizar asignaciones:", error);
-        mostrarNotificacion("Error al actualizar las asignaciones.", "error");
+    /**
+     * Obtiene el color del borde según la acción del historial
+     */
+    function getColorBorde(accion) {
+        switch (accion) {
+            case 'creado':
+                return 'border-green-500';
+            case 'asignado':
+                return 'border-blue-500';
+            case 'liberado':
+                return 'border-orange-500';
+            case 'editado':
+                return 'border-yellow-500';
+            default:
+                return 'border-gray-500';
+        }
     }
-};
-
-/**
- * Obtiene el color del borde según la acción del historial
- */
-function getColorBorde(accion) {
-    switch (accion) {
-        case 'creado':
-            return 'border-green-500';
-        case 'asignado':
-            return 'border-blue-500';
-        case 'liberado':
-            return 'border-orange-500';
-        case 'editado':
-            return 'border-yellow-500';
-        default:
-            return 'border-gray-500';
-    }
-}

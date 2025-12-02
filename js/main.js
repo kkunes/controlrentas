@@ -9,11 +9,10 @@ import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, co
 import { mostrarPagos, mostrarFormularioNuevoPago, editarPago, mostrarFormularioRegistrarAbono, revisarPagosVencidos, mostrarHistorialPagosInmueble, eliminarDocumento as eliminarPagoDoc, mostrarHistorialPagosInquilino } from './pagos.js'; // Added mostrarHistorialPagosInquilino import
 import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc, cambiarEstadoCosto } from './mantenimientos.js';
 import { mostrarInventarioMobiliario, mostrarFormularioNuevoMueble, eliminarMueble } from './mobiliario.js';
-import { mostrarReportes } from './reportes.js';
+import { mostrarReportes } from './reportes.js'; 
 import { mostrarAbonos, mostrarFormularioNuevoAbono, editarAbono, eliminarAbono, aplicarSaldoFavorManual } from './abonos.js';
 import { mostrarDesperfectos, mostrarFormularioNuevoDesperfecto, mostrarTotalDesperfectosInquilino, editarDesperfecto } from './desperfectos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
-import { showSkeletons, hideSkeletonsAndShowContent } from './skeletonUtils.js';
 import { GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { renderComisiones } from './comision.js';
 import { collection, doc, setDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
@@ -83,8 +82,6 @@ window.ocultarModal = ocultarModal;
 window.mostrarNotificacion = mostrarNotificacion;
 window.mostrarLoader = () => document.getElementById('loader').classList.remove('hidden');
 window.ocultarLoader = () => document.getElementById('loader').classList.add('hidden');
-window.showSkeletons = showSkeletons;
-window.hideSkeletonsAndShowContent = hideSkeletonsAndShowContent;
 
 // Funciones de recordatorios de renovación de contratos
 window.verificarContratosProximosARenovar = verificarContratosProximosARenovar;
@@ -94,26 +91,26 @@ window.mostrarHistorialInquilinos = mostrarHistorialInquilinos; // Nueva línea
 // ***** Centralización de la función eliminarDocumento *****
 // Esta función global manejará la confirmación y delegará la eliminación a la función específica de cada módulo.
 window.eliminarDocumento = async (coleccion, id, callbackRefresh) => {
-  switch (coleccion) {
-    case 'inmuebles':
-      eliminarInmuebleDoc(coleccion, id, callbackRefresh);
-      break;
-    case 'inquilinos':
-      eliminarInquilinoDoc(coleccion, id, callbackRefresh);
-      break;
-    case 'pagos':
-      eliminarPagoDoc(coleccion, id, callbackRefresh);
-      break;
-    case 'mantenimientos':
-      eliminarMantenimientoDoc(coleccion, id, callbackRefresh);
-      break;
-    case 'desperfectos':
-      window.eliminarDocumento(coleccion, id, callbackRefresh);
-      break;
-    default:
-      mostrarNotificacion('Colección no reconocida para eliminar.', 'error');
-      break;
-  }
+    switch (coleccion) {
+        case 'inmuebles':
+            eliminarInmuebleDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'inquilinos':
+            eliminarInquilinoDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'pagos':
+            eliminarPagoDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'mantenimientos':
+            eliminarMantenimientoDoc(coleccion, id, callbackRefresh);
+            break;
+        case 'desperfectos':
+            window.eliminarDocumento(coleccion, id, callbackRefresh);
+            break;
+        default:
+            mostrarNotificacion('Colección no reconocida para eliminar.', 'error');
+            break;
+    }
 };
 
 // ---- Funciones de Autenticación ----
@@ -158,46 +155,46 @@ onAuthStateChanged(auth, user => {
 
 // ---- Control de Rutas (Navegación) basado en el hash de la URL ----
 const loadContent = () => {
-  const fullHash = window.location.hash.substring(1);
-  const parts = fullHash.split('?');
-  const hash = parts[0];
-  const queryString = parts[1];
+    const fullHash = window.location.hash.substring(1);
+    const parts = fullHash.split('?');
+    const hash = parts[0];
+    const queryString = parts[1];
 
-  let params = {};
-  if (queryString) {
-    params = Object.fromEntries(new URLSearchParams(queryString));
-  }
+    let params = {};
+    if (queryString) {
+        params = Object.fromEntries(new URLSearchParams(queryString));
+    }
 
-  switch (hash) {
-    case 'inmuebles':
-      mostrarInmuebles(params.estado);
-      break;
-    case 'inquilinos':
-      mostrarInquilinos();
-      break;
-    case 'pagos':
-      mostrarPagos();
-      break;
-    case 'mantenimientos':
-      mostrarMantenimientos();
-      break;
-    case 'mobiliario':
-      mostrarInventarioMobiliario();
-      break;
-    case 'reportes':
-      mostrarReportes();
-      break;
-    case 'abonos':
-      mostrarAbonos();
-      break;
-    case 'desperfectos':
-      mostrarDesperfectos();
-      break;
-    case 'dashboard':
-    default:
-      mostrarDashboard();
-      break;
-  }
+    switch (hash) {
+        case 'inmuebles':
+            mostrarInmuebles(params.estado);
+            break;
+        case 'inquilinos':
+            mostrarInquilinos();
+            break;
+        case 'pagos':
+            mostrarPagos();
+            break;
+        case 'mantenimientos':
+            mostrarMantenimientos();
+            break;
+        case 'mobiliario':
+            mostrarInventarioMobiliario();
+            break;
+        case 'reportes':
+            mostrarReportes();
+            break;
+        case 'abonos':
+            mostrarAbonos();
+            break;
+        case 'desperfectos':
+            mostrarDesperfectos();
+            break;
+        case 'dashboard':
+        default:
+            mostrarDashboard();
+            break;
+    }
 };
 
 // ---- Event Listeners Principales ----
@@ -205,21 +202,15 @@ const loadContent = () => {
 // Escuchar cambios en el hash de la URL para cargar el contenido correspondiente
 window.addEventListener('hashchange', loadContent);
 
-import { CommandPalette } from './commandPalette.js';
-
 // Cargar el contenido inicial al cargar completamente la página (DOMContentLoaded)
 document.addEventListener('DOMContentLoaded', () => {
-  loadContent();
-  // Revisar pagos vencidos al cargar la aplicación
-  revisarPagosVencidos();
-
-  // Inicializar Command Palette
-  const palette = new CommandPalette();
-  palette.init();
+    loadContent();
+    // Revisar pagos vencidos al cargar la aplicación
+    revisarPagosVencidos();
 });
 
 // Nueva función para mostrar comisiones
-window.mostrarComisiones = function () {
-  renderComisiones();
-  if (typeof setActiveSection === 'function') setActiveSection('comisiones');
+window.mostrarComisiones = function() {
+    renderComisiones();
+    if (typeof setActiveSection === 'function') setActiveSection('comisiones');
 };
