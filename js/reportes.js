@@ -169,7 +169,7 @@ export async function mostrarReportes() {
                 await generarGraficoAnual(parseInt(anioSeleccionado));
             }
         });
-       
+
         isReportesListenerAttached = true;
     }
 
@@ -269,7 +269,7 @@ async function imprimirReporteAnual() {
 
     try {
         const { imgURI } = await annualChartInstance.dataURI();
-        
+
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
             <html>
@@ -359,7 +359,7 @@ async function generarGraficoAnual(anio) {
         inquilinosSnap.forEach(doc => {
             const data = doc.data();
             if (data.depositoRecibido && data.montoDeposito && data.fechaDeposito) {
-                 const fechaDeposito = new Date(data.fechaDeposito + 'T00:00:00');
+                const fechaDeposito = new Date(data.fechaDeposito + 'T00:00:00');
                 if (fechaDeposito.getFullYear() === anio) {
                     const mesIndex = fechaDeposito.getMonth();
                     ingresosPorMes[mesIndex] += parseFloat(data.montoDeposito) || 0;
@@ -373,7 +373,7 @@ async function generarGraficoAnual(anio) {
         mantenimientosSnap.forEach(doc => {
             const data = doc.data();
             if (data.fechaMantenimiento) {
-                 const fechaMantenimiento = new Date(data.fechaMantenimiento + 'T00:00:00');
+                const fechaMantenimiento = new Date(data.fechaMantenimiento + 'T00:00:00');
                 if (fechaMantenimiento.getFullYear() === anio) {
                     const mesIndex = fechaMantenimiento.getMonth();
                     gastosPorMes[mesIndex] += parseFloat(data.costo) || 0;
@@ -415,10 +415,10 @@ async function generarGraficoAnual(anio) {
                     show: true
                 },
                 events: {
-                    mounted: function(chartContext, config) {
+                    mounted: function (chartContext, config) {
                         annualChartInstance = chartContext;
                     },
-                    updated: function(chartContext, config) {
+                    updated: function (chartContext, config) {
                         annualChartInstance = chartContext;
                     }
                 }
@@ -513,7 +513,7 @@ async function generarGraficoAnual(anio) {
                     },
                     xaxis: {
                         labels: {
-                            formatter: function(val) {
+                            formatter: function (val) {
                                 if (val == 0) return "0";
                                 if (Math.abs(val) >= 1000) {
                                     return "$" + (val / 1000).toFixed(0) + 'k';
@@ -565,23 +565,41 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                 </button>
             </div>
             <div class="p-6 flex-grow overflow-y-auto">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                    <input type="date" id="filtroFechaInicioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-                    <input type="date" id="filtroFechaFinModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-                    <select id="filtroInquilinoModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${inquilinosOptions}</select>
-                    <select id="filtroPropietarioModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">${propietariosOptions}</select>
-                    <select id="filtroTipoModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-                        <option value="">Tipos</option>
-                        <option value="ingreso">Ingreso</option>
-                        <option value="gasto">Gasto</option>
-                    </select>
-                    <select id="filtroFormaPagoModal" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-                        <option value="">Forma de Pago</option>
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Tarjeta">Tarjeta</option>
-                        <option value="Otro">Otro</option>
-                    </select>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Fecha Inicio</label>
+                        <input type="date" id="filtroFechaInicioModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Fecha Fin</label>
+                        <input type="date" id="filtroFechaFinModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Inquilino</label>
+                        <select id="filtroInquilinoModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">${inquilinosOptions}</select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Propietario</label>
+                        <select id="filtroPropietarioModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">${propietariosOptions}</select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Tipo</label>
+                        <select id="filtroTipoModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                            <option value="">Todos los Tipos</option>
+                            <option value="ingreso">Ingreso</option>
+                            <option value="gasto">Gasto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Forma de Pago</label>
+                        <select id="filtroFormaPagoModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                            <option value="">Todas</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="resumenFiltradoModal" class="mb-4"></div>
                 <div id="tablaModalContainer"></div>
@@ -657,27 +675,31 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
         let tablaHtml = '<p class="text-center text-gray-500 py-4">No hay movimientos que coincidan con los filtros.</p>';
         if (movimientosFiltrados.length > 0) {
             tablaHtml = `
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                        <thead class="bg-indigo-600">
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propietario</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forma de Pago</th>
-                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Fecha</th>
+                                <th class="px-2 py-2 text-center text-xs font-bold text-white uppercase tracking-tight">T</th>
+                                <th class="px-3 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Descripción</th>
+                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Propietario</th>
+                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Pago</th>
+                                <th class="px-2 py-2 text-right text-xs font-bold text-white uppercase tracking-tight">Monto</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${movimientosFiltrados.map(mov => `
-                                <tr>
-                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.fecha}</td>
-                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${mov.tipo}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-700">${mov.descripcion}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-700">${mov.propietario}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-700">${mov.formaPago || 'N/A'}</td>
-                                    <td class="px-4 py-2 text-right text-sm text-gray-700">${mov.monto.toFixed(2)}</td>
+                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-700 font-medium">${mov.fecha}</td>
+                                    <td class="px-2 py-2 text-center" title="${mov.tipo}">
+                                        ${mov.tipo.startsWith('Ingreso')
+                    ? '<span class="inline-block w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center" title="Ingreso">↑</span>'
+                    : '<span class="inline-block w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center" title="Gasto">↓</span>'}
+                                    </td>
+                                    <td class="px-3 py-2 text-xs text-gray-700 max-w-xs truncate" title="${mov.descripcion}">${mov.descripcion}</td>
+                                    <td class="px-2 py-2 text-xs text-gray-700 truncate max-w-[120px]" title="${mov.propietario}">${mov.propietario}</td>
+                                    <td class="px-2 py-2 text-xs text-gray-700 truncate" title="${mov.formaPago || '-'}">${mov.formaPago || '-'}</td>
+                                    <td class="px-2 py-2 text-right text-xs font-bold whitespace-nowrap ${mov.tipo.startsWith('Ingreso') ? 'text-green-600' : 'text-red-600'}">$${mov.monto.toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -957,13 +979,13 @@ function generarPdfMovimientosPropietario(movimientos, propietariosMap, propieta
         tablaHtml = `
             <div style="overflow-x: auto;">
                 <table style="min-width: 100%; border-collapse: collapse; border-spacing: 0; margin-top: 1rem;">
-                    <thead style="background-color: #f3f4f6;">
+                    <thead style="background-color: #374151;">
                         <tr>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Fecha</th>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Tipo</th>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Descripción</th>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Propietario</th>
-                            <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; font-weight: 500; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Monto</th>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Fecha</th>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Tipo</th>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Descripción</th>
+                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Propietario</th>
+                            <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Monto</th>
                         </tr>
                     </thead>
                     <tbody style="background-color: #ffffff; divide-y divide-gray-200;">
@@ -1009,12 +1031,12 @@ function generarPdfMovimientosPropietario(movimientos, propietariosMap, propieta
     `;
 
     const opt = {
-        margin:       0.5,
-        filename:     nombreArchivo,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        margin: 0.5,
+        filename: nombreArchivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
     };
 
     html2pdf().from(contentHtml).set(opt).toPdf().get('pdf').then(function (pdf) {
@@ -1235,10 +1257,10 @@ async function generarReporteMensual(mes, anio) {
                                     <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-700">${mov.fecha}</td>
                                     <td class="px-3 py-2 whitespace-nowrap text-xs">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${mov.tipo.startsWith('Ingreso') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                            ${mov.tipo.startsWith('Ingreso') ? 
-                                                '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>' : 
-                                                '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>'
-                                            }
+                                            ${mov.tipo.startsWith('Ingreso') ?
+                    '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>' :
+                    '<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>'
+                }
                                             ${mov.tipo}
                                         </span>
                                     </td>
@@ -1377,16 +1399,16 @@ function generarPDF(mes, anio, totalPagosRentaMes, totalDepositosMes, totalIngre
     const mainContent = document.querySelector('main'); // Apuntar al contenedor principal
 
     const opt = {
-        margin:       1,
-        filename:     nombreArchivo,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
+        margin: 1,
+        filename: nombreArchivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
             scale: 2,
             scrollY: -mainContent.scrollTop, // Usar el scroll del elemento <main>
             windowWidth: document.documentElement.offsetWidth
         },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
     };
 
     html2pdf().from(elemento).set(opt).toPdf().get('pdf').then(function (pdf) {

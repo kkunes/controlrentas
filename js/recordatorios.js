@@ -13,18 +13,18 @@ export async function verificarContratosProximosARenovar() {
         const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
         const hoy = new Date();
         const diasAnticipacion = 15; // Avisar con 15 días de anticipación
-        
+
         // Crear un mapa de inmuebles para buscar rápidamente por ID
         const inmueblesMap = new Map();
         inmueblesSnap.forEach(doc => {
             inmueblesMap.set(doc.id, doc.data().nombre);
         });
-        
+
         let contratosProximosARenovar = [];
-        
+
         inquilinosSnap.forEach(doc => {
             const inquilino = doc.data();
-            
+
             // Solo considerar inquilinos activos con fecha de llegada
             if (inquilino.activo && inquilino.fechaLlegada) {
                 // Obtener el nombre real del inmueble desde el mapa
@@ -32,22 +32,22 @@ export async function verificarContratosProximosARenovar() {
                 if (inquilino.inmuebleAsociadoId && inmueblesMap.has(inquilino.inmuebleAsociadoId)) {
                     nombreInmueble = inmueblesMap.get(inquilino.inmuebleAsociadoId);
                 }
-                
+
                 // Usar la fecha de última renovación si existe, de lo contrario usar la fecha de llegada
                 const fechaBase = inquilino.ultimaRenovacion ? inquilino.ultimaRenovacion : inquilino.fechaLlegada;
                 const fechaInicial = new Date(fechaBase);
-                
+
                 // Calcular próxima fecha de renovación (cada 6 meses desde la fecha base)
                 let fechaRenovacion = new Date(fechaInicial);
-                
+
                 // Encontrar la próxima fecha de renovación
                 while (fechaRenovacion <= hoy) {
                     fechaRenovacion.setMonth(fechaRenovacion.getMonth() + 6);
                 }
-                
+
                 // Calcular días hasta la próxima renovación
                 const diasHastaRenovacion = Math.ceil((fechaRenovacion - hoy) / (1000 * 60 * 60 * 24));
-                
+
                 // Si está dentro del período de anticipación, agregar a la lista
                 if (diasHastaRenovacion <= diasAnticipacion) {
                     contratosProximosARenovar.push({
@@ -63,11 +63,11 @@ export async function verificarContratosProximosARenovar() {
                         vencido: false
                     });
                 }
-                
+
                 // Verificar si ya pasó la fecha de renovación (hasta 30 días después)
                 const fechaRenovacionAnterior = new Date(fechaInicial);
                 fechaRenovacionAnterior.setMonth(fechaRenovacionAnterior.getMonth() + 6);
-                
+
                 if (fechaRenovacionAnterior < hoy) {
                     const diasDesdeVencimiento = Math.ceil((hoy - fechaRenovacionAnterior) / (1000 * 60 * 60 * 24));
                     if (diasDesdeVencimiento <= 30) { // Si pasaron menos de 30 días desde que venció
@@ -87,7 +87,7 @@ export async function verificarContratosProximosARenovar() {
                 }
             }
         });
-        
+
         return contratosProximosARenovar;
     } catch (error) {
         console.error("Error al verificar contratos próximos a renovar:", error);
@@ -159,27 +159,32 @@ export async function mostrarRecordatoriosRenovacion() {
 export function mostrarDetallesRenovacion(contratos) {
     // Ordenar por días restantes (más urgentes primero)
     contratos.sort((a, b) => a.diasRestantes - b.diasRestantes);
-    
+
     let contenidoHTML = `
-        <div class="px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg relative modal-header-responsive">
-            <button id="btnCerrarModal" class="absolute top-3 right-3 text-white hover:text-yellow-200 transition-colors duration-200 focus:outline-none">
+        <div class="px-6 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-t-2xl -mx-6 -mt-6 mb-6 shadow-lg relative">
+            <button id="btnCerrarModal" class="absolute top-4 right-4 text-white hover:text-amber-100 transition-colors duration-200 focus:outline-none z-10">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-            <h3 class="text-2xl font-bold text-center modal-title-responsive">Contratos Próximos a Renovar</h3>
-            <p class="text-center text-yellow-100 mt-1">Se renuevan cada 6 meses</p>
+            <div class="flex items-center justify-center mb-2">
+                <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <h3 class="text-2xl font-extrabold text-center tracking-tight">Contratos Próximos a Renovar</h3>
+            </div>
+            <p class="text-center text-amber-100 text-sm font-medium">Se renuevan cada 6 meses</p>
         </div>
         
-        <div class="space-y-4 max-h-[60vh] overflow-y-auto px-2 modal-responsive-padding">
+        <div class="space-y-4 max-h-[60vh] overflow-y-auto px-2">
     `;
-    
+
     contratos.forEach(contrato => {
         // Determinar color según urgencia
         let colorBorde = 'border-yellow-300';
         let colorBg = 'bg-yellow-50';
         let textoUrgencia = 'Próximamente';
-        
+
         // Verificar si el contrato ya está vencido
         if (contrato.vencido) {
             colorBorde = 'border-purple-400';
@@ -194,7 +199,7 @@ export function mostrarDetallesRenovacion(contratos) {
             colorBg = 'bg-orange-50';
             textoUrgencia = 'Pronto';
         }
-        
+
         // Texto para mostrar los días
         let textoTiempo = '';
         if (contrato.vencido) {
@@ -203,58 +208,79 @@ export function mostrarDetallesRenovacion(contratos) {
         } else {
             textoTiempo = `${textoUrgencia} - ${contrato.diasRestantes} día${contrato.diasRestantes !== 1 ? 's' : ''}`;
         }
-        
+
         contenidoHTML += `
-            <div class="border-l-4 ${colorBorde} ${colorBg} p-4 rounded-r-lg shadow-sm">
+            <div class="border-l-4 ${colorBorde} bg-white/60 backdrop-blur-sm p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200/50">
                 <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                    <div>
-                        <h4 class="text-lg font-semibold text-gray-800">${contrato.nombre}</h4>
-                        <p class="text-sm text-gray-600">Inmueble: ${contrato.inmuebleNombre}</p>
-                        <p class="text-sm text-gray-600">Teléfono: ${contrato.telefono}</p>
+                    <div class="flex-1">
+                        <h4 class="text-lg font-bold text-gray-800 mb-1">${contrato.nombre}</h4>
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                <span class="font-medium">Inmueble:</span> <span class="ml-1">${contrato.inmuebleNombre}</span>
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                                <span class="font-medium">Teléfono:</span> <span class="ml-1">${contrato.telefono}</span>
+                            </p>
+                        </div>
                     </div>
-                    <div class="flex flex-col items-end">
-                        <span class="text-sm font-medium text-gray-700">Renovación: ${formatearFecha(contrato.fechaRenovacion)}</span>
-                        <span class="px-2 py-1 rounded-full text-xs font-semibold ${contrato.vencido ? 'bg-purple-100 text-purple-800' : contrato.diasRestantes <= 5 ? 'bg-red-100 text-red-800' : contrato.diasRestantes <= 10 ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800'}">
+                    <div class="flex flex-col items-end gap-2">
+                        <div class="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm border border-gray-200">
+                            <span class="text-xs text-gray-500 block mb-1">Renovación</span>
+                            <span class="text-sm font-bold text-gray-800">${formatearFecha(contrato.fechaRenovacion)}</span>
+                        </div>
+                        <span class="px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${contrato.vencido ? 'bg-purple-500 text-white' : contrato.diasRestantes <= 5 ? 'bg-red-500 text-white' : contrato.diasRestantes <= 10 ? 'bg-orange-500 text-white' : 'bg-yellow-500 text-white'}">
                             ${textoTiempo}
                         </span>
                     </div>
                 </div>
                 <div class="mt-4 flex justify-end gap-2">
-                    <button class="btn-marcar-renovado px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm rounded-md shadow-sm transition-colors duration-200" 
+                    <button class="btn-marcar-renovado px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-sm font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center" 
                             data-inquilino-id="${contrato.id}">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
                         Marcar como Renovado
                     </button>
-                    <button class="btn-recordatorio px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-md shadow-sm transition-colors duration-200"
+                    <button class="btn-recordatorio px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center"
                             data-inquilino-id="${contrato.id}">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
                         Enviar Recordatorio
                     </button>
                 </div>
             </div>
         `;
     });
-    
+
     contenidoHTML += `
         </div>
-        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200/50">
             <button type="button" onclick="ocultarModal()" 
-                class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-lg shadow-sm transition-colors duration-200">
+                class="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold px-6 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                 Cerrar
             </button>
         </div>
     `;
-    
+
     mostrarModal(contenidoHTML);
-    
+
     // Agregar event listeners a los botones
     document.getElementById('btnCerrarModal').addEventListener('click', ocultarModal);
-    
+
     document.querySelectorAll('.btn-marcar-renovado').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const inquilinoId = e.currentTarget.dataset.inquilinoId;
             await marcarContratoRenovado(inquilinoId);
             // Remover este contrato de la lista
             e.currentTarget.closest('.border-l-4').remove();
-            
+
             // Si no quedan contratos, cerrar el modal
             if (document.querySelectorAll('.border-l-4').length === 0) {
                 ocultarModal();
@@ -266,7 +292,7 @@ export function mostrarDetallesRenovacion(contratos) {
             }
         });
     });
-    
+
     document.querySelectorAll('.btn-recordatorio').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const inquilinoId = e.currentTarget.dataset.inquilinoId;
@@ -287,18 +313,18 @@ async function marcarContratoRenovado(inquilinoId) {
         // Obtener la fecha actual
         const hoy = new Date();
         const fechaRenovacion = hoy.toISOString().split('T')[0];
-        
+
         // Obtener los datos actuales del inquilino
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
         if (!inquilinoDoc.exists()) {
             throw new Error("Inquilino no encontrado");
         }
-        
+
         // Actualizar solo la fecha de última renovación, manteniendo la fecha de llegada original
         await updateDoc(doc(db, "inquilinos", inquilinoId), {
             ultimaRenovacion: fechaRenovacion
         });
-        
+
         mostrarNotificacion("Contrato marcado como renovado. Próxima renovación en 6 meses.", "success");
     } catch (error) {
         console.error("Error al marcar contrato como renovado:", error);
@@ -316,21 +342,21 @@ function enviarRecordatorio(contrato) {
         mostrarNotificacion(`No se puede enviar recordatorio: Teléfono no disponible`, "error");
         return;
     }
-    
+
     // Formatear la fecha de renovación para el mensaje
     const fechaRenovacion = formatearFecha(contrato.fechaRenovacion);
-    
+
     // Obtener el nombre del inmueble (asegurarse de que no sea 'No especificado')
-    const nombreInmueble = contrato.inmuebleNombre && contrato.inmuebleNombre !== 'No especificado' 
-        ? contrato.inmuebleNombre 
+    const nombreInmueble = contrato.inmuebleNombre && contrato.inmuebleNombre !== 'No especificado'
+        ? contrato.inmuebleNombre
         : 'su propiedad rentada';
-    
+
     // Crear el mensaje de recordatorio
     let mensaje = `Recordatorio: Su contrato de arrendamiento para ${nombreInmueble} vence el ${fechaRenovacion}. Por favor, contáctenos para renovarlo.`;
-    
+
     // Limpiar el número de teléfono (eliminar espacios, guiones, etc.)
     const telefono = contrato.telefono.replace(/[\s-()]/g, '');
-    
+
     // Opciones para enviar el recordatorio
     mostrarModal(`
         <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
@@ -373,35 +399,35 @@ function enviarRecordatorio(contrato) {
             </button>
         </div>
     `);
-    
+
     // Agregar event listeners a los botones
     document.getElementById('btn-cancelar').addEventListener('click', ocultarModal);
-    
+
     document.getElementById('btn-whatsapp').addEventListener('click', () => {
         const mensajePersonalizado = document.getElementById('mensaje-recordatorio').value;
         const mensajeCodificado = encodeURIComponent(mensajePersonalizado);
         const whatsappUrl = `https://wa.me/${telefono}?text=${mensajeCodificado}`;
-        
+
         // Registrar el envío en la base de datos
         registrarRecordatorioEnviado(contrato.id, 'whatsapp', mensajePersonalizado);
-        
+
         // Abrir WhatsApp en una nueva pestaña
         window.open(whatsappUrl, '_blank');
-        
+
         // Mostrar confirmación
         mostrarConfirmacionEnvio(contrato.nombre, 'WhatsApp');
     });
-    
+
     document.getElementById('btn-sms').addEventListener('click', () => {
         const mensajePersonalizado = document.getElementById('mensaje-recordatorio').value;
         const smsUrl = `sms:${telefono}?body=${encodeURIComponent(mensajePersonalizado)}`;
-        
+
         // Registrar el envío en la base de datos
         registrarRecordatorioEnviado(contrato.id, 'sms', mensajePersonalizado);
-        
+
         // Abrir la aplicación de SMS
         window.open(smsUrl, '_blank');
-        
+
         // Mostrar confirmación
         mostrarConfirmacionEnvio(contrato.nombre, 'SMS');
     });
@@ -419,7 +445,7 @@ async function registrarRecordatorioEnviado(inquilinoId, tipo, mensaje) {
         const hoy = new Date();
         const fechaEnvio = hoy.toISOString().split('T')[0];
         const horaEnvio = hoy.toTimeString().split(' ')[0];
-        
+
         // Crear un nuevo documento en la colección de recordatorios
         await addDoc(collection(db, "recordatorios"), {
             inquilinoId: inquilinoId,
@@ -429,12 +455,12 @@ async function registrarRecordatorioEnviado(inquilinoId, tipo, mensaje) {
             horaEnvio: horaEnvio,
             usuarioEnvio: auth.currentUser ? auth.currentUser.displayName || auth.currentUser.email : 'Usuario desconocido'
         });
-        
+
         // Actualizar el inquilino con la fecha del último recordatorio
         await updateDoc(doc(db, "inquilinos", inquilinoId), {
             ultimoRecordatorio: fechaEnvio
         });
-        
+
     } catch (error) {
         console.error("Error al registrar recordatorio:", error);
     }
@@ -464,7 +490,7 @@ function mostrarConfirmacionEnvio(nombre, medio) {
             </button>
         </div>
     `);
-    
+
     // Mostrar notificación
     mostrarNotificacion(`Recordatorio enviado a ${nombre} por ${medio}`, "success");
 }

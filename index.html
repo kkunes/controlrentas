@@ -1,184 +1,224 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Control de Rentas - Dashboard</title>
-    <link id="theme-style" rel="stylesheet" href="./css/styles.css?v=1.8">
+  <link id="theme-style" rel="stylesheet" href="./css/styles.css?v=1.8">
   <link id="sidebar-style" rel="stylesheet" href="./css/sidebar.css?v=1.8">
   <link rel="stylesheet" href="./css/breathing-icon.css">
   <link rel="stylesheet" href="./css/pill-menu.css">
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
- 
+
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
- 
+
 </head>
+
 <body class="flex min-h-screen">
 
   <!-- Agrega esto al inicio del body -->
-<div id="loader" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
-  <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 border-opacity-50"></div>
-</div>
+  <div id="loader" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 border-opacity-50"></div>
+  </div>
 
   <!-- Botón para abrir/cerrar el menú en móvil -->
-<button id="btnMenu"
-  class="lg:hidden fixed top-4 left-4 z-50 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl shadow-lg focus:outline-none hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200"
-  style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-  <svg class="w-7 h-7 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-  </svg>
-</button>
+  <button id="btnMenu"
+    class="lg:hidden fixed top-4 left-4 z-50 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl shadow-lg focus:outline-none hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200"
+    style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+    <svg class="w-7 h-7 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
 
-  <aside id="sidebar" class="fixed lg:static z-40 left-0 top-0 h-full w-72 lg:w-72 p-4 flex flex-col transition-all duration-300 -translate-x-full lg:translate-x-0">
-      <div class="text-white text-2xl font-bold mb-8 text-center flex items-center justify-center">
-          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-2 rounded-xl shadow-lg mr-3 animate-pulse">
-              <svg data-icon="rentasApp" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-              </svg>
-          </div>
-          <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-indigo-200 drop-shadow-lg">RentasApp</span>
+  <aside id="sidebar"
+    class="fixed lg:static z-40 left-0 top-0 h-full w-72 lg:w-72 p-4 flex flex-col transition-all duration-300 -translate-x-full lg:translate-x-0">
+    <div class="text-white text-2xl font-bold mb-8 text-center flex items-center justify-center">
+      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-2 rounded-xl shadow-lg mr-3 animate-pulse">
+        <svg data-icon="rentasApp" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
       </div>
-      <nav class="flex-grow">
-        <ul class="space-y-3">
-          <li>
-            <button id="btn-dashboard" onclick="mostrarDashboard()" data-section="dashboard" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="dashboard" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-              </svg>
-              <span class="flex items-center">Dashboard<span class="indicator ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-inmuebles" onclick="mostrarInmuebles()" data-section="inmuebles" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="inmuebles" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-              </svg>
-              <span class="flex items-center">Inmuebles<span class="indicator ml-1.5 inline-block w-3 h-3 bg-indigo-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-inquilinos" onclick="mostrarInquilinos()" data-section="inquilinos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="inquilinos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-              </svg>
-              <span class="flex items-center">Inquilinos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-purple-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-pagos" onclick="mostrarPagos()" data-section="pagos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="pagos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-              </svg>
-              <span class="flex items-center">Pagos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-green-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-mobiliario" onclick="mostrarInventarioMobiliario()" data-section="mobiliario" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="mobiliario" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-              </svg>
-              <span class="flex items-center">Mobiliario<span class="indicator ml-1.5 inline-block w-3 h-3 bg-teal-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-mantenimientos" onclick="mostrarMantenimientos()" data-section="mantenimientos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="mantenimientos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
-              </svg>
-              <span class="flex items-center">Mantenimientos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-yellow-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-reportes" onclick="mostrarReportes()" data-section="reportes" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="reportes" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-              <span class="flex items-center">Reportes<span class="indicator ml-1.5 inline-block w-3 h-3 bg-pink-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-abonos" onclick="mostrarAbonos()" data-section="abonos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="abonos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <span class="flex items-center">Saldos a Favor<span class="indicator ml-1.5 inline-block w-3 h-3 bg-cyan-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-comisiones" onclick="mostrarComisiones()" data-section="comisiones" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="comisiones" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <span class="flex items-center">Comisiones<span class="indicator ml-1.5 inline-block w-3 h-3 bg-fuchsia-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-          <li>
-            <button id="btn-desperfectos" onclick="mostrarDesperfectos()" data-section="desperfectos" class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
-              <svg data-icon="desperfectos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-              </svg>
-              <span class="flex items-center">Desperfectos<span class="indicator ml-1.5 inline-block w-3 h-3 bg-red-400 rounded-full hidden"></span></span>
-            </button>
-          </li>
-        </ul>
-      </nav>
-      
-      <!-- Theme Switcher -->
-      <div class="mt-auto pt-4 border-t border-blue-500/20">
-        <div class="flex flex-col space-y-3">
-          <label for="theme-switcher" class="text-white text-sm">Tema:</label>
-          <select id="theme-switcher" class="bg-gray-700 text-white rounded-md p-2">
-            <option value="default">Default</option>
-            <option value="flat-design">Flat Design</option>
-            <option value="glassmorphism">Glassmorphism</option>
-            <option value="material-design">Material Design</option>
-            <option value="neumorphism">Neumorphism</option>
-            <option value="nostalgia">Nostalgia</option>
-            <option value="retro">Retro</option>
-            <option value="fluent-design">Fluent Design</option>
-            <option value="tailwind-default">Tailwind Default</option>
-            <option value="one-ui-8">One UI 8</option>
-          </select>
-        </div>
-      </div>
+      <span
+        class="bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-indigo-200 drop-shadow-lg">RentasApp</span>
+    </div>
+    <nav class="flex-grow">
+      <ul class="space-y-3">
+        <li>
+          <button id="btn-dashboard" onclick="mostrarDashboard()" data-section="dashboard"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="dashboard" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span class="flex items-center">Dashboard<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-inmuebles" onclick="mostrarInmuebles()" data-section="inmuebles"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="inmuebles" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span class="flex items-center">Inmuebles<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-indigo-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-inquilinos" onclick="mostrarInquilinos()" data-section="inquilinos"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="inquilinos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span class="flex items-center">Inquilinos<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-purple-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-pagos" onclick="mostrarPagos()" data-section="pagos"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="pagos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span class="flex items-center">Pagos<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-green-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-mobiliario" onclick="mostrarInventarioMobiliario()" data-section="mobiliario"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="mobiliario" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span class="flex items-center">Mobiliario<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-teal-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-mantenimientos" onclick="mostrarMantenimientos()" data-section="mantenimientos"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="mantenimientos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+            </svg>
+            <span class="flex items-center">Mantenimientos<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-yellow-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-reportes" onclick="mostrarReportes()" data-section="reportes"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="reportes" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span class="flex items-center">Reportes<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-pink-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-abonos" onclick="mostrarAbonos()" data-section="abonos"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="abonos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="flex items-center">Saldos a Favor<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-cyan-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-comisiones" onclick="mostrarComisiones()" data-section="comisiones"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="comisiones" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="flex items-center">Comisiones<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-fuchsia-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+        <li>
+          <button id="btn-desperfectos" onclick="mostrarDesperfectos()" data-section="desperfectos"
+            class="sidebar-btn flex items-center w-full px-4 py-3 transition-all duration-200 font-medium text-base">
+            <svg data-icon="desperfectos" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="flex items-center">Desperfectos<span
+                class="indicator ml-1.5 inline-block w-3 h-3 bg-red-400 rounded-full hidden"></span></span>
+          </button>
+        </li>
+      </ul>
+    </nav>
 
-      <!-- Botones de inicio y cierre de sesión -->
-      <div class="mt-auto pt-4 border-t border-blue-500/20">
-        <div class="flex flex-col space-y-3">
-          <button id="btnLogin" class="w-full flex items-center justify-center px-4 py-3 transition-all duration-200">
-            <svg data-icon="login" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-            </svg>
-            <span class="flex items-center">Iniciar sesión con Google<span class="ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full animate-pulse"></span></span>
-          </button>
-          <button id="btnLogout" class="w-full flex items-center justify-center px-4 py-3 transition-all duration-200 hidden">
-            <svg data-icon="logout" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
-            Cerrar sesión
-          </button>
-          <span id="userInfo" class="text-center text-sm text-blue-300/80 bg-blue-900/20 py-1 px-2 rounded-lg"></span>
-        </div>
+    <!-- Theme Switcher -->
+    <div class="mt-auto pt-4 border-t border-blue-500/20">
+      <div class="flex flex-col space-y-3">
+        <label for="theme-switcher" class="text-white text-sm">Tema:</label>
+        <select id="theme-switcher" class="bg-gray-700 text-white rounded-md p-2">
+          <option value="premium">Premium Dark</option>
+          <option value="default">Default</option>
+          <option value="flat-design">Flat Design</option>
+          <option value="glassmorphism">Glassmorphism</option>
+          <option value="material-design">Material Design</option>
+          <option value="neumorphism">Neumorphism</option>
+          <option value="nostalgia">Nostalgia</option>
+          <option value="retro">Retro</option>
+          <option value="fluent-design">Fluent Design</option>
+          <option value="tailwind-default">Tailwind Default</option>
+          <option value="one-ui-8">One UI 8</option>
+        </select>
       </div>
+    </div>
+
+    <!-- Botones de inicio y cierre de sesión -->
+    <div class="mt-auto pt-4 border-t border-blue-500/20">
+      <div class="flex flex-col space-y-3">
+        <button id="btnLogin" class="w-full flex items-center justify-center px-4 py-3 transition-all duration-200">
+          <svg data-icon="login" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+          <span class="flex items-center">Iniciar sesión con Google<span
+              class="ml-1.5 inline-block w-3 h-3 bg-blue-400 rounded-full animate-pulse"></span></span>
+        </button>
+        <button id="btnLogout"
+          class="w-full flex items-center justify-center px-4 py-3 transition-all duration-200 hidden">
+          <svg data-icon="logout" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Cerrar sesión
+        </button>
+        <span id="userInfo" class="text-center text-sm text-blue-300/80 bg-blue-900/20 py-1 px-2 rounded-lg"></span>
+      </div>
+    </div>
   </aside>
 
   <main class="flex-1 p-4 sm:p-6 md:p-8">
     <div id="contenido" class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-center h-64">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+      <div class="flex items-center justify-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     </div>
   </main>
 
   <div id="miModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-      <div id="modalContenido" class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-lg md:max-w-lg relative">
-          </div>
+    <div id="modalContenido" class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-lg md:max-w-lg relative">
+    </div>
   </div>
 
   <div id="notificacionContainer" class="fixed top-4 right-4 z-50 space-y-2">
-      </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -226,170 +266,175 @@
 
     // Set initial theme and icons
     // Check localStorage for a saved theme
-    const savedTheme = localStorage.getItem('theme') || 'default';
+    const savedTheme = localStorage.getItem('theme') || 'premium';
     themeSwitcher.value = savedTheme;
     applyTheme(savedTheme);
 
     // Save theme to localStorage on change
     themeSwitcher.addEventListener('change', (e) => {
-        localStorage.setItem('theme', e.target.value);
-        applyTheme(e.target.value);
+      localStorage.setItem('theme', e.target.value);
+      applyTheme(e.target.value);
     });
   </script>
   <script>
-const btnMenu = document.getElementById('btnMenu');
-const sidebar = document.getElementById('sidebar');
+    const btnMenu = document.getElementById('btnMenu');
+    const sidebar = document.getElementById('sidebar');
 
-// Función para manejar el comportamiento del sidebar
-function toggleSidebar() {
-  sidebar.classList.toggle('abierto');
-}
-
-// Evento para el botón de menú
-btnMenu.addEventListener('click', toggleSidebar);
-
-// Cierra el sidebar al hacer clic fuera en móvil
-document.addEventListener('click', (e) => {
-  if (window.innerWidth < 1024 && sidebar.classList.contains('abierto')) {
-    if (!sidebar.contains(e.target) && e.target !== btnMenu) {
-      sidebar.classList.remove('abierto');
+    // Función para manejar el comportamiento del sidebar
+    function toggleSidebar() {
+      sidebar.classList.toggle('abierto');
     }
-  }
-});
 
-// Cierra el sidebar al hacer clic en cualquier botón del sidebar en móvil
-sidebar.querySelectorAll('button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (window.innerWidth < 1024) {
-      sidebar.classList.remove('abierto');
-    }
-  });
-});
-
-// Maneja el cambio de tamaño de la ventana
-window.addEventListener('resize', () => {
-  if (window.innerWidth >= 1024) {
-    sidebar.classList.remove('abierto');
-  }
-  
-  // Asegurarse de que el sidebar esté oculto al cargar en móvil
-  if (window.innerWidth < 1024) {
-    sidebar.classList.remove('abierto');
-  }
-});
-
-// Asegurarse de que el sidebar esté oculto al cargar en móvil
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.innerWidth < 1024) {
-    sidebar.classList.remove('abierto');
-  }
-  
-  // Configurar el sistema de indicadores para el sidebar
-  setupSidebarIndicators();
-});
-
-// Función para configurar los indicadores del sidebar
-function setupSidebarIndicators() {
-  // Por defecto, dashboard está activo al inicio
-  setActiveSection('dashboard');
-  
-  // Agregar event listeners a todos los botones del sidebar
-  document.querySelectorAll('.sidebar-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const section = this.getAttribute('data-section');
-      setActiveSection(section);
+    // Evento para el botón de menú
+    btnMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSidebar();
     });
-  });
-}
 
-// Función para establecer la sección activa
-function setActiveSection(sectionId) {
-  // Ocultar todos los indicadores
-  document.querySelectorAll('.indicator').forEach(indicator => {
-    indicator.classList.add('hidden');
-  });
-  
-  // Mostrar el indicador de la sección activa
-  const activeIndicator = document.querySelector(`#btn-${sectionId} .indicator`);
-  if (activeIndicator) {
-    activeIndicator.classList.remove('hidden');
-    
-    // Añadir una animación de pulso
-    activeIndicator.classList.add('animate-pulse');
-    
-    // Guardar la sección activa en localStorage para persistencia
-    localStorage.setItem('activeSection', sectionId);
-  }
-}
+    // Cierra el sidebar al hacer clic fuera en móvil
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth < 1024 && sidebar.classList.contains('abierto')) {
+        // Check if click is outside sidebar and not on the menu button or its children
+        if (!sidebar.contains(e.target) && !btnMenu.contains(e.target)) {
+          sidebar.classList.remove('abierto');
+        }
+      }
+    });
 
-// Función para mostrar cada sección que también actualiza el indicador
-window.mostrarDashboard = function() {
-  // Código existente para mostrar dashboard
-  if (typeof originalMostrarDashboard === 'function') {
-    originalMostrarDashboard();
-  }
-  setActiveSection('dashboard');
-};
+    // Cierra el sidebar al hacer clic en cualquier botón del sidebar en móvil
+    sidebar.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.innerWidth < 1024) {
+          sidebar.classList.remove('abierto');
+        }
+      });
+    });
 
-// Guardar referencias a las funciones originales
-const originalMostrarDashboard = window.mostrarDashboard;
-const originalMostrarInmuebles = window.mostrarInmuebles;
-const originalMostrarInquilinos = window.mostrarInquilinos;
-const originalMostrarPagos = window.mostrarPagos;
-const originalMostrarInventarioMobiliario = window.mostrarInventarioMobiliario;
-const originalMostrarMantenimientos = window.mostrarMantenimientos;
-const originalMostrarReportes = window.mostrarReportes;
-const originalMostrarAbonos = window.mostrarAbonos;
+    // Maneja el cambio de tamaño de la ventana
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        sidebar.classList.remove('abierto');
+      }
 
-// Sobrescribir las funciones para actualizar los indicadores
-window.mostrarInmuebles = function() {
-  if (typeof originalMostrarInmuebles === 'function') {
-    originalMostrarInmuebles.apply(this, arguments);
-  }
-  setActiveSection('inmuebles');
-};
+      // Asegurarse de que el sidebar esté oculto al cargar en móvil
+      if (window.innerWidth < 1024) {
+        sidebar.classList.remove('abierto');
+      }
+    });
 
-window.mostrarInquilinos = function() {
-  if (typeof originalMostrarInquilinos === 'function') {
-    originalMostrarInquilinos.apply(this, arguments);
-  }
-  setActiveSection('inquilinos');
-};
+    // Asegurarse de que el sidebar esté oculto al cargar en móvil
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.innerWidth < 1024) {
+        sidebar.classList.remove('abierto');
+      }
 
-window.mostrarPagos = function() {
-  if (typeof originalMostrarPagos === 'function') {
-    originalMostrarPagos.apply(this, arguments);
-  }
-  setActiveSection('pagos');
-};
+      // Configurar el sistema de indicadores para el sidebar
+      setupSidebarIndicators();
+    });
 
-window.mostrarInventarioMobiliario = function() {
-  if (typeof originalMostrarInventarioMobiliario === 'function') {
-    originalMostrarInventarioMobiliario.apply(this, arguments);
-  }
-  setActiveSection('mobiliario');
-};
+    // Función para configurar los indicadores del sidebar
+    function setupSidebarIndicators() {
+      // Por defecto, dashboard está activo al inicio
+      setActiveSection('dashboard');
 
-window.mostrarMantenimientos = function() {
-  if (typeof originalMostrarMantenimientos === 'function') {
-    originalMostrarMantenimientos.apply(this, arguments);
-  }
-  setActiveSection('mantenimientos');
-};
+      // Agregar event listeners a todos los botones del sidebar
+      document.querySelectorAll('.sidebar-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const section = this.getAttribute('data-section');
+          setActiveSection(section);
+        });
+      });
+    }
 
-window.mostrarReportes = function() {
-  if (typeof originalMostrarReportes === 'function') {
-    originalMostrarReportes.apply(this, arguments);
-  }
-  setActiveSection('reportes');
-};
+    // Función para establecer la sección activa
+    function setActiveSection(sectionId) {
+      // Ocultar todos los indicadores
+      document.querySelectorAll('.indicator').forEach(indicator => {
+        indicator.classList.add('hidden');
+      });
 
-window.mostrarAbonos = function() {
-  if (typeof originalMostrarAbonos === 'function') {
-    originalMostrarAbonos.apply(this, arguments);
-  }
-  setActiveSection('abonos');
-};
-</script>
+      // Mostrar el indicador de la sección activa
+      const activeIndicator = document.querySelector(`#btn-${sectionId} .indicator`);
+      if (activeIndicator) {
+        activeIndicator.classList.remove('hidden');
+
+        // Añadir una animación de pulso
+        activeIndicator.classList.add('animate-pulse');
+
+        // Guardar la sección activa en localStorage para persistencia
+        localStorage.setItem('activeSection', sectionId);
+      }
+    }
+
+    // Función para mostrar cada sección que también actualiza el indicador
+    window.mostrarDashboard = function () {
+      // Código existente para mostrar dashboard
+      if (typeof originalMostrarDashboard === 'function') {
+        originalMostrarDashboard();
+      }
+      setActiveSection('dashboard');
+    };
+
+    // Guardar referencias a las funciones originales
+    const originalMostrarDashboard = window.mostrarDashboard;
+    const originalMostrarInmuebles = window.mostrarInmuebles;
+    const originalMostrarInquilinos = window.mostrarInquilinos;
+    const originalMostrarPagos = window.mostrarPagos;
+    const originalMostrarInventarioMobiliario = window.mostrarInventarioMobiliario;
+    const originalMostrarMantenimientos = window.mostrarMantenimientos;
+    const originalMostrarReportes = window.mostrarReportes;
+    const originalMostrarAbonos = window.mostrarAbonos;
+
+    // Sobrescribir las funciones para actualizar los indicadores
+    window.mostrarInmuebles = function () {
+      if (typeof originalMostrarInmuebles === 'function') {
+        originalMostrarInmuebles.apply(this, arguments);
+      }
+      setActiveSection('inmuebles');
+    };
+
+    window.mostrarInquilinos = function () {
+      if (typeof originalMostrarInquilinos === 'function') {
+        originalMostrarInquilinos.apply(this, arguments);
+      }
+      setActiveSection('inquilinos');
+    };
+
+    window.mostrarPagos = function () {
+      if (typeof originalMostrarPagos === 'function') {
+        originalMostrarPagos.apply(this, arguments);
+      }
+      setActiveSection('pagos');
+    };
+
+    window.mostrarInventarioMobiliario = function () {
+      if (typeof originalMostrarInventarioMobiliario === 'function') {
+        originalMostrarInventarioMobiliario.apply(this, arguments);
+      }
+      setActiveSection('mobiliario');
+    };
+
+    window.mostrarMantenimientos = function () {
+      if (typeof originalMostrarMantenimientos === 'function') {
+        originalMostrarMantenimientos.apply(this, arguments);
+      }
+      setActiveSection('mantenimientos');
+    };
+
+    window.mostrarReportes = function () {
+      if (typeof originalMostrarReportes === 'function') {
+        originalMostrarReportes.apply(this, arguments);
+      }
+      setActiveSection('reportes');
+    };
+
+    window.mostrarAbonos = function () {
+      if (typeof originalMostrarAbonos === 'function') {
+        originalMostrarAbonos.apply(this, arguments);
+      }
+      setActiveSection('abonos');
+    };
+  </script>
 </body>
+
 </html>

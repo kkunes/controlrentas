@@ -106,7 +106,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         const inmueblesSnap = await getDocs(collection(db, "inmuebles")); // Para mapear nombres de inmuebles
-        
+
         const inmueblesMap = new Map();
         inmueblesSnap.forEach(doc => {
             inmueblesMap.set(doc.id, doc.data());
@@ -156,42 +156,10 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <h3 class="text-lg sm:text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors duration-200">${inquilino.nombre}</h3>
                                         
                                         <div class="relative inline-block ml-3">
-                                            <span id="total-pill-${inquilino.id}" class="total-pill-trigger cursor-pointer inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-blue-200 text-blue-900 hover:bg-blue-300 transition-colors duration-200 border-2 border-blue-400 shadow-md" title="Clic para ver desglose mensual">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            <span id="total-pill-${inquilino.id}" class="total-pill-trigger cursor-pointer inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 border border-indigo-400/30" title="Clic para ver desglose mensual">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5 text-blue-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                                 ${totales.totalGeneral.toFixed(2)}/mes
                                             </span>
-                                            <div id="total-breakdown-${inquilino.id}" class="total-breakdown-popup absolute z-20 hidden bg-slate-200/75 backdrop-blur-md shadow-xl rounded-lg p-4 border-2 border-blue-400 text-sm mt-2 w-64">
-                                                <h4 class="font-bold text-slate-900 mb-3 text-base">Desglose Mensual</h4>
-                                                <div class="space-y-3">
-                                                    <div class="flex justify-between items-center">
-                                                        <span class="flex items-center font-medium text-slate-800">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                                                            Renta:
-                                                        </span>
-                                                        <span class="font-bold text-lg text-green-700">${totales.totalRenta.toFixed(2)}</span>
-                                                    </div>
-                                                    <div class="flex justify-between items-center">
-                                                        <span class="flex items-center font-medium text-slate-800">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                                            Servicios:
-                                                        </span>
-                                                        <span class="font-bold text-lg text-yellow-700">${totales.totalServicios.toFixed(2)}</span>
-                                                    </div>
-                                                    <div class="flex justify-between items-center">
-                                                        <span class="flex items-center font-medium text-slate-800">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19V8h14v11a2 2 0 01-2 2H7a2 2 0 01-2-2zm-1-9h16" /></svg>
-                                                            Mobiliario:
-                                                        </span>
-                                                        <span class="font-bold text-lg text-purple-700">${totales.totalMobiliario.toFixed(2)}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="border-t border-slate-300/75 mt-4 pt-3">
-                                                    <div class="flex justify-between items-center font-bold text-lg text-slate-900">
-                                                        <span>Total:</span>
-                                                        <span class="text-blue-800">${totales.totalGeneral.toFixed(2)}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -207,6 +175,46 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                             <svg class="w-7 h-7 text-red-500 hover:text-red-600 transition-all duration-200 transform hover:scale-110" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
                                         </span>
                                     ` : ''}
+                                </div>
+                            </div>
+                            
+                            <div id="total-breakdown-${inquilino.id}" class="total-breakdown-popup hidden mt-4 mb-4 w-full bg-white border border-indigo-100 rounded-xl shadow-sm overflow-hidden transition-all duration-300">
+                                <div class="bg-indigo-50/50 px-4 py-3 border-b border-indigo-100 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    <h4 class="font-bold text-gray-800 text-sm">Desglose Mensual</h4>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <span class="flex items-center font-medium text-gray-700 text-sm">
+                                            <div class="p-1 bg-green-100 rounded mr-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                            </div>
+                                            Renta
+                                        </span>
+                                        <span class="font-bold text-gray-800">$${totales.totalRenta.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <span class="flex items-center font-medium text-gray-700 text-sm">
+                                            <div class="p-1 bg-amber-100 rounded mr-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                            </div>
+                                            Servicios
+                                        </span>
+                                        <span class="font-bold text-gray-800">$${totales.totalServicios.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <span class="flex items-center font-medium text-gray-700 text-sm">
+                                            <div class="p-1 bg-purple-100 rounded mr-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19V8h14v11a2 2 0 01-2 2H7a2 2 0 01-2-2zm-1-9h16" /></svg>
+                                            </div>
+                                            Mobiliario
+                                        </span>
+                                        <span class="font-bold text-gray-800">$${totales.totalMobiliario.toFixed(2)}</span>
+                                    </div>
+                                    <div class="border-t border-gray-100 mt-2 pt-3 flex justify-between items-center">
+                                        <span class="font-bold text-gray-900 text-sm">Total Mensual</span>
+                                        <span class="font-extrabold text-lg text-indigo-600">$${totales.totalGeneral.toFixed(2)}</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -269,9 +277,9 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         </svg>
                                         <div class="flex flex-col">
                                             <span class="text-sm font-medium">Servicios:</span>
-                                            ${inquilino.servicios.map(servicio => 
-                                                `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
-                                            ).join('')}
+                                            ${inquilino.servicios.map(servicio =>
+                    `<span class="text-xs text-gray-600">${servicio.tipo}: ${parseFloat(servicio.monto).toFixed(2)}/mes</span>`
+                ).join('')}
                                         </div>
                                     </div>
                                 ` : ''}
@@ -286,7 +294,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 ` : ''}
                             </div>
 
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                            <div class="grid grid-cols-2 gap-2">
                                 <button onclick="mostrarHistorialPagosInquilino('${inquilino.id}')" 
                                     title="Ver historial de pagos del inquilino"
                                     class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
@@ -295,16 +303,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     </svg>
                                     <span>Pagos</span>
                                 </button>
-                                ${inquilino.activo ? 
-                                    `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" 
+                                ${inquilino.activo ?
+                        `<button onclick="confirmarDesocupacionInquilino('${inquilino.id}')" 
                                         title="Marcar inquilino como desocupado"
                                         class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                         </svg>
                                         <span>Desocupar</span>
-                                    </button>` : 
-                                    `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" 
+                                    </button>` :
+                        `<button onclick="confirmarReactivacionInquilino('${inquilino.id}')" 
                                         title="Reactivar inquilino inactivo"
                                         class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -312,10 +320,10 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         </svg>
                                         <span>Reactivar</span>
                                     </button>`
-                                }
+                    }
                                 <button onclick="editarInquilino('${inquilino.id}')" 
                                     title="Editar información del inquilino"
-                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
@@ -323,7 +331,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" 
                                     title="Eliminar este inquilino"
-                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
@@ -331,7 +339,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="mostrarHistorialAbonosInquilino('${inquilino.id}')" 
                                     title="Ver historial de abonos del inquilino"
-                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
@@ -339,7 +347,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="mostrarSaldoFavorInquilino('${inquilino.id}')" 
                                     title="Ver saldo a favor del inquilino"
-                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -347,12 +355,11 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                 </button>
                                 <button onclick="mostrarMobiliarioAsignadoInquilino('${inquilino.id}', '${inquilino.nombre}')" 
                                     title="Ver mobiliario asignado al inquilino"
-                                    class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md">
+                                    class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19V8h14v11a2 2 0 01-2 2H7a2 2 0 01-2-2zm-1-9h16" />
                                     </svg>
-                                    <span class="hidden sm:inline">Mobiliario</span>
-                                    <span class="sm:hidden">Mob.</span>
+                                    <span>Mobiliario</span>
                                 </button>
                             </div>
                         </div>
@@ -366,7 +373,8 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                             <span id="badge-adeudos-${inquilino.id}" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">Cargando adeudos...</span>
                         </div>
                     </div>
-                `;            }
+                `;
+            }
         }
 
         contenedor.innerHTML = `
@@ -409,17 +417,17 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         document.getElementById('filtroActivo').addEventListener('change', function () {
             mostrarInquilinos(this.value);
         });
-        
+
         // Listener para el cuadro de búsqueda
-        document.getElementById('busquedaInquilino').addEventListener('input', function() {
+        document.getElementById('busquedaInquilino').addEventListener('input', function () {
             const busqueda = this.value.toLowerCase();
             const tarjetas = document.querySelectorAll('#listaInquilinos > div');
-            
+
             tarjetas.forEach(tarjeta => {
                 const nombre = tarjeta.querySelector('h3')?.textContent.toLowerCase() || '';
                 const telefono = tarjeta.querySelector('.text-gray-600 .text-sm')?.textContent.toLowerCase() || '';
                 const inmueble = tarjeta.querySelectorAll('.text-gray-600 .text-sm')[1]?.textContent.toLowerCase() || '';
-                
+
                 if (nombre.includes(busqueda) || telefono.includes(busqueda) || inmueble.includes(busqueda)) {
                     tarjeta.style.display = '';
                 } else {
@@ -434,7 +442,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 e.stopPropagation(); // Evita que el clic se propague al documento
                 const breakdownId = pill.id.replace('total-pill-', 'total-breakdown-');
                 const breakdownPopup = document.getElementById(breakdownId);
-                
+
                 // Ocultar todos los otros popups abiertos
                 document.querySelectorAll('.total-breakdown-popup').forEach(popup => {
                     if (popup.id !== breakdownId) {
@@ -527,8 +535,8 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                 const esMesActualIteracion = fechaIteracion.getMonth() === hoy.getMonth() && fechaIteracion.getFullYear() === hoy.getFullYear();
                 const isBeforeOccupationMonth = fechaIteracion.getFullYear() < fechaInicioOcupacion.getFullYear() ||
-                                                (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
-                                                 fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
+                    (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                        fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
 
                 if (!isBeforeOccupationMonth) {
                     const shouldCheckRent = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
@@ -577,8 +585,8 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     const pagoRegistrado = pagosMap.get(clavePago);
 
                     const isBeforeOccupationMonth = fechaIteracionMobiliario.getFullYear() < fechaInicioOcupacion.getFullYear() ||
-                                                  (fechaIteracionMobiliario.getFullYear() === fechaInicioOcupacion.getFullYear() &&
-                                                   fechaIteracionMobiliario.getMonth() < fechaInicioOcupacion.getMonth());
+                        (fechaIteracionMobiliario.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                            fechaIteracionMobiliario.getMonth() < fechaInicioOcupacion.getMonth());
 
                     if (!isBeforeOccupationMonth) {
                         if (!pagoRegistrado || !pagoRegistrado.mobiliarioPagado || pagoRegistrado.mobiliarioPagado.length === 0) {
@@ -606,7 +614,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     if (totalAdeudosRentaCount > 0) textoBadge.push(`${totalAdeudosRentaCount} Renta`);
                     if (totalAdeudosServiciosCount > 0) textoBadge.push(`${totalAdeudosServiciosCount} Serv`);
                     if (totalAdeudosMobiliarioCount > 0) textoBadge.push(`${totalAdeudosMobiliarioCount} Mob`);
-                    
+
                     newBadge.textContent = textoBadge.join(' + ');
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
                     newBadge.title = "Haz clic para ver los detalles de adeudos";
@@ -830,12 +838,12 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                     </button>
                 </div>
                 <div id="listaServicios" class="space-y-4">
-                    ${(inquilinoExistente.servicios && inquilinoExistente.servicios.length > 0) ? 
-                        inquilinoExistente.servicios.map((servicio, index) => `
+                    ${(inquilinoExistente.servicios && inquilinoExistente.servicios.length > 0) ?
+            inquilinoExistente.servicios.map((servicio, index) => `
                             <!-- Aquí se generará cada servicio existente -->
-                        `).join('') : 
-                        '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>'
-                    }
+                        `).join('') :
+            '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>'
+        }
                 </div>
             </div>
 
@@ -853,7 +861,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     mostrarModal(modalHtml);
 
     // Lógica para mostrar/ocultar el contenedor de servicios
-    document.getElementById('pagaServicios').addEventListener('change', function() {
+    document.getElementById('pagaServicios').addEventListener('change', function () {
         document.getElementById('serviciosContainer').classList.toggle('hidden', !this.checked);
     });
 
@@ -920,7 +928,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             mostrarNotificacion("Error al guardar el inquilino.", "error");
         }
     });
-    
+
     // Show/hide deposit fields based on checkbox
     document.getElementById('depositoRecibido').addEventListener('change', (e) => {
         document.getElementById('camposDeposito').classList.toggle('hidden', !e.target.checked);
@@ -975,7 +983,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
 
         // Re-attach event listeners for delete buttons
         document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 this.closest('.servicio-item').remove();
                 // Opcional: Renumerar si es necesario
             });
@@ -1014,7 +1022,7 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
         try {
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             const inquilinoSnap = await getDoc(inquilinoRef);
-            
+
             if (inquilinoSnap.exists()) {
                 const inquilinoData = inquilinoSnap.data();
                 const inmuebleId = inquilinoData.inmuebleAsociadoId;
@@ -1039,7 +1047,7 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
                 mostrarNotificacion("Inquilino no encontrado.", 'error');
             }
             mostrarInquilinos();
-            
+
         } catch (error) {
             console.error("Error al desocupar inquilino:", error);
             mostrarNotificacion("Error al desocupar inquilino.", "error");
@@ -1061,7 +1069,7 @@ export async function confirmarReactivacionInquilino(inquilinoId) {
             });
             mostrarNotificacion("Inquilino reactivado con éxito.", 'success');
             mostrarInquilinos();
-           
+
         } catch (error) {
             console.error("Error al reactivar inquilino:", error);
             mostrarNotificacion("Error al reactivar inquilino.", "error");
@@ -1121,7 +1129,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         // Using the main inquilino data instead.
         if (inquilino.inmuebleAsociadoId && inquilino.fechaOcupacion) {
             const mesesAdeudados = await obtenerMesesAdeudadosHistorico(inquilinoId, inquilino.inmuebleAsociadoId, new Date(inquilino.fechaOcupacion));
-                                                                         let adeudosHtml = '';
+            let adeudosHtml = '';
             if (mesesAdeudados.length > 0) {
                 adeudosHtml = `
                     <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
@@ -1389,7 +1397,7 @@ export async function mostrarSaldoFavorInquilino(inquilinoId) {
         }
 
         mostrarModal(`
-            <div class="px-4 py-3 bg-green-500 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
+            <div class="px-4 py-3 bg-green-600 text-white rounded-t-lg -mx-6 -mt-6 mb-4 shadow">
                 <h3 class="text-lg font-bold text-center">Saldo a Favor Actual</h3>
             </div>
             <div class="py-2">${tabla}</div>
@@ -1466,11 +1474,11 @@ window.addEventListener('load', async () => {
 
 import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm";
 
-document.addEventListener('change', function(e) {
+document.addEventListener('change', function (e) {
     if (e.target && e.target.id === 'recibioDeposito') {
         document.getElementById('campoDeposito').style.display = e.target.checked ? 'block' : 'none';
     }
-    
+
     if (e.target && e.target.id === 'pagaServicios') {
         document.getElementById('serviciosContainer').style.display = e.target.checked ? 'block' : 'none';
     }
@@ -1480,16 +1488,16 @@ document.addEventListener('change', function(e) {
 function agregarServicioAlFormulario() {
     const listaServicios = document.getElementById('listaServicios');
     if (!listaServicios) return;
-    
+
     // Limpiar mensaje de "No hay servicios"
     if (listaServicios.innerHTML.includes('No hay servicios agregados')) {
         listaServicios.innerHTML = '';
     }
-    
+
     // Obtener el índice para el nuevo servicio
     const servicioItems = listaServicios.querySelectorAll('.servicio-item');
     const nuevoIndice = servicioItems.length;
-    
+
     // Crear el nuevo elemento de servicio
     const nuevoServicio = document.createElement('div');
     nuevoServicio.className = 'servicio-item border border-gray-200 rounded-lg p-3 mb-3 bg-white';
@@ -1536,30 +1544,30 @@ function agregarServicioAlFormulario() {
                 placeholder="Detalles adicionales sobre el servicio"></textarea>
         </div>
     `;
-    
+
     // Agregar el nuevo servicio a la lista
     listaServicios.appendChild(nuevoServicio);
-    
+
     // Agregar evento para eliminar el servicio
     const btnEliminar = nuevoServicio.querySelector('.btn-eliminar-servicio');
     if (btnEliminar) {
-        btnEliminar.addEventListener('click', function() {
+        btnEliminar.addEventListener('click', function () {
             eliminarServicio(this);
         });
     }
 }
 
 // Nueva funcionalidad: Filtrar inquilinos con adeudos
-document.addEventListener('change', function(e) {
+document.addEventListener('change', function (e) {
     if (e.target && e.target.id === 'filtroAdeudos') {
         const mostrarConAdeudos = e.target.checked;
         const listaInquilinos = document.getElementById('listaInquilinos');
-        
+
         if (listaInquilinos) {
             listaInquilinos.querySelectorAll('.bg-white').forEach(card => {
                 const inquilinoId = card.dataset.id;
                 const badge = document.getElementById(`badge-adeudos-${inquilinoId}`);
-                
+
                 if (badge) {
                     const tieneAdeudos = badge.textContent !== "Sin adeudos";
                     card.style.display = mostrarConAdeudos && !tieneAdeudos ? 'none' : 'block';
@@ -1575,7 +1583,7 @@ function eliminarServicio(btnEliminar) {
     if (servicioItem) {
         const listaServicios = document.getElementById('listaServicios');
         listaServicios.removeChild(servicioItem);
-        
+
         // Renumerar los servicios restantes
         const servicioItems = listaServicios.querySelectorAll('.servicio-item');
         if (servicioItems.length === 0) {
@@ -1587,7 +1595,7 @@ function eliminarServicio(btnEliminar) {
                 if (titulo) {
                     titulo.textContent = `Servicio #${index + 1}`;
                 }
-                
+
                 // Actualizar los índices en los nombres de los campos
                 const campos = item.querySelectorAll('[name^="servicios["]');
                 campos.forEach(campo => {
@@ -1595,7 +1603,7 @@ function eliminarServicio(btnEliminar) {
                     const nuevoNombre = nombreActual.replace(/servicios\[\d+\]/, `servicios[${index}]`);
                     campo.setAttribute('name', nuevoNombre);
                 });
-                
+
                 // Actualizar el atributo data-index del botón eliminar
                 const btnEliminar = item.querySelector('.btn-eliminar-servicio');
                 if (btnEliminar) {
@@ -1618,7 +1626,7 @@ if (contenedorFiltros) {
 }
 
 // Nueva funcionalidad: Mostrar mobiliario asignado a inquilinos
-window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilinoNombre) {
+window.mostrarMobiliarioAsignadoInquilino = async function (inquilinoId, inquilinoNombre) {
     const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
     let mobiliarioAsignado = [];
     mobiliarioSnap.forEach(doc => {
@@ -1655,9 +1663,9 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
         <div class="w-full max-w-md mx-auto">
             <div class="divide-y divide-teal-100 rounded-lg shadow bg-white">
                 ${mobiliarioAsignado.map(mob => {
-                    const subtotal = mob.cantidad * mob.costoRenta;
-                    total += subtotal;
-                    return `
+        const subtotal = mob.cantidad * mob.costoRenta;
+        total += subtotal;
+        return `
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-2">
                             <div class="flex-1">
                                 <div class="font-semibold text-teal-800">${mob.nombre}</div>
@@ -1670,7 +1678,7 @@ window.mostrarMobiliarioAsignadoInquilino = async function(inquilinoId, inquilin
                             </div>
                         </div>
                     `;
-                }).join('')}
+    }).join('')}
                 <div class="flex justify-between items-center px-3 py-3 bg-teal-50 rounded-b-lg">
                     <span class="font-bold text-teal-800">Total mobiliario</span>
                     <span class="font-bold text-lg text-teal-700">${total.toFixed(2)}</span>

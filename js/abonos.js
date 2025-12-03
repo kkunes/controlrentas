@@ -37,7 +37,7 @@ export async function mostrarAbonos() {
         inmueblesSnap.forEach(doc => {
             inmueblesMap.set(doc.id, doc.data().nombre || 'Inmueble sin nombre');
         });
-        
+
         // Crear un mapa para buscar inmuebles por nombre también
         const inmueblesNombreMap = new Map();
         inmueblesSnap.forEach(doc => {
@@ -46,19 +46,19 @@ export async function mostrarAbonos() {
                 inmueblesNombreMap.set(data.nombre.toLowerCase(), data.nombre);
             }
         });
-        
+
         const inquilinosMap = new Map();
         inquilinosSnap.forEach(doc => {
             const inquilino = doc.data();
-            
+
             // Verificar todos los posibles campos donde podría estar el ID del inmueble
             let inmuebleId = inquilino.inmuebleId || inquilino.inmuebleAsociadoId || inquilino.idInmueble;
             let inmuebleNombre = null;
-            
+
             // 1. Intentar obtener por ID
             if (inmuebleId && inmueblesMap.has(inmuebleId)) {
                 inmuebleNombre = inmueblesMap.get(inmuebleId);
-            } 
+            }
             // 2. Intentar obtener por campo nombreInmueble
             else if (inquilino.nombreInmueble) {
                 inmuebleNombre = inquilino.nombreInmueble;
@@ -72,12 +72,12 @@ export async function mostrarAbonos() {
                     inmuebleNombre = inquilino.inmueble; // Usar el nombre directamente
                 }
             }
-            
+
             // Si no se encontró de ninguna forma
             if (!inmuebleNombre) {
                 inmuebleNombre = 'Sin inmueble asignado';
             }
-            
+
             inquilinosMap.set(doc.id, {
                 nombre: inquilino.nombre,
                 inmuebleNombre: inmuebleNombre
@@ -88,7 +88,7 @@ export async function mostrarAbonos() {
         abonosSnap.forEach(doc => {
             const data = doc.data();
             const inquilinoInfo = inquilinosMap.get(data.inquilinoId) || { nombre: 'Inquilino Desconocido', inmuebleNombre: 'Sin inmueble' };
-            
+
             // Si el inmueble aparece como "Sin inmueble asignado", intentar obtenerlo directamente
             let inmuebleNombre = inquilinoInfo.inmuebleNombre;
             if (inmuebleNombre === 'Sin inmueble asignado' || inmuebleNombre === 'Inmueble no encontrado') {
@@ -96,12 +96,12 @@ export async function mostrarAbonos() {
                 const inquilinoDoc = inquilinosSnap.docs.find(d => d.id === data.inquilinoId);
                 if (inquilinoDoc) {
                     const inquilinoData = inquilinoDoc.data();
-                    
+
                     // 1. Intentar obtener por ID
                     const inmuebleId = inquilinoData.inmuebleId || inquilinoData.inmuebleAsociadoId || inquilinoData.idInmueble;
                     if (inmuebleId && inmueblesMap.has(inmuebleId)) {
                         inmuebleNombre = inmueblesMap.get(inmuebleId);
-                    } 
+                    }
                     // 2. Intentar obtener por campo nombreInmueble
                     else if (inquilinoData.nombreInmueble) {
                         inmuebleNombre = inquilinoData.nombreInmueble;
@@ -120,9 +120,9 @@ export async function mostrarAbonos() {
                             inmuebleNombre = inquilinoData.inmueble;
                         }
                     }
-                    
+
                     // 4. Verificar si hay un campo de inmueble en formato diferente
-                    if ((inmuebleNombre === 'Sin inmueble asignado' || inmuebleNombre === 'Inmueble no encontrado') && 
+                    if ((inmuebleNombre === 'Sin inmueble asignado' || inmuebleNombre === 'Inmueble no encontrado') &&
                         inquilinoData.inmuebleAsociado && typeof inquilinoData.inmuebleAsociado === 'object') {
                         // A veces el inmueble está como objeto con nombre
                         if (inquilinoData.inmuebleAsociado.nombre) {
@@ -131,7 +131,7 @@ export async function mostrarAbonos() {
                     }
                 }
             }
-            
+
             abonosList.push({
                 id: doc.id,
                 ...data,
@@ -218,13 +218,11 @@ export async function mostrarAbonos() {
                                 </div>
                             </div>
 
-                            <div class="mt-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Saldo Restante</span>
-                                    <span class="text-xl font-bold ${abono.saldoRestante > 0 ? 'text-green-600' : abono.saldoRestante < 0 ? 'text-red-600' : 'text-gray-500'}">
-    $${parseFloat(abono.saldoRestante).toFixed(2)}
-</span>
-                                </div>
+                            <div class="mt-4 p-4 rounded-xl border ${abono.saldoRestante > 0 ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'} flex justify-between items-center shadow-sm">
+                                <span class="text-sm font-medium ${abono.saldoRestante > 0 ? 'text-green-800' : 'text-gray-600'}">Saldo Restante</span>
+                                <span class="text-2xl font-extrabold ${abono.saldoRestante > 0 ? 'text-green-600' : abono.saldoRestante < 0 ? 'text-red-600' : 'text-gray-400'}">
+                                    $${parseFloat(abono.saldoRestante).toFixed(2)}
+                                </span>
                             </div>
 
                             <div class="mt-4 flex flex-wrap gap-2 sm:gap-3">
@@ -403,7 +401,7 @@ export async function mostrarFormularioNuevoAbono(id = null) {
         inmueblesSnap.forEach(doc => {
             inmueblesMap.set(doc.id, doc.data().nombre || 'Inmueble sin nombre');
         });
-        
+
         // Crear un mapa para buscar inmuebles por nombre también
         const inmueblesNombreMap = new Map();
         inmueblesSnap.forEach(doc => {
@@ -412,19 +410,19 @@ export async function mostrarFormularioNuevoAbono(id = null) {
                 inmueblesNombreMap.set(data.nombre.toLowerCase(), data.nombre);
             }
         });
-        
+
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
         inquilinosSnap.forEach(doc => {
             const inquilino = doc.data();
-            
+
             // Verificar todos los posibles campos donde podría estar el ID del inmueble
             let inmuebleId = inquilino.inmuebleId || inquilino.inmuebleAsociadoId || inquilino.idInmueble;
             let inmuebleNombre = null;
-            
+
             // 1. Intentar obtener por ID
             if (inmuebleId && inmueblesMap.has(inmuebleId)) {
                 inmuebleNombre = inmueblesMap.get(inmuebleId);
-            } 
+            }
             // 2. Intentar obtener por campo nombreInmueble
             else if (inquilino.nombreInmueble) {
                 inmuebleNombre = inquilino.nombreInmueble;
@@ -438,14 +436,14 @@ export async function mostrarFormularioNuevoAbono(id = null) {
                     inmuebleNombre = inquilino.inmueble; // Usar el nombre directamente
                 }
             }
-            
+
             // Si no se encontró de ninguna forma
             if (!inmuebleNombre) {
                 inmuebleNombre = 'Sin inmueble asignado';
             }
-            
-            inquilinosList.push({ 
-                id: doc.id, 
+
+            inquilinosList.push({
+                id: doc.id,
                 ...inquilino,
                 inmuebleNombre: inmuebleNombre
             });
@@ -472,14 +470,14 @@ export async function mostrarFormularioNuevoAbono(id = null) {
     }
 
     const inquilinosOptions = inquilinosList.map(inc => {
-        const inmuebleText = (inc.inmuebleNombre !== 'Sin inmueble asignado' && inc.inmuebleNombre !== 'Inmueble no encontrado') 
-            ? inc.inmuebleNombre 
+        const inmuebleText = (inc.inmuebleNombre !== 'Sin inmueble asignado' && inc.inmuebleNombre !== 'Inmueble no encontrado')
+            ? inc.inmuebleNombre
             : 'Sin inmueble';
         return `<option value="${inc.id}" ${inc.id === abono.inquilinoId ? 'selected' : ''}>${inc.nombre} - ${inmuebleText}</option>`;
     }).join('');
 
     const formHtml = `
-        <div class="px-6 py-5 bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6 shadow-md">
+        <div class="px-6 py-5 bg-indigo-600 text-white rounded-t-xl -mx-6 -mt-6 mb-6 shadow-md">
             <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -488,7 +486,7 @@ export async function mostrarFormularioNuevoAbono(id = null) {
             </h3>
         </div>
         <form id="formAbonoSaldoFavor" class="space-y-5 max-w-lg mx-auto px-4">
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-gray-700 text-sm font-medium mb-2">Tipo de Movimiento:</label>
@@ -538,7 +536,7 @@ export async function mostrarFormularioNuevoAbono(id = null) {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                 <div class="space-y-4">
                     <div>
                         <label for="descripcionAbono" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
@@ -758,18 +756,18 @@ export async function eliminarAbono(id, inquilinoId = null) {
     try {
         // Preguntar si desea eliminar todos los abonos del inquilino
         const eliminarTodo = inquilinoId && confirm('¿Deseas eliminar TODOS los saldos a favor de este inquilino?');
-        
+
         // Primera confirmación
-        const mensaje = eliminarTodo 
+        const mensaje = eliminarTodo
             ? '¿Estás seguro de que quieres eliminar TODOS los saldos a favor de este inquilino? Esta acción es irreversible.'
             : '¿Estás seguro de que quieres eliminar este saldo a favor? Esta acción es irreversible.';
-            
+
         if (confirm(mensaje)) {
             // Segunda confirmación
             const mensaje2 = eliminarTodo
                 ? 'REALMENTE deseas eliminar TODOS los saldos a favor de este inquilino? No se podrán recuperar.'
                 : 'REALMENTE deseas eliminar este saldo a favor? No se podrá recuperar.';
-                
+
             if (confirm(mensaje2)) {
                 if (eliminarTodo) {
                     // Eliminar todos los abonos asociados al inquilino
@@ -778,21 +776,21 @@ export async function eliminarAbono(id, inquilinoId = null) {
                         where("inquilinoId", "==", inquilinoId)
                     );
                     const abonosSnap = await getDocs(abonosQuery);
-                    
+
                     // Eliminar cada documento encontrado
                     const batch = writeBatch(db);
                     abonosSnap.forEach(doc => {
                         batch.delete(doc.ref);
                     });
                     await batch.commit();
-                    
+
                     mostrarNotificacion('Todos los saldos a favor del inquilino han sido eliminados.', 'success');
                 } else {
                     // Eliminar solo el abono específico
                     await deleteDoc(doc(db, "abonosSaldoFavor", id));
                     mostrarNotificacion('Saldo a favor eliminado con éxito.', 'success');
                 }
-                
+
                 mostrarAbonos();
             } else {
                 mostrarNotificacion('Eliminación cancelada.', 'info');
@@ -815,7 +813,7 @@ function mostrarHistorialDeAplicaciones(aplicaciones, nombreInquilino, inmuebleN
             let tipoAplicacion = '';
             let colorMonto = '';
 
-            switch(app.origen) {
+            switch (app.origen) {
                 case 'ingreso':
                     pagoLabel = app.descripcion || 'Ingreso de saldo';
                     tipoAplicacion = 'Ingreso';

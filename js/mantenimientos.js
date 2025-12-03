@@ -50,7 +50,7 @@ export async function mostrarMantenimientos() {
                 const mesMantenimiento = fechaMantenimiento.toLocaleString('es-MX', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
                 const anioMantenimiento = fechaMantenimiento.getFullYear();
 
-                const pagoCorrespondiente = pagosList.find(p => 
+                const pagoCorrespondiente = pagosList.find(p =>
                     p.inmuebleId === data.inmuebleId &&
                     p.mesCorrespondiente === mesMantenimiento &&
                     p.anioCorrespondiente === anioMantenimiento
@@ -174,10 +174,10 @@ export async function mostrarMantenimientos() {
                 const mes = fecha ? fecha.getMonth() + 1 : null;
                 const anio = fecha ? fecha.getFullYear() : null;
                 return (!filtroInmueble || m.inmuebleId === filtroInmueble) &&
-                       (!filtroCategoria || m.categoria === filtroCategoria) &&
-                       (!filtroEstado || m.estado === filtroEstado) &&
-                       (!filtroMes || mes === filtroMes) &&
-                       (!filtroAnio || anio === filtroAnio);
+                    (!filtroCategoria || m.categoria === filtroCategoria) &&
+                    (!filtroEstado || m.estado === filtroEstado) &&
+                    (!filtroMes || mes === filtroMes) &&
+                    (!filtroAnio || anio === filtroAnio);
             });
 
             const totalCosto = filtrados.reduce((sum, m) => sum + (Number(m.costo) || 0), 0);
@@ -270,12 +270,12 @@ export async function mostrarMantenimientos() {
             `;
 
             const opt = {
-                margin:       0.5,
-                filename:     `Reporte_Mantenimientos_${nombreMes}_${anioReporte}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
+                margin: 0.5,
+                filename: `Reporte_Mantenimientos_${nombreMes}_${anioReporte}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             html2pdf().from(pdfContent).set(opt).toPdf().get('pdf').then(function (pdf) {
@@ -304,10 +304,10 @@ export async function mostrarMantenimientos() {
                 const mes = fecha ? fecha.getMonth() + 1 : null;
                 const anio = fecha ? fecha.getFullYear() : null;
                 return (!filtroInmueble || m.inmuebleId === filtroInmueble) &&
-                       (!filtroCategoria || m.categoria === filtroCategoria) &&
-                       (!filtroEstado || m.estado === filtroEstado) &&
-                       (!filtroMes || mes === filtroMes) &&
-                       (!filtroAnio || anio === filtroAnio);
+                    (!filtroCategoria || m.categoria === filtroCategoria) &&
+                    (!filtroEstado || m.estado === filtroEstado) &&
+                    (!filtroMes || mes === filtroMes) &&
+                    (!filtroAnio || anio === filtroAnio);
             });
 
             const totalContainer = document.getElementById('total-mantenimientos-container');
@@ -326,8 +326,8 @@ export async function mostrarMantenimientos() {
             } else {
                 filtrados.sort((a, b) => new Date(b.fechaMantenimiento) - new Date(a.fechaMantenimiento));
                 tbody.innerHTML = filtrados.map(m => {
-                    let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Urgente:"bg-red-100 text-red-800",Alta:"bg-orange-100 text-orange-800",Media:"bg-yellow-100 text-yellow-800",Baja:"bg-green-100 text-green-800"}[m.prioridad] || "bg-gray-100 text-gray-800");
-                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({Pendiente:"bg-red-100 text-red-800","En Progreso":"bg-yellow-100 text-yellow-800",Completado:"bg-green-100 text-green-800",Cancelado:"bg-gray-100 text-gray-800"}[m.estado] || "bg-gray-100 text-gray-800");
+                    let prioridadClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({ Urgente: "bg-red-100 text-red-800", Alta: "bg-orange-100 text-orange-800", Media: "bg-yellow-100 text-yellow-800", Baja: "bg-green-100 text-green-800" }[m.prioridad] || "bg-gray-100 text-gray-800");
+                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold " + ({ Pendiente: "bg-red-100 text-red-800", "En Progreso": "bg-yellow-100 text-yellow-800", Completado: "bg-green-100 text-green-800", Cancelado: "bg-gray-100 text-gray-800" }[m.estado] || "bg-gray-100 text-gray-800");
                     const materialesBtn = m.materiales && m.materiales.length > 0 ? `
                         <a href="#" title="Ver Materiales" onclick="mostrarMaterialesMantenimiento('${m.id}')" class="text-purple-500 p-2 flex items-center gap-2" style="--icon-color: #A855F7;">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -507,7 +507,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
             ${est}
         </option>
     `).join('');
-    
+
     const materialesHtml = mantenimiento?.materiales?.map((material, index) => `
         <div class="flex items-center gap-2 material-entry">
             <input type="text" name="material_nombre_${index}" placeholder="Nombre del material" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm" value="${material.nombre}" required>
@@ -536,7 +536,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-indigo-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 shadow-md">
                 <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
@@ -545,7 +545,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                 </h3>
             </div>
             <form id="formMantenimiento" class="space-y-4 sm:space-y-6 px-4">
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                             <label for="inmuebleId" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -575,7 +575,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                     <div class="space-y-4">
                         <div>
                             <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -591,7 +591,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                             <label for="costo" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -624,7 +624,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                             <label for="nombreObrero" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -638,13 +638,13 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+            <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                 <h4 class="text-lg font-medium text-gray-800 mb-2">Materiales</h4>
                 <div id="materiales-container" class="space-y-2">${materialesHtml}</div>
                 <button type="button" id="btn-agregar-material" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm">Agregar Material</button>
             </div>
 
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+            <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                         <label for="prioridad" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -677,7 +677,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+            <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                         <label for="pagadoPor" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -769,7 +769,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
 
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
-        
+
         const materiales = [];
         const materialEntries = document.querySelectorAll('.material-entry');
         let costoMateriales = 0;
@@ -783,7 +783,7 @@ export async function mostrarFormularioNuevoMantenimiento(id = null) {
         });
 
         data.materiales = materiales;
-        
+
         const costoManoObra = parseFloat(data.costo);
         data.costo_mano_obra = costoManoObra;
         data.costo = costoManoObra + costoMateriales;
@@ -906,54 +906,57 @@ function mostrarModalCambiarEstadoCosto(mantenimiento) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6">
-                <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="px-6 py-5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-t-2xl -mx-6 -mt-6 mb-6 shadow-lg">
+                <div class="flex items-center justify-center mb-2">
+                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                    Seguimiento de Mantenimiento
-                </h3>
+                    <h3 class="text-2xl font-extrabold text-center tracking-tight">Seguimiento de Mantenimiento</h3>
+                </div>
+                <p class="text-center text-yellow-100 text-sm font-medium">Actualiza estado y costos</p>
             </div>
-            <form id="formCambiarEstadoCosto" class="space-y-4 sm:space-y-6 px-4">
+            <form id="formCambiarEstadoCosto" class="space-y-5 px-4">
                 <input type="hidden" id="mantenimientoId" value="${mantenimiento.id}">
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label for="estado" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <label for="estado" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 Estado
                             </label>
                             <select id="estado" name="estado"
-                                class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200"
+                                class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700 transition-all duration-200"
                                 required>
                                 ${estadoOptions}
                             </select>
                         </div>
                         <div>
-                            <label for="costo" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <label for="costo" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 Costo
                             </label>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-gray-500">$</span>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 font-medium">$</span>
                                 <input type="number" id="costo" name="costo" step="0.01"
-                                    class="block w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200"
+                                    class="block w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700 transition-all duration-200"
                                     value="${mantenimiento.costo ?? ''}" placeholder="0.00" required>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4">
-                        <label for="pagadoPor" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </div>
+                <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
+                    <div>
+                        <label for="pagadoPor" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                             ¿Quién pagó el mantenimiento?
                         </label>
-                        <select id="pagadoPor" name="pagadoPor" class="block w-full px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <select id="pagadoPor" name="pagadoPor" class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700 transition-all duration-200">
                             <option value="">Selecciona</option>
                             <option value="inquilino" ${mantenimiento?.pagadoPor === "inquilino" ? "selected" : ""}>Inquilino</option>
                             <option value="propietario" ${mantenimiento?.pagadoPor === "propietario" ? "selected" : ""}>Propietario</option>
@@ -961,18 +964,18 @@ function mostrarModalCambiarEstadoCosto(mantenimiento) {
                         </select>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
                     <button type="button" onclick="ocultarModal()"
-                        class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                         Cancelar
                     </button>
                     <button type="submit"
-                        class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
-                        text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
+                        text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                         Actualizar

@@ -4,40 +4,63 @@
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: flex-end; /* Alinea el contenido (botón) a la derecha */
+    justify-content: flex-end;
+    /* Alinea el contenido (botón) a la derecha */
 }
 
 .pill-menu-button {
     /* Styles for the main button (the three dots) */
     z-index: 10;
     cursor: pointer;
-    min-width: 52px; /* Make button larger for touch */
-    min-height: 52px; /* Make button larger for touch */
+    min-width: 52px;
+    /* Make button larger for touch */
+    min-height: 52px;
+    /* Make button larger for touch */
 }
+
+.pill-menu-button svg {
+    display: block;
+    fill: currentColor;
+    color: inherit;
+}
+
 
 .pill-menu-actions {
     display: flex;
     align-items: center;
     position: absolute;
-    right: 52px; /* Adjusted to be next to the larger button */
+    right: 52px;
+    /* Adjusted to be next to the larger button */
     top: 50%;
     transform: translateY(-50%);
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Transición con "rebote" */
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    /* Transición con "rebote" */
     overflow: hidden;
-    border-radius: 9999px; /* pill shape */
-    background-color: rgba(129, 126, 126, 0.575); /* Un blanco casi opaco con transparencia */
-    backdrop-filter: blur(16px); /* Aumentamos el desenfoque para mayor contraste */
+    border-radius: 9999px;
+    /* pill shape */
+    background-color: rgba(129, 126, 126, 0.575);
+    /* Un blanco casi opaco con transparencia */
+    backdrop-filter: blur(16px);
+    /* Aumentamos el desenfoque para mayor contraste */
     -webkit-backdrop-filter: blur(16px);
-    padding: 0; /* No padding, buttons fill height */
-    width: 0; /* Inicia con ancho 0 */
-    height: 52px; /* Adjusted height to accommodate larger buttons */
+    padding: 0;
+    /* No padding, buttons fill height */
+    width: 0;
+    /* Inicia con ancho 0 */
+    height: 52px;
+    /* Adjusted height to accommodate larger buttons */
     opacity: 0;
-    border: 1px solid rgba(255, 255, 255, 0.3); /* Borde blanco sutil */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Borde blanco sutil */
+    max-width: calc(100vw - 70px);
+    /* Prevent overflow on mobile */
 }
 
 .pill-menu-container.active .pill-menu-actions {
-    width: auto; /* Se expande al contenido */
-    padding: 0; /* No padding, buttons fill height */
+    width: auto;
+    /* Se expande al contenido */
+    padding: 0;
+    /* No padding, buttons fill height */
     opacity: 1;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
 }
@@ -46,14 +69,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 16px; /* px-4 py-2 */
-    margin: 0 6px; /* Adjusted margin for better spacing */
+    padding: 8px 16px;
+    /* px-4 py-2 */
+    margin: 0 6px;
+    /* Adjusted margin for better spacing */
     border-radius: 9999px;
     gap: 0.5rem;
     transition: background-color 0.2s ease, transform 0.2s ease;
-    transform: scale(0) rotate(-90deg); /* Inicia escalado a 0 y rotado */
+    transform: scale(0) rotate(-90deg);
+    /* Inicia escalado a 0 y rotado */
     opacity: 0;
     transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.2s ease;
+    white-space: nowrap;
+    /* Prevent text wrapping */
 }
 
 .pill-menu-actions a:hover {
@@ -67,15 +95,111 @@
 }
 
 .pill-menu-container.active .pill-menu-actions a {
-    transform: scale(1) rotate(0deg); /* Vuelve a la normalidad */
+    transform: scale(1) rotate(0deg);
+    /* Vuelve a la normalidad */
     opacity: 1;
 }
 
 /* Animación escalonada para los íconos */
-.pill-menu-container.active .pill-menu-actions a:nth-child(1) { transition-delay: 0.1s; }
-.pill-menu-container.active .pill-menu-actions a:nth-child(2) { transition-delay: 0.15s; }
-.pill-menu-container.active .pill-menu-actions a:nth-child(3) { transition-delay: 0.2s; }
-.pill-menu-container.active .pill-menu-actions a:nth-child(4) { transition-delay: 0.25s; }
-.pill-menu-container.active .pill-menu-actions a:nth-child(5) { transition-delay: 0.3s; }
-.pill-menu-container.active .pill-menu-actions a:nth-child(6) { transition-delay: 0.35s; }
-.pill-menu-container.active .pill-menu-actions a:nth-child(7) { transition-delay: 0.4s; }
+.pill-menu-container.active .pill-menu-actions a:nth-child(1) {
+    transition-delay: 0.1s;
+}
+
+.pill-menu-container.active .pill-menu-actions a:nth-child(2) {
+    transition-delay: 0.15s;
+}
+
+.pill-menu-container.active .pill-menu-actions a:nth-child(3) {
+    transition-delay: 0.2s;
+}
+
+.pill-menu-container.active .pill-menu-actions a:nth-child(4) {
+    transition-delay: 0.25s;
+}
+
+.pill-menu-container.active .pill-menu-actions a:nth-child(5) {
+    transition-delay: 0.3s;
+}
+
+.pill-menu-container.active .pill-menu-actions a:nth-child(6) {
+    transition-delay: 0.35s;
+}
+
+.pill-menu-container.active .pill-menu-actions a:nth-child(7) {
+    transition-delay: 0.4s;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .pill-menu-actions {
+        right: 52px;
+        max-width: calc(100vw - 80px);
+        /* More conservative on mobile */
+    }
+
+    .pill-menu-button {
+        min-width: 52px !important;
+        min-height: 52px !important;
+    }
+
+    .pill-menu-button svg {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+    }
+
+    .pill-menu-actions a {
+        padding: 6px 12px;
+        /* Slightly smaller padding on mobile */
+        margin: 0 4px;
+        /* Reduced margin */
+        gap: 0.375rem;
+        /* Smaller gap */
+    }
+
+    .pill-menu-actions a svg {
+        width: 1.25rem;
+        /* 20px - smaller icons on mobile */
+        height: 1.25rem;
+    }
+
+    .pill-menu-text {
+        font-size: 0.75rem;
+        /* Smaller text on mobile */
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    .pill-menu-actions {
+        max-width: calc(100vw - 65px);
+        height: 48px;
+        /* Slightly smaller height */
+    }
+
+    .pill-menu-button {
+        min-width: 48px !important;
+        min-height: 48px !important;
+    }
+
+    .pill-menu-button svg {
+        width: 1.125rem !important;
+        height: 1.125rem !important;
+    }
+
+    .pill-menu-actions a {
+        padding: 4px 10px;
+        /* Even smaller padding */
+        margin: 0 3px;
+        gap: 0.25rem;
+    }
+
+    .pill-menu-actions a svg {
+        width: 1.125rem;
+        /* 18px */
+        height: 1.125rem;
+    }
+
+    .pill-menu-text {
+        font-size: 0.7rem;
+    }
+}

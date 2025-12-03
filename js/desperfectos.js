@@ -194,7 +194,7 @@ export async function mostrarFormularioNuevoDesperfecto(id = null, inquilinoIdPr
         // NEW LOGIC: If no desperfecto is being edited and no inquilino is preselected,
         // try to pre-select if there's only one occupied inmueble.
         if (!id && !inquilinoIdPreseleccionado && !inmuebleIdPreseleccionado) { // Added !inmuebleIdPreseleccionado
-            const occupiedInmuebles = inmueblesList.filter(inmueble => 
+            const occupiedInmuebles = inmueblesList.filter(inmueble =>
                 inmueble.estado === 'Ocupado' && inmueble.inquilinoActualId
             );
 
@@ -266,66 +266,107 @@ export async function mostrarFormularioNuevoDesperfecto(id = null, inquilinoIdPr
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6">
-                <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            <div class="px-6 py-5 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-t-2xl -mx-6 -mt-6 mb-6 shadow-lg">
+                <div class="flex items-center justify-center mb-2">
+                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
-                    ${tituloModal}
-                </h3>
+                    <h3 class="text-2xl font-extrabold text-center tracking-tight">${tituloModal}</h3>
+                </div>
+                <p class="text-center text-red-100 text-sm font-medium">Registro y seguimiento de daños</p>
             </div>
-            <form id="formDesperfecto" class="space-y-4 sm:space-y-6 px-4">
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <form id="formDesperfecto" class="space-y-5 px-4">
+                <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label for="inmuebleId" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">Inmueble</label>
-                            <select id="inmuebleId" name="inmuebleId" class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" ${isInmuebleFieldDisabled ? 'disabled' : ''} required>
+                            <label for="inmuebleId" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                Inmueble
+                            </label>
+                            <select id="inmuebleId" name="inmuebleId" class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-700 transition-all duration-200" ${isInmuebleFieldDisabled ? 'disabled' : ''} required>
                                 <option value="">Selecciona un inmueble</option>
                                 ${inmueblesOptions}
                             </select>
                         </div>
                         <div>
-                            <label for="inquilinoId" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">Inquilino</label>
-                            <select id="inquilinoId" name="inquilinoId" class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" ${isInquilinoFieldDisabled ? 'disabled' : ''} required>
+                            <label for="inquilinoId" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                Inquilino
+                            </label>
+                            <select id="inquilinoId" name="inquilinoId" class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-700 transition-all duration-200" ${isInquilinoFieldDisabled ? 'disabled' : ''} required>
                                 <option value="">Selecciona un inquilino</option>
                                 ${inquilinosOptions}
                             </select>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
                     <div>
-                        <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">Descripción</label>
-                        <textarea id="descripcion" name="descripcion" rows="3" class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" placeholder="Breve descripción del desperfecto." required>${desperfecto?.descripcion ?? ''}</textarea>
+                        <label for="descripcion" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                            </svg>
+                            Descripción del Desperfecto
+                        </label>
+                        <textarea id="descripcion" name="descripcion" rows="3" class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-700 transition-all duration-200" placeholder="Describe detalladamente el desperfecto..." required>${desperfecto?.descripcion ?? ''}</textarea>
                     </div>
                 </div>
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label for="costoReparacion" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">Costo de Reparación</label>
+                            <label for="costoReparacion" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Costo de Reparación
+                            </label>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-gray-500">$</span>
-                                <input type="number" id="costoReparacion" name="costoReparacion" step="0.01" class="block w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" value="${desperfecto?.costoReparacion ?? ''}" placeholder="0.00" required>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 font-medium">$</span>
+                                <input type="number" id="costoReparacion" name="costoReparacion" step="0.01" class="block w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-700 transition-all duration-200" value="${desperfecto?.costoReparacion ?? ''}" placeholder="0.00" required>
                             </div>
                         </div>
                         <div>
-                            <label for="fechaReporte" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">Fecha del Reporte</label>
-                            <input type="date" id="fechaReporte" name="fechaReporte" class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" value="${desperfecto?.fechaReporte ?? ''}" required>
+                            <label for="fechaReporte" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Fecha del Reporte
+                            </label>
+                            <input type="date" id="fechaReporte" name="fechaReporte" class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-700 transition-all duration-200" value="${desperfecto?.fechaReporte ?? ''}" required>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+                <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
                     <div>
-                        <label for="estado" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">Estado</label>
-                        <select id="estado" name="estado" class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" required>
+                        <label for="estado" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Estado del Desperfecto
+                        </label>
+                        <select id="estado" name="estado" class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-700 transition-all duration-200" required>
                             <option value="">Selecciona un estado</option>
                             ${estadoOptions}
                         </select>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
-                    <button type="button" onclick="ocultarModal()" class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center">Cancelar</button>
-                    <button type="submit" class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">${id ? "Actualizar" : "Registrar"} Desperfecto</button>
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
+                    <button type="button" onclick="ocultarModal()" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        ${id ? "Actualizar" : "Registrar"} Desperfecto
+                    </button>
                 </div>
             </form>
         </div>
@@ -409,7 +450,7 @@ export async function editarDesperfecto(id) {
  * @param {string} currentStatus - Estado actual del desperfecto.
  * @param {string} inquilinoId - ID del inquilino al que pertenece el desperfecto (para refrescar la vista).
  */
-window.cambiarEstadoDesperfecto = async function(desperfectoId, currentStatus, inquilinoId) {
+window.cambiarEstadoDesperfecto = async function (desperfectoId, currentStatus, inquilinoId) {
     const estados = ["Pendiente", "Reparado", "Pagado"];
     const estadoOptions = estados.map(est => `
         <option value="${est}" ${currentStatus === est ? 'selected' : ''}>
@@ -426,26 +467,42 @@ window.cambiarEstadoDesperfecto = async function(desperfectoId, currentStatus, i
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-xl -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6">
-                <h3 class="text-xl sm:text-2xl font-bold text-center flex items-center justify-center">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3 3 7-7"/>
+            <div class="px-6 py-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-2xl -mx-6 -mt-6 mb-6 shadow-lg">
+                <div class="flex items-center justify-center mb-2">
+                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    Cambiar Estado del Desperfecto
-                </h3>
+                    <h3 class="text-2xl font-extrabold text-center tracking-tight">Cambiar Estado del Desperfecto</h3>
+                </div>
+                <p class="text-center text-blue-100 text-sm font-medium">Actualiza el estado de reparación</p>
             </div>
-            <form id="formCambiarEstadoDesperfecto" class="space-y-4 sm:space-y-6 px-4">
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+            <form id="formCambiarEstadoDesperfecto" class="space-y-5 px-4">
+                <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
                     <div>
-                        <label for="nuevoEstado" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">Nuevo Estado</label>
-                        <select id="nuevoEstado" name="nuevoEstado" class="block w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 transition-all duration-200" required>
+                        <label for="nuevoEstado" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Nuevo Estado
+                        </label>
+                        <select id="nuevoEstado" name="nuevoEstado" class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 transition-all duration-200" required>
                             ${estadoOptions}
                         </select>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
-                    <button type="button" onclick="ocultarModal()" class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center">Cancelar</button>
-                    <button type="submit" class="w-full sm:w-auto px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center justify-center">Actualizar Estado</button>
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
+                    <button type="button" onclick="ocultarModal()" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Actualizar Estado
+                    </button>
                 </div>
             </form>
         </div>
@@ -475,7 +532,7 @@ window.cambiarEstadoDesperfecto = async function(desperfectoId, currentStatus, i
  * @param {string} id - ID del documento a eliminar.
  * @param {function} callbackRefresh - Función a llamar para refrescar la tabla después de la eliminación.
  */
-window.eliminarDocumento = async function(coleccion, id, callbackRefresh) {
+window.eliminarDocumento = async function (coleccion, id, callbackRefresh) {
     if (confirm('¿Estás seguro de que quieres eliminar este desperfecto? Esta acción es irreversible.')) {
         try {
             await deleteDoc(doc(db, coleccion, id));
@@ -526,16 +583,50 @@ export async function mostrarTotalDesperfectosInquilino(inquilinoId) {
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            ${desperfectosList.map(d => `
+                            ${desperfectosList.map((d, index) => `
                                 <tr>
                                     <td class="px-4 py-2 text-sm text-gray-800">${d.descripcion || 'Sin descripción'}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-800">${(Number(d.costoReparacion) || 0).toFixed(2)}</td>
+                                    <td class="px-4 py-2 text-sm text-gray-800">$${(Number(d.costoReparacion) || 0).toFixed(2)}</td>
                                     <td class="px-4 py-2 text-sm"><span class="px-2 py-0.5 text-xs rounded-full font-semibold ${d.estado === 'Pendiente' ? 'bg-red-100 text-red-800' : d.estado === 'Reparado' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">${d.estado || 'N/A'}</span></td>
                                     <td class="px-4 py-2 text-sm">
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="cambiarEstadoDesperfecto('${d.id}', '${d.estado}', '${inquilinoId}')" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium px-2 py-1 rounded-md text-xs">Estado</button>
-                                            <button onclick="editarDesperfecto('${d.id}')" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium px-2 py-1 rounded-md text-xs">Editar</button>
-                                            <button onclick="eliminarDocumento('desperfectos', '${d.id}', () => mostrarTotalDesperfectosInquilino('${inquilinoId}'))" class="bg-red-100 hover:bg-red-200 text-red-800 font-medium px-2 py-1 rounded-md text-xs">Eliminar</button>
+                                        <div class="pill-menu-container">
+                                            <button class="pill-menu-button bg-indigo-500 hover:bg-indigo-600 text-white rounded-full p-2 shadow-md transition-all duration-200">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                                                </svg>
+                                            </button>
+                                            <div class="pill-menu-actions">
+                                                <a href="#" 
+                                                    onclick="event.preventDefault(); cambiarEstadoDesperfecto('${d.id}', '${d.estado}', '${inquilinoId}')"
+                                                    class="text-blue-600 hover:text-white"
+                                                    style="--icon-color: #3b82f6;"
+                                                    title="Cambiar Estado">
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    <span class="pill-menu-text">Estado</span>
+                                                </a>
+                                                <a href="#" 
+                                                    onclick="event.preventDefault(); editarDesperfecto('${d.id}')"
+                                                    class="text-yellow-600 hover:text-white"
+                                                    style="--icon-color: #eab308;"
+                                                    title="Editar">
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                    </svg>
+                                                    <span class="pill-menu-text">Editar</span>
+                                                </a>
+                                                <a href="#" 
+                                                    onclick="event.preventDefault(); eliminarDocumento('desperfectos', '${d.id}', () => mostrarTotalDesperfectosInquilino('${inquilinoId}'))"
+                                                    class="text-red-600 hover:text-white"
+                                                    style="--icon-color: #ef4444;"
+                                                    title="Eliminar">
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                    <span class="pill-menu-text">Eliminar</span>
+                                                </a>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -565,6 +656,37 @@ export async function mostrarTotalDesperfectosInquilino(inquilinoId) {
         `;
 
         mostrarModal(modalContent);
+
+        // Attach pill menu listeners
+        setTimeout(() => {
+            document.querySelectorAll('.pill-menu-container').forEach(container => {
+                const button = container.querySelector('.pill-menu-button');
+                if (button && !button.dataset.pillMenuAttached) {
+                    button.dataset.pillMenuAttached = 'true';
+
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Close other active menus
+                        document.querySelectorAll('.pill-menu-container.active').forEach(otherContainer => {
+                            if (otherContainer !== container) {
+                                otherContainer.classList.remove('active');
+                            }
+                        });
+                        // Toggle current menu
+                        container.classList.toggle('active');
+                    });
+                }
+            });
+
+            // Close pill menus when clicking outside
+            document.addEventListener('click', function closePillMenus(e) {
+                if (!e.target.closest('.pill-menu-container')) {
+                    document.querySelectorAll('.pill-menu-container.active').forEach(container => {
+                        container.classList.remove('active');
+                    });
+                }
+            });
+        }, 100);
 
     } catch (error) {
         console.error("Error al mostrar total de desperfectos:", error);

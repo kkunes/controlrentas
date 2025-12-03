@@ -46,15 +46,15 @@ export function confirmarAccion(mensaje, botonConfirmar = 'Confirmar', botonCanc
                 </div>
             </div>
         `;
-        
+
         mostrarModal(modalHtml);
-        
+
         // Agregar event listeners
         document.getElementById('btn-confirmar').addEventListener('click', () => {
             ocultarModal();
             resolve(true);
         });
-        
+
         document.getElementById('btn-cancelar').addEventListener('click', () => {
             ocultarModal();
             resolve(false);
@@ -72,11 +72,11 @@ export function mostrarModal(htmlContent) {
     const modalContent = document.getElementById('modalContenido');
 
     if (!modal) {
-        
+
         return;
     }
     if (!modalContent) {
-        
+
         return;
     }
 
@@ -154,7 +154,7 @@ export function mostrarNotificacion(mensaje, tipo = 'info', duracion = 3000, pos
     });
 
     const cerrarToast = () => {
-        
+
         if (!toast.classList.contains('show')) return;
         toast.classList.remove('show');
         toast.addEventListener('transitionend', () => toast.remove(), { once: true });
@@ -187,7 +187,7 @@ export async function eliminarDocumento(db, collectionName, docId) {
         await deleteDoc(doc(db, collectionName, docId));
         // No mostrar notificación aquí; la maneja la función global en main.js
     } catch (error) {
-        
+
         throw new Error("No se pudo eliminar el documento. Intente de nuevo.");
     }
 }
@@ -223,3 +223,37 @@ function obtenerEstilosToast(tipo) {
             return { clases: 'toast-info', icono: 'ℹ️', titulo: 'Información' };
     }
 }
+
+/**
+ * Toggle pill menu visibility with animation
+ * @param {string} menuId - The ID of the menu to toggle (without 'pill-menu-' prefix)
+ */
+window.togglePillMenu = function (menuId) {
+    const menu = document.getElementById(`pill-menu-${menuId}`);
+    if (!menu) return;
+
+    const isVisible = menu.style.display !== 'none';
+
+    // Close all other pill menus
+    document.querySelectorAll('.pill-menu').forEach(otherMenu => {
+        if (otherMenu !== menu) {
+            otherMenu.style.display = 'none';
+        }
+    });
+
+    // Toggle current menu
+    if (isVisible) {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'block';
+    }
+};
+
+// Close pill menus when clicking outside
+document.addEventListener('click', function (event) {
+    if (!event.target.closest('.pill-menu') && !event.target.closest('button[onclick*="togglePillMenu"]')) {
+        document.querySelectorAll('.pill-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
+});
