@@ -6,6 +6,11 @@
     align-items: center;
     justify-content: flex-end;
     /* Alinea el contenido (botón) a la derecha */
+    z-index: 20;
+}
+
+.pill-menu-container.active {
+    z-index: 50;
 }
 
 .pill-menu-button {
@@ -148,23 +153,23 @@
     }
 
     .pill-menu-actions a {
-        padding: 6px 12px;
+        padding: 10px;
         /* Slightly smaller padding on mobile */
         margin: 0 4px;
         /* Reduced margin */
-        gap: 0.375rem;
-        /* Smaller gap */
+        gap: 0;
+        /* No gap since text is hidden */
     }
 
     .pill-menu-actions a svg {
-        width: 1.25rem;
-        /* 20px - smaller icons on mobile */
-        height: 1.25rem;
+        width: 1.5rem;
+        /* 24px - larger icons on mobile since text is hidden */
+        height: 1.5rem;
     }
 
     .pill-menu-text {
-        font-size: 0.75rem;
-        /* Smaller text on mobile */
+        display: none;
+        /* Hide text on mobile to prevent overflow */
     }
 }
 

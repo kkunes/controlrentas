@@ -9,7 +9,7 @@ import { mostrarInquilinos, mostrarFormularioNuevoInquilino, editarInquilino, co
 import { mostrarPagos, mostrarFormularioNuevoPago, editarPago, mostrarFormularioRegistrarAbono, revisarPagosVencidos, mostrarHistorialPagosInmueble, eliminarDocumento as eliminarPagoDoc, mostrarHistorialPagosInquilino } from './pagos.js'; // Added mostrarHistorialPagosInquilino import
 import { mostrarMantenimientos, mostrarFormularioNuevoMantenimiento, editarMantenimiento, mostrarHistorialMantenimientoInmueble, eliminarDocumento as eliminarMantenimientoDoc, cambiarEstadoCosto } from './mantenimientos.js';
 import { mostrarInventarioMobiliario, mostrarFormularioNuevoMueble, eliminarMueble } from './mobiliario.js';
-import { mostrarReportes } from './reportes.js'; 
+import { mostrarReportes } from './reportes.js';
 import { mostrarAbonos, mostrarFormularioNuevoAbono, editarAbono, eliminarAbono, aplicarSaldoFavorManual } from './abonos.js';
 import { mostrarDesperfectos, mostrarFormularioNuevoDesperfecto, mostrarTotalDesperfectosInquilino, editarDesperfecto } from './desperfectos.js';
 import { mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
@@ -23,15 +23,19 @@ const provider = new GoogleAuthProvider();
 // Esto permite que estas funciones sean llamadas directamente desde el HTML (ej. onclick="mostrarDashboard()")
 
 // Funciones principales de navegación
-window.mostrarDashboard = mostrarDashboard;
-window.mostrarInmuebles = mostrarInmuebles;
-window.mostrarInquilinos = mostrarInquilinos;
-window.mostrarPagos = mostrarPagos;
-window.mostrarMantenimientos = mostrarMantenimientos;
-window.mostrarInventarioMobiliario = mostrarInventarioMobiliario;
-window.mostrarReportes = mostrarReportes;
-window.mostrarAbonos = mostrarAbonos;
-window.mostrarDesperfectos = mostrarDesperfectos;
+// Helper function for scrolling
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'instant' });
+
+// Funciones principales de navegación
+window.mostrarDashboard = (...args) => { scrollToTop(); mostrarDashboard(...args); };
+window.mostrarInmuebles = (...args) => { scrollToTop(); mostrarInmuebles(...args); };
+window.mostrarInquilinos = (...args) => { scrollToTop(); mostrarInquilinos(...args); };
+window.mostrarPagos = (...args) => { scrollToTop(); mostrarPagos(...args); };
+window.mostrarMantenimientos = (...args) => { scrollToTop(); mostrarMantenimientos(...args); };
+window.mostrarInventarioMobiliario = (...args) => { scrollToTop(); mostrarInventarioMobiliario(...args); };
+window.mostrarReportes = (...args) => { scrollToTop(); mostrarReportes(...args); };
+window.mostrarAbonos = (...args) => { scrollToTop(); mostrarAbonos(...args); };
+window.mostrarDesperfectos = (...args) => { scrollToTop(); mostrarDesperfectos(...args); };
 
 // Funciones específicas de Desperfectos
 window.mostrarFormularioNuevoDesperfecto = mostrarFormularioNuevoDesperfecto;
@@ -91,26 +95,26 @@ window.mostrarHistorialInquilinos = mostrarHistorialInquilinos; // Nueva línea
 // ***** Centralización de la función eliminarDocumento *****
 // Esta función global manejará la confirmación y delegará la eliminación a la función específica de cada módulo.
 window.eliminarDocumento = async (coleccion, id, callbackRefresh) => {
-    switch (coleccion) {
-        case 'inmuebles':
-            eliminarInmuebleDoc(coleccion, id, callbackRefresh);
-            break;
-        case 'inquilinos':
-            eliminarInquilinoDoc(coleccion, id, callbackRefresh);
-            break;
-        case 'pagos':
-            eliminarPagoDoc(coleccion, id, callbackRefresh);
-            break;
-        case 'mantenimientos':
-            eliminarMantenimientoDoc(coleccion, id, callbackRefresh);
-            break;
-        case 'desperfectos':
-            window.eliminarDocumento(coleccion, id, callbackRefresh);
-            break;
-        default:
-            mostrarNotificacion('Colección no reconocida para eliminar.', 'error');
-            break;
-    }
+  switch (coleccion) {
+    case 'inmuebles':
+      eliminarInmuebleDoc(coleccion, id, callbackRefresh);
+      break;
+    case 'inquilinos':
+      eliminarInquilinoDoc(coleccion, id, callbackRefresh);
+      break;
+    case 'pagos':
+      eliminarPagoDoc(coleccion, id, callbackRefresh);
+      break;
+    case 'mantenimientos':
+      eliminarMantenimientoDoc(coleccion, id, callbackRefresh);
+      break;
+    case 'desperfectos':
+      window.eliminarDocumento(coleccion, id, callbackRefresh);
+      break;
+    default:
+      mostrarNotificacion('Colección no reconocida para eliminar.', 'error');
+      break;
+  }
 };
 
 // ---- Funciones de Autenticación ----
@@ -155,46 +159,47 @@ onAuthStateChanged(auth, user => {
 
 // ---- Control de Rutas (Navegación) basado en el hash de la URL ----
 const loadContent = () => {
-    const fullHash = window.location.hash.substring(1);
-    const parts = fullHash.split('?');
-    const hash = parts[0];
-    const queryString = parts[1];
+  scrollToTop();
+  const fullHash = window.location.hash.substring(1);
+  const parts = fullHash.split('?');
+  const hash = parts[0];
+  const queryString = parts[1];
 
-    let params = {};
-    if (queryString) {
-        params = Object.fromEntries(new URLSearchParams(queryString));
-    }
+  let params = {};
+  if (queryString) {
+    params = Object.fromEntries(new URLSearchParams(queryString));
+  }
 
-    switch (hash) {
-        case 'inmuebles':
-            mostrarInmuebles(params.estado);
-            break;
-        case 'inquilinos':
-            mostrarInquilinos();
-            break;
-        case 'pagos':
-            mostrarPagos();
-            break;
-        case 'mantenimientos':
-            mostrarMantenimientos();
-            break;
-        case 'mobiliario':
-            mostrarInventarioMobiliario();
-            break;
-        case 'reportes':
-            mostrarReportes();
-            break;
-        case 'abonos':
-            mostrarAbonos();
-            break;
-        case 'desperfectos':
-            mostrarDesperfectos();
-            break;
-        case 'dashboard':
-        default:
-            mostrarDashboard();
-            break;
-    }
+  switch (hash) {
+    case 'inmuebles':
+      mostrarInmuebles(params.estado);
+      break;
+    case 'inquilinos':
+      mostrarInquilinos();
+      break;
+    case 'pagos':
+      mostrarPagos();
+      break;
+    case 'mantenimientos':
+      mostrarMantenimientos();
+      break;
+    case 'mobiliario':
+      mostrarInventarioMobiliario();
+      break;
+    case 'reportes':
+      mostrarReportes();
+      break;
+    case 'abonos':
+      mostrarAbonos();
+      break;
+    case 'desperfectos':
+      mostrarDesperfectos();
+      break;
+    case 'dashboard':
+    default:
+      mostrarDashboard();
+      break;
+  }
 };
 
 // ---- Event Listeners Principales ----
@@ -204,13 +209,13 @@ window.addEventListener('hashchange', loadContent);
 
 // Cargar el contenido inicial al cargar completamente la página (DOMContentLoaded)
 document.addEventListener('DOMContentLoaded', () => {
-    loadContent();
-    // Revisar pagos vencidos al cargar la aplicación
-    revisarPagosVencidos();
+  loadContent();
+  // Revisar pagos vencidos al cargar la aplicación
+  revisarPagosVencidos();
 });
 
 // Nueva función para mostrar comisiones
-window.mostrarComisiones = function() {
-    renderComisiones();
-    if (typeof setActiveSection === 'function') setActiveSection('comisiones');
+window.mostrarComisiones = function () {
+  renderComisiones();
+  if (typeof setActiveSection === 'function') setActiveSection('comisiones');
 };
