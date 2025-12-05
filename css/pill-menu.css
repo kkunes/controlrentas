@@ -140,6 +140,13 @@
         right: 52px;
         max-width: calc(100vw - 80px);
         /* More conservative on mobile */
+        height: auto !important;
+        /* Allow height to grow for text */
+        min-height: 52px;
+        padding: 4px 0;
+        /* Add vertical padding */
+        border-radius: 12px;
+        /* Rounded corners for the container */
     }
 
     .pill-menu-button {
@@ -153,23 +160,29 @@
     }
 
     .pill-menu-actions a {
-        padding: 10px;
-        /* Slightly smaller padding on mobile */
-        margin: 0 4px;
+        padding: 6px 8px;
+        /* Adjusted padding */
+        margin: 0 2px;
         /* Reduced margin */
-        gap: 0;
-        /* No gap since text is hidden */
+        gap: 2px;
+        /* Gap between icon and text */
+        flex-direction: column;
+        /* Stack icon and text */
+        height: auto;
     }
 
     .pill-menu-actions a svg {
-        width: 1.5rem;
-        /* 24px - larger icons on mobile since text is hidden */
-        height: 1.5rem;
+        width: 1.25rem;
+        /* 20px */
+        height: 1.25rem;
     }
 
     .pill-menu-text {
-        display: none;
-        /* Hide text on mobile to prevent overflow */
+        display: block !important;
+        /* Show text on mobile */
+        font-size: 0.6rem;
+        line-height: 1;
+        text-align: center;
     }
 }
 
@@ -177,8 +190,7 @@
 @media (max-width: 480px) {
     .pill-menu-actions {
         max-width: calc(100vw - 65px);
-        height: 48px;
-        /* Slightly smaller height */
+        min-height: 48px;
     }
 
     .pill-menu-button {
@@ -192,10 +204,9 @@
     }
 
     .pill-menu-actions a {
-        padding: 4px 10px;
+        padding: 4px 6px;
         /* Even smaller padding */
-        margin: 0 3px;
-        gap: 0.25rem;
+        margin: 0 2px;
     }
 
     .pill-menu-actions a svg {
@@ -205,6 +216,6 @@
     }
 
     .pill-menu-text {
-        font-size: 0.7rem;
+        font-size: 0.55rem;
     }
 }

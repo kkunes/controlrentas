@@ -60,6 +60,96 @@ window.adeudosModalContent = '';
 // Hacer la función accesible globalmente para los handlers `onclick`
 window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
 
+// Variables para el caché de inquilinos
+let cachedInquilinosHTML = null;
+let inquilinosCacheTimestamp = null;
+let cachedInquilinosFilter = null;
+const CACHE_DURATION_MS = 10 * 60 * 1000; // 10 minutos
+
+export function limpiarCacheInquilinos() {
+    cachedInquilinosHTML = null;
+    inquilinosCacheTimestamp = null;
+    cachedInquilinosFilter = null;
+    console.log("Caché de inquilinos limpiado.");
+}
+
+function adjuntarListenersInquilinos() {
+    const filtroActivo = document.getElementById('filtroActivo');
+    if (filtroActivo) {
+        filtroActivo.addEventListener('change', function () {
+            mostrarInquilinos(this.value);
+        });
+    }
+
+    const busquedaInquilino = document.getElementById('busquedaInquilino');
+    if (busquedaInquilino) {
+        busquedaInquilino.addEventListener('input', function () {
+            const busqueda = this.value.toLowerCase();
+            const tarjetas = document.querySelectorAll('#listaInquilinos > div');
+
+            tarjetas.forEach(tarjeta => {
+                const nombre = tarjeta.querySelector('h3')?.textContent.toLowerCase() || '';
+                const telefono = tarjeta.querySelector('.text-gray-600 .text-sm')?.textContent.toLowerCase() || '';
+                const inmueble = tarjeta.querySelectorAll('.text-gray-600 .text-sm')[1]?.textContent.toLowerCase() || '';
+
+                if (nombre.includes(busqueda) || telefono.includes(busqueda) || inmueble.includes(busqueda)) {
+                    tarjeta.style.display = '';
+                } else {
+                    tarjeta.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll('.total-pill-trigger').forEach(pill => {
+        pill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const breakdownId = pill.id.replace('total-pill-', 'total-breakdown-');
+            const breakdownPopup = document.getElementById(breakdownId);
+
+            document.querySelectorAll('.total-breakdown-popup').forEach(popup => {
+                if (popup.id !== breakdownId) {
+                    popup.classList.add('hidden');
+                }
+            });
+
+            if (breakdownPopup) {
+                breakdownPopup.classList.toggle('hidden');
+            }
+        });
+    });
+
+    if (!window.inquilinosGlobalClickListenerAttached) {
+        document.addEventListener('click', (e) => {
+            const openPopups = document.querySelectorAll('.total-breakdown-popup:not(.hidden)');
+            openPopups.forEach(popup => {
+                const pillId = popup.id.replace('total-breakdown-', 'total-pill-');
+                const pill = document.getElementById(pillId);
+                if (!popup.contains(e.target) && (!pill || !pill.contains(e.target))) {
+                    popup.classList.add('hidden');
+                }
+            });
+        });
+        window.inquilinosGlobalClickListenerAttached = true;
+    }
+
+    const lista = document.getElementById('listaInquilinos');
+    if (lista) {
+        Sortable.create(lista, {
+            animation: 150,
+            handle: '.handle-move',
+            onEnd: async function (evt) {
+                const ids = Array.from(lista.children).map(card => card.dataset.id);
+                for (let i = 0; i < ids.length; i++) {
+                    await updateDoc(doc(db, "inquilinos", ids[i]), { orden: i });
+                }
+                mostrarNotificacion("Orden de inquilinos actualizado.", "success");
+                limpiarCacheInquilinos();
+            }
+        });
+    }
+}
+
 /**
  * Muestra la lista de inquilinos en forma de tarjetas.
  */
@@ -69,6 +159,15 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
         mostrarNotificacion("Error: No se pudo cargar la sección de inquilinos.", 'error');
+        ocultarLoader();
+        return;
+    }
+
+    // --- Lógica de Caché ---
+    if (cachedInquilinosHTML && inquilinosCacheTimestamp && cachedInquilinosFilter === filtroActivo && (new Date() - inquilinosCacheTimestamp < CACHE_DURATION_MS)) {
+        console.log("Cargando inquilinos desde la caché.");
+        contenedor.innerHTML = cachedInquilinosHTML;
+        adjuntarListenersInquilinos();
         ocultarLoader();
         return;
     }
@@ -329,7 +428,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     </svg>
                                     <span>Editar</span>
                                 </button>
-                                <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', mostrarInquilinos)" 
+                                <button onclick="eliminarDocumento('inquilinos', '${inquilino.id}', () => { limpiarCacheInquilinos(); mostrarInquilinos(); })" 
                                     title="Eliminar este inquilino"
                                     class="bg-red-500 hover:bg-red-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -414,77 +513,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
         `;
 
         // Agrega los event listeners después de asignar el innerHTML
-        document.getElementById('filtroActivo').addEventListener('change', function () {
-            mostrarInquilinos(this.value);
-        });
-
-        // Listener para el cuadro de búsqueda
-        document.getElementById('busquedaInquilino').addEventListener('input', function () {
-            const busqueda = this.value.toLowerCase();
-            const tarjetas = document.querySelectorAll('#listaInquilinos > div');
-
-            tarjetas.forEach(tarjeta => {
-                const nombre = tarjeta.querySelector('h3')?.textContent.toLowerCase() || '';
-                const telefono = tarjeta.querySelector('.text-gray-600 .text-sm')?.textContent.toLowerCase() || '';
-                const inmueble = tarjeta.querySelectorAll('.text-gray-600 .text-sm')[1]?.textContent.toLowerCase() || '';
-
-                if (nombre.includes(busqueda) || telefono.includes(busqueda) || inmueble.includes(busqueda)) {
-                    tarjeta.style.display = '';
-                } else {
-                    tarjeta.style.display = 'none';
-                }
-            });
-        });
-
-        // Listener para las nuevas píldoras de total
-        document.querySelectorAll('.total-pill-trigger').forEach(pill => {
-            pill.addEventListener('click', (e) => {
-                e.stopPropagation(); // Evita que el clic se propague al documento
-                const breakdownId = pill.id.replace('total-pill-', 'total-breakdown-');
-                const breakdownPopup = document.getElementById(breakdownId);
-
-                // Ocultar todos los otros popups abiertos
-                document.querySelectorAll('.total-breakdown-popup').forEach(popup => {
-                    if (popup.id !== breakdownId) {
-                        popup.classList.add('hidden');
-                    }
-                });
-
-                // Mostrar u ocultar el popup actual
-                if (breakdownPopup) {
-                    breakdownPopup.classList.toggle('hidden');
-                }
-            });
-        });
-
-        // Listener global para cerrar popups al hacer clic fuera
-        document.addEventListener('click', (e) => {
-            const openPopups = document.querySelectorAll('.total-breakdown-popup:not(.hidden)');
-            openPopups.forEach(popup => {
-                // Si el clic no fue dentro del popup ni en su píldora de activación
-                const pillId = popup.id.replace('total-breakdown-', 'total-pill-');
-                const pill = document.getElementById(pillId);
-                if (!popup.contains(e.target) && !pill.contains(e.target)) {
-                    popup.classList.add('hidden');
-                }
-            });
-        });
-
-
-        const lista = document.getElementById('listaInquilinos');
-        if (lista) {
-            Sortable.create(lista, {
-                animation: 150,
-                handle: '.handle-move', // <-- Solo se puede arrastrar desde el handle
-                onEnd: async function (evt) {
-                    const ids = Array.from(lista.children).map(card => card.dataset.id);
-                    for (let i = 0; i < ids.length; i++) {
-                        await updateDoc(doc(db, "inquilinos", ids[i]), { orden: i });
-                    }
-                    mostrarNotificacion("Orden de inquilinos actualizado.", "success");
-                }
-            });
-        }
+        adjuntarListenersInquilinos();
 
         // Actualizar badges de adeudos
         for (const inquilino of inquilinosList) {
@@ -720,6 +749,11 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 }
             }
         }
+
+        // Guardar en caché después de actualizar todo
+        cachedInquilinosHTML = contenedor.innerHTML;
+        inquilinosCacheTimestamp = new Date();
+        cachedInquilinosFilter = filtroActivo;
     } catch (error) {
         console.error("Error al obtener inquilinos:", error);
         mostrarNotificacion("Error al cargar los inquilinos.", 'error');
@@ -923,6 +957,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 mostrarNotificacion("Inquilino registrado con éxito.", "success");
             }
             ocultarModal();
+            limpiarCacheInquilinos();
             mostrarInquilinos();
         } catch (error) {
             mostrarNotificacion("Error al guardar el inquilino.", "error");
@@ -1046,6 +1081,7 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
             } else {
                 mostrarNotificacion("Inquilino no encontrado.", 'error');
             }
+            limpiarCacheInquilinos();
             mostrarInquilinos();
 
         } catch (error) {
@@ -1068,6 +1104,7 @@ export async function confirmarReactivacionInquilino(inquilinoId) {
                 fechaDesocupacion: null
             });
             mostrarNotificacion("Inquilino reactivado con éxito.", 'success');
+            limpiarCacheInquilinos();
             mostrarInquilinos();
 
         } catch (error) {
