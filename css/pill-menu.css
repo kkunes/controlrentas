@@ -147,6 +147,17 @@
         /* Add vertical padding */
         border-radius: 12px;
         /* Rounded corners for the container */
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE 10+ */
+    }
+
+    .pill-menu-actions::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari */
     }
 
     .pill-menu-button {
@@ -204,9 +215,9 @@
     }
 
     .pill-menu-actions a {
-        padding: 4px 6px;
+        padding: 4px 4px;
         /* Even smaller padding */
-        margin: 0 2px;
+        margin: 0 1px;
     }
 
     .pill-menu-actions a svg {
