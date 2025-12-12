@@ -276,6 +276,12 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                         Registrar Propietario
                     </button>
                     <button onclick="mostrarFormularioNuevoInmueble()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200">Registrar Nuevo Inmueble</button>
+                    <button onclick="generarPDFInmuebles()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-200 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Descargar PDF
+                    </button>
                 </div>
                 <div class="flex gap-2 flex-wrap">
                     <div class="flex flex-col">
@@ -347,6 +353,93 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                 }
             });
         }
+
+        // Función para generar PDF
+        window.generarPDFInmuebles = async () => {
+            const fechaGeneracion = new Date().toLocaleDateString();
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const filtroTipo = document.getElementById('filtroTipo').value;
+
+            const headerHtml = `
+                <div style="text-align: center; margin-bottom: 2rem; color: #000000;">
+                    <h2 style="font-size: 1.8rem; font-weight: 800; color: #000000; margin: 0 0 0.5rem 0;">Reporte de Inmuebles</h2>
+                    <h3 style="font-size: 1rem; font-weight: 500; color: #000000; margin: 0;">Generado el: ${fechaGeneracion}</h3>
+                    <p style="font-size: 0.8rem; color: #000000;">Filtros: Estado: ${filtroEstado}, Tipo: ${filtroTipo}</p>
+                </div>
+            `;
+
+            let contenidoHtml = '';
+            if (inmueblesList.length === 0) {
+                contenidoHtml = '<p style="text-align: center; color: #000000; padding: 1.5rem;">No hay inmuebles que coincidan con los filtros.</p>';
+            } else {
+                contenidoHtml = `
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; color: #000000;">
+                        <thead>
+                            <tr style="background-color: #3730a3; color: #ffffff;">
+                                <th style="padding: 10px; text-align: left; font-weight: bold; border-top-left-radius: 8px;">Nombre</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold;">Dirección</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold;">Tipo</th>
+                                <th style="padding: 10px; text-align: center; font-weight: bold;">Estado</th>
+                                <th style="padding: 10px; text-align: right; font-weight: bold;">Renta</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold;">Inquilino</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold; border-top-right-radius: 8px;">CFE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${inmueblesList.map((inmueble, index) => `
+                                <tr style="border-bottom: 1px solid #e5e7eb; background-color: ${index % 2 === 0 ? '#ffffff' : '#f5f3ff'};">
+                                    <td style="padding: 10px; color: #1f2937; font-weight: 600;">${inmueble.nombre}</td>
+                                    <td style="padding: 10px; color: #374151;">${inmueble.direccion}</td>
+                                    <td style="padding: 10px; color: #374151;">${inmueble.tipo}</td>
+                                    <td style="padding: 10px; text-align: center;">
+                                        <span style="display: inline-block; padding: 4px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; background-color: ${inmueble.estado === 'Disponible' ? '#dcfce7' : inmueble.estado === 'Ocupado' ? '#ffedd5' : '#f3f4f6'}; color: ${inmueble.estado === 'Disponible' ? '#166534' : inmueble.estado === 'Ocupado' ? '#9a3412' : '#1f2937'};">
+                                            ${inmueble.estado}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 10px; text-align: right; color: #111827; font-weight: 600;">$${(inmueble.rentaMensual || 0).toFixed(2)}</td>
+                                    <td style="padding: 10px; color: #374151;">${inmueble.inquilinoActual ? inmueble.inquilinoActual.nombre : '-'}</td>
+                                    <td style="padding: 10px; color: #374151;">${inmueble.numeroCFE || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            const finalHtml = `
+                <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #000000; line-height: 1.5; padding: 2rem;">
+                    ${headerHtml}
+                    ${contenidoHtml}
+                </div>
+            `;
+
+            const opt = {
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: `Reporte_Inmuebles_${fechaGeneracion.replace(/\//g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
+            };
+
+            const element = document.createElement('div');
+            element.innerHTML = finalHtml;
+            document.body.appendChild(element);
+
+            html2pdf().from(element).set(opt).toPdf().get('pdf').then(function (pdf) {
+                var totalPages = pdf.internal.getNumberOfPages();
+                for (var i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(9);
+                    pdf.setTextColor(107, 114, 128);
+                    const text = `Página ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    pdf.text(text, pageWidth - 0.5, pageHeight - 0.5, { align: 'right' });
+                }
+                document.body.removeChild(element);
+            }).save();
+        };
 
     } catch (error) {
         console.error("Error al obtener inmuebles:", error);
