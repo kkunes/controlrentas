@@ -184,41 +184,53 @@ export async function mostrarMantenimientos() {
 
             const nombreMes = filtroMes ? meses[filtroMes - 1] : "Todos los meses";
             const anioReporte = filtroAnio || "Todos los años";
-            const tituloReporte = `Reporte de Mantenimientos - ${nombreMes} ${anioReporte}`;
+            const tituloReporte = `${nombreMes} ${anioReporte}`;
+            const fechaGeneracion = new Date().toLocaleDateString();
 
-            let tablaHtml = '';
+            const headerHtml = `
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.8rem; font-weight: 800; color: #111827; margin: 0 0 0.5rem 0;">Reporte de Mantenimientos</h2>
+                    <h3 style="font-size: 1.2rem; font-weight: 500; color: #4b5563; margin: 0;">${tituloReporte}</h3>
+                </div>
+            `;
+
+            const summaryHtml = `
+                <div style="text-align: center; margin-bottom: 2rem; padding: 1.5rem; background-color: #f0fdf4; border-radius: 0.75rem; border: 1px solid #bbf7d0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    <p style="font-size: 1rem; font-weight: 600; color: #166534; margin: 0 0 0.5rem 0; text-transform: uppercase; letter-spacing: 0.05em;">Costo Total</p>
+                    <p style="font-size: 2.5rem; font-weight: 800; color: #14532d; margin: 0;">$${totalCosto.toFixed(2)}</p>
+                </div>
+            `;
+
+            let contenidoHtml = '';
+
             if (filtrados.length === 0) {
-                tablaHtml = `<p style="text-align: center; color: #6b7280; padding: 20px;">No hay mantenimientos que coincidan con los filtros para generar el reporte.</p>`;
+                contenidoHtml = '<p style="text-align: center; color: #6b7280; padding: 1.5rem;">No hay mantenimientos que coincidan con los filtros.</p>';
             } else {
                 filtrados.sort((a, b) => new Date(b.fechaMantenimiento) - new Date(a.fechaMantenimiento));
-                tablaHtml = `
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                            <thead>
-                                <tr style="background-color: #f3f4f6;">
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Inmueble</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Inquilino</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Descripción</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Costo</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Categoría</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Prioridad</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Estado</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Fecha</th>
-                                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 10px;">Paga</th>
+                contenidoHtml = `
+                    <div style="margin-bottom: 2rem;">
+                        <table style="min-width: 100%; border-collapse: collapse; border-spacing: 0; border: 1px solid #e5e7eb;">
+                            <thead style="background-color: #374151;">
+                                <tr>
+                                    <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Inmueble</th>
+                                    <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Inquilino</th>
+                                    <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 25%;">Descripción</th>
+                                    <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 10%;">Categoría</th>
+                                    <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 10%;">Estado</th>
+                                    <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 10%;">Fecha</th>
+                                    <th style="padding: 0.5rem; text-align: right; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Costo</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                ${filtrados.map(m => `
-                                    <tr style="background-color: #ffffff;">
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.nombreInmueble}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.nombreInquilino}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.descripcion || 'Sin descripción'}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${(Number(m.costo) || 0).toFixed(2)}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.categoria || 'N/A'}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.prioridad || 'N/A'}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.estado || 'N/A'}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.fechaMantenimiento || 'N/A'}</td>
-                                        <td style="padding: 8px; border: 1px solid #e5e7eb; font-size: 10px;">${m.pagadoPor}</td>
+                            <tbody style="background-color: #ffffff;">
+                                ${filtrados.map((m, index) => `
+                                    <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'}; border-bottom: 1px solid #e5e7eb;">
+                                        <td style="padding: 0.5rem; font-size: 0.75rem; font-weight: 600; color: #1f2937;">${m.nombreInmueble}</td>
+                                        <td style="padding: 0.5rem; font-size: 0.75rem; color: #4b5563;">${m.nombreInquilino}</td>
+                                        <td style="padding: 0.5rem; font-size: 0.75rem; color: #4b5563;">${m.descripcion || '-'}</td>
+                                        <td style="padding: 0.5rem; font-size: 0.75rem; color: #4b5563;">${m.categoria || '-'}</td>
+                                        <td style="padding: 0.5rem; font-size: 0.75rem; color: #4b5563;">${m.estado || '-'}</td>
+                                        <td style="padding: 0.5rem; font-size: 0.75rem; color: #4b5563; white-space: nowrap;">${m.fechaMantenimiento || '-'}</td>
+                                        <td style="padding: 0.5rem; text-align: right; font-weight: 700; font-size: 0.75rem; color: #059669;">$${(Number(m.costo) || 0).toFixed(2)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -227,68 +239,40 @@ export async function mostrarMantenimientos() {
                 `;
             }
 
-            const pdfContent = `
-                <div style="font-family: 'Arial', sans-serif; padding: 20px; background-color: #f8f9fa;">
-                    <h1 style="text-align: center; color: #2c3e50; margin-bottom: 25px; font-size: 28px; font-weight: bold; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">${tituloReporte}</h1>
-                    <div style="background-color: #d4edda; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                        <p style="font-size: 18px; color: #155724; margin: 0; font-weight: 600;">Costo Total de Mantenimientos (Filtrado):</p>
-                        <p style="font-size: 32px; font-weight: bold; color: #28a745; margin: 10px 0 0;">${totalCosto.toFixed(2)} MXN</p>
-                    </div>
-                    <div style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background-color: #007bff; color: #ffffff;">
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Inmueble</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Inquilino</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Descripción</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Costo</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Categoría</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Prioridad</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Estado</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Fecha</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #dee2e6;">Pagado por</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${filtrados.map((m, index) => `
-                                    <tr style="background-color: ${index % 2 === 0 ? '#f2f2f2' : '#ffffff'};">
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.nombreInmueble}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.nombreInquilino}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.descripcion || 'Sin descripción'}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${(Number(m.costo) || 0).toFixed(2)}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.categoria || 'N/A'}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.prioridad || 'N/A'}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.estado || 'N/A'}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.fechaMantenimiento || 'N/A'}</td>
-                                        <td style="padding: 10px 8px; border: 1px solid #dee2e6; font-size: 10px;">${m.pagadoPor}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+            const finalHtml = `
+                <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #1f2937; line-height: 1.5; padding: 2rem;">
+                    ${headerHtml}
+                    ${summaryHtml}
+                    ${contenidoHtml}
                 </div>
             `;
 
             const opt = {
-                margin: 0.5,
-                filename: `Reporte_Mantenimientos_${nombreMes}_${anioReporte}.pdf`,
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: `Reporte_Mantenimientos_${fechaGeneracion.replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, scrollY: 0, windowWidth: document.documentElement.offsetWidth },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
                 pagebreak: { mode: ['css', 'legacy'] }
             };
 
-            html2pdf().from(pdfContent).set(opt).toPdf().get('pdf').then(function (pdf) {
+            // Crear un elemento temporal para generar el PDF
+            const element = document.createElement('div');
+            element.innerHTML = finalHtml;
+            document.body.appendChild(element);
+
+            html2pdf().from(element).set(opt).toPdf().get('pdf').then(function (pdf) {
                 var totalPages = pdf.internal.getNumberOfPages();
                 for (var i = 1; i <= totalPages; i++) {
                     pdf.setPage(i);
-                    pdf.setFontSize(10);
-                    pdf.setTextColor(150);
-                    const text = `Página ${i} de ${totalPages}`;
+                    pdf.setFontSize(9);
+                    pdf.setTextColor(107, 114, 128); // Gray-500
+                    const text = `Página ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
                     const pageHeight = pdf.internal.pageSize.getHeight();
                     const pageWidth = pdf.internal.pageSize.getWidth();
-                    pdf.text(text, pageWidth - 0.75, pageHeight - 0.5);
+                    pdf.text(text, pageWidth - 0.5, pageHeight - 0.5, { align: 'right' });
                 }
+                document.body.removeChild(element); // Limpiar
             }).save();
         }
 
