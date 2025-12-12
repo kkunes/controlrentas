@@ -545,15 +545,15 @@ async function generarGraficoAnual(anio) {
     }
 }
 
-async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
+async function abrirModalPropietarios(propietariosMap, inmueblesMap, inquilinosMap) {
     let propietariosOptions = '<option value="">Propietarios</option>';
     propietariosMap.forEach((nombre, id) => {
         propietariosOptions += `<option value="${id}">${nombre}</option>`;
     });
 
-    let inquilinosOptions = '<option value="">Inquilinos</option>';
-    inquilinosMap.forEach((nombre, id) => {
-        inquilinosOptions += `<option value="${id}">${nombre}</option>`;
+    let inmueblesOptions = '<option value="">Inmuebles</option>';
+    inmueblesMap.forEach((info, id) => {
+        inmueblesOptions += `<option value="${id}">${info.nombre}</option>`;
     });
 
     const modalHtml = `
@@ -575,8 +575,8 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                         <input type="date" id="filtroFechaFinModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Inquilino</label>
-                        <select id="filtroInquilinoModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">${inquilinosOptions}</select>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Inmueble</label>
+                        <select id="filtroInmuebleModal" class="block w-full border border-gray-300 rounded-xl shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">${inmueblesOptions}</select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Propietario</label>
@@ -621,7 +621,7 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
 
     const renderTabla = () => {
         const propietarioId = document.getElementById('filtroPropietarioModal').value;
-        const inquilinoId = document.getElementById('filtroInquilinoModal').value;
+        const inmuebleId = document.getElementById('filtroInmuebleModal').value;
         const fechaInicio = document.getElementById('filtroFechaInicioModal').value;
         const fechaFin = document.getElementById('filtroFechaFinModal').value;
         const tipo = document.getElementById('filtroTipoModal').value;
@@ -633,8 +633,8 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
             movimientosFiltrados = movimientosFiltrados.filter(mov => mov.propietarioId === propietarioId);
         }
 
-        if (inquilinoId) {
-            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.inquilinoId === inquilinoId);
+        if (inmuebleId) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.inmuebleId === inmuebleId);
         }
 
         if (fechaInicio) {
@@ -679,26 +679,28 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                         <thead class="bg-indigo-600">
                             <tr>
-                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Fecha</th>
-                                <th class="px-2 py-2 text-center text-xs font-bold text-white uppercase tracking-tight">T</th>
-                                <th class="px-3 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Descripción</th>
-                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Propietario</th>
-                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Pago</th>
-                                <th class="px-2 py-2 text-right text-xs font-bold text-white uppercase tracking-tight">Monto</th>
+                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight w-20">Fecha</th>
+                                <th class="px-1 py-2 text-center text-xs font-bold text-white uppercase tracking-tight w-8">T</th>
+                                <th class="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-tight">Descripción</th>
+                                <th class="px-2 py-2 text-right text-xs font-bold text-white uppercase tracking-tight w-20">Monto</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${movimientosFiltrados.map(mov => `
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-700 font-medium">${mov.fecha}</td>
-                                    <td class="px-2 py-2 text-center" title="${mov.tipo}">
+                                    <td class="px-1 py-2 text-center" title="${mov.tipo}">
                                         ${mov.tipo.startsWith('Ingreso')
                     ? '<span class="inline-block w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center" title="Ingreso">↑</span>'
                     : '<span class="inline-block w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center" title="Gasto">↓</span>'}
                                     </td>
-                                    <td class="px-3 py-2 text-xs text-gray-700 max-w-xs truncate" title="${mov.descripcion}">${mov.descripcion}</td>
-                                    <td class="px-2 py-2 text-xs text-gray-700 truncate max-w-[120px]" title="${mov.propietario}">${mov.propietario}</td>
-                                    <td class="px-2 py-2 text-xs text-gray-700 truncate" title="${mov.formaPago || '-'}">${mov.formaPago || '-'}</td>
+                                    <td class="px-2 py-2 text-xs text-gray-700">
+                                        <div class="font-medium truncate max-w-[150px] sm:max-w-xs">${mov.compactDescription || mov.descripcion}</div>
+                                        <div class="text-[10px] text-gray-500 truncate max-w-[150px] sm:max-w-xs">
+                                            <span class="font-semibold text-gray-600 mr-1">${mov.formaPago || '-'}</span>
+                                            ${mov.propietario}
+                                        </div>
+                                    </td>
                                     <td class="px-2 py-2 text-right text-xs font-bold whitespace-nowrap ${mov.tipo.startsWith('Ingreso') ? 'text-green-600' : 'text-red-600'}">$${mov.monto.toFixed(2)}</td>
                                 </tr>
                             `).join('')}
@@ -741,10 +743,12 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                     fecha: fechaPago,
                     tipo: 'Ingreso (Pago de Renta)',
                     descripcion: `Pago de ${inquilinoNombre} por ${inmuebleNombre} (Mes: ${data.mesCorrespondiente || 'N/A'})`,
+                    compactDescription: `${inmuebleNombre} - ${data.mesCorrespondiente || 'Pago'}`,
                     monto: montoPagado,
                     propietario: propietarioNombre,
                     propietarioId,
                     inquilinoId: data.inquilinoId,
+                    inmuebleId: data.inmuebleId,
                     formaPago: data.formaPago
                 });
             }
@@ -763,9 +767,11 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                     fecha: data.fechaDeposito,
                     tipo: 'Ingreso (Depósito)',
                     descripcion: `Depósito de ${nombreInquilino} por ${inmuebleNombre}`,
+                    compactDescription: `${inmuebleNombre} - Depósito`,
                     monto: parseFloat(data.montoDeposito),
                     propietario: propietarioNombre,
                     propietarioId,
+                    inmuebleId: data.inmuebleAsociadoId,
                     formaPago: 'N/A'
                 });
             }
@@ -789,9 +795,11 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                 fecha: data.fechaMantenimiento ? data.fechaMantenimiento.substring(0, 10) : '',
                 tipo: 'Gasto (Mantenimiento)',
                 descripcion: `Mantenimiento${tipoMantenimiento ? ': ' + tipoMantenimiento : ''}${descripcionMantenimiento ? ' - ' + descripcionMantenimiento : ''} (${inmuebleNombre})${categoriaMantenimiento ? ' [' + categoriaMantenimiento + ']' : ''}`,
+                compactDescription: `${inmuebleNombre} - ${tipoMantenimiento || 'Mantenimiento'}`,
                 monto: parseFloat(data.costo) || 0,
                 propietario: propietarioNombre,
                 propietarioId,
+                inmuebleId: data.inmuebleId,
                 formaPago: 'N/A'
             });
         });
@@ -811,7 +819,7 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
     };
 
     document.getElementById('filtroPropietarioModal').addEventListener('change', handleFilterChange);
-    document.getElementById('filtroInquilinoModal').addEventListener('change', handleFilterChange);
+    document.getElementById('filtroInmuebleModal').addEventListener('change', handleFilterChange);
     document.getElementById('filtroFechaInicioModal').addEventListener('change', handleFilterChange);
     document.getElementById('filtroFechaFinModal').addEventListener('change', handleFilterChange);
     document.getElementById('filtroTipoModal').addEventListener('change', handleFilterChange);
@@ -822,7 +830,7 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
             await loadAllData();
         }
         const propietarioId = document.getElementById('filtroPropietarioModal').value;
-        const inquilinoId = document.getElementById('filtroInquilinoModal').value;
+        const inmuebleId = document.getElementById('filtroInmuebleModal').value;
         const fechaInicio = document.getElementById('filtroFechaInicioModal').value;
         const fechaFin = document.getElementById('filtroFechaFinModal').value;
         const tipo = document.getElementById('filtroTipoModal').value;
@@ -834,8 +842,8 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
             movimientosFiltrados = movimientosFiltrados.filter(mov => mov.propietarioId === propietarioId);
         }
 
-        if (inquilinoId) {
-            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.inquilinoId === inquilinoId);
+        if (inmuebleId) {
+            movimientosFiltrados = movimientosFiltrados.filter(mov => mov.inmuebleId === inmuebleId);
         }
 
         if (fechaInicio) {
@@ -871,15 +879,7 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
     const lastDayOfMonth = new Date(anio, mes, 0).getDate();
     const endOfMonth = `${anio}-${String(mes).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
-    const inmueblesSnap = await getDocs(collection(db, "inmuebles"));
-    const inmueblesMap = new Map();
-    inmueblesSnap.forEach(doc => {
-        const data = doc.data();
-        inmueblesMap.set(doc.id, {
-            nombre: data.nombre,
-            propietarioId: data.propietarioId
-        });
-    });
+
 
     const pagosRef = collection(db, "pagos");
     const pagosSnap = await getDocs(query(pagosRef, where("fechaRegistro", ">=", startOfMonth), where("fechaRegistro", "<=", endOfMonth)));
@@ -900,10 +900,12 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                 fecha: fechaPago,
                 tipo: 'Ingreso (Pago de Renta)',
                 descripcion: `Pago de ${inquilinoNombre} por ${inmuebleNombre} (Mes: ${data.mesCorrespondiente || 'N/A'})`,
+                compactDescription: `${inmuebleNombre} - ${data.mesCorrespondiente || 'Pago'}`,
                 monto: montoPagado,
                 propietario: propietarioNombre,
                 propietarioId,
                 inquilinoId: data.inquilinoId,
+                inmuebleId: data.inmuebleId,
                 formaPago: data.formaPago
             });
         }
@@ -922,9 +924,11 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
                 fecha: data.fechaDeposito,
                 tipo: 'Ingreso (Depósito)',
                 descripcion: `Depósito de ${nombreInquilino} por ${inmuebleNombre}`,
+                compactDescription: `${inmuebleNombre} - Depósito`,
                 monto: parseFloat(data.montoDeposito),
                 propietario: propietarioNombre,
                 propietarioId,
+                inmuebleId: data.inmuebleAsociadoId,
                 formaPago: 'N/A'
             });
         }
@@ -948,9 +952,11 @@ async function abrirModalPropietarios(propietariosMap, inquilinosMap) {
             fecha: data.fechaMantenimiento ? data.fechaMantenimiento.substring(0, 10) : '',
             tipo: 'Gasto (Mantenimiento)',
             descripcion: `Mantenimiento${tipoMantenimiento ? ': ' + tipoMantenimiento : ''}${descripcionMantenimiento ? ' - ' + descripcionMantenimiento : ''} (${inmuebleNombre})${categoriaMantenimiento ? ' [' + categoriaMantenimiento + ']' : ''}`,
+            compactDescription: `${inmuebleNombre} - ${tipoMantenimiento || 'Mantenimiento'}`,
             monto: parseFloat(data.costo) || 0,
             propietario: propietarioNombre,
             propietarioId,
+            inmuebleId: data.inmuebleId,
             formaPago: 'N/A'
         });
     });
@@ -974,82 +980,112 @@ function generarPdfMovimientosPropietario(movimientos, propietariosMap, propieta
         totalFiltrado += mov.monto;
     });
 
-    let tablaHtml = '<p style="text-align: center; color: #6b7280; padding: 1.5rem;">No hay movimientos que coincidan con los filtros.</p>';
-    if (movimientos.length > 0) {
-        tablaHtml = `
-            <div style="overflow-x: auto;">
-                <table style="min-width: 100%; border-collapse: collapse; border-spacing: 0; margin-top: 1rem;">
-                    <thead style="background-color: #374151;">
-                        <tr>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Fecha</th>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Tipo</th>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Descripción</th>
-                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Propietario</th>
-                            <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb;">Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody style="background-color: #ffffff; divide-y divide-gray-200;">
-                        ${movimientos.map(mov => `
-                            <tr style="${mov.tipo.startsWith('Ingreso') ? 'background-color: #ecfdf5;' : 'background-color: #fef2f2;'}">
-                                <td style="padding: 0.75rem; white-space: nowrap; font-size: 0.875rem; color: #374151;">${mov.fecha}</td>
-                                <td style="padding: 0.75rem; white-space: nowrap; font-size: 0.875rem; color: ${mov.tipo.startsWith('Ingreso') ? '#065f46;' : '#991b1b;'};">${mov.tipo}</td>
-                                <td style="padding: 0.75rem; font-size: 0.875rem; color: #374151;">${mov.descripcion}</td>
-                                <td style="padding: 0.75rem; font-size: 0.875rem; color: #374151;">${mov.propietario || 'N/A'}</td>
-                                <td style="padding: 0.75rem; text-align: right; font-weight: 700; font-size: 0.875rem; color: ${mov.tipo.startsWith('Ingreso') ? '#047857;' : '#b91c1c;'};">${parseFloat(mov.monto).toFixed(2)}</td>
+    // Agrupar movimientos por propietario
+    const movimientosPorPropietario = {};
+    movimientos.forEach(mov => {
+        const prop = mov.propietario || 'Sin Propietario';
+        if (!movimientosPorPropietario[prop]) {
+            movimientosPorPropietario[prop] = {
+                movimientos: [],
+                total: 0
+            };
+        }
+        movimientosPorPropietario[prop].movimientos.push(mov);
+        movimientosPorPropietario[prop].total += mov.monto;
+    });
+
+    let contenidoHtml = '';
+
+    if (Object.keys(movimientosPorPropietario).length === 0) {
+        contenidoHtml = '<p style="text-align: center; color: #6b7280; padding: 1.5rem;">No hay movimientos que coincidan con los filtros.</p>';
+    } else {
+        // Ordenar propietarios alfabéticamente
+        const propietariosOrdenados = Object.keys(movimientosPorPropietario).sort();
+
+        propietariosOrdenados.forEach(prop => {
+            const data = movimientosPorPropietario[prop];
+            const tablaPropietario = `
+                <div style="margin-bottom: 2rem; page-break-inside: avoid;">
+                    <div style="background-color: #f3f4f6; padding: 0.75rem; border-radius: 0.5rem 0.5rem 0 0; border: 1px solid #e5e7eb; border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #1f2937; font-weight: 700;">${prop}</h3>
+                        <span style="font-weight: 600; color: #374151;">Total: $${data.total.toFixed(2)}</span>
+                    </div>
+                    <table style="min-width: 100%; border-collapse: collapse; border-spacing: 0; border: 1px solid #e5e7eb;">
+                        <thead style="background-color: #374151;">
+                            <tr>
+                                <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Fecha</th>
+                                <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 10%;">Tipo</th>
+                                <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Método</th>
+                                <th style="padding: 0.5rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 45%;">Descripción</th>
+                                <th style="padding: 0.5rem; text-align: right; font-size: 0.7rem; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Monto</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
+                        </thead>
+                        <tbody style="background-color: #ffffff;">
+                            ${data.movimientos.map(mov => `
+                                <tr style="${mov.tipo.startsWith('Ingreso') ? 'background-color: #ecfdf5;' : 'background-color: #fef2f2;'} border-bottom: 1px solid #e5e7eb;">
+                                    <td style="padding: 0.5rem; white-space: nowrap; font-size: 0.8rem; color: #374151;">${mov.fecha}</td>
+                                    <td style="padding: 0.5rem; white-space: nowrap; font-size: 0.8rem; color: ${mov.tipo.startsWith('Ingreso') ? '#065f46;' : '#991b1b;'};">${mov.tipo.startsWith('Ingreso') ? 'Ingreso' : 'Gasto'}</td>
+                                    <td style="padding: 0.5rem; white-space: nowrap; font-size: 0.8rem; color: #374151;">${mov.formaPago || '-'}</td>
+                                    <td style="padding: 0.5rem; font-size: 0.8rem; color: #374151;">${mov.compactDescription || mov.descripcion}</td>
+                                    <td style="padding: 0.5rem; text-align: right; font-weight: 700; font-size: 0.8rem; color: ${mov.tipo.startsWith('Ingreso') ? '#047857;' : '#b91c1c;'};">${parseFloat(mov.monto).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            contenidoHtml += tablaPropietario;
+        });
     }
 
     const headerHtml = `
-        <h2 style="text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: #1f2937;">Reporte de Movimientos por Propietario</h2>
-        <h3 style="text-align: center; font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; color: #3b82f6;">Propietario: ${nombrePropietario}</h3>
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: #111827; margin: 0 0 0.5rem 0;">Reporte de Movimientos</h2>
+            <h3 style="font-size: 1.2rem; font-weight: 500; color: #4b5563; margin: 0;">${nombrePropietario}</h3>
+        </div>
     `;
 
-    const contentHtml = `
-        <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .income-row { background-color: #e6ffe6; } /* Light green for income */
-            .expense-row { background-color: #ffe6e6; } /* Light red for expense */
-            .income-text { color: #006400; } /* Dark green for income text */
-            .expense-text { color: #8b0000; } /* Dark red for expense text */
-            .header { text-align: center; margin-bottom: 20px; }
-            .page-number { position: fixed; bottom: 20px; right: 20px; font-size: 10px; }
-        </style>
-        ${headerHtml}
-        <div style="text-align: center; margin-bottom: 1.5rem; padding: 1rem; background-color: #e0f7fa; border-radius: 0.5rem; border: 1px solid #b2ebf2;">
-            <p style="font-size: 1.1rem; font-weight: 600; color: #006064; margin-bottom: 0.5rem;">Total Ingreso Propietario:</p>
-            <p style="font-size: 2rem; font-weight: 800; color: #004d40;">${totalFiltrado.toFixed(2)}</p>
+    const summaryHtml = `
+        <div style="text-align: center; margin-bottom: 2rem; padding: 1.5rem; background-color: #f0fdf4; border-radius: 0.75rem; border: 1px solid #bbf7d0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <p style="font-size: 1rem; font-weight: 600; color: #166534; margin: 0 0 0.5rem 0; text-transform: uppercase; letter-spacing: 0.05em;">Total General</p>
+            <p style="font-size: 2.5rem; font-weight: 800; color: #14532d; margin: 0;">$${totalFiltrado.toFixed(2)}</p>
         </div>
-        ${tablaHtml}
+    `;
+
+    const finalHtml = `
+        <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #1f2937; line-height: 1.5; padding: 2rem;">
+            ${headerHtml}
+            ${summaryHtml}
+            ${contenidoHtml}
+        </div>
     `;
 
     const opt = {
-        margin: 0.5,
+        margin: [0.5, 0.5, 0.5, 0.5], // Márgenes uniformes
         filename: nombreArchivo,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
     };
 
-    html2pdf().from(contentHtml).set(opt).toPdf().get('pdf').then(function (pdf) {
+    // Crear un elemento temporal para generar el PDF
+    const element = document.createElement('div');
+    element.innerHTML = finalHtml;
+    document.body.appendChild(element);
+
+    html2pdf().from(element).set(opt).toPdf().get('pdf').then(function (pdf) {
         var totalPages = pdf.internal.getNumberOfPages();
         for (var i = 1; i <= totalPages; i++) {
             pdf.setPage(i);
-            pdf.setFontSize(10);
-            pdf.setTextColor(150);
-            const text = `Página ${i} de ${totalPages}`;
+            pdf.setFontSize(9);
+            pdf.setTextColor(107, 114, 128); // Gray-500
+            const text = `Página ${i} de ${totalPages} | Generado el ${new Date().toLocaleDateString()}`;
             const pageHeight = pdf.internal.pageSize.getHeight();
             const pageWidth = pdf.internal.pageSize.getWidth();
-            pdf.text(text, pageWidth - 0.75, pageHeight - 0.5, { align: 'right' });
+            pdf.text(text, pageWidth - 0.5, pageHeight - 0.5, { align: 'right' });
         }
+        document.body.removeChild(element); // Limpiar
     }).save();
 }
 
@@ -1351,7 +1387,7 @@ async function generarReporteMensual(mes, anio) {
         `;
 
         document.getElementById('btnIngresoPropietario').addEventListener('click', () => {
-            abrirModalPropietarios(propietariosMap, inquilinosMap);
+            abrirModalPropietarios(propietariosMap, inmueblesMap, inquilinosMap);
         });
 
         document.getElementById('btnDescargarPDF').addEventListener('click', () => {
