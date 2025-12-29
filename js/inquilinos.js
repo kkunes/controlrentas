@@ -1,12 +1,12 @@
-// js/inquilinos.js
+﻿// js/inquilinos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
 import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // Alias para evitar conflicto
-import { obtenerMesesAdeudadosHistorico, mostrarFormularioNuevoPago, mostrarFormularioPagoServicio, mostrarFormularioPagoMobiliario } from './pagos.js';
+import { obtenerMesesAdeudadosHistorico, mostrarFormularioNuevoPago, mostrarFormularioPagoServicio, mostrarFormularioPagoMobiliario, consolidarPagosAntiguos } from './pagos.js';
 import { mostrarTotalDesperfectosInquilino } from './desperfectos.js';
 
-// Nueva función para calcular totales
+// Nueva funciÃ³n para calcular totales
 async function calcularTotalesInquilino(inquilinoId) {
     const inquilinoRef = doc(db, "inquilinos", inquilinoId);
     const inquilinoSnap = await getDoc(inquilinoRef);
@@ -57,10 +57,10 @@ window.vieneDeAdeudos = false;
 window.adeudosModalContent = '';
 
 
-// Hacer la función accesible globalmente para los handlers `onclick`
+// Hacer la funciÃ³n accesible globalmente para los handlers `onclick`
 window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
 
-// Variables para el caché de inquilinos
+// Variables para el cachÃ© de inquilinos
 let cachedInquilinosHTML = null;
 let inquilinosCacheTimestamp = null;
 let cachedInquilinosFilter = null;
@@ -70,7 +70,7 @@ export function limpiarCacheInquilinos() {
     cachedInquilinosHTML = null;
     inquilinosCacheTimestamp = null;
     cachedInquilinosFilter = null;
-    console.log("Caché de inquilinos limpiado.");
+    console.log("CachÃ© de inquilinos limpiado.");
 }
 
 function adjuntarListenersInquilinos() {
@@ -158,14 +158,14 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
-        mostrarNotificacion("Error: No se pudo cargar la sección de inquilinos.", 'error');
+        mostrarNotificacion("Error: No se pudo cargar la secciÃ³n de inquilinos.", 'error');
         ocultarLoader();
         return;
     }
 
-    // --- Lógica de Caché ---
+    // --- LÃ³gica de CachÃ© ---
     if (cachedInquilinosHTML && inquilinosCacheTimestamp && cachedInquilinosFilter === filtroActivo && (new Date() - inquilinosCacheTimestamp < CACHE_DURATION_MS)) {
-        console.log("Cargando inquilinos desde la caché.");
+        console.log("Cargando inquilinos desde la cachÃ©.");
         contenedor.innerHTML = cachedInquilinosHTML;
         adjuntarListenersInquilinos();
         ocultarLoader();
@@ -228,7 +228,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             inquilinosList = inquilinosList.filter(i => !i.activo);
         }
 
-        // Obtén todos los pagos una sola vez
+        // ObtÃ©n todos los pagos una sola vez
         const pagosSnap = await getDocs(collection(db, "pagos"));
         let pagosDepositoMap = new Map();
         pagosSnap.forEach(doc => {
@@ -337,7 +337,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span class="text-sm font-medium">Depósito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
+                                        <span class="text-sm font-medium">DepÃ³sito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
                                     </div>
                                 ` : ''}
 
@@ -365,7 +365,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
-                                        <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Identificación</a>
+                                        <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver IdentificaciÃ³n</a>
                                     </div>
                                 ` : ''}
                                 
@@ -421,7 +421,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     </button>`
                     }
                                 <button onclick="editarInquilino('${inquilino.id}')" 
-                                    title="Editar información del inquilino"
+                                    title="Editar informaciÃ³n del inquilino"
                                     class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -461,6 +461,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     <span>Mobiliario</span>
                                 </button>
                             </div>
+                            <!-- BotÃ³n de Herramienta Avanzada -->
+                             <div class="mt-3 pt-3 border-t border-gray-100">
+                                <button onclick="iniciarConsolidacion('${inquilino.id}', '${inquilino.nombre}')" 
+                                    class="w-full text-xs text-gray-500 hover:text-indigo-600 font-medium flex items-center justify-center gap-1 transition-colors py-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    Congelar Historial (Reparar Recibos)
+                                </button>
+                            </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex items-center justify-between">
                             <span class="handle-move cursor-move text-gray-400 hover:text-gray-700 flex items-center gap-1.5 transition-colors duration-200" title="Arrastrar para reordenar">
@@ -486,7 +496,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     <div class="flex flex-col">
                         <label for="busquedaInquilino" class="text-xs text-gray-600 mb-1">Buscar inquilino:</label>
                         <div class="relative">
-                            <input type="text" id="busquedaInquilino" placeholder="Buscar por nombre o teléfono..." 
+                            <input type="text" id="busquedaInquilino" placeholder="Buscar por nombre o telÃ©fono..." 
                                 class="form-control pl-8 pr-2 py-2 w-72">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -519,7 +529,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             </div>
         `;
 
-        // Agrega los event listeners después de asignar el innerHTML
+        // Agrega los event listeners despuÃ©s de asignar el innerHTML
         adjuntarListenersInquilinos();
 
         // Actualizar badges de adeudos
@@ -752,17 +762,17 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 } else {
                     newBadge.textContent = "Sin adeudos";
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
-                    newBadge.title = "El inquilino está al corriente";
+                    newBadge.title = "El inquilino estÃ¡ al corriente";
                 }
             }
         }
 
-        // Guardar en caché después de actualizar todo
+        // Guardar en cachÃ© despuÃ©s de actualizar todo
         cachedInquilinosHTML = contenedor.innerHTML;
         inquilinosCacheTimestamp = new Date();
         cachedInquilinosFilter = filtroActivo;
 
-        // Función para generar PDF
+        // FunciÃ³n para generar PDF
         window.generarPDFInquilinos = async () => {
             const fechaGeneracion = new Date().toLocaleDateString();
             const filtroEstado = document.getElementById('filtroActivo').value;
@@ -784,7 +794,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                         <thead>
                             <tr style="background-color: #3730a3; color: #ffffff;">
                                 <th style="padding: 10px; text-align: left; font-weight: bold; border-top-left-radius: 8px;">Nombre</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">Teléfono</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold;">TelÃ©fono</th>
                                 <th style="padding: 10px; text-align: left; font-weight: bold;">Inmueble</th>
                                 <th style="padding: 10px; text-align: center; font-weight: bold;">Estado</th>
                                 <th style="padding: 10px; text-align: left; font-weight: bold;">Inicio</th>
@@ -837,7 +847,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     pdf.setPage(i);
                     pdf.setFontSize(9);
                     pdf.setTextColor(107, 114, 128);
-                    const text = `Página ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
+                    const text = `PÃ¡gina ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
                     const pageHeight = pdf.internal.pageSize.getHeight();
                     const pageWidth = pdf.internal.pageSize.getWidth();
                     pdf.text(text, pageWidth - 0.5, pageHeight - 0.5, { align: 'right' });
@@ -854,7 +864,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 }
 
 /**
- * Función para editar un inquilino, mostrando el formulario.
+ * FunciÃ³n para editar un inquilino, mostrando el formulario.
  * @param {string} id - ID del inquilino a editar.
  */
 export async function mostrarFormularioNuevoInquilino(id = null) {
@@ -900,7 +910,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             </div>
 
             <div>
-                <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                <label for="telefono" class="block text-sm font-medium text-gray-700">Tel\u00E9fono</label>
                 <input type="tel" id="telefono" value="${inquilinoExistente.telefono || ''}" class="form-control">
             </div>
 
@@ -920,29 +930,38 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <div>
                     <label for="fechaOcupacion" class="block text-sm font-medium text-gray-700">Fecha de Inicio de Pagos</label>
                     <input type="date" id="fechaOcupacion" value="${inquilinoExistente.fechaOcupacion || ''}" class="form-control">
+                    <div class="mt-1 p-2 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="text-xs text-amber-800 leading-snug">
+                            <strong>\u00BFCambio de d\u00EDa de pago?</strong><br>
+                            Modifica solo el <strong>D\u00CDA</strong> de esta fecha. <span class="font-bold text-red-600">NO cambies el a\u00F1o ni el mes original</span> para no perder el historial de adeudos anteriores.
+                        </p>
+                    </div>
                 </div>
             </div>
 
             <div>
-                <label for="urlIdentificacion" class="block text-sm font-medium text-gray-700">URL de Identificación (Drive)</label>
+                <label for="urlIdentificacion" class="block text-sm font-medium text-gray-700">URL de Identificaci\u00F3n (Drive)</label>
                 <input type="url" id="urlIdentificacion" value="${inquilinoExistente.urlIdentificacion || ''}" class="form-control" placeholder="https://docs.google.com/...">
             </div>
 
-            <!-- Checkbox de Depósito -->
+            <!-- Checkbox de Dep\u00F3sito -->
             <div class="flex items-center">
                 <input type="checkbox" id="depositoRecibido" class="form-checkbox h-5 w-5 text-blue-600" ${inquilinoExistente.depositoRecibido ? 'checked' : ''}>
-                <label for="depositoRecibido" class="ml-2 block text-sm text-gray-900">¿Se recibió depósito en garantía?</label>
+                <label for="depositoRecibido" class="ml-2 block text-sm text-gray-900">\u00BFSe recibi\u00F3 dep\u00F3sito en garant\u00EDa?</label>
             </div>
 
-            <!-- Campos de Depósito (se muestran/ocultan con el checkbox de arriba) -->
+            <!-- Campos de Dep\u00F3sito (se muestran/ocultan con el checkbox de arriba) -->
             <div id="camposDeposito" class="${inquilinoExistente.depositoRecibido ? '' : 'hidden'} space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="montoDeposito" class="block text-sm font-medium text-gray-700">Monto del Depósito</label>
+                        <label for="montoDeposito" class="block text-sm font-medium text-gray-700">Monto del Dep\u00F3sito</label>
                         <input type="number" id="montoDeposito" value="${inquilinoExistente.montoDeposito || ''}" class="form-control" step="0.01">
                     </div>
                     <div>
-                        <label for="fechaDeposito" class="block text-sm font-medium text-gray-700">Fecha de Recepción del Depósito</label>
+                        <label for="fechaDeposito" class="block text-sm font-medium text-gray-700">Fecha de Recepci\u00F3n del Dep\u00F3sito</label>
                         <input type="date" id="fechaDeposito" value="${inquilinoExistente.fechaDeposito || ''}" class="form-control">
                     </div>
                 </div>
@@ -951,7 +970,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             <!-- Checkbox de Servicios -->
             <div class="flex items-center">
                 <input type="checkbox" id="pagaServicios" class="form-checkbox h-5 w-5 text-blue-600" ${inquilinoExistente.pagaServicios ? 'checked' : ''}>
-                <label for="pagaServicios" class="ml-2 block text-sm text-gray-900">¿Este inquilino paga servicios?</label>
+                <label for="pagaServicios" class="ml-2 block text-sm text-gray-900">\u00BFEste inquilino paga servicios?</label>
             </div>
 
             <!-- Contenedor de Servicios (se muestra/oculta con el checkbox de arriba) -->
@@ -965,7 +984,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <div id="listaServicios" class="space-y-4">
                     ${(inquilinoExistente.servicios && inquilinoExistente.servicios.length > 0) ?
             inquilinoExistente.servicios.map((servicio, index) => `
-                            <!-- Aquí se generará cada servicio existente -->
+                            <!-- Aqu\u00ED se generar\u00E1 cada servicio existente -->
                         `).join('') :
             '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>'
         }
@@ -977,6 +996,39 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 <label for="activo" class="ml-2 block text-sm text-gray-900">Inquilino Activo</label>
             </div>
 
+            <!-- BIT\u00C1CORA / HISTORIAL DE SUCESOS -->
+            <div class="mt-6 border-t border-gray-200 pt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Bit\u00E1cora de Sucesos
+                    </h4>
+                </div>
+                
+                <div id="contenedorBitacora" class="bg-gray-50 rounded-lg p-3 mb-3 border border-gray-200" style="max-height: 250px; overflow-y: auto;">
+                    ${(inquilinoExistente.bitacora && inquilinoExistente.bitacora.length > 0) ?
+            inquilinoExistente.bitacora.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).map(evento => `
+                            <div class="relative pl-4 pb-4 border-l-2 border-gray-300 last:border-0 last:pb-0">
+                                <div class="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full ${evento.tipo === 'sistema' ? 'bg-indigo-500' : 'bg-gray-500'}"></div>
+                                <div class="text-xs text-gray-500 mb-0.5">${new Date(evento.fecha).toLocaleString('es-MX')}</div>
+                                <div class="text-sm text-gray-800 font-medium">${evento.mensaje}</div>
+                                ${evento.usuario ? `<div class="text-xs text-gray-400 mt-0.5">Por: ${evento.usuario}</div>` : ''}
+                            </div>
+                        `).join('')
+            : '<div class="text-center text-gray-400 text-sm py-2">Sin sucesos registrados</div>'
+        }
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="nuevaNotaBitacora" placeholder="Escribe una nota o comentario..." class="form-control text-sm flex-grow">
+                    <button type="button" id="btnAgregarNotaBitacora" class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm transition-colors">
+                        Agregar Nota
+                    </button>
+                </div>
+            </div>
+
             <div class="flex justify-end mt-6">
                 <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200 mr-2">Cancelar</button>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">${esEdicion ? 'Actualizar' : 'Guardar'}</button>
@@ -985,10 +1037,48 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     `;
     mostrarModal(modalHtml);
 
-    // Lógica para mostrar/ocultar el contenedor de servicios
+    // LÃ³gica para mostrar/ocultar el contenedor de servicios
     document.getElementById('pagaServicios').addEventListener('change', function () {
         document.getElementById('serviciosContainer').classList.toggle('hidden', !this.checked);
     });
+
+    // --- LÃ“GICA BITÃCORA (Frontend) ---
+    const contenedorBitacora = document.getElementById('contenedorBitacora');
+    const inputNota = document.getElementById('nuevaNotaBitacora');
+    const btnAgregarNota = document.getElementById('btnAgregarNotaBitacora');
+    let bitacoraTemp = inquilinoExistente.bitacora || [];
+
+    // FunciÃ³n para renderizar bitÃ¡cora (mezcla guardada + temporal)
+    function renderizarBitacoraVisual() {
+        if (bitacoraTemp.length === 0) {
+            contenedorBitacora.innerHTML = '<div class="text-center text-gray-400 text-sm py-2">Sin sucesos registrados</div>';
+            return;
+        }
+
+        contenedorBitacora.innerHTML = bitacoraTemp.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).map(evento => `
+            <div class="relative pl-4 pb-4 border-l-2 border-gray-300 last:border-0 last:pb-0">
+                <div class="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full ${evento.tipo === 'sistema' ? 'bg-indigo-500' : (evento.tipo === 'nuevo' ? 'bg-green-500' : 'bg-gray-500')}"></div>
+                <div class="text-xs text-gray-500 mb-0.5">${new Date(evento.fecha).toLocaleString('es-MX')}</div>
+                <div class="text-sm text-gray-800 font-medium">${evento.mensaje}</div>
+                ${evento.usuario ? `<div class="text-xs text-gray-400 mt-0.5">Por: ${evento.usuario}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    btnAgregarNota.addEventListener('click', () => {
+        const mensaje = inputNota.value.trim();
+        if (mensaje) {
+            bitacoraTemp.push({
+                fecha: new Date().toISOString(),
+                mensaje: mensaje,
+                tipo: 'manual', // o 'nuevo' para distinguir visualmente
+                usuario: 'Admin' // PodrÃ­amos hacerlo dinÃ¡mico si hubiera auth
+            });
+            inputNota.value = '';
+            renderizarBitacoraVisual();
+        }
+    });
+
 
     // Logic to handle form submission
     const form = document.getElementById('formularioInquilino');
@@ -1006,6 +1096,28 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         const fechaDeposito = document.getElementById('fechaDeposito').value;
         const activo = document.getElementById('activo').checked;
         const pagaServicios = document.getElementById('pagaServicios').checked;
+
+        // --- DETECCIÃ“N AUTOMÃTICA DE CAMBIOS (BitÃ¡cora) ---
+        if (inquilinoExistente.fechaOcupacion && fechaOcupacion !== inquilinoExistente.fechaOcupacion) {
+            bitacoraTemp.push({
+                fecha: new Date().toISOString(),
+                mensaje: `Cambio de Fecha de OcupaciÃ³n: de ${inquilinoExistente.fechaOcupacion} a ${fechaOcupacion}`,
+                tipo: 'sistema',
+                usuario: 'Sistema'
+            });
+        }
+
+        // Si cambiÃ³ el inmueble
+        if (inquilinoExistente.inmuebleAsociadoId && inmuebleAsociadoId !== inquilinoExistente.inmuebleAsociadoId) {
+            // Buscar nombres para mejor registro (opcional, por ahora solo IDs o buscamos en DOM)
+            bitacoraTemp.push({
+                fecha: new Date().toISOString(),
+                mensaje: `Cambio de Inmueble (ID): de ${inquilinoExistente.inmuebleAsociadoId} a ${inmuebleAsociadoId}`,
+                tipo: 'sistema',
+                usuario: 'Sistema'
+            });
+        }
+
 
         // Recolectar servicios
         const servicios = [];
@@ -1033,7 +1145,8 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             fechaDeposito: depositoRecibido ? fechaDeposito : '',
             activo,
             pagaServicios,
-            servicios
+            servicios,
+            bitacora: bitacoraTemp // Guardamos la bitÃ¡cora actualizada
         };
 
         try {
@@ -1041,16 +1154,24 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 // Update existing inquilino
                 const docRef = doc(db, "inquilinos", inquilinoId);
                 await updateDoc(docRef, inquilinoData);
-                mostrarNotificacion("Inquilino actualizado con éxito.", "success");
+                mostrarNotificacion("Inquilino actualizado con Ã©xito.", "success");
             } else {
+                // Para nuevos inquilinos, agregamos el evento de creaciÃ³n
+                inquilinoData.bitacora = [{
+                    fecha: new Date().toISOString(),
+                    mensaje: "Inquilino registrado en el sistema",
+                    tipo: "sistema",
+                    usuario: "Sistema"
+                }];
                 // Add new inquilino
                 await addDoc(collection(db, "inquilinos"), inquilinoData);
-                mostrarNotificacion("Inquilino registrado con éxito.", "success");
+                mostrarNotificacion("Inquilino registrado con Ã©xito.", "success");
             }
             ocultarModal();
             limpiarCacheInquilinos();
             mostrarInquilinos();
         } catch (error) {
+            console.error(error);
             mostrarNotificacion("Error al guardar el inquilino.", "error");
         }
     });
@@ -1060,7 +1181,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         document.getElementById('camposDeposito').classList.toggle('hidden', !e.target.checked);
     });
 
-    // --- Lógica para Servicios ---
+    // --- LÃ³gica para Servicios ---
     function renderizarServicios() {
         const listaServicios = document.getElementById('listaServicios');
         if (!listaServicios) return;
@@ -1127,9 +1248,9 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         }
         const nuevoIndice = listaServicios.querySelectorAll('.servicio-item').length;
         const nuevoServicioHtml = `
-            <!-- Aquí va el HTML de un nuevo servicio, similar al de renderizarServicios pero vacío -->
+            <!-- AquÃ­ va el HTML de un nuevo servicio, similar al de renderizarServicios pero vacÃ­o -->
         `;
-        // Simplificado: simplemente llamamos a una función que añade el HTML
+        // Simplificado: simplemente llamamos a una funciÃ³n que aÃ±ade el HTML
         agregarServicioAlFormulario();
     });
 }
@@ -1139,12 +1260,12 @@ export async function editarInquilino(id) {
 }
 
 /**
- * Confirma la desocupación de un inquilino y actualiza su estado.
- * También marca el inmueble asociado como 'Disponible'.
+ * Confirma la desocupaciÃ³n de un inquilino y actualiza su estado.
+ * TambiÃ©n marca el inmueble asociado como 'Disponible'.
  * @param {string} inquilinoId - ID del inquilino a desocupar.
  */
 export async function confirmarDesocupacionInquilino(inquilinoId) {
-    if (confirm('¿Estás seguro de que quieres desocupar a este inquilino? Se marcará como inactivo y su inmueble asociado como disponible.')) {
+    if (confirm('Â¿EstÃ¡s seguro de que quieres desocupar a este inquilino? Se marcarÃ¡ como inactivo y su inmueble asociado como disponible.')) {
         try {
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             const inquilinoSnap = await getDoc(inquilinoRef);
@@ -1157,9 +1278,9 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
                     activo: false,
                     inmuebleAsociadoId: null,
                     inmuebleAsociadoNombre: 'No Asignado',
-                    fechaDesocupacion: new Date().toISOString().split('T')[0] // <-- Nueva línea
+                    fechaDesocupacion: new Date().toISOString().split('T')[0] // <-- Nueva lÃ­nea
                 });
-                mostrarNotificacion("Inquilino desocupado con éxito.", 'success');
+                mostrarNotificacion("Inquilino desocupado con Ã©xito.", 'success');
 
                 if (inmuebleId) {
                     await updateDocInmueble(doc(db, "inmuebles", inmuebleId), {
@@ -1183,18 +1304,18 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
 }
 
 /**
- * Confirma la reactivación de un inquilino.
+ * Confirma la reactivaciÃ³n de un inquilino.
  * @param {string} inquilinoId - ID del inquilino a reactivar.
  */
 export async function confirmarReactivacionInquilino(inquilinoId) {
-    if (confirm('¿Estás seguro de que quieres reactivar a este inquilino?')) {
+    if (confirm('Â¿EstÃ¡s seguro de que quieres reactivar a este inquilino?')) {
         try {
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             await updateDoc(inquilinoRef, {
                 activo: true,
                 fechaDesocupacion: null
             });
-            mostrarNotificacion("Inquilino reactivado con éxito.", 'success');
+            mostrarNotificacion("Inquilino reactivado con Ã©xito.", 'success');
             limpiarCacheInquilinos();
             mostrarInquilinos();
 
@@ -1232,7 +1353,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             const mob = doc.data();
             if (Array.isArray(mob.asignaciones)) {
                 mob.asignaciones.forEach(a => {
-                    // CORRECCIÓN: Se comprueba estrictamente que `activa` sea `true`.
+                    // CORRECCIÃ“N: Se comprueba estrictamente que `activa` sea `true`.
                     if (a.inquilinoId && a.activa === true && a.cantidad > 0) {
                         inquilinosConMobiliario.add(a.inquilinoId);
                     }
@@ -1249,10 +1370,10 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             }
         });
 
-        // Ordenar por fecha (más reciente primero)
+        // Ordenar por fecha (mÃ¡s reciente primero)
         pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
 
-        // Ejemplo de integración en mostrarHistorialPagosInquilino
+        // Ejemplo de integraciÃ³n en mostrarHistorialPagosInquilino
         // FIX: This was buggy, `inmuebleId` and `fechaOcupacion` were not defined.
         // Using the main inquilino data instead.
         if (inquilino.inmuebleAsociadoId && inquilino.fechaOcupacion) {
@@ -1270,7 +1391,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             } else {
                 adeudosHtml = `
                     <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
-                        <strong>¡Sin adeudos!</strong>
+                        <strong>Â¡Sin adeudos!</strong>
                     </div>
                 `;
             }
@@ -1286,7 +1407,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Inmueble</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mes/Año</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mes/AÃ±o</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto Total</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pagado</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Saldo</th>
@@ -1340,7 +1461,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     abonosDetalleHtml = `<span class="text-xs text-gray-400">Sin abonos</span>`;
                 }
 
-                // Lógica para el estado del mobiliario
+                // LÃ³gica para el estado del mobiliario
                 let mobiliarioHtml = '-';
 
                 // Verifica si el inquilino tiene mobiliario asignado para el inmueble de este pago
@@ -1349,12 +1470,12 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     const mob = doc.data();
                     if (Array.isArray(mob.asignaciones)) {
                         mob.asignaciones.forEach(a => {
-                            // Solo cuenta como asignado si está activa, cantidad > 0, inquilinoId coincide y el inmuebleId coincide con el del pago
+                            // Solo cuenta como asignado si estÃ¡ activa, cantidad > 0, inquilinoId coincide y el inmuebleId coincide con el del pago
                             if (
                                 a.inquilinoId === inquilinoId &&
                                 a.activa === true &&
                                 a.cantidad > 0 &&
-                                a.inmuebleId === pago.inmuebleId // <-- esta línea es clave
+                                a.inmuebleId === pago.inmuebleId // <-- esta lÃ­nea es clave
                             ) {
                                 tieneMobiliarioAsignado = true;
                             }
@@ -1437,7 +1558,7 @@ export async function mostrarHistorialAbonosInquilino(inquilinoId) {
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origen</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pago (Mes/Año)</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pago (Mes/AÃ±o)</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -1538,16 +1659,16 @@ export async function mostrarSaldoFavorInquilino(inquilinoId) {
     }
 }
 
-// Función auxiliar para eliminar documentos (probablemente ya la tienes en ui.js o utilities.js)
-// Si no la tienes, aquí una versión simple para inquilinos:
+// FunciÃ³n auxiliar para eliminar documentos (probablemente ya la tienes en ui.js o utilities.js)
+// Si no la tienes, aquÃ­ una versiÃ³n simple para inquilinos:
 export async function eliminarDocumento(coleccion, id, callbackRefresh, callbackDashboard) {
-    if (confirm('¿Estás seguro de que quieres eliminar este elemento? Esta acción es irreversible.')) {
+    if (confirm('Â¿EstÃ¡s seguro de que quieres eliminar este elemento? Esta acciÃ³n es irreversible.')) {
         try {
             const docSnap = await getDoc(doc(db, coleccion, id));
             const data = docSnap.data();
 
             await deleteDoc(doc(db, coleccion, id));
-            mostrarNotificacion('Elemento eliminado con éxito.', 'success');
+            mostrarNotificacion('Elemento eliminado con Ã©xito.', 'success');
 
             // Si el inquilino eliminado estaba asociado a un inmueble, liberar el inmueble
             if (coleccion === 'inquilinos' && data && data.inmuebleAsociadoId) {
@@ -1556,7 +1677,7 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh, callback
                     inquilinoActualId: null,
                     inquilinoActualNombre: null
                 });
-                mostrarNotificacion(`Inmueble ${data.inmuebleAsociadoNombre || 'anterior'} ha sido marcado como Disponible tras la eliminación del inquilino.`, 'info');
+                mostrarNotificacion(`Inmueble ${data.inmuebleAsociadoNombre || 'anterior'} ha sido marcado como Disponible tras la eliminaciÃ³n del inquilino.`, 'info');
             }
 
             if (callbackRefresh) callbackRefresh();
@@ -1568,7 +1689,7 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh, callback
     }
 }
 
-// Al cargar los inquilinos, también cargar y asignar el orden correspondiente
+// Al cargar los inquilinos, tambiÃ©n cargar y asignar el orden correspondiente
 window.addEventListener('load', async () => {
     try {
         const inquilinosSnap = await getDocs(collection(db, "inquilinos"));
@@ -1581,7 +1702,7 @@ window.addEventListener('load', async () => {
         // Ordenar inquilinos por el campo 'orden' (si existe)
         inquilinosList.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 
-        // Asignar el orden a cada inquilino en la interfaz (puedes tener un contenedor específico para esto)
+        // Asignar el orden a cada inquilino en la interfaz (puedes tener un contenedor especÃ­fico para esto)
         const contenedorOrden = document.getElementById("contenidoOrden");
         if (contenedorOrden) {
             contenedorOrden.innerHTML = inquilinosList.map((inquilino, index) => `
@@ -1612,7 +1733,7 @@ document.addEventListener('change', function (e) {
     }
 });
 
-// Función para agregar un nuevo servicio al formulario
+// FunciÃ³n para agregar un nuevo servicio al formulario
 function agregarServicioAlFormulario() {
     const listaServicios = document.getElementById('listaServicios');
     if (!listaServicios) return;
@@ -1622,7 +1743,7 @@ function agregarServicioAlFormulario() {
         listaServicios.innerHTML = '';
     }
 
-    // Obtener el índice para el nuevo servicio
+    // Obtener el Ã­ndice para el nuevo servicio
     const servicioItems = listaServicios.querySelectorAll('.servicio-item');
     const nuevoIndice = servicioItems.length;
 
@@ -1705,7 +1826,7 @@ document.addEventListener('change', function (e) {
     }
 });
 
-// Función para eliminar un servicio
+// FunciÃ³n para eliminar un servicio
 function eliminarServicio(btnEliminar) {
     const servicioItem = btnEliminar.closest('.servicio-item');
     if (servicioItem) {
@@ -1718,13 +1839,13 @@ function eliminarServicio(btnEliminar) {
             listaServicios.innerHTML = '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>';
         } else {
             servicioItems.forEach((item, index) => {
-                // Actualizar el título
+                // Actualizar el tÃ­tulo
                 const titulo = item.querySelector('h5');
                 if (titulo) {
                     titulo.textContent = `Servicio #${index + 1}`;
                 }
 
-                // Actualizar los índices en los nombres de los campos
+                // Actualizar los Ã­ndices en los nombres de los campos
                 const campos = item.querySelectorAll('[name^="servicios["]');
                 campos.forEach(campo => {
                     const nombreActual = campo.getAttribute('name');
@@ -1732,7 +1853,7 @@ function eliminarServicio(btnEliminar) {
                     campo.setAttribute('name', nuevoNombre);
                 });
 
-                // Actualizar el atributo data-index del botón eliminar
+                // Actualizar el atributo data-index del botÃ³n eliminar
                 const btnEliminar = item.querySelector('.btn-eliminar-servicio');
                 if (btnEliminar) {
                     btnEliminar.setAttribute('data-index', index);
@@ -1915,3 +2036,33 @@ async function abrirFormularioPagoMobiliario(inquilinoId, mes, anio) {
 window.abrirFormularioPagoRenta = abrirFormularioPagoRenta;
 window.abrirFormularioPagoServicio = abrirFormularioPagoServicio;
 window.abrirFormularioPagoMobiliario = abrirFormularioPagoMobiliario;
+
+// --- FUNCIONALIDAD DE CONSOLIDACIÓN HISTÓRICA ---
+window.iniciarConsolidacion = async (inquilinoId, nombreInquilino) => {
+    const diaAnterior = prompt(`\u2744\uFE0F CONSOLIDACI\u00D3N HIST\u00D3RICA \u2744\uFE0F\n\nEst\u00E1s a punto de reparar los recibos antiguos de: ${nombreInquilino}.\n\nPor favor, ingresa el D\u00CDA DE PAGO que ten\u00EDa este inquilino ANTES del cambio (n\u00FAmero del 1 al 31):`, "1");
+
+    if (diaAnterior !== null) {
+        const diaInt = parseInt(diaAnterior);
+        if (isNaN(diaInt) || diaInt < 1 || diaInt > 31) {
+            alert("\u26A0\uFE0F Por favor ingresa un d\u00EDa v\u00E1lido (1-31).");
+            return;
+        }
+
+        if (confirm(`\u26A0\uFE0F \u00BFCONFIRMAS que el d\u00EDa de corte anterior era el d\u00EDa ${diaInt}?\n\nEsta acci\u00F3n buscar\u00E1 todos los recibos antiguos que no tengan fecha guardada y la fijar\u00E1 permanentemente usando el d\u00EDa ${diaInt}.`)) {
+            mostrarLoader();
+            try {
+                // Asumiendo que consolidarPagosAntiguos está importada desde pagos.js
+                // Si no, necesitamos importarla, pero los imports son al inicio. 
+                // Ya la importamos en el paso 233/241.
+                const cantidad = await consolidarPagosAntiguos(inquilinoId, diaInt);
+
+                alert(`\u2705 \u00A1\u00C9XITO!\n\nSe han consolidado y protegido ${cantidad} recibos antiguos.\nAhora puedes generar tus reportes pasados con total confianza.`);
+            } catch (error) {
+                console.error(error);
+                alert("\u274C Ocurri\u00F3 un error al consolidar los pagos. Revisa la consola.");
+            } finally {
+                ocultarLoader();
+            }
+        }
+    }
+};

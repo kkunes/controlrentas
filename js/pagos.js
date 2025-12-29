@@ -1,4 +1,4 @@
-// js/pagos.js
+﻿// js/pagos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
@@ -11,7 +11,7 @@ export async function mostrarPagos(mostrarTabla = false) {
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
-        mostrarNotificacion("Error: No se pudo cargar la sección de pagos.", 'error');
+        mostrarNotificacion("Error: No se pudo cargar la secciÃ³n de pagos.", 'error');
         ocultarLoader();
         return;
     }
@@ -20,7 +20,7 @@ export async function mostrarPagos(mostrarTabla = false) {
     if (!mostrarTabla) {
         contenedor.innerHTML = `
             <div class="flex flex-col items-center justify-center py-10">
-                <h2 class="text-3xl font-bold text-gray-800 mb-10">Gestión de Pagos</h2>
+                <h2 class="text-3xl font-bold text-gray-800 mb-10">Gesti\u00F3n de Pagos</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
                     <button id="btnNuevoPago" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
                         text-white p-8 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center">
@@ -135,7 +135,7 @@ export async function mostrarPagos(mostrarTabla = false) {
             pagosList.push({ id: doc.id, ...data, nombreInmueble, nombreInquilino });
         });
 
-        // Ordenar los pagos por fecha de registro (el más reciente primero)
+        // Ordenar los pagos por fecha de registro (el mÃ¡s reciente primero)
         pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
 
         let tablaFilas = "";
@@ -163,7 +163,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                         break;
                 }
 
-                // Obtener el costo real del inmueble desde la colección de inmuebles
+                // Obtener el costo real del inmueble desde la colecciÃ³n de inmuebles
                 let montoBase = 0;
                 const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
                 if (inmuebleData && inmuebleData.rentaMensual) {
@@ -210,7 +210,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                 const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado &&
                     Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
 
-                // En la generación de filas de la tabla:
+                // En la generaciÃ³n de filas de la tabla:
                 const servicios = [];
                 if (pago.serviciosPagados?.internet) {
                     servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
@@ -332,9 +332,9 @@ export async function mostrarPagos(mostrarTabla = false) {
         const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
         const estados = ["pagado", "parcial", "pendiente", "vencido"];
         const estadosOptions = estados.map(e => `<option value="${e}">${e.charAt(0).toUpperCase() + e.slice(1)}</option>`).join('');
-        // NUEVO: Opciones de año para filtro
+        // NUEVO: Opciones de aÃ±o para filtro
         const anioActual = new Date().getFullYear();
-        const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
+        const anos = Array.from({ length: 7 }, (_, i) => anioActual - 3 + i);
         const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
         // Filtros UI
@@ -362,7 +362,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Año</label>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">AÃ±o</label>
                     <select id="filtroAnio" class="border border-gray-300 rounded-md px-2 py-1 bg-white">
                         <option value="">Todos</option>
                         ${aniosOptions}
@@ -466,7 +466,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                 mostrarFormularioPagoMobiliario();
             });
         });
-        // --- Adjuntar Event Listeners después de que el HTML se ha cargado ---
+        // --- Adjuntar Event Listeners despuÃ©s de que el HTML se ha cargado ---
         document.getElementById('btnNuevoPago').addEventListener('click', () => mostrarFormularioNuevoPago());
 
         function adjuntarListenersPillMenu() {
@@ -491,7 +491,7 @@ export async function mostrarPagos(mostrarTabla = false) {
             });
         }
 
-        // Listener global para cerrar los menús. Se añade una sola vez.
+        // Listener global para cerrar los menÃºs. Se aÃ±ade una sola vez.
         if (!window.pillMenuClickListenerAdded) {
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.pill-menu-container')) {
@@ -519,7 +519,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                 if (pagoData) {
                     mostrarFormularioRegistrarAbono(pagoId, pagoData.montoTotal, pagoData.montoPagado);
                 } else {
-                    mostrarNotificacion("Error: No se encontró la información del pago para abonar.", 'error');
+                    mostrarNotificacion("Error: No se encontrÃ³ la informaciÃ³n del pago para abonar.", 'error');
                 }
             });
         });
@@ -608,7 +608,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                             break;
                     }
 
-                    // Obtener el costo real del inmueble desde la colección de inmuebles
+                    // Obtener el costo real del inmueble desde la colecciÃ³n de inmuebles
                     let montoBase = 0;
                     const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
                     if (inmuebleData && inmuebleData.rentaMensual) {
@@ -655,7 +655,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                     const tieneMobiliario = inquilinoData && inquilinoData.mobiliarioAsignado &&
                         Array.isArray(inquilinoData.mobiliarioAsignado) && inquilinoData.mobiliarioAsignado.length > 0;
 
-                    // En la generación de filas de la tabla:
+                    // En la generaciÃ³n de filas de la tabla:
                     const servicios = [];
                     if (pago.serviciosPagados?.internet) {
                         servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)}`);
@@ -780,7 +780,7 @@ export async function mostrarPagos(mostrarTabla = false) {
                     if (pagoData) {
                         mostrarFormularioRegistrarAbono(pagoId, pagoData.montoTotal, pagoData.montoPagado);
                     } else {
-                        mostrarNotificacion("Error: No se encontró la información del pago para abonar.", 'error');
+                        mostrarNotificacion("Error: No se encontrÃ³ la informaciÃ³n del pago para abonar.", 'error');
                     }
                 });
             });
@@ -847,10 +847,10 @@ export async function mostrarPagos(mostrarTabla = false) {
 }
 
 /**
- * Determina el mes correspondiente a un pago según la fecha de registro.
- * Si el pago se realiza el día 1 o el día 15 o posterior, corresponde al mes actual.
+ * Determina el mes correspondiente a un pago segÃºn la fecha de registro.
+ * Si el pago se realiza el dÃ­a 1 o el dÃ­a 15 o posterior, corresponde al mes actual.
  * @param {Date} fechaPago - La fecha en que se realiza el pago
- * @returns {Object} - Objeto con el mes y año correspondientes
+ * @returns {Object} - Objeto con el mes y aÃ±o correspondientes
  */
 function determinarMesCorrespondiente(fechaPago) {
     const mesesNombres = [
@@ -858,7 +858,7 @@ function determinarMesCorrespondiente(fechaPago) {
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
 
-    // Siempre corresponde al mes actual, independientemente del día
+    // Siempre corresponde al mes actual, independientemente del dÃ­a
     const mesActual = fechaPago.getMonth();
     const anioActual = fechaPago.getFullYear();
 
@@ -870,8 +870,8 @@ function determinarMesCorrespondiente(fechaPago) {
 }
 
 /**
- * Actualiza el mes correspondiente en el formulario según la fecha de registro.
- * Si la fecha es el día 15 o posterior, corresponde al mes actual.
+ * Actualiza el mes correspondiente en el formulario segÃºn la fecha de registro.
+ * Si la fecha es el dÃ­a 15 o posterior, corresponde al mes actual.
  * @param {HTMLElement} fechaRegistroInput - El input de fecha de registro
  */
 function actualizarMesCorrespondiente(fechaRegistroInput) {
@@ -897,7 +897,7 @@ function actualizarMesCorrespondiente(fechaRegistroInput) {
 }
 
 
-// Nueva función para mostrar el modal de reporte de pagos con UI mejorada y selección múltiple
+// Nueva funciÃ³n para mostrar el modal de reporte de pagos con UI mejorada y selecciÃ³n mÃºltiple
 function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
     const createCheckboxList = (id, items) => {
         const itemsHtml = [...items.entries()].map(([itemId, name]) => `
@@ -983,7 +983,7 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
         generarReportePDF(pagosFiltrados);
     });
 
-    // --- Lógica de Exclusión Mutua ---
+    // --- LÃ³gica de ExclusiÃ³n Mutua ---
     const inmueblesContainer = document.getElementById('reporteInmueblesList');
     const inquilinosContainer = document.getElementById('reporteInquilinosList');
 
@@ -992,16 +992,16 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
             if (e.target.type === 'checkbox' && e.target.checked) {
                 const otherCheckboxes = otherContainer.querySelectorAll('input[type="checkbox"]:checked');
                 if (otherCheckboxes.length > 0) {
-                    // Revertir la selección
+                    // Revertir la selecciÃ³n
                     e.target.checked = false;
 
                     // Mostrar alerta con SweetAlert2
                     Swal.fire({
-                        title: '¡Un momento! 🚦',
-                        html: 'Solo puedes filtrar por <b>inmuebles</b> o por <b>inquilinos</b> a la vez, ¡no ambos!',
+                        title: 'Â¡Un momento! ðŸš¦',
+                        html: 'Solo puedes filtrar por <b>inmuebles</b> o por <b>inquilinos</b> a la vez, Â¡no ambos!',
                         icon: 'warning',
-                        confirmButtonText: '¡Entendido!',
-                        confirmButtonColor: '#3B82F6', // Un azul más amigable
+                        confirmButtonText: 'Â¡Entendido!',
+                        confirmButtonColor: '#3B82F6', // Un azul mÃ¡s amigable
                         background: '#fff url(/img/bubbles.png)', // Un fondo sutil si tienes una imagen de burbujas
                         backdrop: `
                             rgba(0,0,0,0.4)
@@ -1010,7 +1010,7 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
                             no-repeat
                         `,
                         showClass: {
-                            popup: 'animate__animated animate__tada' // Animación más divertida
+                            popup: 'animate__animated animate__tada' // AnimaciÃ³n mÃ¡s divertida
                         }
                     });
                 }
@@ -1022,7 +1022,7 @@ function mostrarModalReportePagos(pagosList, inmueblesMap, inquilinosMap) {
     handleSelection(inquilinosContainer, inmueblesContainer);
 }
 
-// Nueva función para generar el PDF del reporte de pagos
+// Nueva funciÃ³n para generar el PDF del reporte de pagos
 function generarReportePDF(pagosList) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -1045,7 +1045,7 @@ function generarReportePDF(pagosList) {
 
         return inmuebleMatch &&
             inquilinoMatch &&
-            (!fechaInicio || fechaPago >= fechaInicio) && // Corregido aquí
+            (!fechaInicio || fechaPago >= fechaInicio) && // Corregido aquÃ­
             (!fechaFin || fechaPago <= fechaFin);
     });
 
@@ -1074,7 +1074,7 @@ function generarReportePDF(pagosList) {
             grupos[pago.inquilinoId].pagos.push(pago);
         });
     } else {
-        // Si no hay agrupación múltiple, se crea un solo grupo para mantener la lógica
+        // Si no hay agrupaciÃ³n mÃºltiple, se crea un solo grupo para mantener la lÃ³gica
         grupos['todos'] = { nombre: 'Todos los pagos seleccionados', pagos: pagosFiltrados };
     }
 
@@ -1147,14 +1147,14 @@ function generarReportePDF(pagosList) {
     ocultarModal();
 }
 
-// Nueva función para el flujo guiado después de registrar un pago
+// Nueva funciÃ³n para el flujo guiado despuÃ©s de registrar un pago
 async function iniciarFlujoPostPago(pagoId, inquilinoId, enVistaTabla) {
     ocultarModal();
 
     try {
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
         if (!inquilinoDoc.exists()) {
-            mostrarNotificacion("No se encontró el inquilino.", "error");
+            mostrarNotificacion("No se encontrÃ³ el inquilino.", "error");
             if (enVistaTabla) mostrarPagos(true);
             return;
         }
@@ -1164,9 +1164,9 @@ async function iniciarFlujoPostPago(pagoId, inquilinoId, enVistaTabla) {
             ((inquilinoData.servicios && inquilinoData.servicios.length > 0) ||
                 (inquilinoData.tipoServicio && inquilinoData.montoServicio));
 
-        // --- CORRECCIÓN: Verificar si el inquilino tiene mobiliario asignado ---
-        // La verificación se hace buscando en la colección 'mobiliario' si hay alguna
-        // asignación activa para este inquilino.
+        // --- CORRECCIÃ“N: Verificar si el inquilino tiene mobiliario asignado ---
+        // La verificaciÃ³n se hace buscando en la colecciÃ³n 'mobiliario' si hay alguna
+        // asignaciÃ³n activa para este inquilino.
         let tieneMobiliario = false;
         const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
         for (const mobDoc of mobiliarioSnap.docs) {
@@ -1188,20 +1188,20 @@ async function iniciarFlujoPostPago(pagoId, inquilinoId, enVistaTabla) {
 
     } catch (error) {
         console.error("Error en el flujo post-pago:", error);
-        mostrarNotificacion("Ocurrió un error al verificar los datos del inquilino.", "error");
+        mostrarNotificacion("OcurriÃ³ un error al verificar los datos del inquilino.", "error");
         if (enVistaTabla) mostrarPagos(true);
     }
 }
 
 async function preguntarPorServicios(pagoId, inquilinoId, tieneMobiliario, enVistaTabla) {
     Swal.fire({
-        title: '¿Pago de Servicios?',
-        text: "Este inquilino tiene servicios asignados. ¿Deseas registrar el pago de servicios ahora?",
+        title: 'Â¿Pago de Servicios?',
+        text: "Este inquilino tiene servicios asignados. Â¿Deseas registrar el pago de servicios ahora?",
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, registrar',
+        confirmButtonText: 'SÃ­, registrar',
         cancelButtonText: 'No, omitir',
         customClass: {
             popup: 'animated fadeInDown'
@@ -1209,7 +1209,7 @@ async function preguntarPorServicios(pagoId, inquilinoId, tieneMobiliario, enVis
     }).then(async (result) => {
         if (result.isConfirmed) {
             // El usuario quiere registrar servicios.
-            // Pasamos una función de callback para continuar el flujo.
+            // Pasamos una funciÃ³n de callback para continuar el flujo.
             const callbackFlujo = () => {
                 if (tieneMobiliario) {
                     preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla);
@@ -1231,13 +1231,13 @@ async function preguntarPorServicios(pagoId, inquilinoId, tieneMobiliario, enVis
 
 async function preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla) {
     Swal.fire({
-        title: '¿Pago de Mobiliario?',
-        text: "Este inquilino tiene mobiliario asignado. ¿Deseas registrar el pago del mobiliario ahora?",
+        title: 'Â¿Pago de Mobiliario?',
+        text: "Este inquilino tiene mobiliario asignado. Â¿Deseas registrar el pago del mobiliario ahora?",
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, registrar',
+        confirmButtonText: 'SÃ­, registrar',
         cancelButtonText: 'No, omitir',
         customClass: {
             popup: 'animated fadeInDown'
@@ -1245,7 +1245,7 @@ async function preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             // El usuario quiere registrar mobiliario.
-            // Pasamos una función de callback para continuar el flujo.
+            // Pasamos una funciÃ³n de callback para continuar el flujo.
             const callbackFlujo = () => preguntarPorRecibo(pagoId, enVistaTabla);
             await mostrarFormularioPagoMobiliario(inquilinoId, pagoId, callbackFlujo);
         } else {
@@ -1257,13 +1257,13 @@ async function preguntarPorMobiliario(pagoId, inquilinoId, enVistaTabla) {
 
 async function preguntarPorRecibo(pagoId, enVistaTabla) {
     Swal.fire({
-        title: '¿Generar Recibo?',
-        text: "¿Deseas generar el recibo de pago en PDF ahora?",
+        title: 'Â¿Generar Recibo?',
+        text: "Â¿Deseas generar el recibo de pago en PDF ahora?",
         icon: 'success',
         showCancelButton: true,
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, generar PDF',
+        confirmButtonText: 'SÃ­, generar PDF',
         cancelButtonText: 'No, finalizar',
         customClass: {
             popup: 'animated fadeInUp'
@@ -1325,7 +1325,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
     const anioActual = new Date().getFullYear();
-    const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
+    const anos = Array.from({ length: 7 }, (_, i) => anioActual - 3 + i);
 
     // Opciones de inmuebles
     const inmueblesOptions = inmuebles.map(inm => `
@@ -1339,11 +1339,11 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         <option value="${inq.id}">${inq.nombre}</option>
     `).join('');
 
-    // Opciones de meses y años
+    // Opciones de meses y aÃ±os
     const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
     const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
-    // Valores por defecto para edición
+    // Valores por defecto para ediciÃ³n
     const selectedInmueble = pago.inmuebleId || '';
     const selectedInquilino = pago.inquilinoId || '';
     const selectedMes = pago.mesCorrespondiente || '';
@@ -1417,7 +1417,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
                 <label for="montoPago" class="block text-sm font-semibold text-gray-700 mb-1">Cantidad a pagar ahora</label>
                 <input type="number" id="montoPago" name="montoPago" step="0.01" min="0.01" required
                     class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                <span class="text-xs text-blue-500">Si la cantidad es menor al costo mensual, el pago será considerado parcial.</span>
+                <span class="text-xs text-blue-500">Si la cantidad es menor al costo mensual, el pago serÃ¡ considerado parcial.</span>
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1426,10 +1426,10 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
                 <select id="mesCorrespondiente" name="mesCorrespondiente" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
                     ${mesesOptions}
                 </select>
-                <span class="text-xs text-blue-500">Los pagos corresponden a partir del mes de ocupación.</span>
+                <span class="text-xs text-blue-500">Los pagos corresponden a partir del mes de ocupaciÃ³n.</span>
             </div>
             <div>
-                <label for="anioCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">Año Correspondiente</label>
+                <label for="anioCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">AÃ±o Correspondiente</label>
                 <select id="anioCorrespondiente" name="anioCorrespondiente" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
                     ${aniosOptions}
                 </select>
@@ -1449,7 +1449,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
                 <option value="">Selecciona una forma de pago</option>
                 <option value="Efectivo">Efectivo</option>
                 <option value="Transferencia">Transferencia</option>
-                <option value="Depósito">Depósito</option>
+                <option value="DepÃ³sito">DepÃ³sito</option>
                 <option value="Otro">Otro</option>
             </select>
         </div>
@@ -1466,7 +1466,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         <!-- Servicios adicionales -->
         <div id="serviciosAdicionales" style="display:none;">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Servicios Pagados</label>
-            <!-- Aquí se insertan los botones de eliminar -->
+            <!-- AquÃ­ se insertan los botones de eliminar -->
             ${serviciosEliminablesHtml}
         </div>
 
@@ -1561,7 +1561,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     const montoTotalInput = document.getElementById('montoTotal');
     const montoPagoInput = document.getElementById('montoPago');
 
-    // Dentro de la función mostrarFormularioNuevoPago, después de cargar los inmuebles e inquilinos, agregar la consulta de mobiliario
+    // Dentro de la funciÃ³n mostrarFormularioNuevoPago, despuÃ©s de cargar los inmuebles e inquilinos, agregar la consulta de mobiliario
     const mobiliarioSnap = await getDocs(collection(db, "mobiliario"));
     let mobiliarioMap = new Map();
     mobiliarioSnap.forEach(doc => {
@@ -1571,7 +1571,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         }
     });
 
-    // Función para obtener solo el costo del inmueble (sin sumar mobiliario)
+    // FunciÃ³n para obtener solo el costo del inmueble (sin sumar mobiliario)
     async function calcularTotal(inmuebleId) {
         const inmueble = inmuebles.find(inm => inm.id === inmuebleId);
         if (!inmueble) return 0;
@@ -1584,7 +1584,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         montoTotalInput.value = total;
     }
 
-    // En el event listener de cambio del inmueble, usar la función calcularTotal
+    // En el event listener de cambio del inmueble, usar la funciÃ³n calcularTotal
     inmuebleSelect.addEventListener('change', async function () {
         const inmuebleId = this.value;
         const total = await calcularTotal(inmuebleId);
@@ -1604,11 +1604,11 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
 
 
 
-    // Si es edición, selecciona los valores actuales
+    // Si es ediciÃ³n, selecciona los valores actuales
     inmuebleSelect.value = selectedInmueble;
     inquilinoSelect.value = selectedInquilino;
 
-    // Si es un nuevo pago, determinar el mes correspondiente según la fecha de registro
+    // Si es un nuevo pago, determinar el mes correspondiente segÃºn la fecha de registro
     if (!id) {
         const fechaRegistroInput = document.getElementById('fechaRegistro');
         actualizarMesCorrespondiente(fechaRegistroInput);
@@ -1618,7 +1618,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
             actualizarMesCorrespondiente(this);
         });
     } else {
-        // Si es edición, mantener los valores originales
+        // Si es ediciÃ³n, mantener los valores originales
         document.getElementById('mesCorrespondiente').value = selectedMes;
         document.getElementById('anioCorrespondiente').value = selectedAnio;
     }
@@ -1640,7 +1640,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         const anioCorrespondiente = parseInt(document.getElementById('anioCorrespondiente').value);
         const fechaRegistro = document.getElementById('fechaRegistro').value;
 
-        // Validación de duplicidad solo para nuevo pago
+        // ValidaciÃ³n de duplicidad solo para nuevo pago
         if (!id) {
             const pagosRef = collection(db, "pagos");
             const q = query(
@@ -1653,12 +1653,12 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
-                mostrarNotificacion('Ya existe un pago completo registrado para este inmueble, mes y año. No se permite duplicados.', 'error', 8000);
+                mostrarNotificacion('Ya existe un pago completo registrado para este inmueble, mes y aÃ±o. No se permite duplicados.', 'error', 8000);
                 return;
             }
         }
 
-        // Estado y saldos según el monto pagado
+        // Estado y saldos segÃºn el monto pagado
         let estado = "pendiente";
         let saldoPendiente = montoTotal - montoPago;
         if (montoPago >= montoTotal) {
@@ -1668,13 +1668,13 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
             estado = "parcial";
         }
 
-        // Determinar el mes correspondiente según la fecha de pago
-        // Si el pago se realiza el día 15, se considera como pago del mes actual
+        // Determinar el mes correspondiente segÃºn la fecha de pago
+        // Si el pago se realiza el dÃ­a 15, se considera como pago del mes actual
         const fechaPago = new Date(fechaRegistro);
         const diaPago = fechaPago.getDate();
         // No modificamos mesCorrespondiente ni anioCorrespondiente ya que el usuario los selecciona manualmente
 
-        // --- AQUÍ VA EL FRAGMENTO DE SALDO A FAVOR ---
+        // --- AQUÃ VA EL FRAGMENTO DE SALDO A FAVOR ---
         if (montoPago > montoTotal) {
             const excedente = montoPago - montoTotal;
             const abonosSnap = await getDocs(query(
@@ -1714,7 +1714,54 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
             serviciosPagados.internetMonto = montoInternet ? parseFloat(montoInternet.value) || 0 : 0;
         }
 
+        // --- CÃLCULO DE PERIODO HISTÃ“RICO (Persistencia) ---
+        let periodoInicio = "";
+        let periodoFin = "";
+
+        try {
+            // Obtener datos frescos del inquilino para la fecha de ocupaciÃ³n
+            const inquilinoDocForPeriod = await getDoc(doc(db, "inquilinos", inquilinoId));
+            if (inquilinoDocForPeriod.exists()) {
+                const inquilinoData = inquilinoDocForPeriod.data();
+                if (inquilinoData.fechaOcupacion && mesCorrespondiente && anioCorrespondiente) {
+                    let diaInicio = 1;
+                    if (inquilinoData.fechaOcupacion.includes('/')) {
+                        const partes = inquilinoData.fechaOcupacion.split('/');
+                        diaInicio = parseInt(partes[0]);
+                    } else if (inquilinoData.fechaOcupacion.includes('-')) {
+                        const partes = inquilinoData.fechaOcupacion.split('-');
+                        diaInicio = parseInt(partes[2]);
+                    }
+
+                    const meses = [
+                        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                    ];
+                    const mesPagoIdx = meses.findIndex(m => m.toLowerCase() === mesCorrespondiente.toLowerCase());
+                    const anioPago = parseInt(anioCorrespondiente);
+
+                    // Fecha inicio: dÃ­a de ocupaciÃ³n, mes/aÃ±o del pago
+                    const fechaInicioObj = new Date(anioPago, mesPagoIdx, diaInicio);
+
+                    // Fecha fin: un dÃ­a antes del mismo dÃ­a del mes siguiente
+                    let mesFinVal = mesPagoIdx + 1;
+                    let anioFinVal = anioPago;
+                    if (mesFinVal > 11) { mesFinVal = 0; anioFinVal++; }
+                    const fechaFinObj = new Date(anioFinVal, mesFinVal, diaInicio);
+                    fechaFinObj.setDate(fechaFinObj.getDate() - 1);
+
+                    const opciones = { day: '2-digit', month: 'long', year: 'numeric' };
+                    periodoInicio = fechaInicioObj.toLocaleDateString('es-MX', opciones);
+                    periodoFin = fechaFinObj.toLocaleDateString('es-MX', opciones);
+                }
+            }
+        } catch (error) {
+            console.error("Error calculando periodo histÃ³rico:", error);
+        }
+
         const datos = {
+            periodoInicio, // Guardamos el periodo histÃ³rico
+            periodoFin,
             inmuebleId,
             inquilinoId,
             mesCorrespondiente,
@@ -1736,7 +1783,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         try {
             if (id) {
                 await updateDoc(doc(db, "pagos", id), datos);
-                mostrarNotificacion('Pago actualizado con éxito.', 'success');
+                mostrarNotificacion('Pago actualizado con Ã©xito.', 'success');
                 ocultarModal();
                 if (enVistaTabla) {
                     mostrarPagos(true);
@@ -1762,7 +1809,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
         btn.addEventListener('click', async function () {
             const servicio = this.dataset.servicio;
-            if (confirm(`¿Eliminar el servicio "${servicio}" de este pago?`)) {
+            if (confirm(`Â¿Eliminar el servicio "${servicio}" de este pago?`)) {
                 // Elimina el servicio y su monto del objeto
                 delete pago.serviciosPagados[servicio];
                 delete pago.serviciosPagados[`${servicio}Monto`];
@@ -1775,7 +1822,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         });
     });
 
-    // Después de mostrar el modal
+    // DespuÃ©s de mostrar el modal
     if (
         (pago.serviciosPagados && Object.keys(pago.serviciosPagados).length > 0) ||
         (inmuebles.find(inm => inm.id === selectedInmueble)?.tieneInternet)
@@ -1793,7 +1840,7 @@ export async function editarPago(id) {
     // Guardar el estado actual para saber si estamos en la vista de tabla
     const enVistaTabla = document.querySelector('.min-w-full') !== null;
 
-    // Mostrar el formulario de edición
+    // Mostrar el formulario de ediciÃ³n
     await mostrarFormularioNuevoPago(id);
 
     // Modificar el comportamiento del formulario para mantener la vista de tabla
@@ -1808,13 +1855,13 @@ export async function editarPago(id) {
             const datos = Object.fromEntries(formData.entries());
 
             try {
-                // Procesar los datos como lo haría normalmente
-                // (Aquí iría la lógica de procesamiento que ya tienes)
+                // Procesar los datos como lo harÃ­a normalmente
+                // (AquÃ­ irÃ­a la lÃ³gica de procesamiento que ya tienes)
 
                 // Cerrar el modal
                 ocultarModal();
 
-                // Mostrar la vista de tabla si estábamos en ella
+                // Mostrar la vista de tabla si estÃ¡bamos en ella
                 if (enVistaTabla) {
                     mostrarPagos(true);
                 } else {
@@ -1859,7 +1906,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
 
         const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         const anioActual = new Date().getFullYear();
-        const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
+        const anos = Array.from({ length: 7 }, (_, i) => anioActual - 3 + i);
         const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
         const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
@@ -1920,7 +1967,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                         </select>
                     </div>
                     <div>
-                        <label for="anioCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">Año Correspondiente</label>
+                        <label for="anioCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">AÃ±o Correspondiente</label>
                         <select id="anioCorrespondiente" name="anioCorrespondiente" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
                             ${aniosOptions}
                         </select>
@@ -1936,7 +1983,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                         <option value="">Selecciona una forma de pago</option>
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transferencia">Transferencia</option>
-                        <option value="Depósito">Depósito</option>
+                        <option value="DepÃ³sito">DepÃ³sito</option>
                         <option value="Otro">Otro</option>
                     </select>
                 </div>
@@ -2125,11 +2172,11 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
             const montoLuz = servicioLuz ? parseFloat(document.getElementById('montoLuz').value) || 0 : 0;
 
             if ((servicioInternet && montoInternet <= 0) || (servicioAgua && montoAgua <= 0) || (servicioLuz && montoLuz <= 0)) {
-                mostrarNotificacion("Debes ingresar un monto válido para cada servicio seleccionado.", "error");
+                mostrarNotificacion("Debes ingresar un monto vÃ¡lido para cada servicio seleccionado.", "error");
                 return;
             }
 
-            // --- INICIO: Verificación de duplicados ---
+            // --- INICIO: VerificaciÃ³n de duplicados ---
             const pagosRefCheck = collection(db, "pagos");
             const qCheck = query(pagosRefCheck, where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
             const querySnapshotCheck = await getDocs(qCheck);
@@ -2151,7 +2198,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                     }
                 }
             }
-            // --- FIN: Verificación de duplicados ---
+            // --- FIN: VerificaciÃ³n de duplicados ---
 
             try {
                 const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
@@ -2187,7 +2234,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                         serviciosPagados: serviciosActualizados
                     });
 
-                    mostrarNotificacion("Pago de servicios añadido con éxito.", "success");
+                    mostrarNotificacion("Pago de servicios aÃ±adido con Ã©xito.", "success");
                     ocultarModal();
                     if (callbackFlujo) {
                         callbackFlujo(); // Continuar con el flujo (mobiliario o recibo)
@@ -2237,7 +2284,7 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
                             serviciosPagados
                         });
 
-                        mostrarNotificacion("Pago de servicios registrado con éxito.", "success");
+                        mostrarNotificacion("Pago de servicios registrado con Ã©xito.", "success");
                     }
                     ocultarModal();
                     mostrarPagos(true);
@@ -2256,8 +2303,8 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
 }
 
 /**
- * Muestra el formulario para registrar un pago específico de mobiliario.
- * Considera la fecha de asignación para determinar si se cobra en el mes actual o siguiente.
+ * Muestra el formulario para registrar un pago especÃ­fico de mobiliario.
+ * Considera la fecha de asignaciÃ³n para determinar si se cobra en el mes actual o siguiente.
  */
 export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado = null, pagoIdAsociado = null, callbackFlujo = null) {
     try {
@@ -2303,7 +2350,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
 
         const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         const anioActual = new Date().getFullYear();
-        const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
+        const anos = Array.from({ length: 7 }, (_, i) => anioActual - 3 + i);
         const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
         const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
@@ -2338,7 +2385,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                         </select>
                     </div>
                     <div>
-                        <label for="anioCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">Año Correspondiente</label>
+                        <label for="anioCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">AÃ±o Correspondiente</label>
                         <select id="anioCorrespondiente" name="anioCorrespondiente" required class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
                             ${aniosOptions}
                         </select>
@@ -2354,7 +2401,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                         <option value="">Selecciona una forma de pago</option>
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transferencia">Transferencia</option>
-                        <option value="Depósito">Depósito</option>
+                        <option value="DepÃ³sito">DepÃ³sito</option>
                         <option value="Otro">Otro</option>
                     </select>
                 </div>
@@ -2373,10 +2420,10 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
 
         // Si se preselecciona un inquilino (desde el flujo guiado)
         if (inquilinoIdPreseleccionado) {
-            // La declaración de inquilinoSelect se movió arriba para que esté disponible aquí.
+            // La declaraciÃ³n de inquilinoSelect se moviÃ³ arriba para que estÃ© disponible aquÃ­.
             inquilinoSelect.value = inquilinoIdPreseleccionado;
             inquilinoSelect.disabled = true;
-            // Disparar el evento 'change' para cargar y marcar automáticamente el mobiliario
+            // Disparar el evento 'change' para cargar y marcar automÃ¡ticamente el mobiliario
             const event = new Event('change', { bubbles: true });
             inquilinoSelect.dispatchEvent(event);
         }
@@ -2446,7 +2493,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
 
         inquilinoSelect.addEventListener('change', cargarMobiliarioParaInquilino);
 
-        // Si hay un inquilino preseleccionado, llama a la función directamente
+        // Si hay un inquilino preseleccionado, llama a la funciÃ³n directamente
         if (inquilinoIdPreseleccionado) {
             cargarMobiliarioParaInquilino.call(inquilinoSelect);
         }
@@ -2505,7 +2552,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                 return;
             }
 
-            // --- INICIO: Verificación de duplicados ---
+            // --- INICIO: VerificaciÃ³n de duplicados ---
             const pagosRefCheck = collection(db, "pagos");
             const qCheck = query(pagosRefCheck, where("inquilinoId", "==", inquilinoId), where("mesCorrespondiente", "==", mesCorrespondiente), where("anioCorrespondiente", "==", anioCorrespondiente));
             const querySnapshotCheck = await getDocs(qCheck);
@@ -2517,7 +2564,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                     return;
                 }
             }
-            // --- FIN: Verificación de duplicados ---
+            // --- FIN: VerificaciÃ³n de duplicados ---
 
             let montoTotal = 0;
             mobiliarioSeleccionado.forEach(checkbox => {
@@ -2548,7 +2595,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                         mobiliarioPagado: mobiliarioActualizado
                     });
 
-                    mostrarNotificacion("Pago de mobiliario añadido con éxito.", "success");
+                    mostrarNotificacion("Pago de mobiliario aÃ±adido con Ã©xito.", "success");
                     ocultarModal();
                     if (callbackFlujo) {
                         callbackFlujo(); // Continuar con el flujo (recibo)
@@ -2587,7 +2634,7 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
                         };
 
                         await addDoc(collection(db, "pagos"), pagoData);
-                        mostrarNotificacion("Pago de mobiliario registrado con éxito.", "success");
+                        mostrarNotificacion("Pago de mobiliario registrado con Ã©xito.", "success");
                     }
                     ocultarModal();
                     mostrarPagos(true);
@@ -2617,7 +2664,7 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
         if (docSnap.exists()) {
             pago = { id: docSnap.id, ...docSnap.data() };
         } else {
-            console.error("No se encontró el pago con el ID:", pagoId);
+            console.error("No se encontrÃ³ el pago con el ID:", pagoId);
             mostrarNotificacion("Pago no encontrado para abonar.", 'error');
             return;
         }
@@ -2627,9 +2674,9 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
         return;
     }
 
-    // --- VALIDACIÓN: No permitir abonos si el pago ya está pagado ---
+    // --- VALIDACIÃ“N: No permitir abonos si el pago ya estÃ¡ pagado ---
     if (pago.estado === 'pagado' || pago.saldoPendiente === 0) {
-        mostrarNotificacion('Este pago ya está completamente pagado. No puedes registrar más abonos.', 'warning');
+        mostrarNotificacion('Este pago ya estÃ¡ completamente pagado. No puedes registrar mÃ¡s abonos.', 'warning');
         return;
     }
 
@@ -2730,7 +2777,7 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
                 abonos: abonosActuales
             });
 
-            // Si hay excedente, mándalo a saldo a favor
+            // Si hay excedente, mÃ¡ndalo a saldo a favor
             if (excedente > 0) {
                 // Busca si ya hay un saldo a favor activo
                 const abonosSnap = await getDocs(query(
@@ -2761,10 +2808,10 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
             // Verificar si estamos en la vista de tabla
             const enVistaTabla = document.querySelector('.min-w-full') !== null;
 
-            mostrarNotificacion('Abono registrado con éxito.', 'success');
+            mostrarNotificacion('Abono registrado con Ã©xito.', 'success');
             ocultarModal();
 
-            // Mantener la vista de tabla si estábamos en ella
+            // Mantener la vista de tabla si estÃ¡bamos en ella
             if (enVistaTabla) {
                 mostrarPagos(true);
             } else {
@@ -2815,7 +2862,7 @@ export async function mostrarDetallePago(pagoId) {
         let serviciosHtml = '';
         if (pago.serviciosPagados) {
             const servicios = [];
-            // Usar explícitamente los campos específicos de servicios
+            // Usar explÃ­citamente los campos especÃ­ficos de servicios
             const fechaServicio = pago.serviciosPagados.fechaRegistroServicio || pago.fechaRegistro || 'N/A';
             const formaPagoServicio = pago.serviciosPagados.formaPagoServicio || pago.formaPago || 'N/A';
 
@@ -2854,7 +2901,7 @@ export async function mostrarDetallePago(pagoId) {
                 const costo = item.costo || 0;
                 mobiliarioTotal += costo;
 
-                // Obtener fecha y forma de pago específicas del mobiliario o usar las del pago general
+                // Obtener fecha y forma de pago especÃ­ficas del mobiliario o usar las del pago general
                 const fechaMobiliario = item.fechaRegistroMobiliario || pago.fechaRegistro || 'N/A';
                 const formaPagoMobiliario = item.formaPagoMobiliario || pago.formaPago || 'N/A';
 
@@ -2928,7 +2975,7 @@ export async function mostrarDetallePago(pagoId) {
                     <div><strong>Inmueble:</strong> <span class="text-blue-900">${nombreInmueble}</span></div>
                     <div><strong>Inquilino:</strong> <span class="text-blue-900">${nombreInquilino}</span></div>
                     <div><strong>Mes Correspondiente:</strong> <span>${pago.mesCorrespondiente}</span></div>
-                    <div><strong>Año Correspondiente:</strong> <span>${pago.anioCorrespondiente}</span></div>
+                    <div><strong>AÃ±o Correspondiente:</strong> <span>${pago.anioCorrespondiente}</span></div>
                     <div><strong>Monto Total:</strong> <span class="text-green-700 font-bold">${(pago.montoTotal || 0).toFixed(2)}</span></div>
                     <div><strong>Monto Pagado:</strong> <span class="text-green-700 font-bold">${(pago.montoPagado || 0).toFixed(2)}</span></div>
                     <div><strong>Saldo Pendiente:</strong> <span class="text-red-700 font-bold">${(pago.saldoPendiente || 0).toFixed(2)}</span></div>
@@ -2955,7 +3002,7 @@ export async function mostrarDetallePago(pagoId) {
 
 
 /**
- * Muestra el historial de pagos para un inquilino específico.
+ * Muestra el historial de pagos para un inquilino especÃ­fico.
  * Incluye los detalles de los abonos.
  * @param {string} inquilinoId - El ID del inquilino.
  */
@@ -2983,7 +3030,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
         const tieneInmueble = inquilinoData && inquilinoData.inmuebleAsociadoId;
         const inmuebleAsociado = tieneInmueble ? inmueblesMap.get(inquilinoData.inmuebleAsociadoId) || 'Inmueble Desconocido' : 'Sin inmueble asignado';
 
-        // Obtener el mes y año actual para verificar pagos pendientes
+        // Obtener el mes y aÃ±o actual para verificar pagos pendientes
         const fechaActual = new Date();
         const mesActual = fechaActual.getMonth(); // 0-11
         const anioActual = fechaActual.getFullYear();
@@ -3001,7 +3048,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             });
         }
 
-        // Información de servicios
+        // InformaciÃ³n de servicios
         let serviciosInfo = '';
         if (tieneServicios) {
             serviciosInfo = `
@@ -3027,7 +3074,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             `;
         }
 
-        // Información de inmueble
+        // InformaciÃ³n de inmueble
         let inmuebleInfo = '';
         if (tieneInmueble) {
             inmuebleInfo = `
@@ -3067,7 +3114,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                                 Inmueble
                             </th>
                             <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Mes / Año
+                                Mes / AÃ±o
                             </th>
                             <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Monto Total
@@ -3104,7 +3151,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                         </tr>
             `;
         } else {
-            // Ordenar pagos por fecha (más reciente primero)
+            // Ordenar pagos por fecha (mÃ¡s reciente primero)
             const pagosOrdenados = [];
             pagosSnap.forEach(doc => {
                 pagosOrdenados.push({ id: doc.id, ...doc.data() });
@@ -3122,7 +3169,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             pagosOrdenados.forEach(pago => {
                 let abonosDetalleHtml = '';
                 if (pago.abonos && pago.abonos.length > 0) {
-                    // Ordenar abonos por fecha para mostrarlos cronológicamente
+                    // Ordenar abonos por fecha para mostrarlos cronolÃ³gicamente
                     pago.abonos.sort((a, b) => new Date(a.fechaAbono) - new Date(b.fechaAbono));
                     abonosDetalleHtml += `<ul class="list-disc list-inside text-xs text-gray-700">`;
                     pago.abonos.forEach(abono => {
@@ -3242,7 +3289,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
 
 
 /**
- * Muestra el historial de pagos para un inmueble específico.
+ * Muestra el historial de pagos para un inmueble especÃ­fico.
  * @param {string} inmuebleId - El ID del inmueble.
  */
 export async function mostrarHistorialPagosInmueble(inmuebleId) {
@@ -3273,7 +3320,7 @@ export async function mostrarHistorialPagosInmueble(inmuebleId) {
                                 Inquilino
                             </th>
                             <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Mes / Año
+                                Mes / AÃ±o
                             </th>
                             <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Monto Total
@@ -3384,7 +3431,7 @@ export async function mostrarHistorialPagosInmueble(inmuebleId) {
 
 /**
  * Revisa y actualiza el estado de los pagos vencidos.
- * Esta función se debe llamar periódicamente, por ejemplo, al cargar el dashboard.
+ * Esta funciÃ³n se debe llamar periÃ³dicamente, por ejemplo, al cargar el dashboard.
  */
 export async function revisarPagosVencidos() {
     try {
@@ -3392,7 +3439,7 @@ export async function revisarPagosVencidos() {
         // Establecer la hora a 00:00:00 para comparar solo fechas
         today.setHours(0, 0, 0, 0);
 
-        // Obtener pagos que no estén 'pagado'
+        // Obtener pagos que no estÃ©n 'pagado'
         const pagosPendientesParcialesQuery = query(
             collection(db, "pagos"),
             where("estado", "!=", "pagado")
@@ -3412,19 +3459,19 @@ export async function revisarPagosVencidos() {
             ];
             const mesPagoNumero = meses.indexOf(pago.mesCorrespondiente); // 0-indexed month
 
-            // Creamos una fecha de vencimiento que es el último día del mes del pago
+            // Creamos una fecha de vencimiento que es el Ãºltimo dÃ­a del mes del pago
             // Si el pago es de Enero, vence el 31 de Enero.
-            const fechaVencimiento = new Date(anioPago, mesPagoNumero + 1, 0); // Día 0 del mes siguiente es el último día del mes actual
-            fechaVencimiento.setHours(23, 59, 59, 999); // Establecer la hora al final del día para una comparación precisa
+            const fechaVencimiento = new Date(anioPago, mesPagoNumero + 1, 0); // DÃ­a 0 del mes siguiente es el Ãºltimo dÃ­a del mes actual
+            fechaVencimiento.setHours(23, 59, 59, 999); // Establecer la hora al final del dÃ­a para una comparaciÃ³n precisa
 
             // Un pago se considera vencido si la fecha actual es posterior a la fecha de vencimiento
-            // Y si el estado actual no es ya 'vencido' y no está 'pagado'
+            // Y si el estado actual no es ya 'vencido' y no estÃ¡ 'pagado'
             if (today > fechaVencimiento && pago.estado !== 'vencido' && pago.montoPagado < pago.montoTotal) {
                 actualizaciones.push(updateDoc(doc(db, "pagos", pagoId), {
                     estado: 'vencido'
                 }));
-                // Opcional: Mostrar una notificación si el pago pasa a estar vencido
-                mostrarNotificacion(`¡Alerta! El pago del inmueble para el mes ${pago.mesCorrespondiente} del ${pago.anioCorrespondiente} está vencido.`, 'warning', 10000);
+                // Opcional: Mostrar una notificaciÃ³n si el pago pasa a estar vencido
+                mostrarNotificacion(`Â¡Alerta! El pago del inmueble para el mes ${pago.mesCorrespondiente} del ${pago.anioCorrespondiente} estÃ¡ vencido.`, 'warning', 10000);
             }
         });
 
@@ -3436,16 +3483,16 @@ export async function revisarPagosVencidos() {
     }
 }
 
-// Función auxiliar para eliminar documentos y mantener la vista actual
+// FunciÃ³n auxiliar para eliminar documentos y mantener la vista actual
 export async function eliminarDocumento(coleccion, id, callbackRefresh) {
-    if (confirm('¿Estás seguro de que quieres eliminar este elemento? Esta acción es irreversible.')) {
+    if (confirm('Â¿EstÃ¡s seguro de que quieres eliminar este elemento? Esta acciÃ³n es irreversible.')) {
         try {
             await deleteDoc(doc(db, coleccion, id));
-            mostrarNotificacion('Elemento eliminado con éxito.', 'success');
+            mostrarNotificacion('Elemento eliminado con Ã©xito.', 'success');
 
             // Si estamos en la vista de pagos, mostrar la tabla de pagos directamente
             if (coleccion === 'pagos') {
-                mostrarPagos(true); // Parámetro true para mostrar la tabla en lugar de los botones
+                mostrarPagos(true); // ParÃ¡metro true para mostrar la tabla en lugar de los botones
             } else if (callbackRefresh) {
                 callbackRefresh();
             }
@@ -3457,11 +3504,11 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh) {
     }
 }
 
-// Esta función ya está definida anteriormente en el archivo
+// Esta funciÃ³n ya estÃ¡ definida anteriormente en el archivo
 
 /**
- * Devuelve los meses (mes/año) que un inquilino debe desde su ocupación hasta el mes actual.
- * Solo considera los meses a partir de la fecha de ocupación.
+ * Devuelve los meses (mes/aÃ±o) que un inquilino debe desde su ocupaciÃ³n hasta el mes actual.
+ * Solo considera los meses a partir de la fecha de ocupaciÃ³n.
  * @param {string} inquilinoId
  * @param {string} inmuebleId
  * @param {Date} fechaOcupacion
@@ -3476,13 +3523,13 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
         const hoy = new Date();
         hoy.setHours(0, 0, 0, 0); // Normalize 'hoy' to start of day for accurate comparison
 
-        // Validar fecha de ocupación
+        // Validar fecha de ocupaciÃ³n
         if (!fechaOcupacion || isNaN(fechaOcupacion.getTime())) {
-            console.error("Fecha de ocupación inválida:", fechaOcupacion);
+            console.error("Fecha de ocupaciÃ³n invÃ¡lida:", fechaOcupacion);
             return [];
         }
 
-        // Obtener información del inquilino para verificar servicios
+        // Obtener informaciÃ³n del inquilino para verificar servicios
         const inquilinoDoc = await getDoc(doc(db, "inquilinos", inquilinoId));
         const inquilinoData = inquilinoDoc.exists() ? inquilinoDoc.data() : null;
         const tieneServicios = inquilinoData && inquilinoData.pagaServicios &&
@@ -3509,13 +3556,13 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
             pagosList.push({ ...doc.data(), id: doc.id });
         });
 
-        // Mes y año de ocupación
+        // Mes y aÃ±o de ocupaciÃ³n
         const fechaOcupacionObj = new Date(fechaOcupacion);
         const diaDePago = fechaOcupacionObj.getDate(); // Use this as the payment day
         const mesOcupacion = fechaOcupacionObj.getMonth();
         const anioOcupacion = fechaOcupacionObj.getFullYear();
 
-        // Mes y año de fin de cálculo
+        // Mes y aÃ±o de fin de cÃ¡lculo
         const mesFin = fechaFinCalculo.getMonth();
         const anioFin = fechaFinCalculo.getFullYear();
 
@@ -3544,7 +3591,7 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
                 const pagosMes = pagosList.filter(p =>
                     p.mesCorrespondiente &&
                     p.anioCorrespondiente &&
-                    p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') === nombreMes.toLowerCase().replace(/[^a-záéíóúüñ]/gi, '') &&
+                    p.mesCorrespondiente.toString().trim().toLowerCase().replace(/[^a-zÃ¡Ã©Ã­Ã³ÃºÃ¼Ã±]/gi, '') === nombreMes.toLowerCase().replace(/[^a-zÃ¡Ã©Ã­Ã³ÃºÃ¼Ã±]/gi, '') &&
                     Number(p.anioCorrespondiente) === currentIterYear
                 );
 
@@ -3629,8 +3676,8 @@ function calcularTotalServicios(serviciosPagados) {
 }
 
 /**
- * Genera el HTML para mostrar la información del mobiliario en la tabla de pagos
- * @param {Object} pago - Objeto con la información del pago
+ * Genera el HTML para mostrar la informaciÃ³n del mobiliario en la tabla de pagos
+ * @param {Object} pago - Objeto con la informaciÃ³n del pago
  * @returns {string} - HTML para mostrar el mobiliario
  */
 function generarMobiliarioHtml(pago) {
@@ -3669,7 +3716,7 @@ export async function gestionarServiciosPago(pagoId) {
         const pago = pagoDoc.data();
         const serviciosPagados = pago.serviciosPagados || {};
 
-        // Obtener información del inmueble y del inquilino
+        // Obtener informaciÃ³n del inmueble y del inquilino
         const inmuebleDoc = await getDoc(doc(db, "inmuebles", pago.inmuebleId));
         const nombreInmueble = inmuebleDoc.exists() ? inmuebleDoc.data().nombre : 'Inmueble Desconocido';
 
@@ -3752,12 +3799,12 @@ export async function gestionarServiciosPago(pagoId) {
             document.getElementById('montoluz').disabled = !this.checked;
         });
 
-        // Manejar eliminación de servicios
+        // Manejar eliminaciÃ³n de servicios
         document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
             btn.addEventListener('click', async function () {
                 const servicioId = this.dataset.servicio;
 
-                if (confirm(`¿Estás seguro de eliminar el servicio de ${servicioId}?`)) {
+                if (confirm(`Â¿EstÃ¡s seguro de eliminar el servicio de ${servicioId}?`)) {
                     try {
                         // Eliminar el servicio
                         delete serviciosPagados[servicioId];
@@ -3768,7 +3815,7 @@ export async function gestionarServiciosPago(pagoId) {
                             serviciosPagados: serviciosPagados
                         });
 
-                        // Disparar un evento personalizado para notificar que se eliminó un servicio
+                        // Disparar un evento personalizado para notificar que se eliminÃ³ un servicio
                         const event = new CustomEvent('servicioEliminado', { detail: { pagoId, servicio: servicioId } });
                         document.dispatchEvent(event);
 
@@ -3783,13 +3830,13 @@ export async function gestionarServiciosPago(pagoId) {
             });
         });
 
-        // Manejar envío del formulario
+        // Manejar envÃ­o del formulario
         document.getElementById('formGestionServicios').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             // Recopilar datos del formulario
             const nuevoServicios = {
-                // Agregar fecha y forma de pago específicas para servicios
+                // Agregar fecha y forma de pago especÃ­ficas para servicios
                 fechaRegistroServicio: fechaRegistro,
                 formaPagoServicio: formaPago
             };
@@ -3834,7 +3881,7 @@ export async function gestionarServiciosPago(pagoId) {
 }
 
 /**
- * Elimina un servicio específico de un pago.
+ * Elimina un servicio especÃ­fico de un pago.
  * @param {string} pagoId - El ID del pago.
  * @param {string} nombreServicio - El nombre del servicio a eliminar.
  */
@@ -3862,7 +3909,7 @@ export async function eliminarServicioDePago(pagoId, nombreServicio) {
             serviciosPagados: pago.serviciosPagados
         });
 
-        // Disparar un evento personalizado para notificar que se eliminó un servicio
+        // Disparar un evento personalizado para notificar que se eliminÃ³ un servicio
         const event = new CustomEvent('servicioEliminado', { detail: { pagoId, servicio: nombreServicio } });
         document.dispatchEvent(event);
 
@@ -3889,7 +3936,7 @@ export async function gestionarMobiliarioPago(pagoId) {
         const pago = pagoDoc.data();
         const mobiliarioPagado = pago.mobiliarioPagado || [];
 
-        // Obtener información del inmueble y del inquilino
+        // Obtener informaciÃ³n del inmueble y del inquilino
         const inmuebleDoc = await getDoc(doc(db, "inmuebles", pago.inmuebleId));
         const nombreInmueble = inmuebleDoc.exists() ? inmuebleDoc.data().nombre : 'Inmueble Desconocido';
 
@@ -3935,7 +3982,7 @@ export async function gestionarMobiliarioPago(pagoId) {
                         <div class="flex items-start justify-between">
                             <div>
                                 <h4 class="font-medium text-gray-800">${mob.nombre}</h4>
-                                <p class="text-sm text-gray-600">${mob.descripcion || 'Sin descripción'}</p>
+                                <p class="text-sm text-gray-600">${mob.descripcion || 'Sin descripciÃ³n'}</p>
                                 <p class="text-sm font-semibold text-green-600">Costo: ${mob.costo.toFixed(2)}</p>
                             </div>
                             <button type="button" data-index="${index}" class="btn-eliminar-mobiliario text-red-500 hover:text-red-700">
@@ -3980,13 +4027,13 @@ export async function gestionarMobiliarioPago(pagoId) {
 
         mostrarModal(formHtml);
 
-        // Manejar eliminación de mobiliario
+        // Manejar eliminaciÃ³n de mobiliario
         document.querySelectorAll('.btn-eliminar-mobiliario').forEach(btn => {
             btn.addEventListener('click', async function () {
                 const index = parseInt(this.dataset.index);
                 const mobiliario = mobiliarioDetalles[index];
 
-                if (confirm(`¿Estás seguro de eliminar "${mobiliario.nombre}" de este pago?`)) {
+                if (confirm(`Â¿EstÃ¡s seguro de eliminar "${mobiliario.nombre}" de este pago?`)) {
                     try {
                         // Eliminar el mobiliario del array
                         const nuevoMobiliario = [...mobiliarioPagado];
@@ -4032,3 +4079,59 @@ function cerrarModalDePago(callback = null) {
     }
 }
 window.cerrarModalDePago = cerrarModalDePago;
+
+/**
+ * Consolidar pagos antiguos asignando periodoInicio y periodoFin basados en un día de corte.
+ * Esto "congela" los recibos históricos para que no cambien si se edita el inquilino.
+ * @param {string} inquilinoId - ID del inquilino.
+ * @param {number} diaCorte - Día del mes (1-31) que se usaba antes del cambio.
+ */
+export async function consolidarPagosAntiguos(inquilinoId, diaCorte) {
+    try {
+        const pagosQuery = query(collection(db, "pagos"), where("inquilinoId", "==", inquilinoId));
+        const pagosSnap = await getDocs(pagosQuery);
+        let cont = 0;
+
+        for (const docSnap of pagosSnap.docs) {
+            const pago = docSnap.data();
+
+            // Solo procesamos si NO tiene ya periodo asignado (para no sobreescribir repetidamente)
+            if (!pago.periodoInicio || !pago.periodoFin) {
+                if (pago.mesCorrespondiente && pago.anioCorrespondiente) {
+                    const meses = [
+                        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                    ];
+                    const mesPagoIdx = meses.findIndex(m => m.toLowerCase() === pago.mesCorrespondiente.toLowerCase());
+                    const anioPago = parseInt(pago.anioCorrespondiente);
+
+                    if (mesPagoIdx !== -1) {
+                        // Fecha inicio: día de corte, mes/año del pago
+                        const fechaInicioObj = new Date(anioPago, mesPagoIdx, diaCorte);
+
+                        // Fecha fin: un día antes del mismo día del mes siguiente
+                        let mesFinVal = mesPagoIdx + 1;
+                        let anioFinVal = anioPago;
+                        if (mesFinVal > 11) { mesFinVal = 0; anioFinVal++; }
+                        const fechaFinObj = new Date(anioFinVal, mesFinVal, diaCorte);
+                        fechaFinObj.setDate(fechaFinObj.getDate() - 1);
+
+                        const opciones = { day: '2-digit', month: 'long', year: 'numeric' };
+                        const periodoInicio = fechaInicioObj.toLocaleDateString('es-MX', opciones);
+                        const periodoFin = fechaFinObj.toLocaleDateString('es-MX', opciones);
+
+                        await updateDoc(doc(db, "pagos", docSnap.id), {
+                            periodoInicio: periodoInicio,
+                            periodoFin: periodoFin
+                        });
+                        cont++;
+                    }
+                }
+            }
+        }
+        return cont;
+    } catch (error) {
+        console.error("Error consolidando pagos:", error);
+        throw error;
+    }
+}

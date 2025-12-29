@@ -73,7 +73,11 @@ export async function generarReciboPDF(pagoId, firma = '') {
     // --- Calcula el periodo cubierto por el pago ---
     let periodoTexto = "";
 
-    if (inquilino.fechaOcupacion && pago.mesCorrespondiente && pago.anioCorrespondiente) {
+    if (pago.periodoInicio && pago.periodoFin) {
+        // Prioridad 1: Usar fechas históricas guardadas en el pago
+        periodoTexto = `${pago.periodoInicio} al ${pago.periodoFin}`;
+    } else if (inquilino.fechaOcupacion && pago.mesCorrespondiente && pago.anioCorrespondiente) {
+        // Prioridad 2: Calcular (Fallback para pagos antiguos)
         // Detecta formato y extrae día, mes, año correctamente
         let diaInicio = 1, mesInicio = 0, anioInicio = 2000;
         if (inquilino.fechaOcupacion.includes('/')) {

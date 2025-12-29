@@ -23,7 +23,7 @@ export async function mostrarReportes() {
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
     const anioActual = new Date().getFullYear();
-    const anos = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
+    const anos = Array.from({ length: 7 }, (_, i) => anioActual - 3 + i);
 
     let aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
     let mesesOptions = meses.map((mes, index) => `<option value="${index + 1}">${mes}</option>`).join('');
