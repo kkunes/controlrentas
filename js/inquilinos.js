@@ -6,7 +6,7 @@ import { updateDoc as updateDocInmueble } from "https://www.gstatic.com/firebase
 import { obtenerMesesAdeudadosHistorico, mostrarFormularioNuevoPago, mostrarFormularioPagoServicio, mostrarFormularioPagoMobiliario, consolidarPagosAntiguos } from './pagos.js';
 import { mostrarTotalDesperfectosInquilino } from './desperfectos.js';
 
-// Nueva funciÃ³n para calcular totales
+// Nueva función para calcular totales
 async function calcularTotalesInquilino(inquilinoId) {
     const inquilinoRef = doc(db, "inquilinos", inquilinoId);
     const inquilinoSnap = await getDoc(inquilinoRef);
@@ -57,10 +57,10 @@ window.vieneDeAdeudos = false;
 window.adeudosModalContent = '';
 
 
-// Hacer la funciÃ³n accesible globalmente para los handlers `onclick`
+// Hacer la función accesible globalmente para los handlers `onclick`
 window.mostrarTotalDesperfectosInquilino = mostrarTotalDesperfectosInquilino;
 
-// Variables para el cachÃ© de inquilinos
+// Variables para el caché de inquilinos
 let cachedInquilinosHTML = null;
 let inquilinosCacheTimestamp = null;
 let cachedInquilinosFilter = null;
@@ -70,7 +70,7 @@ export function limpiarCacheInquilinos() {
     cachedInquilinosHTML = null;
     inquilinosCacheTimestamp = null;
     cachedInquilinosFilter = null;
-    console.log("CachÃ© de inquilinos limpiado.");
+    console.log("Caché de inquilinos limpiado.");
 }
 
 function adjuntarListenersInquilinos() {
@@ -158,14 +158,14 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
     const contenedor = document.getElementById("contenido");
     if (!contenedor) {
         console.error("Contenedor 'contenido' no encontrado.");
-        mostrarNotificacion("Error: No se pudo cargar la secciÃ³n de inquilinos.", 'error');
+        mostrarNotificacion("Error: No se pudo cargar la sección de inquilinos.", 'error');
         ocultarLoader();
         return;
     }
 
-    // --- LÃ³gica de CachÃ© ---
+    // --- Lógica de Caché ---
     if (cachedInquilinosHTML && inquilinosCacheTimestamp && cachedInquilinosFilter === filtroActivo && (new Date() - inquilinosCacheTimestamp < CACHE_DURATION_MS)) {
-        console.log("Cargando inquilinos desde la cachÃ©.");
+        console.log("Cargando inquilinos desde la caché.");
         contenedor.innerHTML = cachedInquilinosHTML;
         adjuntarListenersInquilinos();
         ocultarLoader();
@@ -337,7 +337,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span class="text-sm font-medium">DepÃ³sito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
+                                        <span class="text-sm font-medium">Depósito: ${parseFloat(inquilino.montoDeposito).toFixed(2)} (${inquilino.fechaDeposito})</span>
                                     </div>
                                 ` : ''}
 
@@ -365,7 +365,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
-                                        <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver IdentificaciÃ³n</a>
+                                        <a href="${inquilino.urlIdentificacion}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Ver Identificación</a>
                                     </div>
                                 ` : ''}
                                 
@@ -421,7 +421,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     </button>`
                     }
                                 <button onclick="editarInquilino('${inquilino.id}')" 
-                                    title="Editar informaciÃ³n del inquilino"
+                                    title="Editar información del inquilino"
                                     class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold shadow transition-all duration-200 flex items-center justify-center gap-1.5 hover:shadow-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -496,7 +496,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     <div class="flex flex-col">
                         <label for="busquedaInquilino" class="text-xs text-gray-600 mb-1">Buscar inquilino:</label>
                         <div class="relative">
-                            <input type="text" id="busquedaInquilino" placeholder="Buscar por nombre o telÃ©fono..." 
+                            <input type="text" id="busquedaInquilino" placeholder="Buscar por nombre o teléfono..." 
                                 class="form-control pl-8 pr-2 py-2 w-72">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -762,17 +762,17 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                 } else {
                     newBadge.textContent = "Sin adeudos";
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
-                    newBadge.title = "El inquilino estÃ¡ al corriente";
+                    newBadge.title = "El inquilino está al corriente";
                 }
             }
         }
 
-        // Guardar en cachÃ© despuÃ©s de actualizar todo
+        // Guardar en caché despuÃ©s de actualizar todo
         cachedInquilinosHTML = contenedor.innerHTML;
         inquilinosCacheTimestamp = new Date();
         cachedInquilinosFilter = filtroActivo;
 
-        // FunciÃ³n para generar PDF
+        // Función para generar PDF
         window.generarPDFInquilinos = async () => {
             const fechaGeneracion = new Date().toLocaleDateString();
             const filtroEstado = document.getElementById('filtroActivo').value;
@@ -794,7 +794,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                         <thead>
                             <tr style="background-color: #3730a3; color: #ffffff;">
                                 <th style="padding: 10px; text-align: left; font-weight: bold; border-top-left-radius: 8px;">Nombre</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">TelÃ©fono</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold;">Teléfono</th>
                                 <th style="padding: 10px; text-align: left; font-weight: bold;">Inmueble</th>
                                 <th style="padding: 10px; text-align: center; font-weight: bold;">Estado</th>
                                 <th style="padding: 10px; text-align: left; font-weight: bold;">Inicio</th>
@@ -847,7 +847,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     pdf.setPage(i);
                     pdf.setFontSize(9);
                     pdf.setTextColor(107, 114, 128);
-                    const text = `PÃ¡gina ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
+                    const text = `Página ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
                     const pageHeight = pdf.internal.pageSize.getHeight();
                     const pageWidth = pdf.internal.pageSize.getWidth();
                     pdf.text(text, pageWidth - 0.5, pageHeight - 0.5, { align: 'right' });
@@ -864,7 +864,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 }
 
 /**
- * FunciÃ³n para editar un inquilino, mostrando el formulario.
+ * Función para editar un inquilino, mostrando el formulario.
  * @param {string} id - ID del inquilino a editar.
  */
 export async function mostrarFormularioNuevoInquilino(id = null) {
@@ -1037,7 +1037,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     `;
     mostrarModal(modalHtml);
 
-    // LÃ³gica para mostrar/ocultar el contenedor de servicios
+    // Lógica para mostrar/ocultar el contenedor de servicios
     document.getElementById('pagaServicios').addEventListener('change', function () {
         document.getElementById('serviciosContainer').classList.toggle('hidden', !this.checked);
     });
@@ -1048,7 +1048,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
     const btnAgregarNota = document.getElementById('btnAgregarNotaBitacora');
     let bitacoraTemp = inquilinoExistente.bitacora || [];
 
-    // FunciÃ³n para renderizar bitÃ¡cora (mezcla guardada + temporal)
+    // Función para renderizar bitácora (mezcla guardada + temporal)
     function renderizarBitacoraVisual() {
         if (bitacoraTemp.length === 0) {
             contenedorBitacora.innerHTML = '<div class="text-center text-gray-400 text-sm py-2">Sin sucesos registrados</div>';
@@ -1097,7 +1097,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         const activo = document.getElementById('activo').checked;
         const pagaServicios = document.getElementById('pagaServicios').checked;
 
-        // --- DETECCIÃ“N AUTOMÃTICA DE CAMBIOS (BitÃ¡cora) ---
+        // --- DETECCIÃ“N AUTOMÃTICA DE CAMBIOS (Bitácora) ---
         if (inquilinoExistente.fechaOcupacion && fechaOcupacion !== inquilinoExistente.fechaOcupacion) {
             bitacoraTemp.push({
                 fecha: new Date().toISOString(),
@@ -1146,7 +1146,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
             activo,
             pagaServicios,
             servicios,
-            bitacora: bitacoraTemp // Guardamos la bitÃ¡cora actualizada
+            bitacora: bitacoraTemp // Guardamos la bitácora actualizada
         };
 
         try {
@@ -1154,7 +1154,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 // Update existing inquilino
                 const docRef = doc(db, "inquilinos", inquilinoId);
                 await updateDoc(docRef, inquilinoData);
-                mostrarNotificacion("Inquilino actualizado con Ã©xito.", "success");
+                mostrarNotificacion("Inquilino actualizado con éxito.", "success");
             } else {
                 // Para nuevos inquilinos, agregamos el evento de creaciÃ³n
                 inquilinoData.bitacora = [{
@@ -1165,7 +1165,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                 }];
                 // Add new inquilino
                 await addDoc(collection(db, "inquilinos"), inquilinoData);
-                mostrarNotificacion("Inquilino registrado con Ã©xito.", "success");
+                mostrarNotificacion("Inquilino registrado con éxito.", "success");
             }
             ocultarModal();
             limpiarCacheInquilinos();
@@ -1181,7 +1181,7 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         document.getElementById('camposDeposito').classList.toggle('hidden', !e.target.checked);
     });
 
-    // --- LÃ³gica para Servicios ---
+    // --- Lógica para Servicios ---
     function renderizarServicios() {
         const listaServicios = document.getElementById('listaServicios');
         if (!listaServicios) return;
@@ -1248,9 +1248,9 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
         }
         const nuevoIndice = listaServicios.querySelectorAll('.servicio-item').length;
         const nuevoServicioHtml = `
-            <!-- AquÃ­ va el HTML de un nuevo servicio, similar al de renderizarServicios pero vacÃ­o -->
+            <!-- AquÃ­ va el HTML de un nuevo servicio, similar al de renderizarServicios pero vacío -->
         `;
-        // Simplificado: simplemente llamamos a una funciÃ³n que aÃ±ade el HTML
+        // Simplificado: simplemente llamamos a una función que añade el HTML
         agregarServicioAlFormulario();
     });
 }
@@ -1260,12 +1260,12 @@ export async function editarInquilino(id) {
 }
 
 /**
- * Confirma la desocupaciÃ³n de un inquilino y actualiza su estado.
+ * Confirma la desocupación de un inquilino y actualiza su estado.
  * TambiÃ©n marca el inmueble asociado como 'Disponible'.
  * @param {string} inquilinoId - ID del inquilino a desocupar.
  */
 export async function confirmarDesocupacionInquilino(inquilinoId) {
-    if (confirm('Â¿EstÃ¡s seguro de que quieres desocupar a este inquilino? Se marcarÃ¡ como inactivo y su inmueble asociado como disponible.')) {
+    if (confirm('¿Estás seguro de que quieres desocupar a este inquilino? Se marcarÃ¡ como inactivo y su inmueble asociado como disponible.')) {
         try {
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             const inquilinoSnap = await getDoc(inquilinoRef);
@@ -1280,7 +1280,7 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
                     inmuebleAsociadoNombre: 'No Asignado',
                     fechaDesocupacion: new Date().toISOString().split('T')[0] // <-- Nueva lÃ­nea
                 });
-                mostrarNotificacion("Inquilino desocupado con Ã©xito.", 'success');
+                mostrarNotificacion("Inquilino desocupado con éxito.", 'success');
 
                 if (inmuebleId) {
                     await updateDocInmueble(doc(db, "inmuebles", inmuebleId), {
@@ -1304,18 +1304,18 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
 }
 
 /**
- * Confirma la reactivaciÃ³n de un inquilino.
+ * Confirma la reactivación de un inquilino.
  * @param {string} inquilinoId - ID del inquilino a reactivar.
  */
 export async function confirmarReactivacionInquilino(inquilinoId) {
-    if (confirm('Â¿EstÃ¡s seguro de que quieres reactivar a este inquilino?')) {
+    if (confirm('¿Estás seguro de que quieres reactivar a este inquilino?')) {
         try {
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             await updateDoc(inquilinoRef, {
                 activo: true,
                 fechaDesocupacion: null
             });
-            mostrarNotificacion("Inquilino reactivado con Ã©xito.", 'success');
+            mostrarNotificacion("Inquilino reactivado con éxito.", 'success');
             limpiarCacheInquilinos();
             mostrarInquilinos();
 
@@ -1370,7 +1370,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             }
         });
 
-        // Ordenar por fecha (mÃ¡s reciente primero)
+        // Ordenar por fecha (más reciente primero)
         pagosList.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
 
         // Ejemplo de integraciÃ³n en mostrarHistorialPagosInquilino
@@ -1391,7 +1391,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
             } else {
                 adeudosHtml = `
                     <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
-                        <strong>Â¡Sin adeudos!</strong>
+                        <strong>¡Sin adeudos!</strong>
                     </div>
                 `;
             }
@@ -1407,7 +1407,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Inmueble</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mes/AÃ±o</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mes/Año</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto Total</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pagado</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Saldo</th>
@@ -1461,7 +1461,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     abonosDetalleHtml = `<span class="text-xs text-gray-400">Sin abonos</span>`;
                 }
 
-                // LÃ³gica para el estado del mobiliario
+                // Lógica para el estado del mobiliario
                 let mobiliarioHtml = '-';
 
                 // Verifica si el inquilino tiene mobiliario asignado para el inmueble de este pago
@@ -1470,7 +1470,7 @@ export async function mostrarHistorialPagosInquilino(inquilinoId) {
                     const mob = doc.data();
                     if (Array.isArray(mob.asignaciones)) {
                         mob.asignaciones.forEach(a => {
-                            // Solo cuenta como asignado si estÃ¡ activa, cantidad > 0, inquilinoId coincide y el inmuebleId coincide con el del pago
+                            // Solo cuenta como asignado si está activa, cantidad > 0, inquilinoId coincide y el inmuebleId coincide con el del pago
                             if (
                                 a.inquilinoId === inquilinoId &&
                                 a.activa === true &&
@@ -1558,7 +1558,7 @@ export async function mostrarHistorialAbonosInquilino(inquilinoId) {
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Origen</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pago (Mes/AÃ±o)</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pago (Mes/Año)</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -1659,16 +1659,16 @@ export async function mostrarSaldoFavorInquilino(inquilinoId) {
     }
 }
 
-// FunciÃ³n auxiliar para eliminar documentos (probablemente ya la tienes en ui.js o utilities.js)
-// Si no la tienes, aquÃ­ una versiÃ³n simple para inquilinos:
+// Función auxiliar para eliminar documentos (probablemente ya la tienes en ui.js o utilities.js)
+// Si no la tienes, aquí una versiÃ³n simple para inquilinos:
 export async function eliminarDocumento(coleccion, id, callbackRefresh, callbackDashboard) {
-    if (confirm('Â¿EstÃ¡s seguro de que quieres eliminar este elemento? Esta acciÃ³n es irreversible.')) {
+    if (confirm('¿Estás seguro de que quieres eliminar este elemento? Esta acción es irreversible.')) {
         try {
             const docSnap = await getDoc(doc(db, coleccion, id));
             const data = docSnap.data();
 
             await deleteDoc(doc(db, coleccion, id));
-            mostrarNotificacion('Elemento eliminado con Ã©xito.', 'success');
+            mostrarNotificacion('Elemento eliminado con éxito.', 'success');
 
             // Si el inquilino eliminado estaba asociado a un inmueble, liberar el inmueble
             if (coleccion === 'inquilinos' && data && data.inmuebleAsociadoId) {
@@ -1677,7 +1677,7 @@ export async function eliminarDocumento(coleccion, id, callbackRefresh, callback
                     inquilinoActualId: null,
                     inquilinoActualNombre: null
                 });
-                mostrarNotificacion(`Inmueble ${data.inmuebleAsociadoNombre || 'anterior'} ha sido marcado como Disponible tras la eliminaciÃ³n del inquilino.`, 'info');
+                mostrarNotificacion(`Inmueble ${data.inmuebleAsociadoNombre || 'anterior'} ha sido marcado como Disponible tras la eliminación del inquilino.`, 'info');
             }
 
             if (callbackRefresh) callbackRefresh();
@@ -1733,7 +1733,7 @@ document.addEventListener('change', function (e) {
     }
 });
 
-// FunciÃ³n para agregar un nuevo servicio al formulario
+// Función para agregar un nuevo servicio al formulario
 function agregarServicioAlFormulario() {
     const listaServicios = document.getElementById('listaServicios');
     if (!listaServicios) return;
@@ -1826,7 +1826,7 @@ document.addEventListener('change', function (e) {
     }
 });
 
-// FunciÃ³n para eliminar un servicio
+// Función para eliminar un servicio
 function eliminarServicio(btnEliminar) {
     const servicioItem = btnEliminar.closest('.servicio-item');
     if (servicioItem) {
@@ -1839,7 +1839,7 @@ function eliminarServicio(btnEliminar) {
             listaServicios.innerHTML = '<div class="text-center text-gray-500 py-4">No hay servicios agregados</div>';
         } else {
             servicioItems.forEach((item, index) => {
-                // Actualizar el tÃ­tulo
+                // Actualizar el título
                 const titulo = item.querySelector('h5');
                 if (titulo) {
                     titulo.textContent = `Servicio #${index + 1}`;
