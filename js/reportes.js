@@ -380,11 +380,37 @@ async function imprimirReporteAnual() {
                     <style>
                         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 20px; background-color: #fff; color: #000; }
                         h1 { text-align: center; color: #000; }
-                        img { max-width: 100%; height: auto; display: block; margin: 20px auto; border: 1px solid #eee; }
+                        img { max-width: 100%; height: auto; display: block; margin: 20px auto; border: 1px solid #374151; }
                         .resumen-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
-                        .resumen-card { border: 1px solid #ccc; border-radius: 8px; padding: 15px; text-align: center; box-shadow: none; background: #fff !important; }
-                        .resumen-card h4 { margin: 0 0 10px 0; font-size: 1rem; color: #555; }
-                        .resumen-card p { margin: 0; font-size: 1.5rem; font-weight: bold; color: #000 !important; }
+                        
+                        .resumen-card { border-width: 1px; border-style: solid; border-radius: 8px; padding: 15px; text-align: center; box-shadow: none; }
+                        .resumen-card h4 { margin: 0 0 10px 0; font-size: 1rem; font-weight: 600; }
+                        .resumen-card p { margin: 0; font-size: 1.5rem; font-weight: bold; }
+
+                        /* Ingresos (Verde) */
+                        .resumen-card:nth-child(1) {
+                            background: linear-gradient(to right, #dcfce7, #bbf7d0) !important;
+                            border-color: #86efac;
+                        }
+                        .resumen-card:nth-child(1) h4 { color: #166534 !important; }
+                        .resumen-card:nth-child(1) p { color: #14532d !important; }
+
+                        /* Egresos (Rojo) */
+                        .resumen-card:nth-child(2) {
+                            background: linear-gradient(to right, #fee2e2, #fecaca) !important;
+                            border-color: #fca5a5;
+                        }
+                        .resumen-card:nth-child(2) h4 { color: #991b1b !important; }
+                        .resumen-card:nth-child(2) p { color: #7f1d1d !important; }
+
+                        /* Balance (Azul) */
+                        .resumen-card:nth-child(3) {
+                            background: linear-gradient(to right, #dbeafe, #bfdbfe) !important;
+                            border-color: #93c5fd;
+                        }
+                        .resumen-card:nth-child(3) h4 { color: #1e40af !important; }
+                        .resumen-card:nth-child(3) p { color: #1e3a8a !important; }
+
                         @media print {
                             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                             .resumen-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
