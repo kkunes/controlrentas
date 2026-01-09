@@ -2876,22 +2876,58 @@ export async function mostrarDetallePago(pagoId) {
             console.log("Campos disponibles en serviciosPagados:", Object.keys(pago.serviciosPagados));
 
             if (pago.serviciosPagados.internet) {
-                servicios.push(`Internet: ${(pago.serviciosPagados.internetMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
+                servicios.push({
+                    nombre: 'Internet',
+                    monto: (pago.serviciosPagados.internetMonto || 0).toFixed(2),
+                    fecha: fechaServicio,
+                    formaPago: formaPagoServicio
+                });
             }
             if (pago.serviciosPagados.agua) {
-                servicios.push(`Agua: ${(pago.serviciosPagados.aguaMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
+                servicios.push({
+                    nombre: 'Agua',
+                    monto: (pago.serviciosPagados.aguaMonto || 0).toFixed(2),
+                    fecha: fechaServicio,
+                    formaPago: formaPagoServicio
+                });
             }
             if (pago.serviciosPagados.luz) {
-                servicios.push(`Luz: ${(pago.serviciosPagados.luzMonto || 0).toFixed(2)} | Fecha: ${fechaServicio} | Forma de pago: ${formaPagoServicio}`);
+                servicios.push({
+                    nombre: 'Luz',
+                    monto: (pago.serviciosPagados.luzMonto || 0).toFixed(2),
+                    fecha: fechaServicio,
+                    formaPago: formaPagoServicio
+                });
             }
 
             if (servicios.length > 0) {
                 serviciosHtml = `
-                    <h4 class="text-lg font-semibold mt-6 mb-2 text-gray-800">Servicios Pagados:</h4>
-                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                        <ul class="list-disc list-inside space-y-1">
-                            ${servicios.map(s => `<li class="text-blue-800">${s}</li>`).join('')}
-                        </ul>
+                    <h4 class="text-lg font-bold mt-6 mb-3 text-gray-900 flex items-center gap-2">
+                        <span class="p-1.5 bg-blue-100 rounded-lg text-blue-600">
+                           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </span>
+                        Servicios Pagados
+                    </h4>
+                    <div class="px-4 py-2 rounded-xl shadow-sm"
+                         style="background: rgba(59, 130, 246, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(59, 130, 246, 0.2);">
+                        <div class="flex flex-col divide-y divide-blue-200/50">
+                            ${servicios.map(s => `
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 last:pb-1 first:pt-1">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                        <span class="font-bold text-gray-900 text-base">${s.nombre}</span>
+                                    </div>
+                                    <div class="flex flex-col items-end mt-1 sm:mt-0">
+                                         <span class="font-black text-blue-700 text-lg">$${s.monto}</span>
+                                         <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3 text-xs text-gray-600 font-medium">
+                                            <span><span class="opacity-75">Fecha:</span> ${s.fecha}</span>
+                                            <span class="hidden sm:inline text-blue-300">|</span>
+                                            <span><span class="opacity-75">Pago:</span> ${s.formaPago}</span>
+                                         </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             }
@@ -2922,16 +2958,48 @@ export async function mostrarDetallePago(pagoId) {
                     }
                 } catch (e) { }
 
-                mobiliarioItems.push(`${nombreMobiliario}: ${costo.toFixed(2)} | Fecha: ${fechaMobiliario} | Forma de pago: ${formaPagoMobiliario}`);
+                mobiliarioItems.push({
+                    nombre: nombreMobiliario,
+                    costo: costo.toFixed(2),
+                    fecha: fechaMobiliario,
+                    formaPago: formaPagoMobiliario
+                });
             }
 
             mobiliarioHtml = `
-                <h4 class="text-lg font-semibold mt-6 mb-2 text-gray-800">Mobiliario Pagado:</h4>
-                <div class="bg-green-50 p-3 rounded-lg border border-green-200">
-                    <ul class="list-disc list-inside space-y-1">
-                        ${mobiliarioItems.map(m => `<li class="text-green-800">${m}</li>`).join('')}
-                    </ul>
-                    <p class="mt-2 font-semibold text-green-800">Total Mobiliario: ${mobiliarioTotal.toFixed(2)}</p>
+                <h4 class="text-lg font-bold mt-6 mb-3 text-gray-900 flex items-center gap-2">
+                    <span class="p-1.5 bg-green-100 rounded-lg text-green-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    </span>
+                    Mobiliario Pagado
+                </h4>
+                <div class="px-4 py-2 rounded-xl shadow-sm"
+                     style="background: rgba(16, 185, 129, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <div class="flex flex-col divide-y divide-green-200/50">
+                        ${mobiliarioItems.map(m => `
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 last:pb-1 first:pt-1">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                    <span class="font-bold text-gray-900 text-base">${m.nombre}</span>
+                                </div>
+                                <div class="flex flex-col items-end mt-1 sm:mt-0">
+                                     <span class="font-black text-green-700 text-lg">$${m.costo}</span>
+                                     <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3 text-xs text-gray-600 font-medium">
+                                        <span><span class="opacity-75">Fecha:</span> ${m.fecha}</span>
+                                        <span class="hidden sm:inline text-green-300">|</span>
+                                        <span><span class="opacity-75">Pago:</span> ${m.formaPago}</span>
+                                     </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="flex justify-end mt-2 px-1">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm text-sm font-black text-green-900"
+                         style="background: rgba(16, 185, 129, 0.2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.4);">
+                        <span>Total Mobiliario:</span>
+                        <span class="text-lg">$${mobiliarioTotal.toFixed(2)}</span>
+                    </div>
                 </div>
             `;
         }
