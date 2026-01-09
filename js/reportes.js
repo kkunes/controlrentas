@@ -268,7 +268,109 @@ async function imprimirReporteAnual() {
     const resumenHtml = document.getElementById('resumenAnual').innerHTML;
 
     try {
-        const { imgURI } = await annualChartInstance.dataURI();
+        mostrarLoader(); // Show loader while generating image
+
+        // 1. Obtener datos de la gráfica actual
+        const series = annualChartInstance.w.config.series;
+        const categories = annualChartInstance.w.config.xaxis.categories;
+
+        // 2. Crear opciones para la versión IMPRESA (Tema Oscuro para Gráfica)
+        const printOptions = {
+            series: series,
+            chart: {
+                type: 'bar',
+                height: 400,
+                width: 800, // Ancho fijo para buena resolución en papel
+                background: '#1F2937', // Fondo OSCURO
+                animations: { enabled: false }, // Sin animaciones para captura inmediata
+                toolbar: { show: false },
+                foreColor: '#FFFFFF'
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '60%',
+                    borderRadius: 5,
+                    dataLabels: { position: 'top' }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    if (val == 0) return "";
+                    if (val < 1000) return "$" + parseFloat(val).toFixed(0);
+                    return "$" + (val / 1000).toFixed(1) + 'k';
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    colors: ["#FFFFFF"] // Texto BLANCO
+                }
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: categories,
+                labels: {
+                    style: {
+                        colors: '#FFFFFF', // Texto BLANCO
+                        fontSize: '12px'
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Monto (MXN)',
+                    style: {
+                        color: '#FFFFFF', // Texto BLANCO
+                        fontWeight: 600
+                    }
+                },
+                labels: {
+                    style: {
+                        colors: ['#FFFFFF'] // Texto BLANCO
+                    }
+                }
+            },
+            legend: {
+                labels: {
+                    colors: '#FFFFFF' // Texto BLANCO
+                }
+            },
+            fill: { opacity: 1 },
+            colors: ['#10B981', '#EF4444'],
+            grid: {
+                borderColor: '#4B5563', // Borde gris medio
+                row: {
+                    colors: ['#374151', 'transparent'], // Fondos filas oscuros
+                    opacity: 0.5
+                }
+            }
+        };
+
+        // 3. Renderizar gráfica temporal oculta
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        document.body.appendChild(tempContainer);
+
+        const tempChart = new ApexCharts(tempContainer, printOptions);
+        await tempChart.render();
+
+        // Pequeña espera para asegurar renderizado interno
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const { imgURI } = await tempChart.dataURI();
+
+        // Limpieza
+        tempChart.destroy();
+        document.body.removeChild(tempContainer);
+        ocultarLoader();
 
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
@@ -276,15 +378,16 @@ async function imprimirReporteAnual() {
                 <head>
                     <title>Reporte Anual ${anio}</title>
                     <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 20px; }
-                        h1 { text-align: center; }
-                        img { max-width: 100%; height: auto; display: block; margin: 20px auto; }
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 20px; background-color: #fff; color: #000; }
+                        h1 { text-align: center; color: #000; }
+                        img { max-width: 100%; height: auto; display: block; margin: 20px auto; border: 1px solid #eee; }
                         .resumen-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
-                        .resumen-card { border: 1px solid #ccc; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                        .resumen-card { border: 1px solid #ccc; border-radius: 8px; padding: 15px; text-align: center; box-shadow: none; background: #fff !important; }
                         .resumen-card h4 { margin: 0 0 10px 0; font-size: 1rem; color: #555; }
-                        .resumen-card p { margin: 0; font-size: 1.5rem; font-weight: bold; color: #333; }
+                        .resumen-card p { margin: 0; font-size: 1.5rem; font-weight: bold; color: #000 !important; }
                         @media print {
                             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            .resumen-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         }
                     </style>
                 </head>
@@ -311,6 +414,7 @@ async function imprimirReporteAnual() {
 
     } catch (error) {
         console.error("Error al preparar la impresión:", error);
+        ocultarLoader();
         mostrarNotificacion("No se pudo preparar el reporte para imprimir.", "error");
     }
 }
@@ -324,11 +428,11 @@ async function generarGraficoAnual(anio) {
     const resumenAnualDiv = document.getElementById('resumenAnual');
     graficaContenedor.innerHTML = `
         <div class="flex items-center justify-center p-4">
-            <svg class="animate-spin h-8 w-8 text-blue-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-8 w-8 text-blue-600 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="text-sm font-medium text-[#2c3e50]">Cargando datos del año ${anio}...</p>
+            <p class="text-sm font-bold text-gray-800">Cargando datos del año ${anio}...</p>
         </div>`;
 
     try {
@@ -423,6 +527,11 @@ async function generarGraficoAnual(anio) {
                     }
                 }
             },
+            legend: {
+                labels: {
+                    colors: '#FFFFFF'
+                }
+            },
             plotOptions: {
                 bar: {
                     horizontal: false,
@@ -444,7 +553,8 @@ async function generarGraficoAnual(anio) {
                 offsetY: -20,
                 style: {
                     fontSize: '12px',
-                    colors: ["#304758"]
+                    fontWeight: 700,
+                    colors: ["#FFFFFF"]
                 }
             },
             stroke: {
@@ -454,10 +564,25 @@ async function generarGraficoAnual(anio) {
             },
             xaxis: {
                 categories: meses,
+                labels: {
+                    style: {
+                        colors: '#E5E7EB', // Light gray 200
+                        fontSize: '12px'
+                    }
+                }
             },
             yaxis: {
                 title: {
-                    text: 'Monto (MXN)'
+                    text: 'Monto (MXN)',
+                    style: {
+                        color: '#FFFFFF',
+                        fontWeight: 600
+                    }
+                },
+                labels: {
+                    style: {
+                        colors: '#FFFFFF'
+                    }
                 }
             },
             fill: {
@@ -474,7 +599,7 @@ async function generarGraficoAnual(anio) {
             grid: {
                 borderColor: '#e7e7e7',
                 row: {
-                    colors: ['#f3f3f3', 'transparent'],
+                    colors: ['rgba(243, 244, 246, 0.6)', 'transparent'],
                     opacity: 0.5
                 },
             },
@@ -498,21 +623,25 @@ async function generarGraficoAnual(anio) {
                         },
                         offsetX: 15, // Ajustar posición para barras horizontales
                         style: {
-                            fontSize: '10px',
-                            colors: ['#333']
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            colors: ['#FFFFFF']
                         },
                         background: {
                             enabled: true,
-                            foreColor: '#fff',
+                            foreColor: '#1F2937', // Dark gray 800 background for label
                             padding: 5,
                             borderRadius: 3,
                             borderWidth: 1,
-                            borderColor: '#ddd',
+                            borderColor: '#374151',
                             opacity: 0.9
                         }
                     },
                     xaxis: {
                         labels: {
+                            style: {
+                                colors: '#E5E7EB'
+                            },
                             formatter: function (val) {
                                 if (val == 0) return "0";
                                 if (Math.abs(val) >= 1000) {
