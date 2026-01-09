@@ -130,7 +130,7 @@ export async function mostrarMantenimientos() {
         contenedor.innerHTML = `
             <div class="flex items-center mb-6">
                 <svg class="w-8 h-8 text-gray-700 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"></path>
                 </svg>
                 <h2 class="text-2xl font-bold text-gray-800">Gestión de Mantenimientos</h2>
             </div>
@@ -831,9 +831,10 @@ export async function mostrarMaterialesMantenimiento(id) {
                         </table>
                     </div>
                 </div>
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 text-center">
-                     <p class="text-lg font-semibold text-gray-700">Costo Total de Materiales:</p>
-                     <p class="text-2xl font-bold text-gray-900 mt-1">${totalCostoMateriales.toFixed(2)}</p>
+                <div class="p-4 rounded-xl shadow-lg text-center"
+                     style="background: rgba(88, 28, 135, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2);">
+                     <p class="text-lg font-bold text-purple-100 uppercase tracking-wide">Costo Total de Materiales</p>
+                     <p class="text-3xl font-black text-white mt-1">$${totalCostoMateriales.toFixed(2)}</p>
                 </div>
                 <div class="flex justify-end mt-6">
                     <button type="button" onclick="ocultarModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm">Cerrar</button>
