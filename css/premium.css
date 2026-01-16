@@ -491,12 +491,13 @@ tr:hover td,
     background-color: rgba(239, 68, 68, 0.2) !important;
 }
 
-.bg-yellow-100 {
-    background-color: rgba(245, 158, 11, 0.2) !important;
+.bg-blue-50,
+.bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.15) !important;
 }
 
-.bg-blue-100 {
-    background-color: rgba(59, 130, 246, 0.2) !important;
+.bg-yellow-100 {
+    background-color: rgba(245, 158, 11, 0.2) !important;
 }
 
 .bg-orange-100 {
@@ -626,4 +627,105 @@ tr:hover td,
 .tarjeta-base:hover {
     background-color: var(--glass-surface-hover) !important;
     border-color: var(--glass-highlight) !important;
+}
+
+/* === SweetAlert2 Premium Overrides === */
+.swal2-popup.swal2-modal {
+    background: var(--glass-surface) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-top: 1px solid var(--glass-highlight) !important;
+    box-shadow: var(--glass-shadow) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-primary) !important;
+    padding: 2rem;
+}
+
+.swal2-title {
+    color: var(--text-primary) !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+}
+
+.swal2-html-container {
+    color: var(--text-secondary) !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+}
+
+.swal2-confirm {
+    background: var(--accent-gradient) !important;
+    box-shadow: 0 4px 15px var(--accent-glow) !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 2rem !important;
+    font-size: 0.95rem !important;
+}
+
+.swal2-cancel,
+.swal2-deny {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: white !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 0.75rem 2rem !important;
+    font-size: 0.95rem !important;
+}
+
+.swal2-input,
+.swal2-textarea,
+.swal2-select {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: white !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: none !important;
+}
+
+.swal2-input:focus,
+.swal2-textarea:focus {
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 2px var(--accent-glow) !important;
+    outline: none;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: var(--status-warning) !important;
+    color: var(--status-warning) !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: var(--status-danger) !important;
+    color: var(--status-danger) !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: var(--status-success) !important;
+    color: var(--status-success) !important;
+}
+
+.swal2-icon.swal2-info {
+    border-color: var(--status-info) !important;
+    color: var(--status-info) !important;
+}
+
+.swal2-icon.swal2-success [class^=swal2-success-line] {
+    background-color: var(--status-success) !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.swal2-footer {
+    border-top: 1px solid var(--glass-border) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.85rem !important;
+}
+
+.swal2-backdrop-show {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    background: rgba(15, 23, 42, 0.7) !important;
 }

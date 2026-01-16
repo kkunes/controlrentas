@@ -461,14 +461,19 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     <span>Mobiliario</span>
                                 </button>
                             </div>
-                            <!-- BotÃ³n de Herramienta Avanzada -->
-                             <div class="mt-3 pt-3 border-t border-gray-100">
+                            <!-- Botón de Herramienta Avanzada -->
+                             <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
                                 <button onclick="iniciarConsolidacion('${inquilino.id}', '${inquilino.nombre}')" 
-                                    class="w-full text-xs text-gray-500 hover:text-indigo-600 font-medium flex items-center justify-center gap-1 transition-colors py-1">
+                                    class="text-xs text-gray-500 hover:text-indigo-600 font-medium flex items-center gap-1 transition-colors py-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                     Congelar Historial (Reparar Recibos)
+                                </button>
+                                <button onclick="explicarConsolidacion()" class="text-gray-400 hover:text-blue-500 transition-colors" title="¿Qué es esto?">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -2038,28 +2043,74 @@ window.abrirFormularioPagoServicio = abrirFormularioPagoServicio;
 window.abrirFormularioPagoMobiliario = abrirFormularioPagoMobiliario;
 
 // --- FUNCIONALIDAD DE CONSOLIDACIÓN HISTÓRICA ---
-window.iniciarConsolidacion = async (inquilinoId, nombreInquilino) => {
-    const diaAnterior = prompt(`\u2744\uFE0F CONSOLIDACI\u00D3N HIST\u00D3RICA \u2744\uFE0F\n\nEst\u00E1s a punto de reparar los recibos antiguos de: ${nombreInquilino}.\n\nPor favor, ingresa el D\u00CDA DE PAGO que ten\u00EDa este inquilino ANTES del cambio (n\u00FAmero del 1 al 31):`, "1");
+window.explicarConsolidacion = () => {
+    Swal.fire({
+        title: '¿Qué es Congelar Historial?',
+        html: `
+            <div class="text-left space-y-3 text-sm">
+                <p>Esta herramienta sirve para <b>proteger tus recibos antiguos</b> cuando decides cambiar el día de pago de un inquilino.</p>
+                <p>Al "congelar", el sistema guarda permanentemente las fechas del periodo (ej. "01 de Enero al 01 de Febrero") dentro de cada pago realizado hasta hoy.</p>
+                <div class="bg-indigo-900/30 p-3 rounded-lg border border-indigo-500/30 italic text-indigo-200">
+                    <b class="text-indigo-100">¿Cuándo usarlo?</b><br>
+                    Úsalo SOLO si vas a cambiar el día de pago del inquilino y quieres que sus recibos pasados no se vean afectados por el cambio de fecha.
+                </div>
+            </div>
+        `,
+        icon: 'info',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#4f46e5'
+    });
+};
 
-    if (diaAnterior !== null) {
+window.iniciarConsolidacion = async (inquilinoId, nombreInquilino) => {
+    const { value: diaAnterior } = await Swal.fire({
+        title: 'Consolidación Histórica',
+        text: `Ingresa el DÍA DE PAGO que tenía ${nombreInquilino} ANTES del cambio (1-31):`,
+        input: 'number',
+        inputAttributes: {
+            min: 1,
+            max: 31,
+            step: 1
+        },
+        inputValue: 1,
+        showCancelButton: true,
+        confirmButtonText: 'Continuar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#4f46e5',
+        footer: 'Esta acción fijará permanentemente los periodos en los recibos antiguos.'
+    });
+
+    if (diaAnterior) {
         const diaInt = parseInt(diaAnterior);
         if (isNaN(diaInt) || diaInt < 1 || diaInt > 31) {
-            alert("\u26A0\uFE0F Por favor ingresa un d\u00EDa v\u00E1lido (1-31).");
+            Swal.fire('Error', 'Por favor ingresa un día válido (1-31).', 'error');
             return;
         }
 
-        if (confirm(`\u26A0\uFE0F \u00BFCONFIRMAS que el d\u00EDa de corte anterior era el d\u00EDa ${diaInt}?\n\nEsta acci\u00F3n buscar\u00E1 todos los recibos antiguos que no tengan fecha guardada y la fijar\u00E1 permanentemente usando el d\u00EDa ${diaInt}.`)) {
+        const result = await Swal.fire({
+            title: '¿Confirmar consolidación?',
+            text: `Se fijarán todos los recibos antiguos usando el día ${diaInt} como corte. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, consolidar ahora',
+            cancelButtonText: 'No, cancelar',
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#ef4444'
+        });
+
+        if (result.isConfirmed) {
             mostrarLoader();
             try {
-                // Asumiendo que consolidarPagosAntiguos está importada desde pagos.js
-                // Si no, necesitamos importarla, pero los imports son al inicio. 
-                // Ya la importamos en el paso 233/241.
                 const cantidad = await consolidarPagosAntiguos(inquilinoId, diaInt);
-
-                alert(`\u2705 \u00A1\u00C9XITO!\n\nSe han consolidado y protegido ${cantidad} recibos antiguos.\nAhora puedes generar tus reportes pasados con total confianza.`);
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: `Se han consolidado y protegido ${cantidad} recibos antiguos.`,
+                    icon: 'success',
+                    confirmButtonColor: '#4f46e5'
+                });
             } catch (error) {
                 console.error(error);
-                alert("\u274C Ocurri\u00F3 un error al consolidar los pagos. Revisa la consola.");
+                Swal.fire('Error', 'Ocurrió un error al consolidar los pagos.', 'error');
             } finally {
                 ocultarLoader();
             }
