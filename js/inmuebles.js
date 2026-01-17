@@ -356,65 +356,102 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
 
         // Función para generar PDF
         window.generarPDFInmuebles = async () => {
+            mostrarLoader();
+            mostrarNotificacion("Preparando documento... Por favor espere.", "info");
+
             const fechaGeneracion = new Date().toLocaleDateString();
             const filtroEstado = document.getElementById('filtroEstado').value;
             const filtroTipo = document.getElementById('filtroTipo').value;
 
+            // Separar y ordenar alfabéticamente
+            const ocupados = inmueblesList
+                .filter(i => i.estado === 'Ocupado')
+                .sort((a, b) => a.nombre.localeCompare(b.nombre));
+            const desocupados = inmueblesList
+                .filter(i => i.estado !== 'Ocupado')
+                .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
             const headerHtml = `
-                <div style="text-align: center; margin-bottom: 2rem; color: #000000;">
-                    <h2 style="font-size: 1.8rem; font-weight: 800; color: #000000; margin: 0 0 0.5rem 0;">Reporte de Inmuebles</h2>
-                    <h3 style="font-size: 1rem; font-weight: 500; color: #000000; margin: 0;">Generado el: ${fechaGeneracion}</h3>
-                    <p style="font-size: 0.8rem; color: #000000;">Filtros: Estado: ${filtroEstado}, Tipo: ${filtroTipo}</p>
+                <div style="text-align: center; margin-bottom: 1.5rem; border-bottom: 2px solid #2c3e50; padding-bottom: 1rem;">
+                    <h1 style="font-size: 2rem; font-weight: 800; color: #1a2234; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Control de Renta - Inmuebles</h1>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">
+                        <span>Fecha: ${fechaGeneracion}</span>
+                        <span>Filtros: ${filtroEstado} | ${filtroTipo}</span>
+                    </div>
                 </div>
             `;
 
-            let contenidoHtml = '';
-            if (inmueblesList.length === 0) {
-                contenidoHtml = '<p style="text-align: center; color: #000000; padding: 1.5rem;">No hay inmuebles que coincidan con los filtros.</p>';
-            } else {
-                contenidoHtml = `
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; color: #000000;">
-                        <thead>
-                            <tr style="background-color: #3730a3; color: #ffffff;">
-                                <th style="padding: 10px; text-align: left; font-weight: bold; border-top-left-radius: 8px;">Nombre</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">Dirección</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">Tipo</th>
-                                <th style="padding: 10px; text-align: center; font-weight: bold;">Estado</th>
-                                <th style="padding: 10px; text-align: right; font-weight: bold;">Renta</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">Inquilino</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold; border-top-right-radius: 8px;">CFE</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${inmueblesList.map((inmueble, index) => `
-                                <tr style="border-bottom: 1px solid #e5e7eb; background-color: ${index % 2 === 0 ? '#ffffff' : '#f5f3ff'};">
-                                    <td style="padding: 10px; color: #1f2937; font-weight: 600;">${inmueble.nombre}</td>
-                                    <td style="padding: 10px; color: #374151;">${inmueble.direccion}</td>
-                                    <td style="padding: 10px; color: #374151;">${inmueble.tipo}</td>
-                                    <td style="padding: 10px; text-align: center;">
-                                        <span style="display: inline-block; padding: 4px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; background-color: ${inmueble.estado === 'Disponible' ? '#dcfce7' : inmueble.estado === 'Ocupado' ? '#ffedd5' : '#f3f4f6'}; color: ${inmueble.estado === 'Disponible' ? '#166534' : inmueble.estado === 'Ocupado' ? '#9a3412' : '#1f2937'};">
-                                            ${inmueble.estado}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 10px; text-align: right; color: #111827; font-weight: 600;">$${(inmueble.rentaMensual || 0).toFixed(2)}</td>
-                                    <td style="padding: 10px; color: #374151;">${inmueble.inquilinoActual ? inmueble.inquilinoActual.nombre : '-'}</td>
-                                    <td style="padding: 10px; color: #374151;">${inmueble.numeroCFE || '-'}</td>
+            const totalInmuebles = inmueblesList.length;
+            const summaryHtml = `
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="flex: 1; background: #f1f5f9; padding: 0.75rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Total</span>
+                        <strong style="font-size: 1.25rem; color: #1e293b;">${totalInmuebles}</strong>
+                    </div>
+                    <div style="flex: 1; background: #ecfdf5; padding: 0.75rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.75rem; color: #059669; text-transform: uppercase;">Ocupados</span>
+                        <strong style="font-size: 1.25rem; color: #065f46;">${ocupados.length}</strong>
+                    </div>
+                    <div style="flex: 1; background: #fef2f2; padding: 0.75rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.75rem; color: #dc2626; text-transform: uppercase;">Desocupados</span>
+                        <strong style="font-size: 1.25rem; color: #991b1b;">${desocupados.length}</strong>
+                    </div>
+                </div>
+            `;
+
+            const renderTable = (lista, titulo, color) => {
+                if (lista.length === 0) return '';
+                return `
+                    <div style="margin-bottom: 2rem; page-break-inside: avoid;">
+                        <h2 style="font-size: 1.1rem; font-weight: 700; color: ${color}; margin-bottom: 0.5rem; display: flex; align-items: center; border-left: 4px solid ${color}; padding-left: 0.5rem;">
+                            ${titulo} (${lista.length})
+                        </h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                            <thead>
+                                <tr style="background-color: #f8fafc; border-bottom: 2px solid ${color};">
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 15%;">Inmueble</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 25%;">Dirección</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 10%;">Tipo</th>
+                                    <th style="padding: 8px 4px; text-align: right; font-weight: 700; color: #475569; width: 12%;">Renta</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 18%;">Inquilino</th>
+                                    <th style="padding: 8px 4px; text-align: center; font-weight: 700; color: #475569; width: 10%;">Estado</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 10%;">CFE</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${lista.map((inmueble, idx) => `
+                                    <tr style="border-bottom: 1px solid #e2e8f0; ${idx % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f8fafc;'}">
+                                        <td style="padding: 8px 4px; font-weight: 600; color: #1e293b;">${inmueble.nombre}</td>
+                                        <td style="padding: 8px 4px; color: #475569;">${inmueble.direccion}</td>
+                                        <td style="padding: 8px 4px; color: #475569;">${inmueble.tipo}</td>
+                                        <td style="padding: 8px 4px; text-align: right; font-weight: 700; color: #0f172a;">$${(inmueble.rentaMensual || 0).toFixed(2)}</td>
+                                        <td style="padding: 8px 4px; color: #1e293b;">${inmueble.inquilinoActual ? inmueble.inquilinoActual.nombre : '-'}</td>
+                                        <td style="padding: 8px 4px; text-align: center;">
+                                            <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; background-color: ${inmueble.estado === 'Ocupado' ? '#ffedd5' : inmueble.estado === 'Mantenimiento' ? '#f3f4f6' : '#dcfce7'}; color: ${inmueble.estado === 'Ocupado' ? '#9a3412' : inmueble.estado === 'Mantenimiento' ? '#1f2937' : '#166534'}; border: 1px solid currentColor; opacity: 0.8;">
+                                                ${inmueble.estado}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 8px 4px; color: #64748b; font-size: 0.7rem;">${inmueble.numeroCFE || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 `;
-            }
+            };
 
             const finalHtml = `
-                <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #000000; line-height: 1.5; padding: 2rem;">
+                <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0f172a; line-height: 1.4; padding: 1.5rem;">
                     ${headerHtml}
-                    ${contenidoHtml}
+                    ${summaryHtml}
+                    ${renderTable(ocupados, 'INMUEBLES OCUPADOS', '#f97316')}
+                    ${renderTable(desocupados, 'INMUEBLES DESOCUPADOS / MANTENIMIENTO', '#22c55e')}
+                    ${inmueblesList.length === 0 ? '<p style="text-align: center; color: #64748b; padding: 2rem;">No se encontraron inmuebles con los criterios seleccionados.</p>' : ''}
                 </div>
             `;
 
             const opt = {
-                margin: [0.5, 0.5, 0.5, 0.5],
+                margin: [0.3, 0.3, 0.3, 0.3],
                 filename: `Reporte_Inmuebles_${fechaGeneracion.replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, letterRendering: true },
@@ -430,14 +467,16 @@ export async function mostrarInmuebles(estadoFiltro = null, tipoFiltro = null) {
                 var totalPages = pdf.internal.getNumberOfPages();
                 for (var i = 1; i <= totalPages; i++) {
                     pdf.setPage(i);
-                    pdf.setFontSize(9);
-                    pdf.setTextColor(107, 114, 128);
-                    const text = `Página ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(148, 163, 184); // Gray-400
+                    const text = `Página ${i} de ${totalPages} | ${fechaGeneracion}`;
                     const pageHeight = pdf.internal.pageSize.getHeight();
                     const pageWidth = pdf.internal.pageSize.getWidth();
-                    pdf.text(text, pageWidth - 0.5, pageHeight - 0.5, { align: 'right' });
+                    pdf.text(text, pageWidth - 0.4, pageHeight - 0.3, { align: 'right' });
                 }
                 document.body.removeChild(element);
+                ocultarLoader();
+                mostrarNotificacion("PDF generado con éxito.", "success");
             }).save();
         };
 
