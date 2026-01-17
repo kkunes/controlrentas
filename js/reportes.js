@@ -87,7 +87,26 @@ export async function mostrarReportes() {
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-end">
+                    <div class="relative">
+                        <label for="selectCriterio" class="block text-xs font-medium text-[#2c3e50] mb-1 flex items-center">
+                            <svg class="w-3 h-3 mr-1 text-[#3a506b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            Criterio de Filtrado
+                        </label>
+                        <div class="relative">
+                            <select id="selectCriterio" class="appearance-none block w-full px-3 py-2 bg-white border border-blue-500/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700">
+                                <option value="fechaPago">Por Fecha de Pago</option>
+                                <option value="periodoCorrespondiente" selected>Por Periodo Correspondiente</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-end lg:col-span-3">
                         <button id="generarReporteBtn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center text-sm font-medium border border-blue-600 hover:border-blue-700">
                             <svg class="w-4 h-4 mr-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -156,7 +175,8 @@ export async function mostrarReportes() {
             if (event.target.closest('#generarReporteBtn')) {
                 const mesSeleccionado = document.getElementById('selectMes').value;
                 const anioSeleccionado = document.getElementById('selectAnio').value;
-                await generarReporteMensual(parseInt(mesSeleccionado), parseInt(anioSeleccionado));
+                const criterio = document.getElementById('selectCriterio').value;
+                await generarReporteMensual(parseInt(mesSeleccionado), parseInt(anioSeleccionado), criterio);
             }
             if (event.target.closest('#imprimirGraficaBtn')) {
                 imprimirReporteAnual();
@@ -178,7 +198,7 @@ export async function mostrarReportes() {
         document.getElementById('selectAnio').value = new Date().getFullYear();
         document.getElementById('selectAnioGrafica').value = new Date().getFullYear();
 
-        await generarReporteMensual(new Date().getMonth() + 1, new Date().getFullYear());
+        await generarReporteMensual(new Date().getMonth() + 1, new Date().getFullYear(), 'periodoCorrespondiente');
         await generarGraficoAnual(new Date().getFullYear());
     } catch (error) {
         console.error("Error al mostrar reportes:", error);
@@ -1249,7 +1269,7 @@ function generarPdfMovimientosPropietario(movimientos, propietariosMap, propieta
  * @param {number} mes - El mes (1-12).
  * @param {number} anio - El año.
  */
-async function generarReporteMensual(mes, anio) {
+async function generarReporteMensual(mes, anio, criterio = 'fechaPago') {
     const resultadoDiv = document.getElementById('reporteResultado');
     resultadoDiv.innerHTML = `
         <div class="flex items-center justify-center p-4">
@@ -1316,17 +1336,26 @@ async function generarReporteMensual(mes, anio) {
             if (!isNaN(montoPagado)) {
                 totalIngresos += montoPagado;
             }
-            // Para el detalle mensual, usamos la fechaUltimoAbono o fechaRegistro
+
+            // Para el detalle mensual, siempre calculamos la fecha real del pago
             const fechaPago = data.fechaUltimoAbono
                 ? data.fechaUltimoAbono.substring(0, 10)
                 : (data.fechaRegistro ? data.fechaRegistro.substring(0, 10) : '');
-            // Verifica si el pago corresponde al mes/año seleccionado
-            if (
-                fechaPago &&
-                fechaPago >= startOfMonth &&
-                fechaPago <= endOfMonth &&
-                !isNaN(montoPagado)
-            ) {
+
+            let cumpleFiltro = false;
+
+            if (criterio === 'fechaPago') {
+                if (fechaPago && fechaPago >= startOfMonth && fechaPago <= endOfMonth) {
+                    cumpleFiltro = true;
+                }
+            } else {
+                // Criterio: Periodo Correspondiente
+                if (data.mesCorrespondiente === nombreMes && parseInt(data.anioCorrespondiente) === anio) {
+                    cumpleFiltro = true;
+                }
+            }
+
+            if (cumpleFiltro && !isNaN(montoPagado)) {
                 totalIngresosMes += montoPagado;
                 // Suma solo pagos de renta
                 totalPagosRentaMes += montoPagado;
