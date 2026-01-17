@@ -258,8 +258,8 @@ export async function generarReciboPDF(pagoId, firma = '') {
                 yDer += 6;
                 // Calcular el monto total sumando servicios pagados
                 // Calcular el monto total sumando servicios pagados
-                // Usar la renta mensual actual del inmueble si existe, sino usar el monto del pago
-                let montoBase = inmueble.rentaMensual || pago.montoTotal || 0;
+                // Priorizar el monto registrado en el pago para mantener la integridad histórica
+                let montoBase = pago.montoTotal || inmueble.rentaMensual || 0;
                 let montoTotal = parseFloat(montoBase);
 
                 if (pago.serviciosPagados) {
@@ -336,8 +336,8 @@ export async function generarReciboPDF(pagoId, firma = '') {
         yDer += 6;
         // Calcular el monto total sumando servicios pagados
         // Calcular el monto total sumando servicios pagados
-        // Usar la renta mensual actual del inmueble si existe, sino usar el monto del pago
-        let montoBase = inmueble.rentaMensual || pago.montoTotal || 0;
+        // Priorizar el monto registrado en el pago para mantener la integridad histórica
+        let montoBase = pago.montoTotal || inmueble.rentaMensual || 0;
         let montoTotal = parseFloat(montoBase);
 
         if (pago.serviciosPagados) {

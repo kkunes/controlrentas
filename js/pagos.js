@@ -163,13 +163,14 @@ export async function mostrarPagos(mostrarTabla = false) {
                         break;
                 }
 
-                // Obtener el costo real del inmueble desde la colección de inmuebles
-                let montoBase = 0;
-                const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
-                if (inmuebleData && inmuebleData.rentaMensual) {
-                    montoBase = inmuebleData.rentaMensual;
-                } else {
-                    montoBase = pago.montoBase || pago.montoTotal || 0;
+                // Priorizar el monto registrado en el pago para mantener la integridad histórica
+                // El campo montoTotal en el documento del pago representa la renta base registrada en ese momento
+                let montoBase = pago.montoTotal || 0;
+
+                // Si no hay monto registrado (pago antiguo o fallido), usamos el actual del inmueble como respaldo
+                if (montoBase === 0) {
+                    const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
+                    montoBase = inmuebleData?.rentaMensual || 0;
                 }
 
                 // Calcular el monto total sumando servicios y mobiliario
@@ -608,13 +609,13 @@ export async function mostrarPagos(mostrarTabla = false) {
                             break;
                     }
 
-                    // Obtener el costo real del inmueble desde la colección de inmuebles
-                    let montoBase = 0;
-                    const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
-                    if (inmuebleData && inmuebleData.rentaMensual) {
-                        montoBase = inmuebleData.rentaMensual;
-                    } else {
-                        montoBase = pago.montoBase || pago.montoTotal || 0;
+                    // Priorizar el monto registrado en el pago para mantener la integridad histórica
+                    let montoBase = pago.montoTotal || 0;
+
+                    // Si no hay monto registrado, usamos el costo actual como respaldo
+                    if (montoBase === 0) {
+                        const inmuebleData = inmueblesSnap.docs.find(doc => doc.id === pago.inmuebleId)?.data();
+                        montoBase = inmuebleData?.rentaMensual || 0;
                     }
 
                     // Calcular el monto total sumando servicios y mobiliario
