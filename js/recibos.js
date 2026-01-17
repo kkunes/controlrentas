@@ -184,6 +184,47 @@ export async function generarReciboPDF(pagoId, firma = '') {
             }
         }
 
+        // --- Identificar y mostrar servicios pendientes ---
+        if (inquilino.pagaServicios) {
+            const pendientes = [];
+
+            // Caso 1: Array de servicios (nuevo sistema)
+            if (inquilino.servicios && Array.isArray(inquilino.servicios)) {
+                inquilino.servicios.forEach(s => {
+                    const key = s.tipo.toLowerCase();
+                    // Si el servicio no está en serviciosPagados o es false
+                    if (!pago.serviciosPagados || !pago.serviciosPagados[key]) {
+                        pendientes.push(`${s.tipo}: $${parseFloat(s.monto || 0).toFixed(2)}`);
+                    }
+                });
+            }
+            // Caso 2: Campos individuales (sistema antiguo)
+            else if (inquilino.tipoServicio && inquilino.montoServicio) {
+                const key = inquilino.tipoServicio.toLowerCase();
+                if (!pago.serviciosPagados || !pago.serviciosPagados[key]) {
+                    pendientes.push(`${inquilino.tipoServicio}: $${parseFloat(inquilino.montoServicio).toFixed(2)}`);
+                }
+            }
+
+            if (pendientes.length > 0) {
+                pdf.setFont("helvetica", "bold");
+                pdf.setFontSize(8);
+                pdf.setTextColor(185, 28, 28); // Rojo oscuro elegante
+                const pteTexto = "PENDIENTE: " + pendientes.join(', ');
+
+                // Dibujar un pequeño indicador elegante
+                const textWidth = pdf.getTextWidth(pteTexto);
+                pdf.setFillColor(254, 242, 242); // Fondo rojo muy suave
+                pdf.setDrawColor(252, 165, 165); // Borde rojo claro
+
+                // Si hay servicios pagados, bajar un poco para no encimar
+                const yPte = serviciosTexto ? y + 5 : y;
+                pdf.roundedRect(11.5, yPte - 3, textWidth + 3, 4.5, 0.5, 0.5, 'FD');
+                pdf.text(pteTexto, 13, yPte);
+                pdf.setFontSize(11); // Restaurar tamaño
+            }
+        }
+
         // La línea y el bloque de inquilino siempre en la misma posición
         let yLinea = y + 10; // Fijo, no depende de si hay servicios o no
 
