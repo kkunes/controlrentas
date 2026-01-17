@@ -350,14 +350,21 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                             <span class="text-sm font-medium">Inicio Pagos: ${inquilino.fechaOcupacion}</span>
                                         </div>
                                     ` : ''}
-                                    ${inquilino.fechaLlegada ? `
+                                    ${inquilino.fechaDesocupacion ? `
+                                        <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-red-50 p-2 rounded-lg col-span-1 sm:col-span-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span class="text-sm font-medium text-red-700">Fecha Desocupación: ${inquilino.fechaDesocupacion}</span>
+                                        </div>
+                                    ` : (inquilino.fechaLlegada ? `
                                         <div class="flex items-center hover:text-gray-800 transition-colors duration-200 bg-gray-50 p-2 rounded-lg">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                             <span class="text-sm font-medium">Firma: ${inquilino.fechaLlegada}</span>
                                         </div>
-                                    ` : ''}
+                                    ` : '')}
                                 </div>
 
                                 ${inquilino.urlIdentificacion ? `
@@ -779,62 +786,100 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
         // Función para generar PDF
         window.generarPDFInquilinos = async () => {
+            mostrarLoader();
+            mostrarNotificacion("Preparando reporte de inquilinos...", "info");
+
             const fechaGeneracion = new Date().toLocaleDateString();
             const filtroEstado = document.getElementById('filtroActivo').value;
 
+            // Separar y ordenar alfabéticamente
+            const activos = inquilinosList
+                .filter(i => i.activo)
+                .sort((a, b) => a.nombre.localeCompare(b.nombre));
+            const inactivos = inquilinosList
+                .filter(i => !i.activo)
+                .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
             const headerHtml = `
-                <div style="text-align: center; margin-bottom: 2rem; color: #000000;">
-                    <h2 style="font-size: 1.8rem; font-weight: 800; color: #000000; margin: 0 0 0.5rem 0;">Reporte de Inquilinos</h2>
-                    <h3 style="font-size: 1rem; font-weight: 500; color: #000000; margin: 0;">Generado el: ${fechaGeneracion}</h3>
-                    <p style="font-size: 0.8rem; color: #000000;">Filtro: ${filtroEstado}</p>
+                <div style="text-align: center; margin-bottom: 1.5rem; border-bottom: 2px solid #3730a3; padding-bottom: 1rem;">
+                    <h1 style="font-size: 2rem; font-weight: 800; color: #1e1b4b; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Reporte de Inquilinos</h1>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">
+                        <span>Fecha: ${fechaGeneracion}</span>
+                        <span>Filtro: ${filtroEstado}</span>
+                    </div>
                 </div>
             `;
 
-            let contenidoHtml = '';
-            if (inquilinosList.length === 0) {
-                contenidoHtml = '<p style="text-align: center; color: #000000; padding: 1.5rem;">No hay inquilinos que coincidan con los filtros.</p>';
-            } else {
-                contenidoHtml = `
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; color: #000000;">
-                        <thead>
-                            <tr style="background-color: #3730a3; color: #ffffff;">
-                                <th style="padding: 10px; text-align: left; font-weight: bold; border-top-left-radius: 8px;">Nombre</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">Teléfono</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">Inmueble</th>
-                                <th style="padding: 10px; text-align: center; font-weight: bold;">Estado</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold;">Inicio</th>
-                                <th style="padding: 10px; text-align: left; font-weight: bold; border-top-right-radius: 8px;">Fin</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${inquilinosList.map((inquilino, index) => `
-                                <tr style="border-bottom: 1px solid #e5e7eb; background-color: ${index % 2 === 0 ? '#ffffff' : '#f5f3ff'};">
-                                    <td style="padding: 10px; color: #1f2937; font-weight: 600;">${inquilino.nombre}</td>
-                                    <td style="padding: 10px; color: #374151;">${inquilino.telefono}</td>
-                                    <td style="padding: 10px; color: #374151;">${inquilino.nombreInmueble}</td>
-                                    <td style="padding: 10px; text-align: center;">
-                                        <span style="display: inline-block; padding: 4px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; background-color: ${inquilino.activo ? '#dcfce7' : '#fee2e2'}; color: ${inquilino.activo ? '#166534' : '#991b1b'};">
-                                            ${inquilino.activo ? 'Activo' : 'Inactivo'}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 10px; color: #374151;">${inquilino.fechaOcupacion || '-'}</td>
-                                    <td style="padding: 10px; color: #374151;">${inquilino.fechaDesocupacion || '-'}</td>
+            const summaryHtml = `
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="flex: 1; background: #f1f5f9; padding: 0.75rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Total Registrados</span>
+                        <strong style="font-size: 1.25rem; color: #1e293b;">${inquilinosList.length}</strong>
+                    </div>
+                    <div style="flex: 1; background: #ecfdf5; padding: 0.75rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.75rem; color: #059669; text-transform: uppercase;">Activos</span>
+                        <strong style="font-size: 1.25rem; color: #065f46;">${activos.length}</strong>
+                    </div>
+                    <div style="flex: 1; background: #fef2f2; padding: 0.75rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.75rem; color: #dc2626; text-transform: uppercase;">Inactivos</span>
+                        <strong style="font-size: 1.25rem; color: #991b1b;">${inactivos.length}</strong>
+                    </div>
+                </div>
+            `;
+
+            const renderTable = (lista, titulo, color) => {
+                if (lista.length === 0) return '';
+                return `
+                    <div style="margin-bottom: 2rem; page-break-inside: avoid;">
+                        <h2 style="font-size: 1.1rem; font-weight: 700; color: ${color}; margin-bottom: 0.5rem; display: flex; align-items: center; border-left: 4px solid ${color}; padding-left: 0.5rem;">
+                            ${titulo} (${lista.length})
+                        </h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                            <thead>
+                                <tr style="background-color: #f8fafc; border-bottom: 2px solid ${color};">
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 25%;">Nombre</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 15%;">Teléfono</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 20%;">Inmueble</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 15%;">Inicio</th>
+                                    <th style="padding: 8px 4px; text-align: left; font-weight: 700; color: #475569; width: 15%;">Fin / Salida</th>
+                                    <th style="padding: 8px 4px; text-align: center; font-weight: 700; color: #475569; width: 10%;">Estado</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${lista.map((inquilino, idx) => `
+                                    <tr style="border-bottom: 1px solid #e2e8f0; ${idx % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f8fafc;'}">
+                                        <td style="padding: 8px 4px; font-weight: 600; color: #1e293b;">${inquilino.nombre}</td>
+                                        <td style="padding: 8px 4px; color: #475569;">${inquilino.telefono}</td>
+                                        <td style="padding: 8px 4px; color: #475569;">${inquilino.nombreInmueble}</td>
+                                        <td style="padding: 8px 4px; color: #475569;">${inquilino.fechaOcupacion || '-'}</td>
+                                        <td style="padding: 8px 4px; color: ${inquilino.fechaDesocupacion ? '#dc2626' : '#475569'};">
+                                            ${inquilino.fechaDesocupacion || inquilino.fechaFinContrato || '-'}
+                                        </td>
+                                        <td style="padding: 8px 4px; text-align: center;">
+                                            <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; background-color: ${inquilino.activo ? '#dcfce7' : '#fee2e2'}; color: ${inquilino.activo ? '#166534' : '#991b1b'}; border: 1px solid currentColor; opacity: 0.8;">
+                                                ${inquilino.activo ? 'Activo' : 'Inactivo'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 `;
-            }
+            };
 
             const finalHtml = `
-                <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #000000; line-height: 1.5; padding: 2rem;">
+                <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0f172a; line-height: 1.4; padding: 1.5rem;">
                     ${headerHtml}
-                    ${contenidoHtml}
+                    ${summaryHtml}
+                    ${renderTable(activos, 'INQUILINOS ACTIVOS', '#3730a3')}
+                    ${renderTable(inactivos, 'HISTORIAL DE INQUILINOS (INACTIVOS)', '#991b1b')}
+                    ${inquilinosList.length === 0 ? '<p style="text-align: center; color: #64748b; padding: 2rem;">No se encontraron inquilinos con los criterios seleccionados.</p>' : ''}
                 </div>
             `;
 
             const opt = {
-                margin: [0.5, 0.5, 0.5, 0.5],
+                margin: [0.3, 0.3, 0.3, 0.3],
                 filename: `Reporte_Inquilinos_${fechaGeneracion.replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, letterRendering: true },
@@ -846,19 +891,28 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             element.innerHTML = finalHtml;
             document.body.appendChild(element);
 
-            html2pdf().from(element).set(opt).toPdf().get('pdf').then(function (pdf) {
-                var totalPages = pdf.internal.getNumberOfPages();
-                for (var i = 1; i <= totalPages; i++) {
-                    pdf.setPage(i);
-                    pdf.setFontSize(9);
-                    pdf.setTextColor(107, 114, 128);
-                    const text = `Página ${i} de ${totalPages} | Generado el ${fechaGeneracion}`;
-                    const pageHeight = pdf.internal.pageSize.getHeight();
-                    const pageWidth = pdf.internal.pageSize.getWidth();
-                    pdf.text(text, pageWidth - 0.5, pageHeight - 0.5, { align: 'right' });
-                }
-                document.body.removeChild(element);
-            }).save();
+            try {
+                html2pdf().from(element).set(opt).toPdf().get('pdf').then(function (pdf) {
+                    var totalPages = pdf.internal.getNumberOfPages();
+                    for (var i = 1; i <= totalPages; i++) {
+                        pdf.setPage(i);
+                        pdf.setFontSize(8);
+                        pdf.setTextColor(148, 163, 184);
+                        const text = `Página ${i} de ${totalPages} | ${fechaGeneracion}`;
+                        const pageHeight = pdf.internal.pageSize.getHeight();
+                        const pageWidth = pdf.internal.pageSize.getWidth();
+                        pdf.text(text, pageWidth - 0.4, pageHeight - 0.3, { align: 'right' });
+                    }
+                    document.body.removeChild(element);
+                    ocultarLoader();
+                    mostrarNotificacion("Reporte de inquilinos generado.", "success");
+                }).save();
+            } catch (pdfError) {
+                console.error("Error al generar PDF:", pdfError);
+                mostrarNotificacion("Error al generar el PDF.", "error");
+                ocultarLoader();
+                if (document.body.contains(element)) document.body.removeChild(element);
+            }
         };
     } catch (error) {
         console.error("Error al obtener inquilinos:", error);
