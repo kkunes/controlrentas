@@ -590,24 +590,12 @@ export async function mostrarPagos(mostrarTabla = false) {
             } else {
                 pagosFiltrados.forEach(pago => {
                     // Clases para el estado del pago
-                    let estadoClass = "px-2 py-0.5 text-xs rounded-full font-semibold";
-                    switch (pago.estado) {
-                        case "pagado":
-                            estadoClass += " bg-green-100 text-green-800";
-                            break;
-                        case "parcial":
-                            estadoClass += " bg-yellow-100 text-yellow-800";
-                            break;
-                        case "pendiente":
-                            estadoClass += " bg-red-100 text-red-800";
-                            break;
-                        case "vencido":
-                            estadoClass += " bg-purple-100 text-purple-800";
-                            break;
-                        default:
-                            estadoClass += " bg-gray-100 text-gray-800";
-                            break;
-                    }
+                    let estadoClass = "px-2 py-0.5 rounded-full font-medium ";
+                    if (pago.estado === 'pagado') estadoClass += "bg-green-100 text-green-800";
+                    else if (pago.estado === 'parcial') estadoClass += "bg-blue-100 text-blue-800";
+                    else if (pago.estado === 'vencido') estadoClass += "bg-red-100 text-red-800";
+                    else if (pago.estado === 'omitido') estadoClass += "bg-gray-100 text-gray-800";
+                    else estadoClass += "bg-orange-100 text-orange-800";
 
                     // Priorizar el monto registrado en el pago para mantener la integridad histórica
                     let montoBase = pago.montoTotal || 0;
@@ -672,6 +660,8 @@ export async function mostrarPagos(mostrarTabla = false) {
                     let serviciosHtml = '';
                     if (servicios.length > 0) {
                         serviciosHtml = servicios.join('<br>');
+                    } else if (pago.estado === 'omitido') {
+                        serviciosHtml = '-';
                     } else if (tieneServicios) {
                         serviciosHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pendiente</span>`;
                     } else {
@@ -699,6 +689,8 @@ export async function mostrarPagos(mostrarTabla = false) {
                             </span>
                             <p class="text-xs text-gray-700 mt-1">Total: ${mobiliarioTotal.toFixed(2)}</p>
                         `;
+                    } else if (pago.estado === 'omitido') {
+                        mobiliarioHtml = '-';
                     } else if (tieneMobiliario) {
                         mobiliarioHtml = `
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -3564,7 +3556,7 @@ export async function revisarPagosVencidos() {
 
             // Un pago se considera vencido si la fecha actual es posterior a la fecha de vencimiento
             // Y si el estado actual no es ya 'vencido' y no está 'pagado'
-            if (today > fechaVencimiento && pago.estado !== 'vencido' && pago.montoPagado < pago.montoTotal) {
+            if (today > fechaVencimiento && pago.estado !== 'vencido' && pago.estado !== 'omitido' && pago.montoPagado < pago.montoTotal) {
                 actualizaciones.push(updateDoc(doc(db, "pagos", pagoId), {
                     estado: 'vencido'
                 }));
@@ -3697,11 +3689,13 @@ export async function obtenerMesesAdeudadosHistorico(inquilinoId, inmuebleId, fe
                 let serviciosPagados = false;
 
                 pagosMes.forEach(pago => {
-                    if (typeof pago.estado === "string" && pago.estado.trim().toLowerCase() === "pagado") {
+                    if (typeof pago.estado === "string" && (pago.estado.trim().toLowerCase() === "pagado" || pago.estado.trim().toLowerCase() === "omitido")) {
                         pagado = true;
                     }
 
-                    if (tieneServicios && pago.serviciosPagados) {
+                    if (pago.estado === "omitido") {
+                        serviciosPagados = true;
+                    } else if (tieneServicios && pago.serviciosPagados) {
                         const tieneServiciosPagados = pago.serviciosPagados.internet ||
                             pago.serviciosPagados.agua ||
                             pago.serviciosPagados.luz;

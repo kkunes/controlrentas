@@ -1,6 +1,11 @@
 /* Control de Rentas - Estilo Fluent Design Windows 11 */
 
 /* Variables CSS para Fluent Design */
+/* Ensure SweetAlert2 is always on top of our custom modals (z-50) */
+.swal2-container {
+    z-index: 99999 !important;
+}
+
 :root {
   /* Colores principales Fluent */
   --fluent-accent: #0078D4;

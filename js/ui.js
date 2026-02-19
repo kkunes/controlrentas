@@ -71,18 +71,19 @@ export function mostrarModal(htmlContent) {
     // Asegúrate de que este ID sea 'modalContenido' para coincidir con index.html y el CSS
     const modalContent = document.getElementById('modalContenido');
 
-    if (!modal) {
-
-        return;
-    }
-    if (!modalContent) {
-
-        return;
-    }
+    if (!modal || !modalContent) return;
 
     modalContent.innerHTML = htmlContent;
     modal.classList.remove('hidden');
-    modal.classList.add('flex'); // Asume que 'flex' es la clase para mostrarlo en Tailwind CSS
+    modal.classList.add('flex');
+
+    // Mejoras de accesibilidad
+    modal.setAttribute('aria-hidden', 'false');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('role', 'dialog');
+
+    // Opcional: Impedir scroll en el body mientras el modal está abierto
+    document.body.style.overflow = 'hidden';
 }
 
 /**
@@ -93,8 +94,15 @@ export function ocultarModal() {
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+
+        // Mejoras de accesibilidad
+        modal.setAttribute('aria-hidden', 'true');
+
+        // Restaurar scroll
+        document.body.style.overflow = '';
+
         // Opcional: Limpiar el contenido del modal cuando se oculta
-        const modalContent = document.getElementById('modalContenido'); // ¡Aquí también el cambio!
+        const modalContent = document.getElementById('modalContenido');
         if (modalContent) {
             modalContent.innerHTML = '';
         }

@@ -541,127 +541,168 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
             </div>
         `;
 
-        // Agrega los event listeners despuÃ©s de asignar el innerHTML
+        // Agrega los event listeners después de asignar el innerHTML
         adjuntarListenersInquilinos();
+
+        // --- Optimización: Mapa de pagos por inquilino ---
+        const pagosPorInquilino = new Map();
+        pagosSnap.forEach(doc => {
+            const pago = doc.data();
+            if (pago.inquilinoId) {
+                if (!pagosPorInquilino.has(pago.inquilinoId)) {
+                    pagosPorInquilino.set(pago.inquilinoId, new Map());
+                }
+                const clave = `${pago.mesCorrespondiente}-${pago.anioCorrespondiente}`;
+                pagosPorInquilino.get(pago.inquilinoId).set(clave, { id: doc.id, ...pago });
+            }
+        });
 
         // Actualizar badges de adeudos
         for (const inquilino of inquilinosList) {
-            if (!inquilino.fechaOcupacion || !inquilino.inmuebleAsociadoId) continue;
+            try {
+                const badge = document.getElementById(`badge-adeudos-${inquilino.id}`);
+                if (!badge) continue;
 
-            // Se obtienen todos los pagos una sola vez
-            const pagosQuery = query(collection(db, "pagos"), where("inquilinoId", "==", inquilino.id));
-            const pagosInquilinoSnap = await getDocs(pagosQuery);
-            const pagosMap = new Map();
-            pagosInquilinoSnap.forEach(doc => {
-                const pago = doc.data();
-                const clave = `${pago.mesCorrespondiente}-${pago.anioCorrespondiente}`;
-                pagosMap.set(clave, pago);
-            });
-
-            const inmuebleAsociado = inmueblesMap.get(inquilino.inmuebleAsociadoId);
-            const rentaMensual = inmuebleAsociado ? parseFloat(inmuebleAsociado.rentaMensual) : 0;
-
-            let totalAdeudoRenta = 0;
-            let totalAdeudoServicios = 0;
-            let totalAdeudoMobiliario = 0;
-
-            const todosLosAdeudos = [];
-            const parts = inquilino.fechaOcupacion.split('-');
-            const yearOcupacion = parseInt(parts[0], 10);
-            const monthOcupacion = parseInt(parts[1], 10) - 1;
-            const dayOcupacion = parseInt(parts[2], 10);
-
-            const fechaInicioOcupacion = new Date(yearOcupacion, monthOcupacion, dayOcupacion);
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-
-            const fechaFinCalculo = inquilino.fechaDesocupacion ? new Date(inquilino.fechaDesocupacion) : hoy;
-            fechaFinCalculo.setHours(0, 0, 0, 0);
-
-            let fechaIteracion = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1);
-            const diaDePago = fechaInicioOcupacion.getDate();
-
-            while (fechaIteracion <= fechaFinCalculo) {
-                const mes = fechaIteracion.toLocaleString('es-MX', { month: 'long' });
-                const anio = fechaIteracion.getFullYear();
-                const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
-                const clavePago = `${mesCapitalizado}-${anio}`;
-                const pagoRegistrado = pagosMap.get(clavePago);
-
-                let adeudoRenta = false;
-                let adeudoServicios = false;
-
-                const esMesActualIteracion = fechaIteracion.getMonth() === hoy.getMonth() && fechaIteracion.getFullYear() === hoy.getFullYear();
-                const isBeforeOccupationMonth = fechaIteracion.getFullYear() < fechaInicioOcupacion.getFullYear() ||
-                    (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
-                        fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
-
-                if (!isBeforeOccupationMonth) {
-                    const shouldCheckRent = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
-                    if (shouldCheckRent && (!pagoRegistrado || pagoRegistrado.estado !== 'pagado')) {
-                        adeudoRenta = true;
-                        if (rentaMensual > 0) {
-                            totalAdeudoRenta += rentaMensual;
-                        }
-                    }
-
-                    const shouldCheckServices = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
-                    if (shouldCheckServices && inquilino.pagaServicios && inquilino.servicios && inquilino.servicios.length > 0) {
-                        for (const servicio of inquilino.servicios) {
-                            const servicioKey = servicio.tipo.toLowerCase();
-                            if (!pagoRegistrado || !pagoRegistrado.serviciosPagados || !pagoRegistrado.serviciosPagados[servicioKey]) {
-                                adeudoServicios = true;
-                                totalAdeudoServicios += parseFloat(servicio.monto || 0);
-                            }
-                        }
-                    }
+                // Si no tiene fecha de ocupación, no podemos calcular adeudos históricos
+                if (!inquilino.fechaOcupacion) {
+                    badge.textContent = "Sin adeudos";
+                    badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
+                    badge.title = "Falta fecha de ocupación para calcular adeudos";
+                    continue;
                 }
 
-                if (adeudoRenta || adeudoServicios) {
-                    todosLosAdeudos.push({
-                        mes: mesCapitalizado,
-                        anio: anio,
-                        rentaPendiente: adeudoRenta,
-                        serviciosPendientes: adeudoServicios
-                    });
+                const pagosMap = pagosPorInquilino.get(inquilino.id) || new Map();
+
+                // Si es inactivo, intentamos recuperar el ID del inmueble de sus pagos previos
+                let inmuebleId = inquilino.inmuebleAsociadoId;
+                if (!inmuebleId && pagosMap.size > 0) {
+                    const ultimoPagoConInmueble = Array.from(pagosMap.values())
+                        .find(p => p.inmuebleId && p.inmuebleId !== 'Desconocido');
+                    if (ultimoPagoConInmueble) inmuebleId = ultimoPagoConInmueble.inmuebleId;
                 }
 
-                fechaIteracion.setMonth(fechaIteracion.getMonth() + 1);
-            }
+                if (!inmuebleId) {
+                    badge.textContent = "Sin adeudos";
+                    badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
+                    badge.title = "Inquilino sin inmueble asociado histórico";
+                    continue;
+                }
 
-            const adeudosFinales = todosLosAdeudos;
+                const inmuebleAsociado = inmueblesMap.get(inmuebleId);
+                const rentaMensual = inmuebleAsociado ? parseFloat(inmuebleAsociado.rentaMensual) : 0;
 
-            const adeudosMobiliario = [];
-            const mobiliarioAsignado = mobiliarioPorInquilino.get(inquilino.id) || [];
-            if (mobiliarioAsignado.length > 0) {
-                let fechaIteracionMobiliario = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1);
-                while (fechaIteracionMobiliario <= fechaFinCalculo) {
-                    const mes = fechaIteracionMobiliario.toLocaleString('es-MX', { month: 'long' });
-                    const anio = fechaIteracionMobiliario.getFullYear();
+                let totalAdeudoRenta = 0;
+                let totalAdeudoServicios = 0;
+                let totalAdeudoMobiliario = 0;
+
+                const todosLosAdeudos = [];
+                const parts = inquilino.fechaOcupacion.split('-');
+                const yearOcupacion = parseInt(parts[0], 10);
+                const monthOcupacion = parseInt(parts[1], 10) - 1;
+                const dayOcupacion = parseInt(parts[2], 10);
+
+                const fechaInicioOcupacion = new Date(yearOcupacion, monthOcupacion, dayOcupacion);
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+
+                // Para inactivos, calculamos hasta su fecha de desocupación
+                const fechaFinCalculoRaw = inquilino.fechaDesocupacion || inquilino.fechaFinContrato;
+                let fechaFinCalculo = hoy;
+                if (fechaFinCalculoRaw) {
+                    const fParts = fechaFinCalculoRaw.split('-');
+                    if (fParts.length === 3) {
+                        fechaFinCalculo = new Date(parseInt(fParts[0]), parseInt(fParts[1]) - 1, parseInt(fParts[2]));
+                    } else {
+                        fechaFinCalculo = new Date(fechaFinCalculoRaw);
+                    }
+                }
+                fechaFinCalculo.setHours(0, 0, 0, 0);
+
+                let fechaIteracion = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1);
+                const diaDePago = fechaInicioOcupacion.getDate();
+
+                while (fechaIteracion <= fechaFinCalculo) {
+                    const mes = fechaIteracion.toLocaleString('es-MX', { month: 'long' });
+                    const anio = fechaIteracion.getFullYear();
                     const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
                     const clavePago = `${mesCapitalizado}-${anio}`;
                     const pagoRegistrado = pagosMap.get(clavePago);
 
-                    const isBeforeOccupationMonth = fechaIteracionMobiliario.getFullYear() < fechaInicioOcupacion.getFullYear() ||
-                        (fechaIteracionMobiliario.getFullYear() === fechaInicioOcupacion.getFullYear() &&
-                            fechaIteracionMobiliario.getMonth() < fechaInicioOcupacion.getMonth());
+                    let adeudoRenta = false;
+                    let adeudoServicios = false;
+
+                    const esMesActualIteracion = fechaIteracion.getMonth() === hoy.getMonth() && fechaIteracion.getFullYear() === hoy.getFullYear();
+                    const isBeforeOccupationMonth = fechaIteracion.getFullYear() < fechaInicioOcupacion.getFullYear() ||
+                        (fechaIteracion.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                            fechaIteracion.getMonth() < fechaInicioOcupacion.getMonth());
 
                     if (!isBeforeOccupationMonth) {
-                        if (!pagoRegistrado || !pagoRegistrado.mobiliarioPagado || pagoRegistrado.mobiliarioPagado.length === 0) {
-                            adeudosMobiliario.push({ mes: mesCapitalizado, anio: anio });
-                            mobiliarioAsignado.forEach(mob => {
-                                totalAdeudoMobiliario += parseFloat(mob.costoRenta || 0);
-                            });
+                        const shouldCheckRent = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
+                        if (shouldCheckRent && (!pagoRegistrado || (pagoRegistrado.estado !== 'pagado' && pagoRegistrado.estado !== 'omitido'))) {
+                            adeudoRenta = true;
+                            if (rentaMensual > 0) {
+                                totalAdeudoRenta += rentaMensual;
+                            }
+                        }
+
+                        const shouldCheckServices = !esMesActualIteracion || (esMesActualIteracion && hoy.getDate() >= diaDePago);
+                        if (shouldCheckServices && inquilino.pagaServicios && inquilino.servicios && inquilino.servicios.length > 0) {
+                            for (const servicio of inquilino.servicios) {
+                                const servicioKey = servicio.tipo.toLowerCase();
+                                if (!pagoRegistrado || (pagoRegistrado.estado !== 'omitido' && (!pagoRegistrado.serviciosPagados || !pagoRegistrado.serviciosPagados[servicioKey]))) {
+                                    adeudoServicios = true;
+                                    totalAdeudoServicios += parseFloat(servicio.monto || 0);
+                                }
+                            }
                         }
                     }
-                    fechaIteracionMobiliario.setMonth(fechaIteracionMobiliario.getMonth() + 1);
-                }
-            }
 
-            const badge = document.getElementById(`badge-adeudos-${inquilino.id}`);
-            if (badge) {
-                const newBadge = badge.cloneNode(true);
-                badge.parentNode.replaceChild(newBadge, badge);
+                    if (adeudoRenta || adeudoServicios) {
+                        todosLosAdeudos.push({
+                            mes: mesCapitalizado,
+                            anio: anio,
+                            rentaPendiente: adeudoRenta,
+                            serviciosPendientes: adeudoServicios
+                        });
+                    }
+
+                    fechaIteracion.setMonth(fechaIteracion.getMonth() + 1);
+                }
+
+                const adeudosFinales = todosLosAdeudos;
+
+                const adeudosMobiliario = [];
+                const mobiliarioAsignado = mobiliarioPorInquilino.get(inquilino.id) || [];
+                if (mobiliarioAsignado.length > 0) {
+                    let fechaIteracionMobiliario = new Date(fechaInicioOcupacion.getFullYear(), fechaInicioOcupacion.getMonth(), 1);
+                    while (fechaIteracionMobiliario <= fechaFinCalculo) {
+                        const mes = fechaIteracionMobiliario.toLocaleString('es-MX', { month: 'long' });
+                        const anio = fechaIteracionMobiliario.getFullYear();
+                        const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
+                        const clavePago = `${mesCapitalizado}-${anio}`;
+                        const pagoRegistrado = pagosMap.get(clavePago);
+
+                        const isBeforeOccupationMonth = fechaIteracionMobiliario.getFullYear() < fechaInicioOcupacion.getFullYear() ||
+                            (fechaIteracionMobiliario.getFullYear() === fechaInicioOcupacion.getFullYear() &&
+                                fechaIteracionMobiliario.getMonth() < fechaInicioOcupacion.getMonth());
+
+                        if (!isBeforeOccupationMonth) {
+                            if (!pagoRegistrado || (pagoRegistrado.estado !== 'omitido' && (!pagoRegistrado.mobiliarioPagado || pagoRegistrado.mobiliarioPagado.length === 0))) {
+                                adeudosMobiliario.push({ mes: mesCapitalizado, anio: anio });
+                                mobiliarioAsignado.forEach(mob => {
+                                    totalAdeudoMobiliario += parseFloat(mob.costoRenta || 0);
+                                });
+                            }
+                        }
+                        fechaIteracionMobiliario.setMonth(fechaIteracionMobiliario.getMonth() + 1);
+                    }
+                }
+
+                const newBadge = badge.id.includes('new') ? badge : badge.cloneNode(true);
+                if (!badge.id.includes('new')) {
+                    newBadge.id = badge.id + '-new';
+                    badge.parentNode.replaceChild(newBadge, badge);
+                }
 
                 const totalAdeudosRentaCount = adeudosFinales.filter(a => a.rentaPendiente).length;
                 const totalAdeudosServiciosCount = adeudosFinales.filter(a => a.serviciosPendientes).length;
@@ -677,13 +718,18 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 transition-colors duration-200";
                     newBadge.title = "Haz clic para ver los detalles de adeudos";
 
-                    newBadge.addEventListener('click', () => {
+                    // Remover listeners previos si los hay
+                    const old_element = newBadge;
+                    const new_element = old_element.cloneNode(true);
+                    old_element.parentNode.replaceChild(new_element, old_element);
+
+                    new_element.addEventListener('click', () => {
                         const modalContentHtml = `
                             <div class="px-4 py-3 bg-red-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
                                 <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
                             </div>
                             
-                            ${(totalAdeudosRentaCount > 0 || totalAdeudosServiciosCount > 0 || totalAdeudosMobiliarioCount > 0) ? `
+                            ${(totalAdeudoRenta > 0 || totalAdeudoServicios > 0 || totalAdeudoMobiliario > 0) ? `
                             <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100 mb-6">
                                 <h4 class="text-lg font-semibold text-gray-800 mb-4">Totales Adeudados</h4>
                                 <div class="space-y-2">
@@ -723,13 +769,16 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                                     <span class="font-medium text-gray-800">${m.mes} ${m.anio}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
-                                                    ${m.rentaPendiente ? `<span class="text-sm text-red-600 font-medium">Renta pendiente</span><button onclick="abrirFormularioPagoRenta('${inquilino.id}', '${m.mes}', ${m.anio})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar Renta</button>` : ''}
+                                                    ${m.rentaPendiente ? `<span class="text-sm text-red-600 font-medium">Renta</span><div class="flex gap-1"><button onclick="abrirFormularioPagoRenta('${inquilino.id}', '${m.mes}', ${m.anio})" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar</button><button onclick="confirmarOmitirAdeudo('${inquilino.id}', '${m.mes}', ${m.anio}, 'Renta')" class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded-md text-xs" title="Omitir/Eliminar adeudo"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div>` : ''}
                                                     ${m.serviciosPendientes && m.rentaPendiente ? '<span class="text-gray-300">|</span>' : ''}
                                                     ${m.serviciosPendientes ? `
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                            Servicios pendientes
+                                                            Servicios
                                                         </span>
-                                                        <button onclick="abrirFormularioPagoServicio('${inquilino.id}', '${m.mes}', ${m.anio})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar Servicios</button>
+                                                        <div class="flex gap-1">
+                                                            <button onclick="abrirFormularioPagoServicio('${inquilino.id}', '${m.mes}', ${m.anio})" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar</button>
+                                                            <button onclick="confirmarOmitirAdeudo('${inquilino.id}', '${m.mes}', ${m.anio}, 'Servicios')" class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded-md text-xs" title="Omitir/Eliminar adeudo"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                                        </div>
                                                     ` : ''}
                                                 </div>
                                             </div>
@@ -753,7 +802,10 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                                                     Mobiliario pendiente
                                                 </span>
-                                                <button onclick="abrirFormularioPagoMobiliario('${inquilino.id}', '${m.mes}', ${m.anio})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar Mobiliario</button>
+                                                <div class="flex gap-1">
+                                                    <button onclick="abrirFormularioPagoMobiliario('${inquilino.id}', '${m.mes}', ${m.anio})" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs">Pagar</button>
+                                                    <button onclick="confirmarOmitirAdeudo('${inquilino.id}', '${m.mes}', ${m.anio}, 'Mobiliario')" class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded-md text-xs" title="Omitir/Eliminar adeudo"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                                </div>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -775,6 +827,13 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                     newBadge.textContent = "Sin adeudos";
                     newBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
                     newBadge.title = "El inquilino está al corriente";
+                }
+            } catch (error) {
+                console.error(`Error procesando adeudos para inquilino ${inquilino.id}:`, error);
+                const badge = document.getElementById(`badge-adeudos-${inquilino.id}`);
+                if (badge) {
+                    badge.textContent = "Error al calcular";
+                    badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500";
                 }
             }
         }
@@ -1324,8 +1383,21 @@ export async function editarInquilino(id) {
  * @param {string} inquilinoId - ID del inquilino a desocupar.
  */
 export async function confirmarDesocupacionInquilino(inquilinoId) {
-    if (confirm('¿Estás seguro de que quieres desocupar a este inquilino? Se marcarÃ¡ como inactivo y su inmueble asociado como disponible.')) {
+    const result = await Swal.fire({
+        title: '¿Confirmar desocupación?',
+        text: '¿Estás seguro de que deseas desocupar a este inquilino? Se marcará como inactivo y su inmueble asociado quedará disponible.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, desocupar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
         try {
+            mostrarLoader();
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             const inquilinoSnap = await getDoc(inquilinoRef);
 
@@ -1337,27 +1409,35 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
                     activo: false,
                     inmuebleAsociadoId: null,
                     inmuebleAsociadoNombre: 'No Asignado',
-                    fechaDesocupacion: new Date().toISOString().split('T')[0] // <-- Nueva lÃ­nea
+                    fechaDesocupacion: new Date().toISOString().split('T')[0]
                 });
-                mostrarNotificacion("Inquilino desocupado con éxito.", 'success');
 
                 if (inmuebleId) {
                     await updateDocInmueble(doc(db, "inmuebles", inmuebleId), {
                         estado: 'Disponible',
-                        inquilinoActualId: null, // Limpiar inquilino actual del inmueble
+                        inquilinoActualId: null,
                         inquilinoActualNombre: null
                     });
-                    mostrarNotificacion(`Inmueble asociado marcado como Disponible.`, 'info');
                 }
+
+                await Swal.fire({
+                    title: 'Inquilino Desocupado',
+                    text: 'El inquilino ha sido marcado como inactivo correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#4f46e5'
+                });
+
             } else {
-                mostrarNotificacion("Inquilino no encontrado.", 'error');
+                Swal.fire('Error', 'Inquilino no encontrado.', 'error');
             }
             limpiarCacheInquilinos();
             mostrarInquilinos();
 
         } catch (error) {
             console.error("Error al desocupar inquilino:", error);
-            mostrarNotificacion("Error al desocupar inquilino.", "error");
+            Swal.fire('Error', 'Hubo un problema al procesar la desocupación.', 'error');
+        } finally {
+            ocultarLoader();
         }
     }
 }
@@ -1367,20 +1447,42 @@ export async function confirmarDesocupacionInquilino(inquilinoId) {
  * @param {string} inquilinoId - ID del inquilino a reactivar.
  */
 export async function confirmarReactivacionInquilino(inquilinoId) {
-    if (confirm('¿Estás seguro de que quieres reactivar a este inquilino?')) {
+    const result = await Swal.fire({
+        title: '¿Reactivar inquilino?',
+        text: '¿Estás seguro de que deseas reactivar a este inquilino? Volverá a aparecer en la sección de activos.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, reactivar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
         try {
+            mostrarLoader();
             const inquilinoRef = doc(db, "inquilinos", inquilinoId);
             await updateDoc(inquilinoRef, {
                 activo: true,
                 fechaDesocupacion: null
             });
-            mostrarNotificacion("Inquilino reactivado con éxito.", 'success');
+
+            await Swal.fire({
+                title: 'Inquilino Reactivado',
+                text: 'El inquilino se ha reactivado con éxito.',
+                icon: 'success',
+                confirmButtonColor: '#4f46e5'
+            });
+
             limpiarCacheInquilinos();
             mostrarInquilinos();
 
         } catch (error) {
             console.error("Error al reactivar inquilino:", error);
-            mostrarNotificacion("Error al reactivar inquilino.", "error");
+            Swal.fire('Error', 'Hubo un problema al reactivar al inquilino.', 'error');
+        } finally {
+            ocultarLoader();
         }
     }
 }
@@ -2095,6 +2197,77 @@ async function abrirFormularioPagoMobiliario(inquilinoId, mes, anio) {
 window.abrirFormularioPagoRenta = abrirFormularioPagoRenta;
 window.abrirFormularioPagoServicio = abrirFormularioPagoServicio;
 window.abrirFormularioPagoMobiliario = abrirFormularioPagoMobiliario;
+
+async function confirmarOmitirAdeudo(inquilinoId, mes, anio, tipo) {
+    const result = await Swal.fire({
+        title: '¿Eliminar adeudo?',
+        html: `¿Estás seguro de que deseas eliminar el adeudo de <b>${tipo}</b> para <b>${mes} ${anio}</b>?<br><br><span class="text-sm text-gray-500">Este adeudo ya no aparecerá en la tarjeta ni en los totales, pero no se marcará como pagado.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#ef4444',
+        reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
+        mostrarLoader();
+        try {
+            // Buscar si ya existe un registro de pago para este mes/año
+            const pagosQuery = query(
+                collection(db, "pagos"),
+                where("inquilinoId", "==", inquilinoId),
+                where("mesCorrespondiente", "==", mes),
+                where("anioCorrespondiente", "==", anio)
+            );
+            const pagosSnap = await getDocs(pagosQuery);
+
+            if (!pagosSnap.empty) {
+                // Si existe, actualizar el estado
+                const pagoId = pagosSnap.docs[0].id;
+                await updateDoc(doc(db, "pagos", pagoId), {
+                    estado: 'omitido'
+                });
+            } else {
+                // Si no existe, crear uno nuevo con estado omitido
+                const inquilinoSnap = await getDoc(doc(db, "inquilinos", inquilinoId));
+                const inquilinoData = inquilinoSnap.data();
+
+                await addDoc(collection(db, "pagos"), {
+                    inquilinoId: inquilinoId,
+                    inmuebleId: inquilinoData.inmuebleAsociadoId || 'Desconocido',
+                    mesCorrespondiente: mes,
+                    anioCorrespondiente: anio,
+                    estado: 'omitido',
+                    fechaRegistro: new Date().toISOString().split('T')[0],
+                    montoTotal: 0,
+                    montoPagado: 0,
+                    saldoPendiente: 0,
+                    formaPago: 'N/A'
+                });
+            }
+
+            Swal.fire({
+                title: 'Adeudo eliminado',
+                text: `El adeudo de ${tipo} para ${mes} ${anio} ha sido eliminado.`,
+                icon: 'success',
+                confirmButtonColor: '#4f46e5'
+            });
+
+            limpiarCacheInquilinos();
+            mostrarInquilinos();
+            ocultarModal(); // Cerrar el modal de adeudos
+        } catch (error) {
+            console.error("Error al omitir adeudo:", error);
+            Swal.fire('Error', 'No se pudo eliminar el adeudo.', 'error');
+        } finally {
+            ocultarLoader();
+        }
+    }
+}
+
+window.confirmarOmitirAdeudo = confirmarOmitirAdeudo;
 
 // --- FUNCIONALIDAD DE CONSOLIDACIÓN HISTÓRICA ---
 window.explicarConsolidacion = () => {

@@ -1,4 +1,8 @@
 /* Premium Design Theme - Control Rentas */
+.swal2-container {
+    z-index: 999999 !important;
+}
+
 :root {
     /* Core Colors */
     --premium-bg-gradient: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
