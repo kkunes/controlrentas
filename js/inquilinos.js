@@ -1,4 +1,4 @@
-﻿// js/inquilinos.js
+// js/inquilinos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
@@ -1269,12 +1269,38 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
 
         try {
             if (inquilinoId) {
+                // Si cambió el inmueble o se desasignó, liberar el anterior
+                if (inquilinoExistente.inmuebleAsociadoId && inquilinoExistente.inmuebleAsociadoId !== inmuebleAsociadoId) {
+                    await updateDocInmueble(doc(db, "inmuebles", inquilinoExistente.inmuebleAsociadoId), {
+                        estado: 'Disponible',
+                        inquilinoActualId: null,
+                        inquilinoActualNombre: null
+                    });
+                }
+
                 // Update existing inquilino
                 const docRef = doc(db, "inquilinos", inquilinoId);
                 await updateDoc(docRef, inquilinoData);
+
+                // Si se asignó un nuevo inmueble y el inquilino está activo, marcarlo como ocupado
+                if (inmuebleAsociadoId && activo) {
+                    await updateDocInmueble(doc(db, "inmuebles", inmuebleAsociadoId), {
+                        estado: 'Ocupado',
+                        inquilinoActualId: inquilinoId,
+                        inquilinoActualNombre: nombre
+                    });
+                } else if (inmuebleAsociadoId && !activo) {
+                    // Si se asignó pero no está activo, por seguridad lo dejamos disponible (o según lógica de negocio)
+                    await updateDocInmueble(doc(db, "inmuebles", inmuebleAsociadoId), {
+                        estado: 'Disponible',
+                        inquilinoActualId: null,
+                        inquilinoActualNombre: null
+                    });
+                }
+
                 mostrarNotificacion("Inquilino actualizado con éxito.", "success");
             } else {
-                // Para nuevos inquilinos, agregamos el evento de creaciÃ³n
+                // Para nuevos inquilinos, agregamos el evento de creación
                 inquilinoData.bitacora = [{
                     fecha: new Date().toISOString(),
                     mensaje: "Inquilino registrado en el sistema",
@@ -1282,7 +1308,17 @@ export async function mostrarFormularioNuevoInquilino(id = null) {
                     usuario: "Sistema"
                 }];
                 // Add new inquilino
-                await addDoc(collection(db, "inquilinos"), inquilinoData);
+                const docRef = await addDoc(collection(db, "inquilinos"), inquilinoData);
+
+                // Si tiene un inmueble asociado y está activo, marcarlo como ocupado
+                if (inmuebleAsociadoId && activo) {
+                    await updateDocInmueble(doc(db, "inmuebles", inmuebleAsociadoId), {
+                        estado: 'Ocupado',
+                        inquilinoActualId: docRef.id,
+                        inquilinoActualNombre: nombre
+                    });
+                }
+
                 mostrarNotificacion("Inquilino registrado con éxito.", "success");
             }
             ocultarModal();
