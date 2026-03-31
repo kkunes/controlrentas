@@ -272,11 +272,42 @@
   }
 }
 
-/* Modales con efecto Acrylic */
+/* Modales responsive con efecto Acrylic */
 .modal-overlay {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+#modalContenido {
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--fluent-stroke) transparent;
+}
+
+#modalContenido::-webkit-scrollbar {
+  width: 6px;
+}
+
+#modalContenido::-webkit-scrollbar-thumb {
+  background: var(--fluent-stroke);
+  border-radius: 3px;
+}
+
+@media (max-width: 640px) {
+  #miModal {
+    padding: 10px;
+  }
+  
+  #modalContenido {
+    max-height: 85vh;
+    padding: 16px !important;
+  }
+  
+  .modal-header {
+    margin: -16px -16px 16px -16px !important;
+  }
 }
 
 .modal-header {

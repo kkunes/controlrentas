@@ -1,4 +1,4 @@
-﻿// js/pagos.js
+// js/pagos.js
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { mostrarLoader, ocultarLoader, mostrarModal, ocultarModal, mostrarNotificacion } from './ui.js';
@@ -1323,7 +1323,9 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
-    const anioActual = new Date().getFullYear();
+    const fechaHoy = new Date();
+    const mesActual = meses[fechaHoy.getMonth()];
+    const anioActual = fechaHoy.getFullYear();
     const anos = Array.from({ length: 7 }, (_, i) => anioActual - 3 + i);
 
     // Opciones de inmuebles
@@ -1338,18 +1340,18 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         <option value="${inq.id}">${inq.nombre}</option>
     `).join('');
 
-    // Opciones de meses y años
-    const mesesOptions = meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
-    const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
-
-    // Valores por defecto para edición
+    // Valores por defecto para registro o edición
     const selectedInmueble = pago.inmuebleId || '';
     const selectedInquilino = pago.inquilinoId || '';
-    const selectedMes = pago.mesCorrespondiente || '';
+    const selectedMes = pago.mesCorrespondiente || mesActual;
     const selectedAnio = pago.anioCorrespondiente || anioActual;
     const montoTotal = pago.montoTotal || '';
     const montoPagado = pago.montoPagado || '';
-    const fechaRegistro = pago.fechaRegistro || new Date().toISOString().split('T')[0];
+    const fechaRegistro = pago.fechaRegistro || fechaHoy.toISOString().split('T')[0];
+
+    // Opciones de meses y años con seleccionados
+    const mesesOptions = meses.map(mes => `<option value="${mes}" ${mes === selectedMes ? 'selected' : ''}>${mes}</option>`).join('');
+    const aniosOptions = anos.map(year => `<option value="${year}" ${year == selectedAnio ? 'selected' : ''}>${year}</option>`).join('');
 
     const propietariosSnap = await getDocs(collection(db, "propietarios"));
     let propietarios = [];
@@ -1406,19 +1408,6 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
                 </select>
             </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label for="montoTotal" class="block text-sm font-semibold text-gray-700 mb-1">Costo mensual del inmueble</label>
-                <input type="number" id="montoTotal" name="montoTotal" step="0.01" min="0" required readonly
-                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 text-gray-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div>
-                <label for="montoPago" class="block text-sm font-semibold text-gray-700 mb-1">Cantidad a pagar ahora</label>
-                <input type="number" id="montoPago" name="montoPago" step="0.01" min="0.01" required
-                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                <span class="text-xs text-blue-500">Si la cantidad es menor al costo mensual, el pago será considerado parcial.</span>
-            </div>
-        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label for="mesCorrespondiente" class="block text-sm font-semibold text-gray-700 mb-1">Mes Correspondiente</label>
@@ -1438,6 +1427,19 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
                 <input type="date" id="fechaRegistro" name="fechaRegistro" value="${fechaRegistro}" required
                     class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 <span class="text-xs text-gray-500">Al cambiar la fecha, se actualiza el mes correspondiente.</span>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="montoTotal" class="block text-sm font-semibold text-gray-700 mb-1">Costo mensual del inmueble</label>
+                <input type="number" id="montoTotal" name="montoTotal" step="0.01" min="0" required readonly
+                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 text-gray-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="montoPago" class="block text-sm font-semibold text-gray-700 mb-1">Cantidad a pagar ahora</label>
+                <input type="number" id="montoPago" name="montoPago" step="0.01" min="0.01" required
+                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <span class="text-xs text-blue-500">Si la cantidad es menor al costo mensual, el pago será considerado parcial.</span>
             </div>
         </div>
 
@@ -1607,16 +1609,7 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     inmuebleSelect.value = selectedInmueble;
     inquilinoSelect.value = selectedInquilino;
 
-    // Si es un nuevo pago, determinar el mes correspondiente según la fecha de registro
-    if (!id) {
-        const fechaRegistroInput = document.getElementById('fechaRegistro');
-        actualizarMesCorrespondiente(fechaRegistroInput);
-
-        // Actualizar mes correspondiente cuando cambie la fecha de registro
-        fechaRegistroInput.addEventListener('change', function () {
-            actualizarMesCorrespondiente(this);
-        });
-    } else {
+    if (id) {
         // Si es edición, mantener los valores originales
         document.getElementById('mesCorrespondiente').value = selectedMes;
         document.getElementById('anioCorrespondiente').value = selectedAnio;
@@ -1624,6 +1617,75 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
 
     montoTotalInput.value = montoTotal;
     montoPagoInput.value = montoPagado;
+
+    // Función para sugerir el monto faltante si ya existe un pago parcial
+    async function sugerirMontoFaltante() {
+        const inmuebleId = inmuebleSelect.value;
+        const mes = document.getElementById('mesCorrespondiente').value;
+        const anio = parseInt(document.getElementById('anioCorrespondiente').value);
+
+        if (!inmuebleId || !mes || !anio || id) return; // No sugerir si es edición o faltan datos
+
+        try {
+            const pagosRef = collection(db, "pagos");
+            const q = query(
+                pagosRef,
+                where("inmuebleId", "==", inmuebleId),
+                where("mesCorrespondiente", "==", mes),
+                where("anioCorrespondiente", "==", anio)
+            );
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const pagoExistente = querySnapshot.docs[0].data();
+                const saldoPendiente = pagoExistente.saldoPendiente || 0;
+                
+                if (saldoPendiente > 0) {
+                    montoPagoInput.value = saldoPendiente.toFixed(2);
+                    // Opcional: mostrar un mensaje informativo sutil
+                    let infoSugerencia = document.getElementById('infoSugerencia');
+                    if (!infoSugerencia) {
+                        infoSugerencia = document.createElement('p');
+                        infoSugerencia.id = 'infoSugerencia';
+                        montoPagoInput.parentNode.appendChild(infoSugerencia);
+                    }
+                    infoSugerencia.className = 'text-xs text-orange-500 mt-1 animate-pulse font-semibold';
+                    infoSugerencia.innerHTML = `⚠️ Pago parcial detectado. Faltan $${saldoPendiente.toFixed(2)} para completar el mes.`;
+                } else if (pagoExistente.estado === 'pagado') {
+                    montoPagoInput.value = '0';
+                    let infoSugerencia = document.getElementById('infoSugerencia');
+                    if (!infoSugerencia) {
+                        infoSugerencia = document.createElement('p');
+                        infoSugerencia.id = 'infoSugerencia';
+                        montoPagoInput.parentNode.appendChild(infoSugerencia);
+                    }
+                    infoSugerencia.className = 'text-xs text-green-500 mt-1 font-semibold';
+                    infoSugerencia.innerHTML = `✅ Este mes ya está totalmente pagado.`;
+                }
+            } else {
+                // Si no hay pago previo, sugerir el monto total
+                const total = parseFloat(montoTotalInput.value) || 0;
+                if (total > 0) {
+                    montoPagoInput.value = total.toFixed(2);
+                }
+                const existingInfo = document.getElementById('infoSugerencia');
+                if (existingInfo) existingInfo.remove();
+            }
+        } catch (error) {
+            console.error("Error al buscar pagos previos:", error);
+        }
+    }
+
+    // Agregar listeners para actualizar sugerencia
+    inmuebleSelect.addEventListener('change', sugerirMontoFaltante);
+    document.getElementById('mesCorrespondiente').addEventListener('change', sugerirMontoFaltante);
+    document.getElementById('anioCorrespondiente').addEventListener('change', sugerirMontoFaltante);
+    document.getElementById('fechaRegistro').addEventListener('change', sugerirMontoFaltante);
+
+    // Ejecutar sugerencia inicial
+    if (selectedInmueble) {
+        setTimeout(sugerirMontoFaltante, 500); // Dar tiempo a que cargarTotal termine
+    }
 
     // --- Guardar pago ---
     document.getElementById('formPago').addEventListener('submit', async (e) => {
@@ -1639,21 +1701,35 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
         const anioCorrespondiente = parseInt(document.getElementById('anioCorrespondiente').value);
         const fechaRegistro = document.getElementById('fechaRegistro').value;
 
-        // Validación de duplicidad solo para nuevo pago
+        // Lógica de guardado/fusión
+        let pagoExistenteId = null;
+        let pagoExistenteData = null;
+
         if (!id) {
             const pagosRef = collection(db, "pagos");
             const q = query(
                 pagosRef,
                 where("inmuebleId", "==", inmuebleId),
                 where("mesCorrespondiente", "==", mesCorrespondiente),
-                where("anioCorrespondiente", "==", anioCorrespondiente),
-                where("estado", "==", "pagado")
+                where("anioCorrespondiente", "==", anioCorrespondiente)
             );
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
-                mostrarNotificacion('Ya existe un pago completo registrado para este inmueble, mes y año. No se permite duplicados.', 'error', 8000);
-                return;
+                pagoExistenteId = querySnapshot.docs[0].id;
+                pagoExistenteData = querySnapshot.docs[0].data();
+
+                if (pagoExistenteData.estado === "pagado") {
+                    const result = await Swal.fire({
+                        title: 'Pago ya registrado',
+                        text: "Ya existe un pago completo para este mes. ¿Deseas agregar esta cantidad como un abono extra o saldo a favor?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, agregar',
+                        cancelButtonText: 'No, cancelar'
+                    });
+                    if (!result.isConfirmed) return;
+                }
             }
         }
 
@@ -1787,6 +1863,40 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
                 if (enVistaTabla) {
                     mostrarPagos(true);
                 }
+            } else if (pagoExistenteId) {
+                // FUSIONAR PAGO
+                const nuevosAbonos = Array.isArray(pagoExistenteData.abonos) ? [...pagoExistenteData.abonos] : [];
+                nuevosAbonos.push({
+                    montoAbonado: montoPago,
+                    fechaAbono: fechaRegistro,
+                    formaPago: formaPago
+                });
+
+                const nuevoMontoPagado = (pagoExistenteData.montoPagado || 0) + montoPago;
+                let nuevoEstado = "parcial";
+                const totalRequerido = pagoExistenteData.montoTotal || montoTotal;
+                let nuevoSaldoPendiente = totalRequerido - nuevoMontoPagado;
+
+                if (nuevoMontoPagado >= totalRequerido) {
+                    nuevoEstado = "pagado";
+                    nuevoSaldoPendiente = 0;
+                } else if (nuevoMontoPagado > 0) {
+                    nuevoEstado = "parcial";
+                } else {
+                    nuevoEstado = "pendiente";
+                }
+
+                await updateDoc(doc(db, "pagos", pagoExistenteId), {
+                    montoPagado: nuevoMontoPagado,
+                    saldoPendiente: nuevoSaldoPendiente,
+                    estado: nuevoEstado,
+                    abonos: nuevosAbonos,
+                    formaPago: formaPago, // Actualizar a la última forma de pago
+                    fechaRegistro: fechaRegistro // Actualizar a la última fecha
+                });
+
+                mostrarNotificacion('Pago actualizado y fusionado con éxito.', 'success');
+                await iniciarFlujoPostPago(pagoExistenteId, inquilinoId, enVistaTabla);
             } else {
                 const docRef = await addDoc(collection(db, "pagos"), datos);
                 mostrarNotificacion('Pago de Renta Registrado.', 'success');
