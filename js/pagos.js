@@ -1381,10 +1381,10 @@ export async function mostrarFormularioNuevoPago(id = null, onCancel = null) {
     }
 
     const formHtml = `
-    <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+    <div class="modal-header-fluent bg-blue-600 text-white shadow">
         <h3 class="text-2xl font-bold text-center">${titulo}</h3>
     </div>
-    <form id="formPago" class="space-y-5 px-2 pb-10">
+    <form id="formPago" class="modal-form-body space-y-5">
         <!-- Buscador -->
         <div class="relative">
             <label for="buscadorInmuebleInquilino" class="block text-sm font-semibold text-gray-700 mb-1">Buscar por Inmueble o Inquilino</label>
@@ -2020,10 +2020,10 @@ export async function mostrarFormularioPagoServicio(inquilinoIdPreseleccionado =
         const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
         const formHtml = `
-            <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="modal-header-fluent bg-indigo-600 text-white shadow">
                 <h3 class="text-2xl font-bold text-center">Registrar Pago de Servicios</h3>
             </div>
-            <form id="formPagoServicio" class="space-y-5 px-2 pb-10">
+            <form id="formPagoServicio" class="modal-form-body space-y-5">
                 <div class="relative">
                     <label for="buscadorInmuebleServicios" class="block text-sm font-semibold text-gray-700 mb-1">Buscar por Inmueble</label>
                     <input type="text" id="buscadorInmuebleServicios" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
@@ -2464,10 +2464,10 @@ export async function mostrarFormularioPagoMobiliario(inquilinoIdPreseleccionado
         const aniosOptions = anos.map(year => `<option value="${year}">${year}</option>`).join('');
 
         const formHtml = `
-            <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="modal-header-fluent bg-indigo-600 text-white shadow">
                 <h3 class="text-2xl font-bold text-center">Registrar Pago de Mobiliario</h3>
             </div>
-            <form id="formPagoMobiliario" class="space-y-5 px-2 pb-10">
+            <form id="formPagoMobiliario" class="modal-form-body space-y-5">
                 <div class="relative">
                     <label for="buscadorInmuebleMobiliario" class="block text-sm font-semibold text-gray-700 mb-1">Buscar por Inmueble</label>
                     <input type="text" id="buscadorInmuebleMobiliario" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
@@ -2794,10 +2794,10 @@ export async function mostrarFormularioRegistrarAbono(pagoId) {
     const saldoPendiente = montoTotal - montoPagadoActual;
 
     const formAbonoHtml = `
-    <div class="px-4 py-3 bg-green-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+    <div class="modal-header-fluent bg-green-600 text-white shadow">
         <h3 class="text-2xl font-bold text-center">Registrar Abono</h3>
     </div>
-    <form id="formAbono" class="space-y-5 px-2 pb-10">
+    <form id="formAbono" class="modal-form-body space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Monto total del pago</label>
@@ -3144,10 +3144,10 @@ export async function mostrarDetallePago(pagoId) {
 
 
         const detalleHtml = `
-            <div class="px-4 py-3 bg-blue-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="modal-header-fluent bg-blue-600 text-white shadow">
                 <h3 class="text-2xl font-bold text-center">Detalles del Pago</h3>
             </div>
-            <div class="space-y-3 text-gray-700 px-2 pb-10">
+            <div class="modal-form-body space-y-3 text-gray-700">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                         <!-- Card Inmueble con Glassmorphism -->
@@ -3960,10 +3960,10 @@ export async function gestionarServiciosPago(pagoId) {
         });
 
         const formHtml = `
-            <div class="px-4 py-3 bg-indigo-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="modal-header-fluent bg-indigo-600 text-white shadow">
                 <h3 class="text-2xl font-bold text-center">Gestionar Servicios</h3>
             </div>
-            <form id="formGestionServicios" class="space-y-4">
+            <form id="formGestionServicios" class="modal-form-body space-y-4">
                 <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-3">
                     <div class="flex flex-col gap-1">
                         <p class="text-sm font-medium text-blue-800">Inmueble: <span class="font-bold">${nombreInmueble}</span></p>
@@ -4199,10 +4199,10 @@ export async function gestionarMobiliarioPago(pagoId) {
         }
 
         const formHtml = `
-            <div class="px-4 py-3 bg-green-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow">
+            <div class="modal-header-fluent bg-green-600 text-white shadow">
                 <h3 class="text-2xl font-bold text-center">Gestionar Mobiliario</h3>
             </div>
-            <div class="space-y-4">
+            <div class="modal-form-body space-y-4">
                 <div class="bg-green-50 p-3 rounded-lg border border-green-200 mb-3">
                     <div class="flex flex-col gap-1">
                         <p class="text-sm font-medium text-green-800">Inmueble: <span class="font-bold">${nombreInmueble}</span></p>

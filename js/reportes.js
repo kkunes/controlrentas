@@ -732,14 +732,12 @@ async function abrirModalPropietarios(propietariosMap, inmueblesMap, inquilinosM
     });
 
     const modalHtml = `
-        <div class="modal-content-responsive bg-white rounded-lg shadow-xl w-full max-w-4xl flex flex-col">
-            <div class="modal-header-responsive bg-gradient-to-r from-blue-500 to-indigo-600 p-4 rounded-t-lg flex justify-between items-center">
-                <h3 class="text-xl font-bold text-white">Ingresos por Propietario</h3>
-                <button id="closeModalBtn" class="modal-close-button text-white hover:text-gray-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+        <div class="modal-header-fluent bg-blue-600 text-white shadow-lg">
+            <div class="flex items-center justify-between w-full">
+                <h3 class="text-xl font-bold text-white uppercase tracking-wide">Ingresos por Propietario</h3>
             </div>
-            <div class="p-6 flex-grow overflow-y-auto">
+        </div>
+        <div class="modal-form-body p-6 flex-grow overflow-y-auto">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Fecha Inicio</label>

@@ -521,21 +521,19 @@ export async function mostrarFormularioNuevoInmueble(id = null) {
     `).join('') || '';
 
     const modalContent = `
-        <div class="bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white rounded-t-lg -mx-6 -mt-6 mb-6 shadow-lg">
-            <div class="px-6 py-4">
-                <div class="flex items-center justify-center gap-3">
-                    <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <div>
-                        <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
-                        <p class="text-center text-green-100 mt-1">Complete los datos del inmueble</p>
-                    </div>
+        <div class="modal-header-fluent bg-green-700 text-white shadow-lg">
+            <div class="flex items-center justify-center gap-3">
+                <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <div>
+                    <h3 class="text-2xl font-bold text-center">${tituloModal}</h3>
+                    <p class="text-center text-green-100 mt-1 italic">Complete los datos del inmueble</p>
                 </div>
             </div>
         </div>
         
-        <form id="formInmueble" class="space-y-6 max-h-[80vh] overflow-y-auto px-2">
+        <form id="formInmueble" class="modal-form-body space-y-6">
             <!-- Información Básica -->
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">

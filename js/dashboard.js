@@ -117,21 +117,17 @@ async function mostrarModalMantenimientos(mantenimientos) {
     };
 
     let modalContent = `
-        <div class="bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6 p-4 shadow-lg">
-            <div class="flex items-center justify-between">
+        <div class="modal-header-fluent bg-gray-800 text-white shadow-lg">
+            <div class="flex items-center justify-between w-full">
                 <h3 class="text-2xl font-bold flex items-center">
                     <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M11.493 3.177a.75.75 0 011.06 0l3.18 3.18a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-3.18-3.18a.75.75 0 010-1.06l4.5-4.5zM12 15a1 1 0 100 2 1 1 0 000-2zm0 4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
                     </svg>
                     Mantenimientos Pendientes
                 </h3>
-                <button onclick="ocultarModal()" class="text-gray-300 hover:text-white transition-colors duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
             </div>
         </div>
+        <div class="modal-form-body">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 maintenance-cards-container">
     `;
 
@@ -177,8 +173,8 @@ async function mostrarModalMantenimientos(mantenimientos) {
         });
     }
 
-    modalContent += '</div>';
-    mostrarModal(modalContent, true);
+    modalContent += '</div></div>';
+    mostrarModal(modalContent);
 }
 
 function adjuntarListenersDashboard() {
@@ -1007,18 +1003,13 @@ window.mostrarListaPagosDashboard = function(tipo) {
     }
 
     let html = `
-        <div class="px-3 sm:px-4 py-3 ${colorFondo} text-white rounded-t-lg -mx-6 -mt-6 mb-4 sm:mb-6 modal-header-responsive">
-            <div class="flex items-center justify-between">
-                <h3 class="text-xl sm:text-2xl font-bold modal-title-responsive">${titulo}</h3>
-                <button onclick="ocultarModal()" class="text-white hover:text-gray-200 transition-colors duration-200">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+        <div class="modal-header-fluent ${colorFondo} text-white shadow-lg">
+            <div class="flex items-center justify-between w-full">
+                <h3 class="text-xl sm:text-2xl font-bold uppercase tracking-wide">${titulo}</h3>
             </div>
         </div>
 
-        <div class="overflow-x-auto -mx-6 px-3 sm:px-6 modal-responsive-padding">
+        <div class="modal-form-body">
             ${lista.length === 0 ? `
                 <div class="flex flex-col items-center justify-center py-8 sm:py-12 bg-gradient-to-br ${colorGradiente} rounded-lg">
                     <svg class="w-12 h-12 sm:w-16 sm:h-16 ${colorIcono} mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1186,69 +1177,10 @@ window.mostrarListaPagosDashboard = function(tipo) {
             `}
         </div>
 
-        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
-            <button type="button" onclick="ocultarModal()" class="bg-gradient-to-r ${colorGradiente} hover:opacity-90 text-gray-800 font-semibold px-6 py-2 rounded-md shadow-sm transition-all duration-200 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Cerrar
-            </button>
         </div>
     `;
     mostrarModal(html);
 };
 
-// Asegurarse de que la función mostrarModal esté definida
-window.mostrarModal = function(contenido, animated = false) {
-    let modalContainer = document.getElementById('modal-container');
-    if (!modalContainer) {
-        modalContainer = document.createElement('div');
-        modalContainer.id = 'modal-container';
-        document.body.appendChild(modalContainer);
-    }
-
-    modalContainer.className = `fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4`;
-    
-    const animationClasses = animated ? 'animate-fade-in-up' : '';
-
-    modalContainer.innerHTML = `
-        <div id="modal-content" class="relative mx-auto shadow-2xl rounded-xl bg-gray-50 w-11/12 md:w-4/5 lg:w-3/4 max-w-4xl ${animationClasses}">
-            <div class="p-6">
-                ${contenido}
-            </div>
-        </div>
-    `;
-
-    // Add CSS for animations if not already present
-    if (!document.getElementById('modal-animations')) {
-        const style = document.createElement('style');
-        style.id = 'modal-animations';
-        style.innerHTML = `
-            @keyframes fade-in-up {
-                from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .animate-fade-in-up {
-                animation: fade-in-up 0.5s ease-out forwards;
-            }
-            .maintenance-card {
-                opacity: 0;
-                transform: translateY(20px);
-                animation: fade-in-up 0.5s ease-out forwards;
-            }
-            .maintenance-cards-container {
-                perspective: 1000px;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-};
-
-// Asegurarse de que la función ocultarModal esté definida
-window.ocultarModal = function() {
-    const modalContainer = document.getElementById('modal-container');
-    if (modalContainer) {
-        modalContainer.remove();
-    }
-};
+window.cambiarEstadoCosto = cambiarEstadoCosto;
 window.cambiarEstadoCosto = cambiarEstadoCosto;

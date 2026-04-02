@@ -258,24 +258,19 @@ export async function mostrarFormularioNuevoDesperfecto(id = null, inquilinoIdPr
     `).join('');
 
     const modalContent = `
-        <div class="relative">
-            <button type="button" onclick="ocultarModal()"
-                class="absolute top-2 right-2 z-20 bg-white/80 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition-all focus:outline-none focus:ring-2 focus:ring-red-400"
-                aria-label="Cerrar">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        <div class="modal-header-fluent bg-red-600 text-white shadow-lg">
+            <div class="flex items-center justify-center gap-3">
+                <svg class="w-8 h-8 text-red-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
-            </button>
-            <div class="px-6 py-5 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-t-2xl -mx-6 -mt-6 mb-6 shadow-lg">
-                <div class="flex items-center justify-center mb-2">
-                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    <h3 class="text-2xl font-extrabold text-center tracking-tight">${tituloModal}</h3>
+                <div>
+                    <h3 class="text-2xl font-bold text-center tracking-tight">${tituloModal}</h3>
+                    <p class="text-center text-red-100 text-sm italic">Registro y seguimiento de daños</p>
                 </div>
-                <p class="text-center text-red-100 text-sm font-medium">Registro y seguimiento de daños</p>
             </div>
-            <form id="formDesperfecto" class="space-y-5 px-4">
+        </div>
+        
+        <form id="formDesperfecto" class="modal-form-body space-y-5">
                 <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -354,21 +349,8 @@ export async function mostrarFormularioNuevoDesperfecto(id = null, inquilinoIdPr
                         </select>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
-                    <button type="button" onclick="ocultarModal()" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        Cancelar
-                    </button>
-                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        ${id ? "Actualizar" : "Registrar"} Desperfecto
-                    </button>
-                </div>
             </form>
+        </div>
         </div>
     `;
 
@@ -459,24 +441,19 @@ window.cambiarEstadoDesperfecto = async function (desperfectoId, currentStatus, 
     `).join('');
 
     const modalContent = `
-        <div class="relative">
-            <button type="button" onclick="ocultarModal()"
-                class="absolute top-2 right-2 z-20 bg-white/80 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition-all focus:outline-none focus:ring-2 focus:ring-red-400"
-                aria-label="Cerrar">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        <div class="modal-header-fluent bg-blue-600 text-white shadow-lg">
+            <div class="flex items-center justify-center gap-3">
+                <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-            </button>
-            <div class="px-6 py-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-2xl -mx-6 -mt-6 mb-6 shadow-lg">
-                <div class="flex items-center justify-center mb-2">
-                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <h3 class="text-2xl font-extrabold text-center tracking-tight">Cambiar Estado del Desperfecto</h3>
+                <div>
+                    <h3 class="text-2xl font-bold text-center tracking-tight">Estado del Desperfecto</h3>
+                    <p class="text-center text-blue-100 text-sm italic">Actualiza el progreso de reparación</p>
                 </div>
-                <p class="text-center text-blue-100 text-sm font-medium">Actualiza el estado de reparación</p>
             </div>
-            <form id="formCambiarEstadoDesperfecto" class="space-y-5 px-4">
+        </div>
+        
+        <form id="formCambiarEstadoDesperfecto" class="modal-form-body space-y-5">
                 <div class="bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-gray-200/50 shadow-sm">
                     <div>
                         <label for="nuevoEstado" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
@@ -490,21 +467,8 @@ window.cambiarEstadoDesperfecto = async function (desperfectoId, currentStatus, 
                         </select>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
-                    <button type="button" onclick="ocultarModal()" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        Cancelar
-                    </button>
-                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Actualizar Estado
-                    </button>
-                </div>
             </form>
+        </div>
         </div>
     `;
 
@@ -644,14 +608,11 @@ export async function mostrarTotalDesperfectosInquilino(inquilinoId) {
         }
 
         const modalContent = `
-            <div class="px-4 py-3 bg-red-500 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
-                <h3 class="text-xl sm:text-2xl font-bold text-center">Desperfectos de ${inquilinoNombre}</h3>
+            <div class="modal-header-fluent bg-red-600 text-white shadow-lg">
+                <h3 class="text-xl sm:text-2xl font-bold text-center">Desperfectos: ${inquilinoNombre}</h3>
             </div>
-            <div class="py-2">
+            <div class="modal-form-body py-2">
                 ${tablaHtml}
-            </div>
-            <div class="flex justify-end mt-6">
-                <button type="button" onclick="ocultarModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-md shadow-sm transition-colors duration-200">Cerrar</button>
             </div>
         `;
 

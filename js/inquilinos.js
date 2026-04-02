@@ -725,10 +725,10 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
 
                     new_element.addEventListener('click', () => {
                         const modalContentHtml = `
-                            <div class="px-4 py-3 bg-red-600 text-white rounded-t-lg -mx-6 -mt-6 mb-6">
+                            <div class="modal-header-fluent bg-red-600 text-white shadow">
                                 <h3 class="text-xl font-bold text-center">Adeudos de ${inquilino.nombre}</h3>
                             </div>
-                            
+                            <div class="modal-form-body">
                             ${(totalAdeudoRenta > 0 || totalAdeudoServicios > 0 || totalAdeudoMobiliario > 0) ? `
                             <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100 mb-6">
                                 <h4 class="text-lg font-semibold text-gray-800 mb-4">Totales Adeudados</h4>
@@ -817,6 +817,7 @@ export async function mostrarInquilinos(filtroActivo = "Todos") {
                                     class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-lg shadow-sm transition-colors duration-200">
                                     Cerrar
                                 </button>
+                            </div>
                             </div>
                         `;
                         window.adeudosModalContent = modalContentHtml;
