@@ -297,12 +297,18 @@
 
 @media (max-width: 640px) {
   #miModal {
-    padding: 10px;
+    padding: 20px 12px !important;
+    align-items: flex-start !important; /* Allow top-aligned scroll */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
   
   #modalContenido {
-    max-height: 85vh;
+    max-height: none !important; /* Remove internal scroll to use parent scroll */
+    overflow-y: visible !important;
     padding: 16px !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important; /* Centers it if content is small */
   }
   
   .modal-header {
